@@ -4,46 +4,68 @@ resourceGroupName = "ArtistAnywhere.Network"
 # Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) #
 ################################################################################################
 
-virtualNetwork = {
-  name               = "Network"
-  addressSpace       = ["10.0.0.0/16"]
+computeNetwork = {
+  name               = "Compute"
+  regionName         = "WestUS2"
+  addressSpace       = ["10.1.0.0/16"]
   dnsServerAddresses = []
   subnets = [
     {
       name              = "Farm"
-      addressSpace      = ["10.0.0.0/17"]
+      addressSpace      = ["10.1.0.0/17"]
       serviceEndpoints  = [],
       serviceDelegation = ""
     },
     {
       name              = "Workstation"
-      addressSpace      = ["10.0.128.0/18"]
+      addressSpace      = ["10.1.128.0/18"]
       serviceEndpoints  = []
       serviceDelegation = ""
     },
     {
       name              = "Cache"
-      addressSpace      = ["10.0.192.0/24"]
+      addressSpace      = ["10.1.192.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
     },
     {
-      name              = "Storage"
-      addressSpace      = ["10.0.193.0/24"]
+      name              = "GatewaySubnet"
+      addressSpace      = ["10.1.255.0/24"]
+      serviceEndpoints  = []
+      serviceDelegation = ""
+    }
+  ]
+}
+
+computeNetworkSubnetIndex = {
+  farm        = 0
+  workstation = 1
+  cache       = 2
+}
+
+storageNetwork = {
+  name               = "Storage"
+  regionName         = "WestCentralUS"
+  addressSpace       = ["10.0.0.0/16"]
+  dnsServerAddresses = []
+  subnets = [
+    {
+      name              = "Storage1"
+      addressSpace      = ["10.0.0.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
+      serviceDelegation = ""
+    },
+    {
+      name              = "Storage2"
+      addressSpace      = ["10.0.1.0/24"]
+      serviceEndpoints  = []
       serviceDelegation = ""
     },
     {
       name              = "StorageNetApp"
-      addressSpace      = ["10.0.194.0/24"]
+      addressSpace      = ["10.0.2.0/24"]
       serviceEndpoints  = []
       serviceDelegation = "Microsoft.Netapp/volumes"
-    },
-    {
-      name              = "StorageHA"
-      addressSpace      = ["10.0.195.0/29"]
-      serviceEndpoints  = []
-      serviceDelegation = ""
     },
     {
       name              = "GatewaySubnet"
@@ -54,20 +76,17 @@ virtualNetwork = {
   ]
 }
 
-virtualNetworkSubnetIndex = {
-  farm          = 0
-  workstation   = 1
-  cache         = 2
-  storage       = 3
-  storageNetApp = 4
-  storageHA     = 5
+storageNetworkSubnetIndex = {
+  storage1      = 0
+  storage2      = 1
+  storageNetApp = 2
 }
 
 ###########################################################################
 # Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
 ###########################################################################
 
-virtualNetworkPrivateDns = {
+privateDns = {
   zoneName               = "artist.studio"
   enableAutoRegistration = true
 }
@@ -81,8 +100,8 @@ hybridNetwork = {
   //type = "Vpn"          // https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
   //type = "ExpressRoute" // https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
   address = {
-    type             = "Basic"
-    allocationMethod = "Dynamic"
+    type             = "Standard"
+    allocationMethod = "Static"
   }
 }
 
@@ -91,10 +110,11 @@ hybridNetwork = {
 ##############################################################################################################
 
 vpnGateway = {
-  sku          = "VpnGw2"
-  type         = "RouteBased"
-  generation   = "Generation2"
-  activeActive = false
+  sku                = "VpnGw2"
+  type               = "RouteBased"
+  generation         = "Generation2"
+  enableBgp          = false
+  enableActiveActive = false
 }
 
 # Site-to-Site Local Network Gateway (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng)
@@ -122,4 +142,5 @@ expressRoute = {
   circuitId          = ""         // Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
   gatewaySku         = "Standard" // https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   connectionFastPath = false      // https://docs.microsoft.com/azure/expressroute/about-fastpath
+  connectionAuthKey  = ""
 }

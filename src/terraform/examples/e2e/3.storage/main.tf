@@ -3,11 +3,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.20.0"
+      version = "~>3.21.1"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~>2.27.0"
+      version = "~>2.28.1"
     }
   }
   backend "azurerm" {
@@ -18,7 +18,7 @@ terraform {
 provider "azurerm" {
   features {
     resource_group {
-      prevent_deletion_if_contains_resources = false
+      prevent_deletion_if_contains_resources = true
     }
   }
 }
@@ -32,38 +32,70 @@ variable "resourceGroupName" {
 }
 
 variable "storageAccounts" {
-  type = list(
-    object(
-      {
-        name                 = string
-        type                 = string
-        tier                 = string
-        redundancy           = string
-        enableBlobNfsV3      = bool
-        enableLargeFileShare = bool
-        enableSecureTransfer = bool
-        privateEndpointTypes = list(string)
-        blobContainers = list(
-          object(
-            {
-              name             = string
-              accessType       = string
-              localDirectories = list(string)
-            }
+  type = list(object(
+    {
+      name                 = string
+      type                 = string
+      tier                 = string
+      redundancy           = string
+      enableBlobNfsV3      = bool
+      enableLargeFileShare = bool
+      enableSecureTransfer = bool
+      privateEndpointTypes = list(string)
+      blobContainers = list(object(
+        {
+          name             = string
+          accessType       = string
+          localDirectories = list(string)
+        }
+      ))
+      fileShares = list(object(
+        {
+          name     = string
+          tier     = string
+          sizeGiB  = number
+          protocol = string
+        }
+      ))
+    }
+  ))
+}
+
+variable "netAppAccount" {
+  type = object(
+    {
+      name = string
+      capacityPools = list(object(
+        {
+          name         = string
+          sizeTiB      = number
+          serviceLevel = string
+          volumes = list(
+            object(
+              {
+                name         = string
+                sizeGiB      = number
+                serviceLevel = string
+                mountPath    = string
+                protocols    = list(string)
+                exportPolicies = list(
+                  object(
+                    {
+                      ruleIndex      = number
+                      readOnly       = bool
+                      readWrite      = bool
+                      rootAccess     = bool
+                      protocols      = list(string)
+                      allowedClients = list(string)
+                    }
+                  )
+                )
+              }
+            )
           )
-        )
-        fileShares = list(
-          object(
-            {
-              name     = string
-              tier     = string
-              sizeGiB  = number
-              protocol = string
-            }
-          )
-        )
-      }
-    )
+        }
+      ))
+    }
   )
 }
 
@@ -134,58 +166,23 @@ variable "hammerspace" {
   )
 }
 
-variable "netAppAccounts" {
-  type = list(
-    object(
-      {
-        name = string
-        capacityPools = list(
-          object(
-            {
-              name         = string
-              sizeTiB      = number
-              serviceLevel = string
-              volumes = list(
-                object(
-                  {
-                    name         = string
-                    sizeGiB      = number
-                    serviceLevel = string
-                    mountPath    = string
-                    protocols    = list(string)
-                    exportPolicies = list(
-                      object(
-                        {
-                          ruleIndex      = number
-                          readOnly       = bool
-                          readWrite      = bool
-                          rootAccess     = bool
-                          protocols      = list(string)
-                          allowedClients = list(string)
-                        }
-                      )
-                    )
-                  }
-                )
-              )
-            }
-          )
-        )
-      }
-    )
+variable "storageNetwork" {
+  type = object(
+    {
+      name               = string
+      resourceGroupName  = string
+    }
   )
 }
 
-variable "virtualNetwork" {
-  type = object(
+variable "storageEndpointSubnets" {
+  type = list(object(
     {
-      name                = string
-      resourceGroupName   = string
-      subnetNameStorage   = string
-      subnetNameStorageHA = string
-      subnetNameCache     = string
+      name               = string
+      regionName         = string
+      virtualNetworkName = string
     }
-  )
+  ))
 }
 
 data "azurerm_key_vault" "vault" {
@@ -199,7 +196,7 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = var.virtualNetwork.name != "" ? 0 : 1
+  count   = local.useOverrideConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -209,27 +206,31 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+data "azurerm_resource_group" "network" {
+  name = data.azurerm_virtual_network.storage.resource_group_name
 }
 
-data "azurerm_subnet" "storage" {
-  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetNameStorage : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storage].name
-  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
+data "azurerm_virtual_network" "storage" {
+  name                 = local.useOverrideConfig ? var.storageNetwork.name : data.terraform_remote_state.network[0].outputs.storageNetwork.name
+  resource_group_name  = local.useOverrideConfig ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+}
+
+data "azurerm_subnet" "storage_1" {
+  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage1 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.storage1].name
+  resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.storage.name
+}
+
+data "azurerm_subnet" "storage_2" {
+  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage2 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.storage2].name
+  resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
 data "azurerm_subnet" "storage_netapp" {
-  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetNameStorage : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storageNetApp].name
-  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
-}
-
-data "azurerm_subnet" "storage_ha" {
-  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetNameStorageHA : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.storageHA].name
-  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
+  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage1 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.storageNetApp].name
+  resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
 data "azuread_service_principal" "hpc_cache" {
@@ -241,32 +242,31 @@ data "http" "current_host" {
 }
 
 locals {
+  useOverrideConfig = var.storageNetwork.name != ""
+  storageEndpointSubnets = local.useOverrideConfig ? var.storageEndpointSubnets : data.terraform_remote_state.network[0].outputs.storageEndpointSubnets
   privateDnsZones = distinct(flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpointType in storageAccount.privateEndpointTypes : {
-        privateDnsZoneName = "privatelink.${privateEndpointType}.core.windows.net"
+        name = "privatelink.${privateEndpointType}.core.windows.net"
       }
     ] if storageAccount.name != ""
   ]))
   privateEndpoints = flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpointType in storageAccount.privateEndpointTypes : {
-        privateEndpointType = privateEndpointType
+        type                = privateEndpointType
         privateDnsZoneName  = "privatelink.${privateEndpointType}.core.windows.net"
         storageAccountName  = storageAccount.name
         storageAccountId    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${storageAccount.name}"
       }
     ] if storageAccount.name != ""
   ])
-  serviceEndpointSubnets = var.virtualNetwork.name != "" ? [ var.virtualNetwork.subnetNameStorage, var.virtualNetwork.subnetNameCache ] : [
-    for subnet in data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets : subnet.name if contains(subnet.serviceEndpoints, "Microsoft.Storage")
-  ]
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
-        blobContainerName       = blobContainer.name
-        blobContainerAccessType = blobContainer.accessType
-        storageAccountName      = storageAccount.name
+        name               = blobContainer.name
+        accessType         = blobContainer.accessType
+        storageAccountName = storageAccount.name
       }
     ] if storageAccount.name != ""
   ])
@@ -274,8 +274,8 @@ locals {
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : [
         for blob in fileset(blobContainer.name, "*") : {
-          blobName           = blob
-          blobContainerName  = blobContainer.name
+          name               = blob
+          containerName      = blobContainer.name
           storageAccountName = storageAccount.name
         }
       ]
@@ -286,8 +286,8 @@ locals {
       for blobContainer in storageAccount.blobContainers : [
         for blobDirectory in blobContainer.localDirectories : [
           for blob in fileset(blobContainer.name, "/${blobDirectory}/**") : {
-            blobName           = blob
-            blobContainerName  = blobContainer.name
+            name               = blob
+            containerName      = blobContainer.name
             storageAccountName = storageAccount.name
           }
         ]
@@ -297,13 +297,21 @@ locals {
   fileShares = flatten([
     for storageAccount in var.storageAccounts : [
       for fileShare in storageAccount.fileShares : {
-        fileShareName      = fileShare.name
-        fileShareTier      = fileShare.tier
-        fileShareSize      = fileShare.sizeGiB
-        fileAccessProtocol = fileShare.protocol
+        name               = fileShare.name
+        tier               = fileShare.tier
+        size               = fileShare.sizeGiB
+        accessProtocol     = fileShare.protocol
         storageAccountName = storageAccount.name
       }
     ] if storageAccount.name != ""
+  ])
+  netAppVolumes = flatten([
+    for capacityPool in var.netAppAccount.capacityPools : [
+      for volume in capacityPool.volumes : merge(
+        {capacityPoolName = capacityPool.name},
+        volume
+      ) if volume.name != ""
+    ] if capacityPool.name != "" && var.netAppAccount.name != ""
   ])
   hammerspaceImagePublisher = "hammerspace"
   hammerspaceImageProduct   = "hammerspace-4-6-5-byol"
@@ -328,7 +336,7 @@ locals {
       "networks": {
         "eth0": {
           "cluster_ips": [
-            "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage.address_prefixes[0]))[0]}"
+            "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage_1.address_prefixes[0]))[0]}"
           ]
         },
         "eth1": {
@@ -342,7 +350,7 @@ locals {
       "domainname": var.hammerspace.domainName == "" ? "${var.hammerspace.namePrefix}.azure" : var.hammerspace.domainName
       "metadata": {
         "ips": [
-          "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage.address_prefixes[0]))[0]}"
+          "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage_1.address_prefixes[0]))[0]}"
         ]
       }
     },
@@ -358,39 +366,20 @@ locals {
       "hostname": "@HOSTNAME@"
     }
   }
-  netAppCapacityPools = flatten([
-    for netAppAccount in var.netAppAccounts : [
-      for capacityPool in netAppAccount.capacityPools : {
-        netAppAccountName = netAppAccount.name
-        capacityPool      = capacityPool
-      } if capacityPool.name != ""
-    ] if netAppAccount.name != ""
-  ])
-  netAppVolumes = flatten([
-    for netAppAccount in var.netAppAccounts : [
-      for capacityPool in netAppAccount.capacityPools : [
-        for volume in capacityPool.volumes : {
-          netAppAccountName = netAppAccount.name
-          capacityPoolName  = capacityPool.name
-          volume            = volume
-        } if volume.name != ""
-      ] if capacityPool.name != ""
-    ] if netAppAccount.name != ""
-  ])
-}
-
-resource "azurerm_resource_group" "storage" {
-  name     = var.resourceGroupName
-  location = module.global.regionName
 }
 
 ##################################################################################
 # Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction) #
 ##################################################################################
 
+resource "azurerm_resource_group" "storage" {
+  name     = var.resourceGroupName
+  location = data.azurerm_virtual_network.storage.location
+}
+
 resource "azurerm_storage_account" "storage" {
   for_each = {
-    for x in var.storageAccounts : x.name => x if x.name != ""
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.name != ""
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.storage.name
@@ -408,7 +397,8 @@ resource "azurerm_storage_account" "storage" {
     content {
       default_action = "Deny"
       virtual_network_subnet_ids = [
-        for x in local.serviceEndpointSubnets : "${data.azurerm_virtual_network.network.id}/subnets/${x}"
+        for storageEndpointSubnet in local.storageEndpointSubnets :
+          "${data.azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${storageEndpointSubnet.virtualNetworkName}/subnets/${storageEndpointSubnet.name}"
       ]
       ip_rules = [
         jsondecode(data.http.current_host.response_body).ip
@@ -419,20 +409,20 @@ resource "azurerm_storage_account" "storage" {
 
 resource "azurerm_private_dns_zone" "zones" {
   for_each = {
-    for x in local.privateDnsZones : x.privateDnsZoneName => x
+    for privateDnsZone in local.privateDnsZones : privateDnsZone.name => privateDnsZone
   }
-  name                = each.value.privateDnsZoneName
+  name                = each.value.name
   resource_group_name = azurerm_resource_group.storage.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "zone_links" {
   for_each = {
-    for x in local.privateDnsZones : x.privateDnsZoneName => x
+    for privateDnsZone in local.privateDnsZones : privateDnsZone.name => privateDnsZone
   }
-  name                  = data.azurerm_virtual_network.network.name
+  name                  = data.azurerm_virtual_network.storage.name
   resource_group_name   = azurerm_resource_group.storage.name
-  private_dns_zone_name = each.value.privateDnsZoneName
-  virtual_network_id    = data.azurerm_virtual_network.network.id
+  private_dns_zone_name = each.value.name
+  virtual_network_id    = data.azurerm_virtual_network.storage.id
   depends_on = [
     azurerm_private_dns_zone.zones
   ]
@@ -440,18 +430,18 @@ resource "azurerm_private_dns_zone_virtual_network_link" "zone_links" {
 
 resource "azurerm_private_endpoint" "storage" {
   for_each = {
-    for x in local.privateEndpoints : "${x.storageAccountName}.${x.privateEndpointType}" => x
+    for privateEndpoint in local.privateEndpoints : "${privateEndpoint.storageAccountName}.${privateEndpoint.type}" => privateEndpoint
   }
-  name                = "${each.value.storageAccountName}.${each.value.privateEndpointType}"
+  name                = "${each.value.storageAccountName}.${each.value.type}"
   resource_group_name = azurerm_resource_group.storage.name
   location            = azurerm_resource_group.storage.location
-  subnet_id           = data.azurerm_subnet.storage.id
+  subnet_id           = data.azurerm_subnet.storage_1.id
   private_service_connection {
     name                           = each.value.storageAccountName
     private_connection_resource_id = each.value.storageAccountId
     is_manual_connection           = false
     subresource_names = [
-      each.value.privateEndpointType
+      each.value.type
     ]
   }
   private_dns_zone_group {
@@ -468,7 +458,7 @@ resource "azurerm_private_endpoint" "storage" {
 
 resource "azurerm_role_assignment" "storage_account_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   for_each = {
-    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != ""
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableBlobNfsV3 && storageAccount.name != ""
   }
   role_definition_name = "Storage Account Contributor"
   principal_id         = data.azuread_service_principal.hpc_cache.object_id
@@ -480,7 +470,7 @@ resource "azurerm_role_assignment" "storage_account_contributor" { # https://doc
 
 resource "azurerm_role_assignment" "storage_blob_data_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   for_each = {
-    for x in var.storageAccounts : x.name => x if x.enableBlobNfsV3 && x.name != ""
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableBlobNfsV3 && storageAccount.name != ""
   }
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = data.azuread_service_principal.hpc_cache.object_id
@@ -492,10 +482,10 @@ resource "azurerm_role_assignment" "storage_blob_data_contributor" { # https://d
 
 resource "azurerm_storage_container" "containers" {
   for_each = {
-    for x in local.blobContainers : "${x.storageAccountName}.${x.blobContainerName}" => x
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer
   }
-  name                  = each.value.blobContainerName
-  container_access_type = each.value.blobContainerAccessType
+  name                  = each.value.name
+  container_access_type = each.value.accessType
   storage_account_name  = each.value.storageAccountName
   depends_on = [
     azurerm_private_endpoint.storage
@@ -504,12 +494,12 @@ resource "azurerm_storage_container" "containers" {
 
 resource "azurerm_storage_blob" "blobs" {
   for_each = {
-    for x in setunion(local.blobRootFiles, local.blobDirectoryFiles) : "${x.storageAccountName}.${x.blobName}" => x
+    for blob in setunion(local.blobRootFiles, local.blobDirectoryFiles) : "${blob.storageAccountName}.${blob.name}" => blob
   }
-  name                   = each.value.blobName
+  name                   = each.value.name
   storage_account_name   = each.value.storageAccountName
-  storage_container_name = each.value.blobContainerName
-  source                 = "${path.cwd}/${each.value.blobContainerName}/${each.value.blobName}"
+  storage_container_name = each.value.containerName
+  source                 = "${path.cwd}/${each.value.containerName}/${each.value.name}"
   type                   = "Block"
   depends_on = [
     azurerm_storage_container.containers
@@ -518,15 +508,77 @@ resource "azurerm_storage_blob" "blobs" {
 
 resource "azurerm_storage_share" "shares" {
   for_each = {
-    for x in local.fileShares : "${x.storageAccountName}.${x.fileShareName}" => x
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare
   }
-  name                 = each.value.fileShareName
-  access_tier          = each.value.fileShareTier
+  name                 = each.value.name
+  access_tier          = each.value.tier
   storage_account_name = each.value.storageAccountName
-  enabled_protocol     = each.value.fileAccessProtocol
-  quota                = each.value.fileShareSize
+  enabled_protocol     = each.value.accessProtocol
+  quota                = each.value.size
   depends_on = [
     azurerm_private_endpoint.storage
+  ]
+}
+
+######################################################################################################
+# NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
+######################################################################################################
+
+resource "azurerm_resource_group" "netapp" {
+  count    = var.netAppAccount.name != "" ? 1 : 0
+  name     = "${var.resourceGroupName}.NetApp"
+  location = data.azurerm_virtual_network.storage.location
+}
+
+resource "azurerm_netapp_account" "storage" {
+  count               = var.netAppAccount.name != "" ? 1 : 0
+  name                = var.netAppAccount.name
+  resource_group_name = azurerm_resource_group.netapp[0].name
+  location            = azurerm_resource_group.netapp[0].location
+}
+
+resource "azurerm_netapp_pool" "storage" {
+  for_each = {
+    for capacityPool in var.netAppAccount.capacityPools : capacityPool.name => capacityPool if var.netAppAccount.name != ""
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.netapp[0].name
+  location            = azurerm_resource_group.netapp[0].location
+  size_in_tb          = each.value.sizeTiB
+  service_level       = each.value.serviceLevel
+  account_name        = var.netAppAccount.name
+  depends_on = [
+    azurerm_netapp_account.storage
+  ]
+}
+
+resource "azurerm_netapp_volume" "storage" {
+  for_each = {
+    for volume in local.netAppVolumes : "${volume.capacityPoolName}.${volume.name}" => volume
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.netapp[0].name
+  location            = azurerm_resource_group.netapp[0].location
+  storage_quota_in_gb = each.value.sizeGiB
+  service_level       = each.value.serviceLevel
+  volume_path         = each.value.mountPath
+  protocols           = each.value.protocols
+  pool_name           = each.value.capacityPoolName
+  account_name        = var.netAppAccount.name
+  subnet_id           = data.azurerm_subnet.storage_netapp.id
+  dynamic "export_policy_rule" {
+    for_each = each.value.exportPolicies
+    content {
+      rule_index          = export_policy_rule.value["ruleIndex"]
+      unix_read_only      = export_policy_rule.value["readOnly"]
+      unix_read_write     = export_policy_rule.value["readWrite"]
+      root_access_enabled = export_policy_rule.value["rootAccess"]
+      protocols_enabled   = export_policy_rule.value["protocols"]
+      allowed_clients     = export_policy_rule.value["allowedClients"]
+    }
+  }
+  depends_on = [
+    azurerm_netapp_pool.storage
   ]
 }
 
@@ -534,29 +586,45 @@ resource "azurerm_storage_share" "shares" {
 # Hammerspace (https://azuremarketplace.microsoft.com/en-US/marketplace/apps/hammerspace.hammerspace_4_6_5) #
 #############################################################################################################
 
+resource "azurerm_marketplace_agreement" "hammerspace" {
+  count     = var.hammerspace.namePrefix != "" ? 1 : 0
+  publisher = local.hammerspaceImagePublisher
+  offer     = local.hammerspaceImageProduct
+  plan      = local.hammerspaceImageName
+}
+
+resource "azurerm_resource_group" "hammerspace" {
+  count    = var.hammerspace.namePrefix != "" ? 1 : 0
+  name     = "${var.resourceGroupName}.Hammerspace"
+  location = data.azurerm_virtual_network.storage.location
+  depends_on = [
+    azurerm_marketplace_agreement.hammerspace
+  ]
+}
+
 resource "azurerm_availability_set" "storage_anvil" {
   count               = var.hammerspace.namePrefix != "" ? 1 : 0
   name                = "${var.hammerspace.namePrefix}Anvil"
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
+  resource_group_name = azurerm_resource_group.hammerspace[0].name
+  location            = azurerm_resource_group.hammerspace[0].location
 }
 
 resource "azurerm_availability_set" "storage_dsx" {
   count               = var.hammerspace.namePrefix != "" ? 1 : 0
   name                = "${var.hammerspace.namePrefix}DSX"
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
+  resource_group_name = azurerm_resource_group.hammerspace[0].name
+  location            = azurerm_resource_group.hammerspace[0].location
 }
 
 resource "azurerm_lb" "storage" {
   count               = var.hammerspace.namePrefix != "" ? 1 : 0
   name                = "${var.hammerspace.namePrefix}LB"
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
+  resource_group_name = azurerm_resource_group.hammerspace[0].name
+  location            = azurerm_resource_group.hammerspace[0].location
   sku                 = "Standard"
   frontend_ip_configuration {
     name      = "FrontendConfig"
-    subnet_id = data.azurerm_subnet.storage.id
+    subnet_id = data.azurerm_subnet.storage_1.id
   }
 }
 
@@ -568,13 +636,13 @@ resource "azurerm_lb_backend_address_pool" "storage" {
 
 resource "azurerm_network_interface_backend_address_pool_association" "storage_anvil" {
   for_each = {
-    for x in local.hammerspaceNodesAnvil : x.name => x
+    for anvilNode in local.hammerspaceNodesAnvil : anvilNode.name => anvilNode
   }
   backend_address_pool_id = azurerm_lb_backend_address_pool.storage[0].id
-  network_interface_id    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
+  network_interface_id    = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}_1"
   ip_configuration_name   = "ipConfig"
   depends_on = [
-    azurerm_network_interface.storage_anvil
+    azurerm_network_interface.storage_anvil_1
   ]
 }
 
@@ -601,41 +669,41 @@ resource "azurerm_lb_probe" "storage" {
   port            = 4505
 }
 
-resource "azurerm_network_interface" "storage_anvil" {
+resource "azurerm_network_interface" "storage_anvil_1" {
   for_each = {
-    for x in local.hammerspaceNodesAnvil : x.name => x
+    for anvilNode in local.hammerspaceNodesAnvil : anvilNode.name => anvilNode
   }
-  name                = each.value.name
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
+  name                = "${each.value.name}_1"
+  resource_group_name = azurerm_resource_group.hammerspace[0].name
+  location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage.id
+    subnet_id                     = data.azurerm_subnet.storage_1.id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
-resource "azurerm_network_interface" "storage_anvil_ha" {
+resource "azurerm_network_interface" "storage_anvil_2" {
   for_each = {
-    for x in local.hammerspaceNodesAnvil : x.name => x
+    for anvilNode in local.hammerspaceNodesAnvil : anvilNode.name => anvilNode
   }
-  name                = "${each.value.name}HA"
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
+  name                = "${each.value.name}_2"
+  resource_group_name = azurerm_resource_group.hammerspace[0].name
+  location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage_ha.id
+    subnet_id                     = data.azurerm_subnet.storage_2.id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
 resource "azurerm_linux_virtual_machine" "storage_anvil" {
   for_each = {
-    for x in local.hammerspaceNodesAnvil : x.name => x
+    for anvilNode in local.hammerspaceNodesAnvil : anvilNode.name => anvilNode
   }
   name                            = each.value.name
-  resource_group_name             = azurerm_resource_group.storage.name
-  location                        = azurerm_resource_group.storage.location
+  resource_group_name             = azurerm_resource_group.hammerspace[0].name
+  location                        = azurerm_resource_group.hammerspace[0].location
   size                            = var.hammerspace.anvilNode.size
   admin_username                  = var.hammerspace.anvilNode.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
@@ -645,8 +713,8 @@ resource "azurerm_linux_virtual_machine" "storage_anvil" {
     replace(replace(replace(jsonencode(local.hammerspaceCustomDataAnvil), "@ANVILIP@", azurerm_lb.storage[0].frontend_ip_configuration[0].private_ip_address), "@HA_MODE@", each.value.index == 0 ? "Primary" : "Secondary"), "@HOSTNAME@", each.value.name)
   )
   network_interface_ids = [
-    "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}",
-    "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}HA"
+    "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}_1",
+    "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}_2"
   ]
   os_disk {
     disk_size_gb         = var.hammerspace.anvilNode.osDisk.sizeGB
@@ -665,18 +733,18 @@ resource "azurerm_linux_virtual_machine" "storage_anvil" {
     version   = local.hammerspaceImageVersion
   }
   depends_on = [
-    azurerm_network_interface.storage_anvil,
-    azurerm_network_interface.storage_anvil_ha
+    azurerm_network_interface.storage_anvil_1,
+    azurerm_network_interface.storage_anvil_2
   ]
 }
 
 resource "azurerm_managed_disk" "storage_anvil" {
   for_each = {
-    for x in local.hammerspaceNodesAnvil : x.name => x
+    for anvilNode in local.hammerspaceNodesAnvil : anvilNode.name => anvilNode
   }
   name                 = each.value.name
-  resource_group_name  = azurerm_resource_group.storage.name
-  location             = azurerm_resource_group.storage.location
+  resource_group_name  = azurerm_resource_group.hammerspace[0].name
+  location             = azurerm_resource_group.hammerspace[0].location
   storage_account_type = each.value.dataDisk.storageType
   disk_size_gb         = each.value.dataDisk.sizeGB
   create_option        = "Empty"
@@ -684,10 +752,10 @@ resource "azurerm_managed_disk" "storage_anvil" {
 
 resource "azurerm_virtual_machine_data_disk_attachment" "storage_anvil" {
   for_each = {
-    for x in local.hammerspaceNodesAnvil : x.name => x
+    for anvilNode in local.hammerspaceNodesAnvil : anvilNode.name => anvilNode
   }
-  virtual_machine_id = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
-  managed_disk_id    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/disks/${each.value.name}"
+  virtual_machine_id = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  managed_disk_id    = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/disks/${each.value.name}"
   caching            = each.value.dataDisk.cachingType
   lun                = each.value.index
   depends_on = [
@@ -698,14 +766,14 @@ resource "azurerm_virtual_machine_data_disk_attachment" "storage_anvil" {
 
 resource "azurerm_virtual_machine_extension" "storage_anvil" {
   for_each = {
-    for x in local.hammerspaceNodesAnvil : x.name => x
+    for anvilNode in local.hammerspaceNodesAnvil : anvilNode.name => anvilNode
   }
   name                       = "SetAdminPassword"
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
   auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  virtual_machine_id         = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   protected_settings = jsonencode({
     "commandToExecute": "ADMIN_PASSWORD='${data.azurerm_key_vault_secret.admin_password.value}' /usr/bin/hs-init-admin-pw"
   })
@@ -716,25 +784,25 @@ resource "azurerm_virtual_machine_extension" "storage_anvil" {
 
 resource "azurerm_network_interface" "storage_dsx" {
   for_each = {
-    for x in local.hammerspaceNodesDsx : x.name => x
+    for dsxNode in local.hammerspaceNodesDsx : dsxNode.name => dsxNode
   }
   name                = each.value.name
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
+  resource_group_name = azurerm_resource_group.hammerspace[0].name
+  location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage.id
+    subnet_id                     = data.azurerm_subnet.storage_1.id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
 resource "azurerm_linux_virtual_machine" "storage_dsx" {
   for_each = {
-    for x in local.hammerspaceNodesDsx : x.name => x
+    for dsxNode in local.hammerspaceNodesDsx : dsxNode.name => dsxNode
   }
   name                            = each.value.name
-  resource_group_name             = azurerm_resource_group.storage.name
-  location                        = azurerm_resource_group.storage.location
+  resource_group_name             = azurerm_resource_group.hammerspace[0].name
+  location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.size
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
@@ -744,7 +812,7 @@ resource "azurerm_linux_virtual_machine" "storage_dsx" {
     replace(replace(jsonencode(local.hammerspaceCustomDataDsx), "@ANVILIP@", azurerm_lb.storage[0].frontend_ip_configuration[0].private_ip_address), "@HOSTNAME@", each.value.name)
   )
   network_interface_ids = [
-    "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
+    "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
   os_disk {
     disk_size_gb         = each.value.osDisk.sizeGB
@@ -769,11 +837,11 @@ resource "azurerm_linux_virtual_machine" "storage_dsx" {
 
 resource "azurerm_managed_disk" "storage_dsx" {
   for_each = {
-    for x in local.hammerspaceDisksDsx : x.name => x
+    for dsxDisk in local.hammerspaceDisksDsx : dsxDisk.name => dsxDisk
   }
   name                 = each.value.name
-  resource_group_name  = azurerm_resource_group.storage.name
-  location             = azurerm_resource_group.storage.location
+  resource_group_name  = azurerm_resource_group.hammerspace[0].name
+  location             = azurerm_resource_group.hammerspace[0].location
   storage_account_type = each.value.dataDisk.storageType
   disk_size_gb         = each.value.dataDisk.sizeGB
   create_option        = "Empty"
@@ -781,10 +849,10 @@ resource "azurerm_managed_disk" "storage_dsx" {
 
 resource "azurerm_virtual_machine_data_disk_attachment" "storage_dsx" {
   for_each = {
-    for x in local.hammerspaceDisksDsx : x.name => x
+    for dsxDisk in local.hammerspaceDisksDsx : dsxDisk.name => dsxDisk
   }
-  virtual_machine_id = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.machineName}"
-  managed_disk_id    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/disks/${each.value.name}"
+  virtual_machine_id = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.machineName}"
+  managed_disk_id    = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/disks/${each.value.name}"
   caching            = each.value.dataDisk.cachingType
   lun                = each.value.index
   depends_on = [
@@ -795,14 +863,14 @@ resource "azurerm_virtual_machine_data_disk_attachment" "storage_dsx" {
 
 resource "azurerm_virtual_machine_extension" "storage_dsx" {
   for_each = {
-    for x in local.hammerspaceNodesDsx : x.name => x
+    for dsxNode in local.hammerspaceNodesDsx : dsxNode.name => dsxNode
   }
   name                       = "SetAdminPassword"
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
   auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.storage.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  virtual_machine_id         = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   protected_settings = jsonencode({
     "commandToExecute": "ADMIN_PASSWORD='${data.azurerm_key_vault_secret.admin_password.value}' /usr/bin/hs-init-admin-pw"
   })
@@ -811,76 +879,10 @@ resource "azurerm_virtual_machine_extension" "storage_dsx" {
   ]
 }
 
-######################################################################################################
-# NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
-######################################################################################################
-
-resource "azurerm_netapp_account" "storage" {
-  for_each = {
-    for x in var.netAppAccounts : x.name => x if x.name != ""
-  }
-  name                = each.value.name
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
-}
-
-resource "azurerm_netapp_pool" "storage" {
-  for_each = {
-    for x in local.netAppCapacityPools : "${x.netAppAccountName}.${x.capacityPool.name}" => x
-  }
-  name                = each.value.capacityPool.name
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
-  size_in_tb          = each.value.capacityPool.sizeTiB
-  service_level       = each.value.capacityPool.serviceLevel
-  account_name        = each.value.netAppAccountName
-  depends_on = [
-    azurerm_netapp_account.storage
-  ]
-}
-
-resource "azurerm_netapp_volume" "storage" {
-  for_each = {
-    for x in local.netAppVolumes : "${x.netAppAccountName}.${x.capacityPoolName}.${x.volume.name}" => x
-  }
-  name                = each.value.volume.name
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
-  storage_quota_in_gb = each.value.volume.sizeGiB
-  service_level       = each.value.volume.serviceLevel
-  volume_path         = each.value.volume.mountPath
-  protocols           = each.value.volume.protocols
-  pool_name           = each.value.capacityPoolName
-  account_name        = each.value.netAppAccountName
-  subnet_id           = data.azurerm_subnet.storage_netapp.id
-  dynamic "export_policy_rule" {
-    for_each = each.value.volume.exportPolicies
-    content {
-      rule_index          = export_policy_rule.value["ruleIndex"]
-      unix_read_only      = export_policy_rule.value["readOnly"]
-      unix_read_write     = export_policy_rule.value["readWrite"]
-      root_access_enabled = export_policy_rule.value["rootAccess"]
-      protocols_enabled   = export_policy_rule.value["protocols"]
-      allowed_clients     = export_policy_rule.value["allowedClients"]
-    }
-  }
-  depends_on = [
-    azurerm_netapp_pool.storage
-  ]
-}
-
-output "regionName" {
-  value = module.global.regionName
-}
-
 output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
 output "storageAccounts" {
   value = var.storageAccounts
-}
-
-output "netAppAccounts" {
-  value = var.netAppAccounts
 }

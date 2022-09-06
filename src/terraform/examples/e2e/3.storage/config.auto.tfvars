@@ -1,6 +1,9 @@
 resourceGroupName = "ArtistAnywhere.Storage"
 
-# Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction)
+##################################################################################
+# Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction) #
+##################################################################################
+
 storageAccounts = [
   {
     name                 = "azrender1" // Name must be globally unique (lowercase alphanumeric)
@@ -56,7 +59,50 @@ storageAccounts = [
   }
 ]
 
-# Hammerspace (https://azuremarketplace.microsoft.com/en-US/marketplace/apps/hammerspace.hammerspace_4_6_5)
+######################################################################################################
+# NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
+######################################################################################################
+
+netAppAccount = {
+  name = ""
+  capacityPools = [
+    {
+      name         = "CapacityPool"
+      sizeTiB      = 4
+      serviceLevel = "Standard"
+      volumes = [
+        {
+          name         = "Show"
+          sizeGiB      = 4096
+          serviceLevel = "Standard"
+          mountPath    = "show"
+          protocols = [
+            "NFSv3"
+          ]
+          exportPolicies = [
+            {
+              ruleIndex  = 1
+              readOnly   = false
+              readWrite  = true
+              rootAccess = true
+              protocols = [
+                "NFSv3"
+              ]
+              allowedClients = [
+                "0.0.0.0/0"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+#############################################################################################################
+# Hammerspace (https://azuremarketplace.microsoft.com/en-US/marketplace/apps/hammerspace.hammerspace_4_6_5) #
+#############################################################################################################
+
 hammerspace = {
   namePrefix = ""
   domainName = ""
@@ -104,50 +150,19 @@ hammerspace = {
   }
 }
 
-# NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)
-netAppAccounts = [
+####################################################################################
+# Optional override configuration when not using Terraform remote state management #
+####################################################################################
+
+storageNetwork = {
+  name               = ""
+  resourceGroupName  = ""
+}
+
+storageEndpointSubnets = [
   {
-    name = ""
-    capacityPools = [
-      {
-        name         = "CapacityPool"
-        sizeTiB      = 4
-        serviceLevel = "Standard"
-        volumes = [
-          {
-            name         = "Show"
-            sizeGiB      = 4096
-            serviceLevel = "Standard"
-            mountPath    = "show"
-            protocols = [
-              "NFSv3"
-            ]
-            exportPolicies = [
-              {
-                ruleIndex  = 1
-                readOnly   = false
-                readWrite  = true
-                rootAccess = true
-                protocols = [
-                  "NFSv3"
-                ]
-                allowedClients = [
-                  "0.0.0.0/0"
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
+    name               = ""
+    regionName         = ""
+    virtualNetworkName = ""
   }
 ]
-
-# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview)
-virtualNetwork = {
-  name                = ""
-  resourceGroupName   = ""
-  subnetNameStorage   = "Storage"
-  subnetNameStorageHA = "StorageHA"
-  subnetNameCache     = "Cache"
-}

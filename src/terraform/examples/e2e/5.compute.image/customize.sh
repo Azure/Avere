@@ -10,6 +10,7 @@ echo "Customize (Start): Platform Utilities"
 yum -y install epel-release
 yum -y install python-pip
 yum -y install nfs-utils
+yum -y install cmake
 yum -y install gcc
 yum -y install git
 yum -y install jq
@@ -17,12 +18,12 @@ echo "Customize (End): Platform Utilities"
 
 echo "Customize (Start): Image Build Parameters"
 buildConfig=$(echo $buildConfigEncoded | base64 -d)
-subnetName=$(echo $buildConfig | jq -r .subnetName)
+machineType=$(echo $buildConfig | jq -r .machineType)
 machineSize=$(echo $buildConfig | jq -r .machineSize)
 outputVersion=$(echo $buildConfig | jq -r .outputVersion)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
 adminPassword=$(echo $buildConfig | jq -r .adminPassword)
-echo "Subnet Name: $subnetName"
+echo "Machine Type: $machineType"
 echo "Machine Size: $machineSize"
 echo "Output Version: $outputVersion"
 echo "Render Engines: $renderEngines"
@@ -56,7 +57,7 @@ echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
 yum -y install azure-cli
 echo "Customize (End): Azure CLI"
 
-if [ $subnetName == "Workstation" ]; then
+if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): NodeJS"
   nodeDirectory="$binDiretory/nodejs"
   versionInfo="16.17.0"
@@ -71,7 +72,7 @@ if [ $subnetName == "Workstation" ]; then
   echo "Customize (End): NodeJS"
 fi
 
-if [ $outputVersion == "0.0.0" ]; then # Scheduler
+if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
   echo "Customize (End): NFS Server"
@@ -79,7 +80,7 @@ if [ $outputVersion == "0.0.0" ]; then # Scheduler
   echo "Customize (Start): CycleCloud"
   cycleCloudRepoPath="/etc/yum.repos.d/cyclecloud.repo"
   echo "[cyclecloud]" > $cycleCloudRepoPath
-  echo "name=cyclecloud" >> $cycleCloudRepoPath
+  echo "name=CycleCloud" >> $cycleCloudRepoPath
   echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $cycleCloudRepoPath
   echo "gpgcheck=1" >> $cycleCloudRepoPath
   echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $cycleCloudRepoPath
@@ -157,7 +158,7 @@ curl -o $installFile -L $downloadUrl
 tar -xzf $installFile
 echo "Customize (End): Deadline Download"
 
-if [ $outputVersion == "0.0.0" ]; then # Scheduler
+if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Deadline Repository"
   installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
   ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> $installFile.txt
@@ -174,10 +175,10 @@ fi
 echo "Customize (Start): Deadline Client"
 installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
 installArgs="--mode unattended"
-if [ $outputVersion == "0.0.0" ]; then # Scheduler
+if [ $machineType == "Scheduler" ]; then
   installArgs="$installArgs --slavestartup false --launcherdaemon false"
 else
-  [ $subnetName == "Farm" ] && workerStartup=true || workerStartup=false
+  [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
   installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
 fi
 ./$installFile $installArgs &> $installFile.txt
@@ -214,28 +215,21 @@ if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (End): PBRT"
 fi
 
-if [[ $renderEngines == *Unreal* ]]; then
-  echo "Customize (Start): OpenSSL"
-  versionInfo="1.1.1q"
-  installFile="openssl-$versionInfo.tar.gz"
-  downloadUrl="https://www.openssl.org/source/$installFile"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  cd openssl*
-  ./config
-  make
-  make install
-  export LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib64
-  echo "/usr/local/lib64" > /etc/ld.so.conf.d/openssl-$versionInfo.conf
-  sslProfile="/etc/profile.d/openssl.sh"
-  echo "OPENSSL_PATH=/usr/local/bin" > $sslProfile
-  echo "export OPENSSL_PATH" >> $sslProfile
-  echo 'PATH=$OPENSSL_PATH:$PATH' >> $sslProfile
-  echo "export PATH" >> $sslProfile
-  source $sslProfile
-  cd $binDirectory
-  echo "Customize (End): OpenSSL"
+if [[ $renderEngines == *Unity* ]]; then
+  echo "Customize (Start): Unity"
+  unityRepoPath="/etc/yum.repos.d/unityhub.repo"
+  echo "[unityhub]" > $unityRepoPath
+  echo "name=Unity Hub" >> $unityRepoPath
+  echo "baseurl=https://hub.unity3d.com/linux/repos/rpm/stable" >> $unityRepoPath
+  echo "enabled=1" >> $unityRepoPath
+  echo "gpgcheck=1" >> $unityRepoPath
+  echo "gpgkey=https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" >> $unityRepoPath
+  echo "repo_gpgcheck=1" >> $unityRepoPath
+  yum -y install unityhub
+  echo "Customize (End): Unity"
+fi
 
+if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (Start): Unreal Engine"
   yum -y install libicu
   versionInfo="5.0.3"
@@ -246,8 +240,8 @@ if [[ $renderEngines == *Unreal* ]]; then
   tar -xzf $installFile -C $rendererPathUnreal
   mv $rendererPathUnreal/Unreal*/* $rendererPathUnreal
   $rendererPathUnreal/Setup.sh
-  $rendererPathUnreal/GenerateProjectFiles.sh
-  make -C $rendererPathUnreal
+  # $rendererPathUnreal/GenerateProjectFiles.sh
+  # make -C $rendererPathUnreal
   echo "Customize (End): Unreal Engine"
 fi
 
@@ -307,7 +301,7 @@ if [[ $renderEngines == *Houdini* ]]; then
   echo "Customize (End): Houdini"
 fi
 
-if [ $subnetName == "Farm" ]; then
+if [ $machineType == "Farm" ]; then
   if [ -f /tmp/onTerminate.sh ]; then
     echo "Customize (Start): Scheduled Event Handler"
     mkdir -p /opt/cycle/jetpack/scripts
@@ -317,7 +311,7 @@ if [ $subnetName == "Farm" ]; then
   fi
 fi
 
-if [ $subnetName == "Workstation" ]; then
+if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Workstation Desktop"
   yum -y groups install "KDE Plasma Workspaces"
   echo "Customize (End): Workstation Desktop"
@@ -329,7 +323,6 @@ if [ $subnetName == "Workstation" ]; then
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
   ./$installFile &> $installFile.txt
-  yum -y install epel-release
   yum -y install usb-vhci
   yum -y install pcoip-agent-graphics
   echo "Customize (End): Teradici PCoIP Agent"
@@ -350,14 +343,3 @@ downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$stora
 curl -o $installFile -L $downloadUrl
 chmod +x $installFile
 echo "Customize (End): VRay Benchmark"
-
-# echo "Customize (Start): NVIDIA OptiX SDK"
-# versionInfo="7.5.0"
-# installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
-# downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
-# curl -o $installFile -L $downloadUrl
-# chmod +x $installFile
-# localDirectory="NVIDIA-OptiX"
-# mkdir $localDirectory
-# ./$installFile --prefix=$localDirectory --skip-license
-# echo "Customize (End): NVIDIA OptiX SDK"

@@ -140,7 +140,6 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 1. Run `cd ~/e2e/4.storage.cache` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. For [Avere vFXT](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) deployment only,
-   * Make sure the [Avere vFXT image terms have been accepted](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-prereqs#accept-software-terms) (only required once per Azure subscription)
    * Make sure you have at least 96 (32 x 3) cores quota available for [Esv3](https://docs.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)

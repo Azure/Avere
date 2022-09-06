@@ -7,9 +7,9 @@ imageDefinitions = [
     name       = "Linux"
     type       = "Linux"
     generation = "V2"
-    publisher  = "OpenLogic"
-    offer      = "CentOS"
-    sku        = "7_9-Gen2"
+    publisher  = "AlmaLinux"
+    offer      = "AlmaLinux"
+    sku        = "9-Gen2"
   },
   {
     name       = "WinScheduler"
@@ -40,118 +40,116 @@ imageDefinitions = [
 # Image Builder (https://docs.microsoft.com/azure/virtual-machines/image-builder-overview)
 imageTemplates = [
   {
-    name = "LnxScheduler"
+    name  = "LnxScheduler"
     image = {
       definitionName   = "Linux"
-      sourceType       = "PlatformImage"
       customizeScript  = "customize.sh"
       terminateScript1 = "terminate.sh"
       terminateScript2 = "onTerminate.sh"
       inputVersion     = "Latest"
     }
     build = {
-      subnetName     = "Farm"
-      machineSize    = "Standard_D8as_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120                // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineType    = "Scheduler"
+      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 120               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = false
       renderEngines  = []
     }
   },
   {
-    name = "LnxFarm"
+    name  = "LnxFarm"
     image = {
       definitionName   = "Linux"
-      sourceType       = "PlatformImage"
       customizeScript  = "customize.sh"
       terminateScript1 = "terminate.sh"
       terminateScript2 = "onTerminate.sh"
       inputVersion     = "Latest"
     }
     build = {
-      subnetName     = "Farm"
+      machineType    = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 256                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      osDiskSizeGB   = 512                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 240                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       runElevated    = false
       renderEngines  = [
         "Blender",
         "PBRT",
-        # "Unreal",
+        "Unity",
+        "Unreal",
         # "Maya",
         # "Houdini"
       ]
     }
   },
   {
-    name = "LnxArtist"
+    name  = "LnxArtist"
     image = {
       definitionName   = "Linux"
-      sourceType       = "PlatformImage"
       customizeScript  = "customize.sh"
       terminateScript1 = "terminate.sh"
       terminateScript2 = "onTerminate.sh"
       inputVersion     = "Latest"
     }
     build = {
-      subnetName     = "Workstation"
+      machineType    = "Workstation"
       machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 256                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      osDiskSizeGB   = 512                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 240                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      outputVersion  = "5.0.0"
+      outputVersion  = "2.0.0"
       runElevated    = false
       renderEngines  = [
         "Blender",
         "PBRT",
-        # "Unreal",
+        "Unity",
+        "Unreal",
         # "Maya",
         # "Houdini"
       ]
     }
   },
   {
-    name = "WinScheduler"
+    name  = "WinScheduler"
     image = {
       definitionName   = "WinScheduler"
-      sourceType       = "PlatformImage"
       customizeScript  = "customize.ps1"
       terminateScript1 = "terminate.ps1"
       terminateScript2 = "onTerminate.ps1"
       inputVersion     = "Latest"
     }
     build = {
-      subnetName     = "Farm"
-      machineSize    = "Standard_D8as_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                  // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 180                // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineType    = "Scheduler"
+      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 180               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = true
       renderEngines  = []
     }
   },
   {
-    name = "WinFarm"
+    name  = "WinFarm"
     image = {
       definitionName   = "WinFarm"
-      sourceType       = "PlatformImage"
       customizeScript  = "customize.ps1"
       terminateScript1 = "terminate.ps1"
       terminateScript2 = "onTerminate.ps1"
       inputVersion     = "Latest"
     }
     build = {
-      subnetName     = "Farm"
+      machineType    = "Farm"
       machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 256                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      osDiskSizeGB   = 512                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 480                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       runElevated    = false
       renderEngines  = [
         "Blender",
         "PBRT",
-        # "Unreal",
+        "Unity",
+        "Unreal",
         # "Maya",
         # "3DSMax",
         # "Houdini"
@@ -159,26 +157,26 @@ imageTemplates = [
     }
   },
   {
-    name = "WinArtist"
+    name  = "WinArtist"
     image = {
       definitionName   = "WinArtist"
-      sourceType       = "PlatformImage"
       customizeScript  = "customize.ps1"
       terminateScript1 = "terminate.ps1"
       terminateScript2 = "onTerminate.ps1"
       inputVersion     = "Latest"
     }
     build = {
-      subnetName     = "Workstation"
+      machineType    = "Workstation"
       machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 256                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      osDiskSizeGB   = 512                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
       timeoutMinutes = 480                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      outputVersion  = "4.0.0"
+      outputVersion  = "2.0.0"
       runElevated    = false
       renderEngines  = [
         "Blender",
         "PBRT",
-        # "Unreal",
+        "Unity",
+        "Unreal",
         # "Maya",
         # "3DSMax",
         # "Houdini"
@@ -187,8 +185,11 @@ imageTemplates = [
   }
 ]
 
-# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview)
-virtualNetwork = {
+####################################################################################
+# Optional override configuration when not using Terraform remote state management #
+####################################################################################
+
+computeNetwork = {
   name              = ""
   resourceGroupName = ""
 }

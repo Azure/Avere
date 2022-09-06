@@ -29,7 +29,7 @@ virtualMachineScaleSets = [
         fileSystemMounts = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
           "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
-          "cache.artist.studio:/mnt/show/farm /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          "cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemPermissions = [
           "chmod 777 /mnt/show/write"
@@ -76,7 +76,7 @@ virtualMachineScaleSets = [
         fileSystemMounts = [
           "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:",
           "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:",
-          "mount -o anon nolock \\\\cache.artist.studio\\mnt\\farm R:"
+          "mount -o anon nolock \\\\cache.artist.studio\\mnt\\show R:"
         ]
         fileSystemPermissions = [
           "icacls W: /grant Everyone:F"
@@ -98,8 +98,11 @@ virtualMachineScaleSets = [
   }
 ]
 
-# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview)
-virtualNetwork = {
+####################################################################################
+# Optional override configuration when not using Terraform remote state management #
+####################################################################################
+
+computeNetwork = {
   name              = ""
   subnetName        = ""
   resourceGroupName = ""

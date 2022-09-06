@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.20.0"
+      version = "~>3.21.1"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -18,7 +18,7 @@ terraform {
 provider "azurerm" {
   features {
     resource_group {
-      prevent_deletion_if_contains_resources = false
+      prevent_deletion_if_contains_resources = true
     }
   }
 }
@@ -89,57 +89,51 @@ variable "vfxtCache" {
 }
 
 variable "storageTargetsNfs" {
-  type = list(
-    object(
-      {
-        name        = string
-        storageHost = string
-        hpcCache = object(
-          {
-            usageModel = string
-          }
-        )
-        vfxtCache = object(
-          {
-            cachePolicy    = string
-            nfsConnections = number
-            customSettings = list(string)
-          }
-        )
-        namespaceJunctions = list(
-          object(
-            {
-              storageExport = string
-              storagePath   = string
-              clientPath    = string
-            }
-          )
-        )
-      }
-    )
-  )
+  type = list(object(
+    {
+      name        = string
+      storageHost = string
+      hpcCache = object(
+        {
+          usageModel = string
+        }
+      )
+      vfxtCache = object(
+        {
+          cachePolicy    = string
+          nfsConnections = number
+          customSettings = list(string)
+        }
+      )
+      namespaceJunctions = list(object(
+        {
+          storageExport = string
+          storagePath   = string
+          clientPath    = string
+        }
+      ))
+    }
+  ))
 }
 
 variable "storageTargetsNfsBlob" {
-  type = list(
-    object(
-      {
-        name       = string
-        clientPath = string
-        usageModel = string
-        storage = object(
-          {
-            resourceGroupName = string
-            accountName       = string
-            containerName     = string
-          }
-        )
-      }
-    )
-  )
+  type = list(object(
+    {
+      name       = string
+      clientPath = string
+      usageModel = string
+      storage = object(
+        {
+          resourceGroupName = string
+          accountName       = string
+          containerName     = string
+        }
+      )
+    }
+  ))
 }
 
-variable "virtualNetwork" {
+variable "computeNetwork" {
   type = object(
     {
       name               = string
@@ -173,7 +167,7 @@ data "azurerm_key_vault_key" "cache_encryption" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useRemoteStateNetwork
+  count   = local.useOverrideConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -188,33 +182,32 @@ data "azurerm_resource_group" "identity" {
 }
 
 data "azurerm_resource_group" "network" {
-  name = data.azurerm_virtual_network.network.resource_group_name
+  name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
-data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+data "azurerm_virtual_network" "compute" {
+  name                 = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name  = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = var.virtualNetwork.name != "" ? var.virtualNetwork.subnetName : data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].name
-  resource_group_name  = var.virtualNetwork.name != "" ? var.virtualNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
-  virtual_network_name = var.virtualNetwork.name != "" ? var.virtualNetwork.name : data.terraform_remote_state.network[0].outputs.virtualNetwork.name
+  name                 = local.useOverrideConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].name
+  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  count                = local.useRemoteStateNetwork
-  name                 = data.terraform_remote_state.network[0].outputs.virtualNetworkPrivateDns.zoneName
-  resource_group_name  = data.terraform_remote_state.network[0].outputs.resourceGroupName
+  count                = local.useOverrideConfig ? 0 : 1
+  name                 = data.terraform_remote_state.network[0].outputs.privateDns.zoneName
+  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 locals {
-  useRemoteStateNetwork   = var.virtualNetwork.name != "" ? 0 : 1
-  vfxtControllerAddress   = var.virtualNetwork.name != "" ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 39)
-  vfxtVServerFirstAddress = var.virtualNetwork.name != "" ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.cache].addressSpace[0], 40)
+  useOverrideConfig       = var.computeNetwork.name != ""
+  deployPrivateDnsZone    = local.useOverrideConfig && var.computeNetwork.privateDns.zoneName != ""
+  vfxtControllerAddress   = local.useOverrideConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 39)
+  vfxtVServerFirstAddress = local.useOverrideConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 40)
   vfxtVServerAddressCount = 12
-  deployPrivateDnsZone    = var.virtualNetwork.privateDns.zoneName != "" ? 1 : 0
-  updatePrivateDnsZone    = var.virtualNetwork.privateDns.zoneName != "" ? 1 : local.useRemoteStateNetwork
 }
 
 resource "azurerm_resource_group" "cache" {
@@ -248,7 +241,7 @@ resource "azurerm_hpc_cache" "cache" {
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
   for_each = {
-    for x in var.storageTargetsNfs : x.name => x if var.enableHpcCache && x.name != ""
+    for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if var.enableHpcCache && storageTargetNfs.name != ""
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.cache.name
@@ -267,7 +260,7 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
 
 resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   for_each = {
-    for x in var.storageTargetsNfsBlob : x.name => x if var.enableHpcCache && x.name != ""
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.enableHpcCache && storageTargetNfsBlob.name != ""
   }
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.cache.name
@@ -310,6 +303,13 @@ resource "azurerm_role_assignment" "cache_contributor" {
   scope                = azurerm_resource_group.cache.id
 }
 
+resource "azurerm_marketplace_agreement" "cache" {
+  count     = var.enableHpcCache ? 0 : 1
+  publisher = "Microsoft-Avere"
+  offer     = "vFXT"
+  plan      = "Avere-vFXT-Controller"
+}
+
 module "vfxt_controller" {
   count                             = var.enableHpcCache ? 0 : 1
   source                            = "github.com/Azure/Avere/src/terraform/modules/controller3"
@@ -319,8 +319,8 @@ module "vfxt_controller" {
   admin_username                    = var.vfxtCache.controller.adminUsername
   admin_password                    = data.azurerm_key_vault_secret.admin_password.value
   ssh_key_data                      = var.vfxtCache.controller.sshPublicKey != "" ? var.vfxtCache.controller.sshPublicKey : null
-  virtual_network_name              = data.azurerm_virtual_network.network.name
-  virtual_network_resource_group    = data.azurerm_virtual_network.network.resource_group_name
+  virtual_network_name              = data.azurerm_virtual_network.compute.name
+  virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
   static_ip_address                 = local.vfxtControllerAddress
   user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.identity.id
@@ -342,8 +342,8 @@ resource "avere_vfxt" "cache" {
   image_id                        = var.vfxtCache.cluster.imageId
   node_cache_size                 = var.vfxtCache.cluster.nodeSize
   vfxt_node_count                 = var.vfxtCache.cluster.nodeCount
-  azure_network_name              = data.azurerm_virtual_network.network.name
-  azure_network_resource_group    = data.azurerm_virtual_network.network.resource_group_name
+  azure_network_name              = data.azurerm_virtual_network.compute.name
+  azure_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   azure_subnet_name               = data.azurerm_subnet.cache.name
   controller_address              = module.vfxt_controller[count.index].controller_address
   controller_admin_username       = module.vfxt_controller[count.index].controller_username
@@ -361,7 +361,7 @@ resource "avere_vfxt" "cache" {
   user_assigned_managed_identity  = data.azurerm_user_assigned_identity.identity.id
   dynamic "core_filer" {
     for_each = {
-      for x in var.storageTargetsNfs : x.name => x if x.name != ""
+      for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if storageTargetNfs.name != ""
     }
     content {
       name                      = core_filer.value["name"]
@@ -380,7 +380,8 @@ resource "avere_vfxt" "cache" {
     }
   }
   depends_on = [
-    module.vfxt_controller
+    module.vfxt_controller,
+    azurerm_marketplace_agreement.cache
   ]
 }
 
@@ -390,30 +391,25 @@ resource "avere_vfxt" "cache" {
 
 resource "azurerm_private_dns_zone" "network" {
   count               = local.deployPrivateDnsZone
-  name                = var.virtualNetwork.privateDns.zoneName
+  name                = var.computeNetwork.privateDns.zoneName
   resource_group_name = azurerm_resource_group.cache.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   count                 = local.deployPrivateDnsZone
-  name                  = var.virtualNetwork.name
+  name                  = var.computeNetwork.name
   resource_group_name   = azurerm_resource_group.cache.name
   private_dns_zone_name = azurerm_private_dns_zone.network[0].name
-  virtual_network_id    = data.azurerm_virtual_network.network.id
-  registration_enabled  = var.virtualNetwork.privateDns.enableAutoRegistration
+  virtual_network_id    = data.azurerm_virtual_network.compute.id
+  registration_enabled  = var.computeNetwork.privateDns.enableAutoRegistration
 }
 
 resource "azurerm_private_dns_a_record" "cache" {
-  count               = local.updatePrivateDnsZone
   name                = "cache"
-  resource_group_name = local.useRemoteStateNetwork == 0 ? azurerm_private_dns_zone.network[0].resource_group_name : data.azurerm_private_dns_zone.network[0].resource_group_name
-  zone_name           = local.useRemoteStateNetwork == 0 ? azurerm_private_dns_zone.network[0].name : data.azurerm_private_dns_zone.network[0].name
+  resource_group_name = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].resource_group_name : data.azurerm_private_dns_zone.network[0].resource_group_name
+  zone_name           = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].name : data.azurerm_private_dns_zone.network[0].name
   records             = var.enableHpcCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
   ttl                 = 300
-}
-
-output "regionName" {
-  value = module.global.regionName
 }
 
 output "resourceGroupName" {

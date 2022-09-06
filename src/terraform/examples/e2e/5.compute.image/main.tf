@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.20.0"
+      version = "~>3.21.1"
     }
   }
   backend "azurerm" {
@@ -14,7 +14,7 @@ terraform {
 provider "azurerm" {
   features {
     resource_group {
-      prevent_deletion_if_contains_resources = false
+      prevent_deletion_if_contains_resources = true
     }
     template_deployment {
       delete_nested_items_during_deletion = true
@@ -35,52 +35,47 @@ variable "imageGalleryName" {
 }
 
 variable "imageDefinitions" {
-  type = list(
-    object(
-      {
-        name       = string
-        type       = string
-        generation = string
-        publisher  = string
-        offer      = string
-        sku        = string
-      }
-    )
-  )
+  type = list(object(
+    {
+      name       = string
+      type       = string
+      generation = string
+      publisher  = string
+      offer      = string
+      sku        = string
+    }
+  ))
 }
 
 variable "imageTemplates" {
-  type = list(
-    object(
-      {
-        name = string
-        image = object(
-          {
-            definitionName   = string
-            sourceType       = string
-            customizeScript  = string
-            terminateScript1 = string
-            terminateScript2 = string
-            inputVersion     = string
-          }
-        )
-        build = object(
-          {
-            subnetName     = string
-            machineSize    = string
-            osDiskSizeGB   = number
-            timeoutMinutes = number
-            outputVersion  = string
-            runElevated    = bool
-            renderEngines  = list(string)
-          }
-        )
-      }
-    )
-  )
+  type = list(object(
+    {
+      name       = string
+      image = object(
+        {
+          definitionName   = string
+          customizeScript  = string
+          terminateScript1 = string
+          terminateScript2 = string
+          inputVersion     = string
+        }
+      )
+      build = object(
+        {
+          machineType    = string
+          machineSize    = string
+          osDiskSizeGB   = number
+          timeoutMinutes = number
+          outputVersion  = string
+          runElevated    = bool
+          renderEngines  = list(string)
+        }
+      )
+    }
+  ))
 }
 
-variable "virtualNetwork" {
+variable "computeNetwork" {
   type = object(
     {
       name              = string
@@ -105,7 +100,7 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = var.virtualNetwork.name == "" ? 1 : 0
+  count   = local.useOverrideConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -116,12 +111,12 @@ data "terraform_remote_state" "network" {
 }
 
 data "azurerm_resource_group" "network" {
-  name = data.azurerm_virtual_network.network.resource_group_name
+  name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
-data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+data "azurerm_virtual_network" "compute" {
+  name                = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_storage_account" "storage" {
@@ -130,6 +125,7 @@ data "azurerm_storage_account" "storage" {
 }
 
 locals {
+  useOverrideConfig       = var.computeNetwork.name != ""
   customizeScriptLinux    = "customize.sh"
   customizeScriptWindows  = "customize.ps1"
   terminateScript1Linux   = "terminate.sh"
@@ -220,6 +216,15 @@ resource "azurerm_shared_image_gallery" "gallery" {
   location            = azurerm_resource_group.image.location
 }
 
+resource "azurerm_marketplace_agreement" "gallery" {
+  for_each = {
+    for imageDefinition in var.imageDefinitions : imageDefinition.name => imageDefinition if imageDefinition.type == "Linux"
+  }
+  publisher = each.value.publisher
+  offer     = each.value.offer
+  plan      = each.value.sku
+}
+
 resource "azurerm_shared_image" "definitions" {
   count               = length(var.imageDefinitions)
   name                = var.imageDefinitions[count.index].name
@@ -233,6 +238,9 @@ resource "azurerm_shared_image" "definitions" {
     offer     = var.imageDefinitions[count.index].offer
     sku       = var.imageDefinitions[count.index].sku
   }
+  depends_on = [
+    azurerm_marketplace_agreement.gallery
+  ]
 }
 
 resource "azurerm_resource_group_template_deployment" "image_builder" {
@@ -254,12 +262,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     },
     "imageScriptContainer" = {
       value = "https://${data.azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
-    },
-    "virtualNetworkName" = {
-      value = data.azurerm_virtual_network.network.name
-    },
-    "virtualNetworkResourceGroupName" = {
-      value = data.azurerm_virtual_network.network.resource_group_name
     },
     "keyVaultSecretAdminPassword" = {
       value = data.azurerm_key_vault_secret.admin_password.value
@@ -283,12 +285,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           "type": "array"
         },
         "imageScriptContainer": {
-          "type": "string"
-        },
-        "virtualNetworkName": {
-          "type": "string"
-        },
-        "virtualNetworkResourceGroupName": {
           "type": "string"
         },
         "keyVaultSecretAdminPassword": {
@@ -438,17 +434,15 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           "properties": {
             "vmProfile": {
               "vmSize": "[parameters('imageTemplates')[copyIndex()].build.machineSize]",
-              "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].build.osDiskSizeGB]",
-              "vnetConfig": {
-                "subnetId": "[resourceId(parameters('virtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('imageTemplates')[copyIndex()].build.subnetName)]"
-              }
+              "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].build.osDiskSizeGB]"
             },
             "source": {
-              "type": "[parameters('imageTemplates')[copyIndex()].image.sourceType]",
+              "type": "PlatformImage",
               "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
               "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
-              "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
+              "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]",
+              "planInfo": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Linux'), json(concat('{\"planName\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku), '\", \"planProduct\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer), '\", \"planPublisher\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher), '\"}')), json('null'))]"
             },
             "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.outputVersion, '0.0.0'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminPassword'))))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
@@ -485,10 +479,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     azurerm_storage_blob.terminate_script2_linux,
     azurerm_storage_blob.terminate_script2_windows
   ]
-}
-
-output "regionName" {
-  value = module.global.regionName
 }
 
 output "resourceGroupName" {

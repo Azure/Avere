@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.20.0"
+      version = "~>3.21.1"
     }
   }
   backend "azurerm" {
@@ -14,7 +14,7 @@ terraform {
 provider "azurerm" {
   features {
     resource_group {
-      prevent_deletion_if_contains_resources = false
+      prevent_deletion_if_contains_resources = true
     }
     virtual_machine_scale_set {
       force_delete                  = false
@@ -33,72 +33,70 @@ variable "resourceGroupName" {
 }
 
 variable "virtualMachineScaleSets" {
-  type = list(
-    object(
-      {
-        name    = string
-        imageId = string
-        machine = object (
-          {
-            size  = string
-            count = number
-          }
-        )
-        operatingSystem = object(
-          {
-            type = string
-            disk = object(
-              {
-                storageType     = string
-                cachingType     = string
-                ephemeralEnable = bool
-              }
-            )
-          }
-        )
-        adminLogin = object(
-          {
-            userName            = string
-            sshPublicKey        = string
-            disablePasswordAuth = bool
-          }
-        )
-        customExtension = object(
-          {
-            enabled  = bool
-            fileName = string
-            parameters = object(
-              {
-                fileSystemMounts      = list(string)
-                fileSystemPermissions = list(string)
-              }
-            )
-          }
-        )
-        monitorExtension = object(
-          {
-            enabled = bool
-          }
-        )
-        spot = object(
-          {
-            enabled         = bool
-            evictionPolicy  = string
-            machineMaxPrice = number
-          }
-        )
-        terminationNotification = object(
-          {
-            enabled      = bool
-            timeoutDelay = string
-          }
-        )
-      }
-    )
-  )
+  type = list(object(
+    {
+      name    = string
+      imageId = string
+      machine = object (
+        {
+          size  = string
+          count = number
+        }
+      )
+      operatingSystem = object(
+        {
+          type = string
+          disk = object(
+            {
+              storageType     = string
+              cachingType     = string
+              ephemeralEnable = bool
+            }
+          )
+        }
+      )
+      adminLogin = object(
+        {
+          userName            = string
+          sshPublicKey        = string
+          disablePasswordAuth = bool
+        }
+      )
+      customExtension = object(
+        {
+          enabled  = bool
+          fileName = string
+          parameters = object(
+            {
+              fileSystemMounts      = list(string)
+              fileSystemPermissions = list(string)
+            }
+          )
+        }
+      )
+      monitorExtension = object(
+        {
+          enabled = bool
+        }
+      )
+      spot = object(
+        {
+          enabled         = bool
+          evictionPolicy  = string
+          machineMaxPrice = number
+        }
+      )
+      terminationNotification = object(
+        {
+          enabled      = bool
+          timeoutDelay = string
+        }
+      )
+    }
+  ))
 }
 
-variable "virtualNetwork" {
+variable "computeNetwork" {
   type = object(
     {
       name              = string
@@ -129,7 +127,7 @@ data "azurerm_log_analytics_workspace" "monitor" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = var.virtualNetwork.name == "" ? 1 : 0
+  count   = local.useOverrideConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -139,15 +137,19 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+data "azurerm_virtual_network" "compute" {
+  name                 = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name  = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.farm].name : var.virtualNetwork.subnetName
-  resource_group_name  = data.azurerm_virtual_network.network.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.network.name
+  name                 = local.useOverrideConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.farm].name
+  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.compute.name
+}
+
+locals {
+  useOverrideConfig = var.computeNetwork.name != ""
 }
 
 resource "azurerm_role_assignment" "farm" {
@@ -163,7 +165,7 @@ resource "azurerm_resource_group" "farm" {
 
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   for_each = {
-    for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.operatingSystem.type == "Linux"
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name
@@ -255,7 +257,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
 
 resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   for_each = {
-    for x in var.virtualMachineScaleSets : x.name => x if x.name != "" && x.operatingSystem.type == "Windows"
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Windows"
   }
   name                   = each.value.name
   resource_group_name    = azurerm_resource_group.farm.name
@@ -334,10 +336,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       timeout = each.value.terminationNotification.timeoutDelay
     }
   }
-}
-
-output "regionName" {
-  value = module.global.regionName
 }
 
 output "resourceGroupName" {

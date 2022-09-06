@@ -25,8 +25,6 @@ keyVault = {
       value = "P@ssword1234"
     }
   ]
-  certificates = [
-  ]
   keys = [
     {
       name = "CacheEncryption"
@@ -41,6 +39,8 @@ keyVault = {
         "wrapKey"
       ]
     }
+  ]
+  certificates = [
   ]
 }
 

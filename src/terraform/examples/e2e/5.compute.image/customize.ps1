@@ -17,22 +17,34 @@ Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
 Write-Host "Customize (End): Resize OS Disk"
 
 Write-Host "Customize (Start): Git"
-$versionInfo = "2.37.2.windows.2"
-$installFile = "Git-$versionInfo-64-bit.exe" -replace ".windows", ""
-$downloadUrl = "https://github.com/git-for-windows/git/releases/download/v$versionInfo/$installFile"
+$versionInfo = "2.37.3"
+$installFile = "Git-$versionInfo-64-bit.exe"
+$downloadUrl = "https://github.com/git-for-windows/git/releases/download/v$versionInfo.windows.1/$installFile"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 $toolPathGit = "C:\Program Files\Git\bin"
 Write-Host "Customize (End): Git"
 
+Write-Host "Customize (Start): Visual Studio"
+$versionInfo = "2022"
+$installFile = "VisualStudioSetup.exe"
+$downloadUrl = "https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS$versionInfo&includeRecommended=true"
+$workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended --add Microsoft.NetCore.Component.Runtime.3.1 --add Component.Unreal"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+$toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
+$toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+$toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
+Write-Host "Customize (End): Visual Studio"
+
 Write-Host "Customize (Start): Image Build Parameters"
 $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
 $buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
-$subnetName = $buildConfig.subnetName
+$machineType = $buildConfig.machineType
 $machineSize = $buildConfig.machineSize
 $outputVersion = $buildConfig.outputVersion
 $renderEngines = $buildConfig.renderEngines -join ","
-Write-Host "Subnet Name: $subnetName"
+Write-Host "Machine Type: $machineType"
 Write-Host "Machine Size: $machineSize"
 Write-Host "Output Version: $outputVersion"
 Write-Host "Render Engines: $renderEngines"
@@ -59,17 +71,17 @@ Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 Write-Host "Customize (End): Azure CLI"
 
-if ($subnetName -eq "Workstation") {
+if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): NodeJS"
-  $versionInfo="16.17.0"
-  $installFile="node-v$versionInfo-x64.msi"
-  $downloadUrl="https://nodejs.org/dist/v$versionInfo/$installFile"
+  $versionInfo = "16.17.0"
+  $installFile = "node-v$versionInfo-x64.msi"
+  $downloadUrl = "https://nodejs.org/dist/v$versionInfo/$installFile"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   Write-Host "Customize (End): NodeJS"
 }
 
-if ($outputVersion -eq "0.0.0") { # Scheduler
+if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): NFS Server"
   Install-WindowsFeature -Name "FS-NFS-Service"
   Write-Host "Customize (End): NFS Server"
@@ -127,7 +139,7 @@ Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Expand-Archive -Path $installFile
 Write-Host "Customize (End): Deadline Download"
 
-if ($outputVersion -eq "0.0.0") { # Scheduler
+if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): Deadline Repository"
   netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
@@ -149,10 +161,10 @@ netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action
 Set-Location -Path "Deadline*"
 $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
 $installArgs = "--mode unattended"
-if ($outputVersion -eq "0.0.0") { # Scheduler
+if ($machineType -eq "Scheduler") {
   $installArgs = "$installArgs --slavestartup false --launcherservice false"
 } else {
-  if ($subnetName -eq "Farm") {
+  if ($machineType -eq "Farm") {
     $workerStartup = "true"
   } else {
     $workerStartup = "false"
@@ -185,6 +197,16 @@ if ($renderEngines -like "*PBRT*") {
   Write-Host "Customize (End): PBRT"
 }
 
+if ($renderEngines -like "*Unity*") {
+  Write-Host "Customize (Start): Unity"
+  $versionInfo = "3.0"
+  $installFile = "UnityHubSetup.exe"
+  $downloadUrl = "$storageContainerUrl/Unity/$versionInfo/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): Unity"
+}
+
 if ($renderEngines -like "*Unreal*") {
   Write-Host "Customize (Start): Unreal Engine"
   netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
@@ -203,25 +225,16 @@ if ($renderEngines -like "*Unreal*") {
   $setupScript = $setupScript.Replace("pause", "rem pause")
   Set-Content -Path $installFile -Value $setupScript
   Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  if ($subnetName -eq "Workstation") {
-    Write-Host "Customize (Start): Visual Studio"
-    $versionInfo = "2022"
-    $installFile = "VisualStudioSetup.exe"
-    $downloadUrl = "https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS$versionInfo&includeRecommended=true"
-    $workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended --add Microsoft.NetCore.Component.Runtime.3.1 --add Component.Unreal"
-    $toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
-    $toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-    $toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
-    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-    Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-    Write-Host "Customize (End): Visual Studio"
+  if ($machineType -eq "Workstation") {
+    Write-Host "Customize (Start): Unreal Visual Studio Project Files"
     & "$rendererPathUnreal\GenerateProjectFiles.bat"
     [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
     Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait -RedirectStandardOutput "msbuild-ue5.output.txt" -RedirectStandardError "msbuild-ue5.error.txt"
-    Write-Host "Customize (Start): Visual Studio Plugin"
+    Write-Host "Customize (End): Unreal Visual Studio Project Files"
+    Write-Host "Customize (Start): Unreal Visual Studio Plugin"
     $installFile = "UnrealVS.vsix"
     Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-    Write-Host "Customize (End): Visual Studio Plugin"
+    Write-Host "Customize (End): Unreal Visual Studio Plugin"
     Write-Host "Customize (Start): Unreal Editor Shortcut"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Epic Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
@@ -265,7 +278,7 @@ if ($renderEngines -like "*Houdini*") {
   $installFile = "houdini-$versionInfo-win64-vc142.exe"
   $downloadUrl = "$storageContainerUrl/Houdini/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  if ($subnetName -eq "Workstation") {
+  if ($machineType -eq "Workstation") {
     $installArgs = "/MainApp=Yes"
   } else {
     $installArgs = "/HoudiniEngineOnly=Yes"
@@ -283,7 +296,7 @@ if ($renderEngines -like "*Houdini*") {
   Write-Host "Customize (End): Houdini"
 }
 
-if ($subnetName -eq "Farm") {
+if ($machineType -eq "Farm") {
   if (Test-Path -Path "C:\Windows\Temp\onTerminate.ps1") {
     Write-Host "Customize (Start): Scheduled Event Handler"
     New-Item -ItemType Directory -Path "C:\cycle\jetpack\scripts" -Force
@@ -298,7 +311,7 @@ if ($subnetName -eq "Farm") {
   Write-Host "Customize (End): Privacy Experience"
 }
 
-if ($subnetName -eq "Workstation") {
+if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Deadline Monitor Shortcut"
   $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
   $scriptShell = New-Object -ComObject WScript.Shell
@@ -331,14 +344,6 @@ $installFile = "vray-benchmark-$versionInfo.exe"
 $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 $installFile = "vray-benchmark-$versionInfo-cli.exe"
-$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$installFile$storageContainerSas"
+$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Write-Host "Customize (End): VRay Benchmark"
-
-# Write-Host "Customize (Start): NVIDIA OptiX SDK"
-# $versionInfo = "7.5.0"
-# $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64.exe"
-# $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$installFile$storageContainerSas"
-# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-# Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-# Write-Host "Customize (End): NVIDIA OptiX SDK"

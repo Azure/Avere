@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.20.0"
+      version = "~>3.21.1"
     }
   }
   backend "azurerm" {
@@ -14,7 +14,7 @@ terraform {
 provider "azurerm" {
   features {
     resource_group {
-      prevent_deletion_if_contains_resources = false
+      prevent_deletion_if_contains_resources = true
     }
     virtual_machine {
       delete_os_disk_on_deletion     = true
@@ -33,48 +33,46 @@ variable "resourceGroupName" {
 }
 
 variable "virtualMachines" {
-  type = list(
-    object(
-      {
-        name        = string
-        imageId     = string
-        machineSize = string
-        operatingSystem = object(
-          {
-            type = string
-            disk = object(
-              {
-                storageType = string
-                cachingType = string
-              }
-            )
-          }
-        )
-        adminLogin = object(
-          {
-            userName            = string
-            sshPublicKey        = string
-            disablePasswordAuth = bool
-          }
-        )
-        customExtension = object(
-          {
-            enabled  = bool
-            fileName = string
-            parameters = object(
-              {
-                fileSystemMounts   = list(string)
-                teradiciLicenseKey = string
-              }
-            )
-          }
-        )
-      }
-    )
-  )
+  type = list(object(
+    {
+      name        = string
+      imageId     = string
+      machineSize = string
+      operatingSystem = object(
+        {
+          type = string
+          disk = object(
+            {
+              storageType = string
+              cachingType = string
+            }
+          )
+        }
+      )
+      adminLogin = object(
+        {
+          userName            = string
+          sshPublicKey        = string
+          disablePasswordAuth = bool
+        }
+      )
+      customExtension = object(
+        {
+          enabled  = bool
+          fileName = string
+          parameters = object(
+            {
+              fileSystemMounts   = list(string)
+              teradiciLicenseKey = string
+            }
+          )
+        }
+      )
+    }
+  ))
 }
 
-variable "virtualNetwork" {
+variable "computeNetwork" {
   type = object(
     {
       name              = string
@@ -100,7 +98,7 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = var.virtualNetwork.name == "" ? 1 : 0
+  count   = local.useOverrideConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -110,15 +108,19 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_virtual_network" "network" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.name : var.virtualNetwork.name
-  resource_group_name  = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.resourceGroupName : var.virtualNetwork.resourceGroupName
+data "azurerm_virtual_network" "compute" {
+  name                 = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name  = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "workstation" {
-  name                 = var.virtualNetwork.name == "" ? data.terraform_remote_state.network[0].outputs.virtualNetwork.subnets[data.terraform_remote_state.network[0].outputs.virtualNetworkSubnetIndex.workstation].name : var.virtualNetwork.subnetName
-  resource_group_name  = data.azurerm_virtual_network.network.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.network.name
+  name                 = local.useOverrideConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.workstation].name
+  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.compute.name
+}
+
+locals {
+  useOverrideConfig = var.computeNetwork.name != ""
 }
 
 resource "azurerm_resource_group" "workstation" {
@@ -128,7 +130,7 @@ resource "azurerm_resource_group" "workstation" {
 
 resource "azurerm_network_interface" "workstation" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != ""
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
@@ -142,7 +144,7 @@ resource "azurerm_network_interface" "workstation" {
 
 resource "azurerm_linux_virtual_machine" "workstation" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.workstation.name
@@ -180,7 +182,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "workstation_linux" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.enabled && x.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Custom"
   type                       = "CustomScript"
@@ -200,7 +202,7 @@ resource "azurerm_virtual_machine_extension" "workstation_linux" {
 
 resource "azurerm_windows_virtual_machine" "workstation" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows"
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
@@ -230,7 +232,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "workstation_windows" {
   for_each = {
-    for x in var.virtualMachines : x.name => x if x.name != "" && x.customExtension.enabled && x.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Custom"
   type                       = "CustomScriptExtension"
@@ -246,10 +248,6 @@ resource "azurerm_virtual_machine_extension" "workstation_windows" {
   depends_on = [
     azurerm_windows_virtual_machine.workstation
   ]
-}
-
-output "regionName" {
-  value = module.global.regionName
 }
 
 output "resourceGroupName" {

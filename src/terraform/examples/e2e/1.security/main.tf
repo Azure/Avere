@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.20.0"
+      version = "~>3.21.1"
     }
   }
 }
@@ -11,11 +11,18 @@ terraform {
 provider "azurerm" {
   features {
     resource_group {
-      prevent_deletion_if_contains_resources = false
+      prevent_deletion_if_contains_resources = true
     }
     key_vault {
-      purge_soft_delete_on_destroy    = true
-      recover_soft_deleted_key_vaults = true
+      purge_soft_delete_on_destroy                            = true
+      purge_soft_deleted_secrets_on_destroy                   = true
+      purge_soft_deleted_keys_on_destroy                      = true
+      purge_soft_deleted_certificates_on_destroy              = true
+      purge_soft_deleted_hardware_security_modules_on_destroy = true
+      recover_soft_deleted_key_vaults                         = true
+      recover_soft_deleted_secrets                            = true
+      recover_soft_deleted_keys                               = true
+      recover_soft_deleted_certificates                       = true
     }
     log_analytics_workspace {
       permanently_delete_on_destroy = true
@@ -43,44 +50,38 @@ variable "keyVault" {
       type                    = string
       enablePurgeProtection   = bool
       softDeleteRetentionDays = number
-      secrets = list(
-        object(
-          {
-            name  = string
-            value = string
-          }
-        )
-      )
-      certificates = list(
-        object(
-          {
-            name        = string
-            subject     = string
-            issuerName  = string
-            contentType = string
-            validMonths = number
-            key = object(
-              {
-                type       = string
-                size       = number
-                reusable   = bool
-                exportable = bool
-                usage      = list(string)
-              }
-            )
-          }
-        )
-      )
-      keys = list(
-        object(
-          {
-            name       = string
-            type       = string
-            size       = number
-            operations = list(string)
-          }
-        )
-      )
+      secrets = list(object(
+        {
+          name  = string
+          value = string
+        }
+      ))
+      keys = list(object(
+        {
+          name       = string
+          type       = string
+          size       = number
+          operations = list(string)
+        }
+      ))
+      certificates = list(object(
+        {
+          name        = string
+          subject     = string
+          issuerName  = string
+          contentType = string
+          validMonths = number
+          key = object(
+            {
+              type       = string
+              size       = number
+              reusable   = bool
+              exportable = bool
+              usage      = list(string)
+            }
+          )
+        }
+      ))
     }
   )
 }
@@ -138,16 +139,27 @@ resource "azurerm_key_vault" "vault" {
 
 resource "azurerm_key_vault_secret" "secrets" {
   for_each = {
-    for x in var.keyVault.secrets : x.name => x
+    for secret in var.keyVault.secrets : secret.name => secret
   }
   name         = each.value.name
   value        = each.value.value
   key_vault_id = azurerm_key_vault.vault.id
 }
 
+resource "azurerm_key_vault_key" "keys" {
+  for_each = {
+    for key in var.keyVault.keys : key.name => key
+  }
+  name         = each.value.name
+  key_type     = each.value.type
+  key_size     = each.value.size
+  key_opts     = each.value.operations
+  key_vault_id = azurerm_key_vault.vault.id
+}
+
 resource "azurerm_key_vault_certificate" "certificates" {
   for_each = {
-    for x in var.keyVault.certificates : x.name => x
+    for certificate in var.keyVault.certificates : certificate.name => certificate
   }
   name         = each.value.name
   key_vault_id = azurerm_key_vault.vault.id
@@ -172,17 +184,6 @@ resource "azurerm_key_vault_certificate" "certificates" {
   }
 }
 
-resource "azurerm_key_vault_key" "keys" {
-  for_each = {
-    for x in var.keyVault.keys : x.name => x
-  }
-  name         = each.value.name
-  key_type     = each.value.type
-  key_size     = each.value.size
-  key_opts     = each.value.operations
-  key_vault_id = azurerm_key_vault.vault.id
-}
-
 resource "azurerm_log_analytics_workspace" "monitor" {
   name                       = var.monitorWorkspace.name
   resource_group_name        = azurerm_resource_group.security.name
@@ -191,10 +192,6 @@ resource "azurerm_log_analytics_workspace" "monitor" {
   retention_in_days          = var.monitorWorkspace.retentionDays
   internet_ingestion_enabled = var.monitorWorkspace.publicIngestEnable
   internet_query_enabled     = var.monitorWorkspace.publicQueryEnable
-}
-
-output "regionName" {
-  value = module.global.regionName
 }
 
 output "resourceGroupName" {

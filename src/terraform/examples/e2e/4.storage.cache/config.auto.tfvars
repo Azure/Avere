@@ -81,18 +81,8 @@ storageTargetsNfs = [
 storageTargetsNfsBlob = [
   {
     name       = "" // "RenderFarm"
-    clientPath = "/mnt/show/farm"
+    clientPath = "/mnt/show"
     usageModel = "WRITE_AROUND"
-    storage = {
-      resourceGroupName = "ArtistAnywhere.Storage"
-      accountName       = "azrender1"
-      containerName     = "show"
-    }
-  },
-  {
-    name       = "" // "ArtistWorkstation"
-    clientPath = "/mnt/show/workstation"
-    usageModel = "WRITE_WORKLOAD_CLOUDWS"
     storage = {
       resourceGroupName = "ArtistAnywhere.Storage"
       accountName       = "azrender1"
@@ -101,16 +91,16 @@ storageTargetsNfsBlob = [
   }
 ]
 
-################################################################################################
-# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) #
-################################################################################################
+####################################################################################
+# Optional override configuration when not using Terraform remote state management #
+####################################################################################
 
-virtualNetwork = {
+computeNetwork = {
   name              = ""
   subnetName        = ""
   resourceGroupName = ""
   privateDns = {
     zoneName               = ""
-    enableAutoRegistration = false
+    enableAutoRegistration = true
   }
 }
