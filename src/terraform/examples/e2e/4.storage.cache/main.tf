@@ -390,13 +390,13 @@ resource "avere_vfxt" "cache" {
 ###########################################################################
 
 resource "azurerm_private_dns_zone" "network" {
-  count               = local.deployPrivateDnsZone
+  count               = local.deployPrivateDnsZone ? 1 : 0
   name                = var.computeNetwork.privateDns.zoneName
   resource_group_name = azurerm_resource_group.cache.name
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "network" {
-  count                 = local.deployPrivateDnsZone
+  count                 = local.deployPrivateDnsZone ? 1 : 0
   name                  = var.computeNetwork.name
   resource_group_name   = azurerm_resource_group.cache.name
   private_dns_zone_name = azurerm_private_dns_zone.network[0].name
@@ -433,5 +433,5 @@ output "cacheMountAddresses" {
 }
 
 output "cachePrivateDnsFqdn" {
-  value = local.updatePrivateDnsZone == 0 ? "" : azurerm_private_dns_a_record.cache[0].fqdn
+  value = azurerm_private_dns_a_record.cache.fqdn
 }
