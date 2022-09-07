@@ -27,7 +27,7 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
-      export CONTROLLER_IMAGE='\/subscriptions\/a44e8215-d744-4fdf-8b42-59fb33c1a0fe\/resourceGroups\/vfxtcontroller-pipelines-sig\/providers\/Microsoft.Compute\/galleries\/vfxtcontroller_pipelines_sig\/images\/controller-builds\/versions\/20220907.53581.26'
+      export CONTROLLER_IMAGE='\/subscriptions\/a44e8215-d744-4fdf-8b42-59fb33c1a0fe\/resourceGroups\/vfxtcontroller-pipelines-sig\/providers\/Microsoft.Compute\/galleries\/vfxtcontroller_pipelines_sig\/images\/controller-builds\/versions\/202209.07.1'
       export VFXT_IMAGE='<vfxt_image>'
       export AVERE_ADMIN_PW='<avere_admin_pw>'
       export VNET_NAME='<vnet_name>'
