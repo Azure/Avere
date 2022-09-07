@@ -27,7 +27,7 @@ write_files:
       export ARM_TENANT_ID='<arm_tenant_id>'
       export REGION='<region>'
       export RESOURCE_GROUP_NAME='<resource_group_name>'
-      export CONTROLLER_IMAGE='\/subscriptions\/a44e8215-d744-4fdf-8b42-59fb33c1a0fe\/resourceGroups\/vfxtcontroller-pipelines-sig\/providers\/Microsoft.Compute\/galleries\/vfxtcontroller_pipelines_sig\/images\/controller-builds\/versions\/20220902.66421.31'
+      export CONTROLLER_IMAGE='\/subscriptions\/a44e8215-d744-4fdf-8b42-59fb33c1a0fe\/resourceGroups\/vfxtcontroller-pipelines-sig\/providers\/Microsoft.Compute\/galleries\/vfxtcontroller_pipelines_sig\/images\/controller-builds\/versions\/20220907.53581.26'
       export VFXT_IMAGE='<vfxt_image>'
       export AVERE_ADMIN_PW='<avere_admin_pw>'
       export VNET_NAME='<vnet_name>'
@@ -217,6 +217,9 @@ write_files:
       export TF_VFXT_CONFIG='<terraform_file_config>'
       export ORIGINAL_NODE_COUNT='<original_node_count>'
       export NEW_NODE_COUNT='<new_node_count>'
+
+      az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID &&
+      az account set -s $ARM_SUBSCRIPTION_ID
 
       echo "to file path for scaleup"
       cd /tf/src/terraform/examples/vfxt/${TF_VFXT_CONFIG}
