@@ -215,20 +215,20 @@ data "azurerm_virtual_network" "storage" {
   resource_group_name  = local.useOverrideConfig ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
-data "azurerm_subnet" "storage_1" {
-  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage1 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.storage1].name
+data "azurerm_subnet" "storage_primary" {
+  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage1 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.primary].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
-data "azurerm_subnet" "storage_2" {
-  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage2 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.storage2].name
+data "azurerm_subnet" "storage_secondary" {
+  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage2 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.secondary].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
 data "azurerm_subnet" "storage_netapp" {
-  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage1 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.storageNetApp].name
+  name                 = local.useOverrideConfig ? var.storageNetwork.subnetNameStorage1 : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.netApp].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
@@ -336,7 +336,7 @@ locals {
       "networks": {
         "eth0": {
           "cluster_ips": [
-            "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage_1.address_prefixes[0]))[0]}"
+            "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage_primary.address_prefixes[0]))[0]}"
           ]
         },
         "eth1": {
@@ -350,7 +350,7 @@ locals {
       "domainname": var.hammerspace.domainName == "" ? "${var.hammerspace.namePrefix}.azure" : var.hammerspace.domainName
       "metadata": {
         "ips": [
-          "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage_1.address_prefixes[0]))[0]}"
+          "@ANVILIP@/${reverse(split("/", data.azurerm_subnet.storage_primary.address_prefixes[0]))[0]}"
         ]
       }
     },
@@ -435,7 +435,7 @@ resource "azurerm_private_endpoint" "storage" {
   name                = "${each.value.storageAccountName}.${each.value.type}"
   resource_group_name = azurerm_resource_group.storage.name
   location            = azurerm_resource_group.storage.location
-  subnet_id           = data.azurerm_subnet.storage_1.id
+  subnet_id           = data.azurerm_subnet.storage_primary.id
   private_service_connection {
     name                           = each.value.storageAccountName
     private_connection_resource_id = each.value.storageAccountId
@@ -624,7 +624,7 @@ resource "azurerm_lb" "storage" {
   sku                 = "Standard"
   frontend_ip_configuration {
     name      = "FrontendConfig"
-    subnet_id = data.azurerm_subnet.storage_1.id
+    subnet_id = data.azurerm_subnet.storage_primary.id
   }
 }
 
@@ -678,7 +678,7 @@ resource "azurerm_network_interface" "storage_anvil_1" {
   location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage_1.id
+    subnet_id                     = data.azurerm_subnet.storage_primary.id
     private_ip_address_allocation = "Dynamic"
   }
 }
@@ -692,7 +692,7 @@ resource "azurerm_network_interface" "storage_anvil_2" {
   location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage_2.id
+    subnet_id                     = data.azurerm_subnet.storage_primary.id
     private_ip_address_allocation = "Dynamic"
   }
 }
@@ -791,7 +791,7 @@ resource "azurerm_network_interface" "storage_dsx" {
   location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage_1.id
+    subnet_id                     = data.azurerm_subnet.storage_primary.id
     private_ip_address_allocation = "Dynamic"
   }
 }

@@ -14,8 +14,8 @@ storageAccounts = [
     enableLargeFileShare = false       // https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share?#advanced
     enableSecureTransfer = true        // https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
     privateEndpointTypes = [           // https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
-      "blob",
-      "file"
+      # "blob",
+      # "file"
     ]
     blobContainers = [                 // https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
@@ -44,7 +44,7 @@ storageAccounts = [
     enableLargeFileShare = true          // https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share?#advanced
     enableSecureTransfer = false         // https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
     privateEndpointTypes = [             // https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
-      "file"
+      # "file"
     ]
     blobContainers = [                   // https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
     ]
