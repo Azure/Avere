@@ -44,7 +44,7 @@ computeNetworkSubnetIndex = {
 }
 
 storageNetwork = {
-  name               = "Storage" // Set name to "" to skip storage network deployment
+  name               = "Storage" # Set name to "" to skip storage network deployment
   regionName         = "WestUS2"
   addressSpace       = ["10.0.0.0/16"]
   dnsServerAddresses = []
@@ -98,8 +98,8 @@ privateDns = {
 
 networkGateway = {
   type = ""
-  //type = "Vpn"          // https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
-  //type = "ExpressRoute" // https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
+  //type = "Vpn"          # https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
+  //type = "ExpressRoute" # https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
   address = {
     type             = "Standard"
     allocationMethod = "Static"
@@ -116,7 +116,7 @@ vpnGateway = {
   generation         = "Generation2"
   enableBgp          = false
   enableActiveActive = false
-  pointToSiteClient = {
+  pointToSiteClient = { # https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
     addressSpace    = []
     certificateName = ""
     certificateData = ""
@@ -128,8 +128,8 @@ vpnGateway = {
 #########################################################################################################################
 
 vpnGatewayLocal = {
-  fqdn         = "" // Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
-  address      = "" // OR set the public IP address of your on-prem VPN gateway device. Do not set both.
+  fqdn         = "" # Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
+  address      = "" # OR set the public IP address of your on-prem VPN gateway device. Do not set both.
   addressSpace = []
   bgp = {
     enabled        = false
@@ -144,10 +144,10 @@ vpnGatewayLocal = {
 ######################################################################################################################################
 
 expressRouteGateway = {
-  sku = "" // https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
+  sku = "" # https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   connection = {
-    circuitId        = ""    // Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
+    circuitId        = ""    # Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
     authorizationKey = ""
-    enableFastPath   = false // https://docs.microsoft.com/azure/expressroute/about-fastpath
+    enableFastPath   = false # https://docs.microsoft.com/azure/expressroute/about-fastpath
   }
 }

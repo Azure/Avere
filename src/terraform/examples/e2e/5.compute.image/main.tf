@@ -100,7 +100,7 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useOverrideConfig ? 0 : 1
+  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -115,8 +115,8 @@ data "azurerm_resource_group" "network" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_storage_account" "storage" {
@@ -125,7 +125,7 @@ data "azurerm_storage_account" "storage" {
 }
 
 locals {
-  useOverrideConfig       = var.computeNetwork.name != ""
+  useDependencyConfig     = var.computeNetwork.name != ""
   customizeScriptLinux    = "customize.sh"
   customizeScriptWindows  = "customize.ps1"
   terminateScript1Linux   = "terminate.sh"
@@ -140,19 +140,19 @@ resource "azurerm_resource_group" "image" {
 }
 
 resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Virtual Machine Contributor" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  role_definition_name = "Virtual Machine Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_role_assignment" "storage" {
-  role_definition_name = "Storage Blob Data Reader" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader
+  role_definition_name = "Storage Blob Data Reader" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_storage_account.storage.id
 }
 
 resource "azurerm_role_assignment" "image" {
-  role_definition_name = "Contributor" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
+  role_definition_name = "Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.image.id
 }

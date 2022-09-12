@@ -5,7 +5,7 @@ virtualMachines = [
   {
     name        = "LnxScheduler"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
-    machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+    machineSize = "Standard_D8_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
       disk = {
@@ -15,7 +15,7 @@ virtualMachines = [
     }
     adminLogin = {
       userName            = "azadmin"
-      sshPublicKey        = "" // "ssh-rsa ..."
+      sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
     customExtension = {
@@ -34,7 +34,7 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600
         }
-        cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
+        cycleCloud = { # https://docs.microsoft.com/azure/cyclecloud/overview
           enabled = false
           storageAccount = {
             name       = ""
@@ -50,9 +50,9 @@ virtualMachines = [
     }
   },
   {
-    name        = "" // "WinScheduler"
+    name        = "" # "WinScheduler"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
-    machineSize = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
+    machineSize = "Standard_D8_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
       disk = {
@@ -62,7 +62,7 @@ virtualMachines = [
     }
     adminLogin = {
       userName            = "azadmin"
-      sshPublicKey        = "" // "ssh-rsa ..."
+      sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
     customExtension = {
@@ -81,7 +81,7 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600
         }
-        cycleCloud = { // https://docs.microsoft.com/azure/cyclecloud/overview
+        cycleCloud = { # https://docs.microsoft.com/azure/cyclecloud/overview
           enabled = false
           storageAccount = {
             name       = ""
@@ -98,9 +98,9 @@ virtualMachines = [
   }
 ]
 
-####################################################################################
-# Optional override configuration when not using Terraform remote state management #
-####################################################################################
+##############################################################################
+# Optional dependency configuration for existing Virtual Network deployments #
+##############################################################################
 
 computeNetwork = {
   name               = ""

@@ -127,7 +127,7 @@ data "azurerm_log_analytics_workspace" "monitor" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useOverrideConfig ? 0 : 1
+  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -138,22 +138,22 @@ data "terraform_remote_state" "network" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                 = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name  = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                 = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name  = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = local.useOverrideConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.farm].name
+  name                 = local.useDependencyConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 locals {
-  useOverrideConfig = var.computeNetwork.name != ""
+  useDependencyConfig = var.computeNetwork.name != ""
 }
 
 resource "azurerm_role_assignment" "farm" {
-  role_definition_name = "Virtual Machine Contributor" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  role_definition_name = "Virtual Machine Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.farm.id
 }

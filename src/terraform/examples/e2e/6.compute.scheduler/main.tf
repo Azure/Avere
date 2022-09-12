@@ -144,7 +144,7 @@ data "azurerm_log_analytics_workspace" "monitor" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useOverrideConfig ? 0 : 1
+  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -166,23 +166,23 @@ data "terraform_remote_state" "image" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                 = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name  = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                 = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name  = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = local.useOverrideConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.farm].name
+  name                 = local.useDependencyConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                 = local.useOverrideConfig ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network[0].outputs.privateDns.zoneName
+  name                 = local.useDependencyConfig ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network[0].outputs.privateDns.zoneName
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 locals {
-  useOverrideConfig      = var.computeNetwork.name != ""
+  useDependencyConfig    = var.computeNetwork.name != ""
   imageIdFarm            = var.computeFarmImage.id != "" ? var.computeFarmImage.id : "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
   imageGalleryName       = var.computeFarmImage.id != "" ? var.computeFarmImage.imageGalleryName : data.terraform_remote_state.image[0].outputs.imageGalleryName
   imageResourceGroupName = var.computeFarmImage.id != "" ? var.computeFarmImage.resourceGroupName : data.terraform_remote_state.image[0].outputs.resourceGroupName
@@ -263,21 +263,18 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     "script": "${base64encode(
-      templatefile(each.value.customExtension.fileName,
-        merge(
-          each.value.customExtension.parameters,
-          { tenantId = data.azurerm_client_config.current.tenant_id },
-          { subscriptionId = data.azurerm_client_config.current.subscription_id },
-          { regionName = module.global.regionName },
-          { networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name },
-          { networkName = data.azurerm_virtual_network.compute.name },
-          { networkSubnetName = data.azurerm_subnet.farm.name },
-          { imageIdFarm = local.imageIdFarm },
-          { imageGalleryName = local.imageGalleryName },
-          { imageResourceGroupName = local.imageResourceGroupName },
-          { adminPassword = data.azurerm_key_vault_secret.admin_password.value }
-        )
-      )
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
+        {tenantId                 = data.azurerm_client_config.current.tenant_id},
+        {subscriptionId           = data.azurerm_client_config.current.subscription_id},
+        {regionName               = module.global.regionName},
+        {networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name},
+        {networkName              = data.azurerm_virtual_network.compute.name},
+        {networkSubnetName        = data.azurerm_subnet.farm.name},
+        {imageIdFarm              = local.imageIdFarm},
+        {imageGalleryName         = local.imageGalleryName},
+        {imageResourceGroupName   = local.imageResourceGroupName},
+        {adminPassword            = data.azurerm_key_vault_secret.admin_password.value}
+      ))
     )}"
   })
   depends_on = [

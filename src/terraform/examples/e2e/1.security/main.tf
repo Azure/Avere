@@ -203,16 +203,14 @@ output "managedIdentityName" {
 }
 
 output "storage" {
-  value = merge(
-    { name = module.global.securityStorageAccountName },
-    var.storage
+  value = merge(var.storage,
+    {name = module.global.securityStorageAccountName}
   )
 }
 
 output "keyVault" {
-  value = merge(
-    { name = module.global.keyVaultName },
-    var.keyVault
+  value = merge(var.keyVault,
+    {name = module.global.keyVaultName}
   )
 }
 

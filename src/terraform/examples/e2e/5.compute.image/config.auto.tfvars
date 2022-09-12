@@ -50,9 +50,9 @@ imageTemplates = [
     }
     build = {
       machineType    = "Scheduler"
-      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D8_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 120              # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = false
       renderEngines  = []
@@ -69,9 +69,9 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 512                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_HB120rs_v2" # https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 512                   # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                   # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       runElevated    = false
       renderEngines  = [
@@ -95,9 +95,9 @@ imageTemplates = [
     }
     build = {
       machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 512                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_NV36ads_A10_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 512                       # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                       # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "2.0.0"
       runElevated    = false
       renderEngines  = [
@@ -121,9 +121,9 @@ imageTemplates = [
     }
     build = {
       machineType    = "Scheduler"
-      machineSize    = "Standard_D8s_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 180               // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_D8_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 0                # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 180              # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = true
       renderEngines  = []
@@ -140,9 +140,9 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 512                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 480                   // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_HB120rs_v2" # https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 512                   # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 480                   # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       runElevated    = false
       renderEngines  = [
@@ -167,9 +167,9 @@ imageTemplates = [
     }
     build = {
       machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" // https://docs.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 512                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 480                       // https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      machineSize    = "Standard_NV36ads_A10_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 512                       # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 480                       # https://docs.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "2.0.0"
       runElevated    = false
       renderEngines  = [
@@ -185,9 +185,9 @@ imageTemplates = [
   }
 ]
 
-####################################################################################
-# Optional override configuration when not using Terraform remote state management #
-####################################################################################
+##############################################################################
+# Optional dependency configuration for existing Virtual Network deployments #
+##############################################################################
 
 computeNetwork = {
   name              = ""

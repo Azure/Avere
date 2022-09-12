@@ -185,9 +185,8 @@ locals {
   virtualNetworks        = distinct(var.storageNetwork.name == "" ? [var.computeNetwork, var.computeNetwork] : [var.computeNetwork, var.storageNetwork])
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
-      for virtualNetworkSubnet in virtualNetwork.subnets : merge(
-        virtualNetworkSubnet,
-        {regionName = virtualNetwork.regionName},
+      for virtualNetworkSubnet in virtualNetwork.subnets : merge(virtualNetworkSubnet,
+        {regionName         = virtualNetwork.regionName},
         {virtualNetworkName = virtualNetwork.name}
       )
     ]
@@ -312,9 +311,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   ]
 }
 
-#####################################################################################################################
-# Virtual Network Peering (https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview) #
-#####################################################################################################################
+###############################################################################################################
+# Virtual Network Peering (https://docs.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
+###############################################################################################################
 
 resource "azurerm_virtual_network_peering" "network_peering_up" {
   count                        = var.networkPeering.enabled ? length(local.virtualNetworks) - 1 : 0

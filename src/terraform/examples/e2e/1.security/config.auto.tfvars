@@ -5,9 +5,9 @@
 
 # Storage (https://docs.microsoft.com/azure/storage)
 storage = {
-  accountType        = "StorageV2" // https://docs.microsoft.com/azure/storage/common/storage-account-overview
-  accountRedundancy  = "LRS"       // https://docs.microsoft.com/azure/storage/common/storage-redundancy
-  accountPerformance = "Standard"  // https://docs.microsoft.com/azure/storage/blobs/storage-blob-performance-tiers
+  accountType        = "StorageV2" # https://docs.microsoft.com/azure/storage/common/storage-account-overview
+  accountRedundancy  = "LRS"       # https://docs.microsoft.com/azure/storage/common/storage-redundancy
+  accountPerformance = "Standard"  # https://docs.microsoft.com/azure/storage/blobs/storage-blob-performance-tiers
 }
 
 # Key Vault (https://docs.microsoft.com/azure/key-vault/general/overview)

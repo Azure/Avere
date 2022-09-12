@@ -6,27 +6,27 @@ resourceGroupName = "ArtistAnywhere.Storage"
 
 storageAccounts = [
   {
-    name                 = "azrender1" // Name must be globally unique (lowercase alphanumeric)
-    type                 = "StorageV2" // https://docs.microsoft.com/azure/storage/common/storage-account-overview
-    tier                 = "Standard"  // https://docs.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
-    redundancy           = "LRS"       // https://docs.microsoft.com/azure/storage/common/storage-redundancy
-    enableBlobNfsV3      = true        // https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = false       // https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share?#advanced
-    enableSecureTransfer = true        // https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    privateEndpointTypes = [           // https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
+    name                 = "azrender1" # Name must be globally unique (lowercase alphanumeric)
+    type                 = "StorageV2" # https://docs.microsoft.com/azure/storage/common/storage-account-overview
+    tier                 = "Standard"  # https://docs.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
+    redundancy           = "LRS"       # https://docs.microsoft.com/azure/storage/common/storage-redundancy
+    enableBlobNfsV3      = true        # https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = false       # https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    enableSecureTransfer = true        # https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    privateEndpointTypes = [           # https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
       # "blob",
       # "file"
     ]
-    blobContainers = [                 // https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    blobContainers = [                 # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
         name       = "show"
         accessType = "private"
-        localDirectories = [
+        localPaths = [
           "blender"
         ]
       }
     ]
-    fileShares = [                     // https://docs.microsoft.com/azure/storage/files/storage-files-introduction
+    fileShares = [                     # https://docs.microsoft.com/azure/storage/files/storage-files-introduction
       {
         name     = "show"
         tier     = "TransactionOptimized"
@@ -36,19 +36,19 @@ storageAccounts = [
     ]
   },
   {
-    name                 = ""            // Name must be globally unique (lowercase alphanumeric)
-    type                 = "FileStorage" // https://docs.microsoft.com/azure/storage/common/storage-account-overview
-    tier                 = "Premium"     // https://docs.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
-    redundancy           = "LRS"         // https://docs.microsoft.com/azure/storage/common/storage-redundancy
-    enableBlobNfsV3      = false         // https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = true          // https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share?#advanced
-    enableSecureTransfer = false         // https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    privateEndpointTypes = [             // https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
+    name                 = "azrender2"   # Name must be globally unique (lowercase alphanumeric)
+    type                 = "FileStorage" # https://docs.microsoft.com/azure/storage/common/storage-account-overview
+    tier                 = "Premium"     # https://docs.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
+    redundancy           = "LRS"         # https://docs.microsoft.com/azure/storage/common/storage-redundancy
+    enableBlobNfsV3      = false         # https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = true          # https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    enableSecureTransfer = false         # https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    privateEndpointTypes = [             # https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
       # "file"
     ]
-    blobContainers = [                   // https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    blobContainers = [                   # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
     ]
-    fileShares = [                       // https://docs.microsoft.com/azure/storage/files/storage-files-introduction
+    fileShares = [                       # https://docs.microsoft.com/azure/storage/files/storage-files-introduction
       {
         name     = "show"
         tier     = "Premium"
@@ -99,37 +99,41 @@ netAppAccount = {
   ]
 }
 
-#############################################################################################################
-# Hammerspace (https://azuremarketplace.microsoft.com/en-US/marketplace/apps/hammerspace.hammerspace_4_6_5) #
-#############################################################################################################
+#######################################################################################################
+# Hammerspace (https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) #
+#######################################################################################################
 
 hammerspace = {
   namePrefix = ""
   domainName = ""
-  anvilNode = {
-    namePrefix = "Anvil"
-    size       = "Standard_E4as_v4"
-    count      = 2
+  metadata = {
+    machine = {
+      namePrefix = "Anvil"
+      size       = "Standard_D8_v5"
+      count      = 1 # Set to 2 (or more) to enable high availability
+    }
     osDisk = {
       sizeGB      = 128
-      storageType = "Premium_LRS"
+      storageType = "StandardSSD_LRS"
       cachingType = "ReadWrite"
     }
     dataDisk = {
       sizeGB      = 256
-      storageType = "Premium_LRS"
+      storageType = "StandardSSD_LRS"
       cachingType = "None"
     }
     adminLogin = {
       userName            = "azadmin"
-      sshPublicKey        = "" // "ssh-rsa ..."
+      sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
   }
-  dsxNode = {
-    namePrefix = "DSX"
-    size       = "Standard_F2s_v2"
-    count      = 2
+  data = {
+    machine = {
+      namePrefix = "DSX"
+      size       = "Standard_HB120rs_v2"
+      count      = 2
+    }
     osDisk = {
       sizeGB      = 128
       storageType = "Premium_LRS"
@@ -138,31 +142,33 @@ hammerspace = {
     dataDisk = {
       count       = 2
       sizeGB      = 256
-      enableRaid0 = false
       storageType = "Premium_LRS"
       cachingType = "None"
+      enableRaid0 = false
     }
     adminLogin = {
       userName            = "azadmin"
-      sshPublicKey        = "" // "ssh-rsa ..."
+      sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
   }
+  enableProximityPlacement = false
 }
 
-####################################################################################
-# Optional override configuration when not using Terraform remote state management #
-####################################################################################
+##############################################################################
+# Optional dependency configuration for existing Virtual Network deployments #
+##############################################################################
 
 storageNetwork = {
-  name               = ""
-  resourceGroupName  = ""
+  name                = ""
+  resourceGroupName   = ""
+  subnetNamePrimary   = ""
+  subnetNameSecondary = ""
+  serviceEndpointSubnets = [ # https://docs.microsoft.com/azure/storage/common/storage-network-security#grant-access-from-a-virtual-network
+    {
+      name               = ""
+      regionName         = ""
+      virtualNetworkName = ""
+    }
+  ]
 }
-
-storageEndpointSubnets = [
-  {
-    name               = ""
-    regionName         = ""
-    virtualNetworkName = ""
-  }
-]

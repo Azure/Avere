@@ -167,7 +167,7 @@ data "azurerm_key_vault_key" "cache_encryption" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useOverrideConfig ? 0 : 1
+  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -186,27 +186,27 @@ data "azurerm_resource_group" "network" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                 = local.useOverrideConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name  = local.useOverrideConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                 = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
+  resource_group_name  = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = local.useOverrideConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].name
+  name                 = local.useDependencyConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  count                = local.useOverrideConfig ? 0 : 1
+  count                = local.useDependencyConfig ? 0 : 1
   name                 = data.terraform_remote_state.network[0].outputs.privateDns.zoneName
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 locals {
-  useOverrideConfig       = var.computeNetwork.name != ""
-  deployPrivateDnsZone    = local.useOverrideConfig && var.computeNetwork.privateDns.zoneName != ""
-  vfxtControllerAddress   = local.useOverrideConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 39)
-  vfxtVServerFirstAddress = local.useOverrideConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 40)
+  useDependencyConfig       = var.computeNetwork.name != ""
+  deployPrivateDnsZone    = local.useDependencyConfig && var.computeNetwork.privateDns.zoneName != ""
+  vfxtControllerAddress   = local.useDependencyConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 39)
+  vfxtVServerFirstAddress = local.useDependencyConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 40)
   vfxtVServerAddressCount = 12
 }
 
@@ -280,25 +280,25 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 resource "azurerm_role_assignment" "identity" {
-  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  role_definition_name = "Managed Identity Operator" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.identity.id
 }
 
 resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
+  role_definition_name = "Avere Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_role_assignment" "cache_identity" {
-  role_definition_name = "Managed Identity Operator" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  role_definition_name = "Managed Identity Operator" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.cache.id
 }
 
 resource "azurerm_role_assignment" "cache_contributor" {
-  role_definition_name = "Avere Contributor" // https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
+  role_definition_name = "Avere Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.cache.id
 }
@@ -380,8 +380,8 @@ resource "avere_vfxt" "cache" {
     }
   }
   depends_on = [
-    module.vfxt_controller,
-    azurerm_marketplace_agreement.cache
+    azurerm_marketplace_agreement.cache,
+    module.vfxt_controller
   ]
 }
 

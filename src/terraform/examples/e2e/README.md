@@ -154,7 +154,7 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
-1. After image template deployment, use the Azure portal or [Image Builder CLI](https://docs.microsoft.com/cli/azure/image/builder?#az-image-builder-run) to start image build runs
+1. After image template deployment, use the Azure portal or [Image Builder CLI](https://docs.microsoft.com/cli/azure/image/builder#az-image-builder-run) to start image build runs
 
 ## 6 Compute Scheduler
 
