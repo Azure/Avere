@@ -88,6 +88,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 1. Run `cd ~/e2e/3.storage` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
+   * If Hammerspace is configured for deployment, the [Hammerspace Azure marketplace image terms](https://mpcprodsa.blob.core.windows.net/marketplaceterms/3EDEF_marketplaceterms_VIRTUALMACHINE%253a24AAK2OAIZEAWW5H4MSP5KSTVB6NDKKRTUBAU23BRFTWN4YC2MQLJUB5ZEYUOUJBVF3YK34CIVPZL2HWYASPGDUY5O2FWEGRBYOXWZE5Y.txt) are automatically accepted.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
@@ -140,7 +141,8 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 1. Run `cd ~/e2e/4.storage.cache` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. For [Avere vFXT](https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) deployment only,
-   * Make sure you have at least 96 (32 x 3) cores quota available for [Esv3](https://docs.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
+   * If Avere vFXT is configured for deployment, the [Avere vFXT Azure marketplace image terms](https://mpcprodsa.blob.core.windows.net/marketplaceterms/3EDEF_marketplaceterms_VIRTUALMACHINE%253a24AAK2OAIZEAWW5H4MSP5KSTVB6NDKKRTUBAU23BRFTWN4YC2MQLJUB5ZEYUOUJBVF3YK34CIVPZL2HWYASPGDUY5O2FWEGRBYOXWZE5Y.txt) are automatically accepted.
+   * Make sure you have at least 96 cores (32 cores x 3 nodes) quota available for [Esv3](https://docs.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
@@ -150,7 +152,9 @@ Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersi
 ### Deployment Steps
 
 1. Run `cd ~/e2e/5.compute.image` in a local shell (Bash or PowerShell)
-1. Review and edit the config values in `config.auto.tfvars` for your deployment. Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
+1. Review and edit the config values in `config.auto.tfvars` for your deployment.
+   * By the default config, the [Alma Linux Azure marketplace image terms](https://mpcprodsa.blob.core.windows.net/marketplaceterms/3EDEF_marketplaceterms_VIRTUALMACHINE%253a24AAK2OAIZEAWW5H4MSP5KSTVB6NDKKRTUBAU23BRFTWN4YC2MQLJUB5ZEYUOUJBVF3YK34CIVPZL2HWYASPGDUY5O2FWEGRBYOXWZE5Y.txt) are automatically accepted for the Linux distribution image.
+    * Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
