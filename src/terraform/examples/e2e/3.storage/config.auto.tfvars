@@ -109,17 +109,17 @@ hammerspace = {
   metadata = {
     machine = {
       namePrefix = "Anvil"
-      size       = "Standard_D8_v5"
+      size       = "Standard_D8s_v5"
       count      = 1 # Set to 2 (or more) to enable high availability
     }
     osDisk = {
       sizeGB      = 128
-      storageType = "StandardSSD_LRS"
+      storageType = "Premium_LRS"
       cachingType = "ReadWrite"
     }
     dataDisk = {
       sizeGB      = 256
-      storageType = "StandardSSD_LRS"
+      storageType = "Premium_LRS"
       cachingType = "None"
     }
     adminLogin = {
