@@ -50,7 +50,12 @@ variable "virtualMachineScaleSets" {
             {
               storageType     = string
               cachingType     = string
-              ephemeralEnable = bool
+              ephemeral = object(
+                {
+                  enabled   = bool
+                  placement = string
+                }
+              )
             }
           )
         }
@@ -195,9 +200,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
     dynamic "diff_disk_settings" {
-      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : []
+      for_each = each.value.operatingSystem.disk.ephemeral.enabled ? [1] : []
       content {
-        option = "Local"
+        option    = "Local"
+        placement = each.value.operatingSystem.disk.ephemeral.placement
       }
     }
   }
@@ -285,9 +291,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
     dynamic "diff_disk_settings" {
-      for_each = each.value.operatingSystem.disk.ephemeralEnable ? [1] : []
+      for_each = each.value.operatingSystem.disk.ephemeral.enabled ? [1] : []
       content {
-        option = "Local"
+        option    = "Local"
+        placement = each.value.operatingSystem.disk.ephemeral.placement
       }
     }
   }

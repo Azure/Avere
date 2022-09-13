@@ -1,6 +1,9 @@
 resourceGroupName = "ArtistAnywhere.Workstation"
 
-# Virtual Machines (https://docs.microsoft.com/azure/virtual-machines)
+########################################################################
+# Virtual Machines (https://docs.microsoft.com/azure/virtual-machines) #
+########################################################################
+
 virtualMachines = [
   {
     name        = "LnxArtist"

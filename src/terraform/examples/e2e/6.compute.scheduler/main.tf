@@ -184,7 +184,7 @@ data "azurerm_private_dns_zone" "network" {
 locals {
   useDependencyConfig    = var.computeNetwork.name != ""
   imageIdFarm            = var.computeFarmImage.id != "" ? var.computeFarmImage.id : "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
-  imageGalleryName       = var.computeFarmImage.id != "" ? var.computeFarmImage.imageGalleryName : data.terraform_remote_state.image[0].outputs.imageGalleryName
+  imageGalleryName       = var.computeFarmImage.id != "" ? var.computeFarmImage.imageGalleryName : data.terraform_remote_state.image[0].outputs.imageGallery.name
   imageResourceGroupName = var.computeFarmImage.id != "" ? var.computeFarmImage.resourceGroupName : data.terraform_remote_state.image[0].outputs.resourceGroupName
   schedulerMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""

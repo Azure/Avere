@@ -5,7 +5,7 @@ source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
 customDataInputFile="/var/lib/waagent/ovf-env.xml"
 customDataOutputFile="/var/lib/waagent/scale.sh"
 customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInputFile)
-echo $customData | base64 -d | gzip -d > $customDataOutputFile
+echo $customData | base64 -d > $customDataOutputFile
 
 scaleServicePath="/etc/systemd/system/scale.service"
 echo "[Unit]" > $scaleServicePath

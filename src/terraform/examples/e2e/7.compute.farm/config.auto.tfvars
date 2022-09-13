@@ -1,6 +1,9 @@
 resourceGroupName = "ArtistAnywhere.Farm"
 
-# Virtual Machine Scale Sets (https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview)
+#####################################################################################################
+# Virtual Machine Scale Sets (https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) #
+#####################################################################################################
+
 virtualMachineScaleSets = [
   {
     name    = "LnxFarm"
@@ -14,7 +17,10 @@ virtualMachineScaleSets = [
       disk = {
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
-        ephemeralEnable = true # https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
+        ephemeral = { # https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
+          enabled   = true
+          placement = "ResourceDisk"
+        }
       }
     }
     adminLogin = {
@@ -61,7 +67,10 @@ virtualMachineScaleSets = [
       disk = {
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
-        ephemeralEnable = true # https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
+        ephemeral = { # https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
+          enabled   = true
+          placement = "ResourceDisk"
+        }
       }
     }
     adminLogin = {

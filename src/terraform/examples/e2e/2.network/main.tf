@@ -253,7 +253,7 @@ resource "azurerm_network_security_group" "network" {
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
   security_rule {
-    name                       = "SSH"
+    name                       = "AllowSSH"
     priority                   = 2000
     direction                  = "Inbound"
     access                     = "Allow"
@@ -264,7 +264,7 @@ resource "azurerm_network_security_group" "network" {
     destination_port_range     = "22"
   }
   security_rule {
-    name                       = "RDP"
+    name                       = "AllowRDP"
     priority                   = 2001
     direction                  = "Inbound"
     access                     = "Allow"

@@ -30,21 +30,22 @@ variable "resourceGroupName" {
   type = string
 }
 
-variable "imageGalleryName" {
-  type = string
-}
-
-variable "imageDefinitions" {
-  type = list(object(
+variable "imageGallery" {
+  type = object(
     {
-      name       = string
-      type       = string
-      generation = string
-      publisher  = string
-      offer      = string
-      sku        = string
+      name = string
+      imageDefinitions = list(object(
+        {
+          name       = string
+          type       = string
+          generation = string
+          publisher  = string
+          offer      = string
+          sku        = string
+        }
+      ))
     }
-  ))
+  )
 }
 
 variable "imageTemplates" {
@@ -211,36 +212,36 @@ resource "azurerm_storage_blob" "terminate_script2_windows" {
 }
 
 resource "azurerm_shared_image_gallery" "gallery" {
-  name                = var.imageGalleryName
+  name                = var.imageGallery.name
   resource_group_name = azurerm_resource_group.image.name
   location            = azurerm_resource_group.image.location
 }
 
-resource "azurerm_marketplace_agreement" "gallery" {
-  for_each = {
-    for imageDefinition in var.imageDefinitions : imageDefinition.name => imageDefinition if imageDefinition.type == "Linux"
-  }
-  publisher = each.value.publisher
-  offer     = each.value.offer
-  plan      = each.value.sku
-}
+# resource "azurerm_marketplace_agreement" "gallery" {
+#   for_each = {
+#     for imageDefinition in var.imageGallery.imageDefinitions : imageDefinition.name => imageDefinition if imageDefinition.type == "Linux"
+#   }
+#   publisher = each.value.publisher
+#   offer     = each.value.offer
+#   plan      = each.value.sku
+# }
 
 resource "azurerm_shared_image" "definitions" {
-  count               = length(var.imageDefinitions)
-  name                = var.imageDefinitions[count.index].name
+  count               = length(var.imageGallery.imageDefinitions)
+  name                = var.imageGallery.imageDefinitions[count.index].name
   resource_group_name = azurerm_resource_group.image.name
   location            = azurerm_resource_group.image.location
   gallery_name        = azurerm_shared_image_gallery.gallery.name
-  os_type             = var.imageDefinitions[count.index].type
-  hyper_v_generation  = var.imageDefinitions[count.index].generation
+  os_type             = var.imageGallery.imageDefinitions[count.index].type
+  hyper_v_generation  = var.imageGallery.imageDefinitions[count.index].generation
   identifier {
-    publisher = var.imageDefinitions[count.index].publisher
-    offer     = var.imageDefinitions[count.index].offer
-    sku       = var.imageDefinitions[count.index].sku
+    publisher = var.imageGallery.imageDefinitions[count.index].publisher
+    offer     = var.imageGallery.imageDefinitions[count.index].offer
+    sku       = var.imageGallery.imageDefinitions[count.index].sku
   }
-  depends_on = [
-    azurerm_marketplace_agreement.gallery
-  ]
+  # depends_on = [
+  #   azurerm_marketplace_agreement.gallery
+  # ]
 }
 
 resource "azurerm_resource_group_template_deployment" "image_builder" {
@@ -255,7 +256,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       value = module.global.securityResourceGroupName
     },
     "imageGalleryName" = {
-      value = var.imageGalleryName
+      value = var.imageGallery.name
     },
     "imageTemplates" = {
       value = var.imageTemplates
@@ -441,8 +442,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
               "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
-              "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]",
-              "planInfo": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Linux'), json(concat('{\"planName\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku), '\", \"planProduct\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer), '\", \"planPublisher\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher), '\"}')), json('null'))]"
+              "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
             "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.outputVersion, '0.0.0'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminPassword'))))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
@@ -485,12 +485,8 @@ output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
-output "imageGalleryName" {
-  value = var.imageGalleryName
-}
-
-output "imageDefinitions" {
-  value = var.imageDefinitions
+output "imageGallery" {
+  value = var.imageGallery
 }
 
 output "imageTemplates" {

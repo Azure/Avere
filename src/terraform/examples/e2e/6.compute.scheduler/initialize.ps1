@@ -16,8 +16,7 @@ Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTri
 $customDataInputFile = "C:\AzureData\CustomData.bin"
 $customDataOutputFile = "C:\AzureData\Scale.ps1"
 $fileStream = New-Object System.IO.FileStream($customDataInputFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
-$gZipStream = New-Object System.IO.Compression.GZipStream($fileStream, [System.IO.Compression.CompressionMode]::Decompress)
-$streamReader = New-Object System.IO.StreamReader($gZipStream)
+$streamReader = New-Object System.IO.StreamReader($fileStream)
 Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutputFile
 
 $taskName = "AAA Render Farm Scaler"
