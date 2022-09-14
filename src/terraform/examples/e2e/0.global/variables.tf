@@ -1,5 +1,5 @@
 variable "regionName" {
-  default = "WestUS2" # Set to the target Azure region name (az account list-locations --query [].name)
+  default = "SouthCentralUS" # Set to the target Azure region name (az account list-locations --query [].name)
 }
 
 variable "securityResourceGroupName" {
