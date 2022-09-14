@@ -20,12 +20,10 @@ echo "Customize (Start): Image Build Parameters"
 buildConfig=$(echo $buildConfigEncoded | base64 -d)
 machineType=$(echo $buildConfig | jq -r .machineType)
 machineSize=$(echo $buildConfig | jq -r .machineSize)
-outputVersion=$(echo $buildConfig | jq -r .outputVersion)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
 adminPassword=$(echo $buildConfig | jq -r .adminPassword)
 echo "Machine Type: $machineType"
 echo "Machine Size: $machineSize"
-echo "Output Version: $outputVersion"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
@@ -45,17 +43,19 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
   echo "Customize (End): NVIDIA GPU GRID Driver"
 fi
 
-echo "Customize (Start): Azure CLI"
-rpm --import https://packages.microsoft.com/keys/microsoft.asc
-repoFile="/etc/yum.repos.d/azure-cli.repo"
-echo "[azure-cli]" > $repoFile
-echo "name=AzureCLI" >> $repoFile
-echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoFile
-echo "enabled=1" >> $repoFile
-echo "gpgcheck=1" >> $repoFile
-echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
-yum -y install azure-cli
-echo "Customize (End): Azure CLI"
+if [ $machineType == "Scheduler" ]; then
+  echo "Customize (Start): Azure CLI"
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  repoFile="/etc/yum.repos.d/azure-cli.repo"
+  echo "[azure-cli]" > $repoFile
+  echo "name=AzureCLI" >> $repoFile
+  echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoFile
+  echo "enabled=1" >> $repoFile
+  echo "gpgcheck=1" >> $repoFile
+  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
+  yum -y install azure-cli
+  echo "Customize (End): Azure CLI"
+fi
 
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): NodeJS"

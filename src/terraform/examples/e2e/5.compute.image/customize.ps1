@@ -42,11 +42,9 @@ $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
 $buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
 $machineType = $buildConfig.machineType
 $machineSize = $buildConfig.machineSize
-$outputVersion = $buildConfig.outputVersion
 $renderEngines = $buildConfig.renderEngines -join ","
 Write-Host "Machine Type: $machineType"
 Write-Host "Machine Size: $machineSize"
-Write-Host "Output Version: $outputVersion"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
@@ -64,12 +62,14 @@ if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -
   Write-Host "Customize (End): NVIDIA GPU GRID Driver"
 }
 
-Write-Host "Customize (Start): Azure CLI"
-$installFile = "az-cli.msi"
-$downloadUrl = "https://aka.ms/installazurecliwindows"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-Write-Host "Customize (End): Azure CLI"
+if ($machineType -eq "Scheduler") {
+  Write-Host "Customize (Start): Azure CLI"
+  $installFile = "az-cli.msi"
+  $downloadUrl = "https://aka.ms/installazurecliwindows"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): Azure CLI"
+}
 
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): NodeJS"
