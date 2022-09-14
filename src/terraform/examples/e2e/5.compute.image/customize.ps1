@@ -330,20 +330,20 @@ if ($machineType -eq "Workstation") {
   Write-Host "Customize (End): Teradici PCoIP Agent"
 }
 
-Write-Host "Customize (Start): Cinebench"
-$versionInfo = "R23"
-$installFile = "Cinebench$versionInfo.zip"
-$downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Expand-Archive -Path $installFile
-Write-Host "Customize (End): Cinebench"
+# Write-Host "Customize (Start): Cinebench"
+# $versionInfo = "R23"
+# $installFile = "Cinebench$versionInfo.zip"
+# $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
+# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+# Expand-Archive -Path $installFile
+# Write-Host "Customize (End): Cinebench"
 
-Write-Host "Customize (Start): VRay Benchmark"
-$versionInfo = "5.02.00"
-$installFile = "vray-benchmark-$versionInfo.exe"
-$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-$installFile = "vray-benchmark-$versionInfo-cli.exe"
-$downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Write-Host "Customize (End): VRay Benchmark"
+# Write-Host "Customize (Start): VRay Benchmark"
+# $versionInfo = "5.02.00"
+# $installFile = "vray-benchmark-$versionInfo.exe"
+# $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+# $installFile = "vray-benchmark-$versionInfo-cli.exe"
+# $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+# Write-Host "Customize (End): VRay Benchmark"

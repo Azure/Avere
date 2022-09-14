@@ -328,18 +328,18 @@ if [ $machineType == "Workstation" ]; then
   echo "Customize (End): Teradici PCoIP Agent"
 fi
 
-echo "Customize (Start): Cinebench"
-versionInfo="R23"
-installFile="Cinebench$versionInfo.zip"
-downloadUrl="$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-curl -o $installFile -L $downloadUrl
-unzip $installFile
-echo "Customize (End): Cinebench"
+# echo "Customize (Start): Cinebench"
+# versionInfo="R23"
+# installFile="Cinebench$versionInfo.zip"
+# downloadUrl="$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
+# curl -o $installFile -L $downloadUrl
+# unzip $installFile
+# echo "Customize (End): Cinebench"
 
-echo "Customize (Start): VRay Benchmark"
-versionInfo="5.02.00"
-installFile="vray-benchmark-$versionInfo"
-downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-curl -o $installFile -L $downloadUrl
-chmod +x $installFile
-echo "Customize (End): VRay Benchmark"
+# echo "Customize (Start): VRay Benchmark"
+# versionInfo="5.02.00"
+# installFile="vray-benchmark-$versionInfo"
+# downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+# curl -o $installFile -L $downloadUrl
+# chmod +x $installFile
+# echo "Customize (End): VRay Benchmark"
