@@ -109,7 +109,7 @@ hammerspace = {
   metadata = {
     machine = {
       namePrefix = "Anvil"
-      size       = "Standard_D8s_v5"
+      size       = "Standard_E32s_v5"
       count      = 1 # Set to 2 (or more) to enable high availability
     }
     osDisk = {
