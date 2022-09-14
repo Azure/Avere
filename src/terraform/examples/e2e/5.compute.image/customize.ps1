@@ -71,16 +71,6 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): Azure CLI"
 }
 
-if ($machineType -eq "Workstation") {
-  Write-Host "Customize (Start): NodeJS"
-  $versionInfo = "16.17.0"
-  $installFile = "node-v$versionInfo-x64.msi"
-  $downloadUrl = "https://nodejs.org/dist/v$versionInfo/$installFile"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): NodeJS"
-}
-
 if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): NFS Server"
   Install-WindowsFeature -Name "FS-NFS-Service"

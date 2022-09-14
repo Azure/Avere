@@ -57,21 +57,6 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): Azure CLI"
 fi
 
-if [ $machineType == "Workstation" ]; then
-  echo "Customize (Start): NodeJS"
-  nodeDirectory="$binDiretory/nodejs"
-  versionInfo="16.17.0"
-  installFile="node-v$versionInfo.tar.gz"
-  downloadUrl="https://nodejs.org/dist/v$versionInfo/$installFile"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  cd node*
-  mkdir -p $nodeDirectory
-  mv * $nodeDirectory
-  cd $binDirectory
-  echo "Customize (End): NodeJS"
-fi
-
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
