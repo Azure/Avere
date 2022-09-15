@@ -13,13 +13,13 @@ computeNetwork = {
     {
       name              = "Farm"
       addressSpace      = ["10.1.0.0/17"]
-      serviceEndpoints  = [],
+      serviceEndpoints  = ["Microsoft.Storage"],
       serviceDelegation = ""
     },
     {
       name              = "Workstation"
       addressSpace      = ["10.1.128.0/18"]
-      serviceEndpoints  = []
+      serviceEndpoints  = ["Microsoft.Storage"],
       serviceDelegation = ""
     },
     {
