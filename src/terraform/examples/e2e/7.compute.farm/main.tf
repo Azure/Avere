@@ -240,9 +240,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     for_each = each.value.monitorExtension.enabled ? [1] : []
     content {
       name                       = "Monitor"
-      type                       = "OmsAgentForLinux"
-      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
-      type_handler_version       = "1.13"
+      type                       = "AzureMonitorLinuxAgent"
+      publisher                  = "Microsoft.Azure.Monitor"
+      type_handler_version       = "1.21"
       auto_upgrade_minor_version = true
       settings = jsonencode({
         "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
@@ -324,9 +324,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     for_each = each.value.monitorExtension.enabled ? [1] : []
     content {
       name                       = "Monitor"
-      type                       = "MicrosoftMonitoringAgent"
-      publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
-      type_handler_version       = "1.0"
+      type                       = "AzureMonitorWindowsAgent"
+      publisher                  = "Microsoft.Azure.Monitor"
+      type_handler_version       = "1.7"
       auto_upgrade_minor_version = true
       settings = jsonencode({
         "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id

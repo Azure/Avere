@@ -32,6 +32,9 @@ virtualMachines = [
         teradiciLicenseKey = ""
       }
     }
+    monitorExtension = {
+      enabled = false
+    }
   },
   {
     name        = "WinArtist"
@@ -59,6 +62,9 @@ virtualMachines = [
         ]
         teradiciLicenseKey = ""
       }
+    }
+    monitorExtension = {
+      enabled = false
     }
   }
 ]

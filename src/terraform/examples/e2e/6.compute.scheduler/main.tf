@@ -287,9 +287,9 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Monitor"
-  type                       = "OmsAgentForLinux"
-  publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
-  type_handler_version       = "1.13"
+  type                       = "AzureMonitorLinuxAgent"
+  publisher                  = "Microsoft.Azure.Monitor"
+  type_handler_version       = "1.21"
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
@@ -361,9 +361,9 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Monitor"
-  type                       = "MicrosoftMonitoringAgent"
-  publisher                  = "Microsoft.EnterpriseCloud.Monitoring"
-  type_handler_version       = "1.0"
+  type                       = "AzureMonitorWindowsAgent"
+  publisher                  = "Microsoft.Azure.Monitor"
+  type_handler_version       = "1.7"
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({

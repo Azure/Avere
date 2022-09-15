@@ -68,6 +68,11 @@ variable "virtualMachines" {
           )
         }
       )
+      monitorExtension = object(
+        {
+          enabled = bool
+        }
+      )
     }
   ))
 }
@@ -95,6 +100,11 @@ data "azurerm_key_vault" "vault" {
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
   key_vault_id = data.azurerm_key_vault.vault.id
+}
+
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.securityResourceGroupName
 }
 
 data "terraform_remote_state" "network" {
@@ -180,7 +190,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "workstation_linux" {
+resource "azurerm_virtual_machine_extension" "custom_linux" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
   }
@@ -194,6 +204,27 @@ resource "azurerm_virtual_machine_extension" "workstation_linux" {
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
     )}"
+  })
+  depends_on = [
+    azurerm_linux_virtual_machine.workstation
+  ]
+}
+
+resource "azurerm_virtual_machine_extension" "monitor_linux" {
+  for_each = {
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
+  }
+  name                       = "Monitor"
+  type                       = "AzureMonitorLinuxAgent"
+  publisher                  = "Microsoft.Azure.Monitor"
+  type_handler_version       = "1.21"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  settings = jsonencode({
+    "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings = jsonencode({
+    "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
   })
   depends_on = [
     azurerm_linux_virtual_machine.workstation
@@ -230,7 +261,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "workstation_windows" {
+resource "azurerm_virtual_machine_extension" "custom_windows" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
   }
@@ -244,6 +275,27 @@ resource "azurerm_virtual_machine_extension" "workstation_windows" {
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
     )}"
+  })
+  depends_on = [
+    azurerm_windows_virtual_machine.workstation
+  ]
+}
+
+resource "azurerm_virtual_machine_extension" "monitor_windows" {
+  for_each = {
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
+  }
+  name                       = "Monitor"
+  type                       = "AzureMonitorWindowsAgent"
+  publisher                  = "Microsoft.Azure.Monitor"
+  type_handler_version       = "1.7"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  settings = jsonencode({
+    "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
+  })
+  protected_settings = jsonencode({
+    "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
   })
   depends_on = [
     azurerm_windows_virtual_machine.workstation
