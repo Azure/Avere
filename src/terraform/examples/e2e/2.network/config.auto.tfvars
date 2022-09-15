@@ -58,7 +58,7 @@ storageNetwork = {
     {
       name              = "Secondary"
       addressSpace      = ["10.0.1.0/24"]
-      serviceEndpoints  = []
+      serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
     },
     {
