@@ -1,14 +1,14 @@
 resourceGroupName = "ArtistAnywhere.Scheduler"
 
-########################################################################
-# Virtual Machines (https://docs.microsoft.com/azure/virtual-machines) #
-########################################################################
+#########################################################################
+# Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
+#########################################################################
 
 virtualMachines = [
   {
     name        = "LnxScheduler"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
-    machineSize = "Standard_D8s_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
+    machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
       disk = {
@@ -37,7 +37,7 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600
         }
-        cycleCloud = { # https://docs.microsoft.com/azure/cyclecloud/overview
+        cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
           enabled = false
           storageAccount = {
             name       = ""
@@ -55,7 +55,7 @@ virtualMachines = [
   {
     name        = "" # "WinScheduler"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
-    machineSize = "Standard_D8s_v5" # https://docs.microsoft.com/azure/virtual-machines/sizes
+    machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
       disk = {
@@ -84,7 +84,7 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 3600
         }
-        cycleCloud = { # https://docs.microsoft.com/azure/cyclecloud/overview
+        cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
           enabled = false
           storageAccount = {
             name       = ""

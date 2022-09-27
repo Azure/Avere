@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.8"
+  required_version = ">= 1.3.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.21.1"
+      version = "~>3.24.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -215,9 +215,9 @@ resource "azurerm_resource_group" "cache" {
   location = module.global.regionName
 }
 
-#############################################################################
-# HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
-#############################################################################
+##############################################################################
+# HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
+##############################################################################
 
 resource "azurerm_hpc_cache" "cache" {
   count               = var.enableHpcCache ? 1 : 0
@@ -270,9 +270,9 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   namespace_path       = each.value.clientPath
 }
 
-################################################################################
-# Avere vFXT (https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
-################################################################################
+#################################################################################
+# Avere vFXT (https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
+#################################################################################
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
@@ -280,25 +280,25 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 resource "azurerm_role_assignment" "identity" {
-  role_definition_name = "Managed Identity Operator" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.identity.id
 }
 
 resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Avere Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
+  role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_role_assignment" "cache_identity" {
-  role_definition_name = "Managed Identity Operator" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
+  role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.cache.id
 }
 
 resource "azurerm_role_assignment" "cache_contributor" {
-  role_definition_name = "Avere Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
+  role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.cache.id
 }
@@ -385,9 +385,9 @@ resource "avere_vfxt" "cache" {
   ]
 }
 
-###########################################################################
-# Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
-###########################################################################
+############################################################################
+# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
+############################################################################
 
 resource "azurerm_private_dns_zone" "network" {
   count               = local.deployPrivateDnsZone ? 1 : 0

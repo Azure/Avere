@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.8"
+  required_version = ">= 1.3.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.21.1"
+      version = "~>3.24.0"
     }
   }
   backend "azurerm" {
@@ -101,6 +101,21 @@ variable "privateDns" {
     {
       zoneName               = string
       enableAutoRegistration = bool
+    }
+  )
+}
+
+variable "bastion" {
+  type = object(
+    {
+      enabled             = bool
+      sku                 = string
+      scaleUnitCount      = number
+      enableFileCopy      = bool
+      enableCopyPaste     = bool
+      enableIpConnect     = bool
+      enableTunneling     = bool
+      enableShareableLink = bool
     }
   )
 }
@@ -205,9 +220,9 @@ resource "azurerm_resource_group" "network" {
   location = var.computeNetwork.regionName
 }
 
-################################################################################################
-# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) #
-################################################################################################
+#################################################################################################
+# Virtual Network (https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) #
+#################################################################################################
 
 resource "azurerm_virtual_network" "network" {
   for_each = {
@@ -247,7 +262,7 @@ resource "azurerm_subnet" "network" {
 
 resource "azurerm_network_security_group" "network" {
   for_each = {
-    for virtualNetworksSubnet in local.virtualNetworksSubnets : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet if virtualNetworksSubnet.name != "GatewaySubnet" && virtualNetworksSubnet.serviceDelegation == ""
+    for virtualNetworksSubnet in local.virtualNetworksSubnets : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet if virtualNetworksSubnet.name != "GatewaySubnet" && virtualNetworksSubnet.name != "AzureBastionSubnet" && virtualNetworksSubnet.serviceDelegation == ""
   }
   name                = "${each.value.virtualNetworkName}.${each.value.name}"
   resource_group_name = azurerm_resource_group.network.name
@@ -257,7 +272,7 @@ resource "azurerm_network_security_group" "network" {
     priority                   = 2000
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "Tcp"
+    protocol                   = "*"
     source_address_prefix      = "GatewayManager"
     source_port_range          = "*"
     destination_address_prefix = "*"
@@ -265,10 +280,10 @@ resource "azurerm_network_security_group" "network" {
   }
   security_rule {
     name                       = "AllowRDP"
-    priority                   = 2001
+    priority                   = 2100
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "Tcp"
+    protocol                   = "*"
     source_address_prefix      = "GatewayManager"
     source_port_range          = "*"
     destination_address_prefix = "*"
@@ -278,7 +293,7 @@ resource "azurerm_network_security_group" "network" {
 
 resource "azurerm_subnet_network_security_group_association" "network" {
   for_each = {
-    for virtualNetworksSubnet in local.virtualNetworksSubnets : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet if virtualNetworksSubnet.name != "GatewaySubnet" && virtualNetworksSubnet.serviceDelegation == ""
+    for virtualNetworksSubnet in local.virtualNetworksSubnets : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet if virtualNetworksSubnet.name != "GatewaySubnet" && virtualNetworksSubnet.name != "AzureBastionSubnet" && virtualNetworksSubnet.serviceDelegation == ""
   }
   subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
   network_security_group_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/networkSecurityGroups/${each.value.virtualNetworkName}.${each.value.name}"
@@ -288,32 +303,9 @@ resource "azurerm_subnet_network_security_group_association" "network" {
   ]
 }
 
-###########################################################################
-# Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
-###########################################################################
-
-resource "azurerm_private_dns_zone" "network" {
-  name                = var.privateDns.zoneName
-  resource_group_name = azurerm_resource_group.network.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "network" {
-  for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork
-  }
-  name                  = each.value.name
-  resource_group_name   = azurerm_resource_group.network.name
-  private_dns_zone_name = azurerm_private_dns_zone.network.name
-  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}"
-  registration_enabled  = var.privateDns.enableAutoRegistration
-  depends_on = [
-    azurerm_virtual_network.network
-  ]
-}
-
-###############################################################################################################
-# Virtual Network Peering (https://docs.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
-###############################################################################################################
+################################################################################################################
+# Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
+################################################################################################################
 
 resource "azurerm_virtual_network_peering" "network_peering_up" {
   count                        = var.networkPeering.enabled ? length(local.virtualNetworks) - 1 : 0
@@ -343,11 +335,173 @@ resource "azurerm_virtual_network_peering" "network_peering_down" {
   ]
 }
 
+############################################################################
+# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
+############################################################################
+
+resource "azurerm_private_dns_zone" "network" {
+  name                = var.privateDns.zoneName
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "network" {
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork
+  }
+  name                  = each.value.name
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.network.name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}"
+  registration_enabled  = var.privateDns.enableAutoRegistration
+  depends_on = [
+    azurerm_virtual_network.network
+  ]
+}
+
+##############################################################################
+# Bastion (https://learn.microsoft.com/en-us/azure/bastion/bastion-overview) #
+##############################################################################
+
+resource "azurerm_network_security_group" "bastion" {
+  count               = var.bastion.enabled ? 1 : 0
+  name                = "Bastion"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  security_rule {
+    name                       = "AllowHTTPS"
+    priority                   = 2000
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "Internet"
+    source_port_range          = "*"
+    destination_address_prefix = "*"
+    destination_port_range     = "443"
+  }
+  security_rule {
+    name                       = "AllowGatewayManager"
+    priority                   = 2100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "GatewayManager"
+    source_port_range          = "*"
+    destination_address_prefix = "*"
+    destination_port_range     = "443"
+  }
+  security_rule {
+    name                       = "AllowBastionInbound"
+    priority                   = 2200
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "VirtualNetwork"
+    source_port_range          = "*"
+    destination_address_prefix = "VirtualNetwork"
+    destination_port_ranges    = ["8080","5701"]
+  }
+  security_rule {
+    name                       = "AllowLoadBalancer"
+    priority                   = 2300
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "AzureLoadBalancer"
+    source_port_range          = "*"
+    destination_address_prefix = "*"
+    destination_port_range     = "443"
+  }
+  security_rule {
+    name                       = "AllowSSH-RDP"
+    priority                   = 2000
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "*"
+    source_port_range          = "*"
+    destination_address_prefix = "VirtualNetwork"
+    destination_port_ranges    = ["22","3389"]
+  }
+  security_rule {
+    name                       = "AllowAzureCloud"
+    priority                   = 2100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "*"
+    source_port_range          = "*"
+    destination_address_prefix = "AzureCloud"
+    destination_port_range     = "443"
+  }
+  security_rule {
+    name                       = "AllowBastionOutbound"
+    priority                   = 2200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "VirtualNetwork"
+    source_port_range          = "*"
+    destination_address_prefix = "VirtualNetwork"
+    destination_port_ranges    = ["8080","5701"]
+  }
+  security_rule {
+    name                       = "AllowBastionSession"
+    priority                   = 2300
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "*"
+    source_port_range          = "*"
+    destination_address_prefix = "Internet"
+    destination_port_range     = "80"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "bastion" {
+  count                     = var.bastion.enabled ? 1 : 0
+  subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.computeNetwork.name}/subnets/AzureBastionSubnet"
+  network_security_group_id = azurerm_network_security_group.bastion[0].id
+  depends_on = [
+    azurerm_subnet.network
+  ]
+}
+
+resource "azurerm_public_ip" "bastion_address" {
+  count               = var.bastion.enabled ? 1 : 0
+  name                = "Bastion"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku                 = var.networkGateway.address.type
+  allocation_method   = var.networkGateway.address.allocationMethod
+  depends_on = [
+    azurerm_subnet_network_security_group_association.bastion
+  ]
+}
+
+resource "azurerm_bastion_host" "compute" {
+  count                  = var.bastion.enabled ? 1 : 0
+  name                   = "Bastion"
+  resource_group_name    = azurerm_resource_group.network.name
+  location               = azurerm_resource_group.network.location
+  sku                    = var.bastion.sku
+  scale_units            = var.bastion.scaleUnitCount
+  file_copy_enabled      = var.bastion.enableFileCopy
+  copy_paste_enabled     = var.bastion.enableCopyPaste
+  ip_connect_enabled     = var.bastion.enableIpConnect
+  tunneling_enabled      = var.bastion.enableTunneling
+  shareable_link_enabled = var.bastion.enableShareableLink
+  ip_configuration {
+    name                 = "ipConfig"
+    public_ip_address_id = azurerm_public_ip.bastion_address[0].id
+    subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.computeNetwork.name}/subnets/AzureBastionSubnet"
+  }
+}
+
 #######################################
 # Virtual Network Gateway (Public IP) #
 #######################################
 
-resource "azurerm_public_ip" "address1" {
+resource "azurerm_public_ip" "gateway_address1" {
   for_each = {
     for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.name => virtualNetwork if var.networkGateway.type != ""
   }
@@ -358,7 +512,7 @@ resource "azurerm_public_ip" "address1" {
   allocation_method   = var.networkGateway.address.allocationMethod
 }
 
-resource "azurerm_public_ip" "address2" {
+resource "azurerm_public_ip" "gateway_address2" {
   for_each = {
     for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.name => virtualNetwork if local.virtualGatewayActiveActive
   }
@@ -369,7 +523,7 @@ resource "azurerm_public_ip" "address2" {
   allocation_method   = var.networkGateway.address.allocationMethod
 }
 
-resource "azurerm_public_ip" "address3" {
+resource "azurerm_public_ip" "gateway_address3" {
   for_each = {
     for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.name => virtualNetwork if local.virtualGatewayActiveActive && length(var.vpnGateway.pointToSiteClient.addressSpace) > 0
   }
@@ -430,9 +584,9 @@ resource "azurerm_virtual_network_gateway" "vpn" {
   }
   depends_on = [
     azurerm_subnet_network_security_group_association.network,
-    azurerm_public_ip.address1,
-    azurerm_public_ip.address2,
-    azurerm_public_ip.address3
+    azurerm_public_ip.gateway_address1,
+    azurerm_public_ip.gateway_address2,
+    azurerm_public_ip.gateway_address3
   ]
 }
 
@@ -464,9 +618,9 @@ resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_down" {
   ]
 }
 
-#########################################################################################################################
-# Local Network Gateway (VPN) (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng) #
-#########################################################################################################################
+##########################################################################################################################
+# Local Network Gateway (VPN) (https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng) #
+##########################################################################################################################
 
 resource "azurerm_local_network_gateway" "vpn" {
   count               = var.networkGateway.type == "Vpn" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
@@ -516,7 +670,7 @@ resource "azurerm_virtual_network_gateway" "express_route" {
   }
   depends_on = [
     azurerm_subnet_network_security_group_association.network,
-    azurerm_public_ip.address1
+    azurerm_public_ip.gateway_address1
   ]
 }
 

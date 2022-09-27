@@ -3,9 +3,9 @@ resourceGroupName = "ArtistAnywhere.Cache"
 cacheName      = "cache" # Set to a uniquely identifiable cache name
 enableHpcCache = true    # Set to false for Avere vFXT cache deployment
 
-#############################################################################
-# HPC Cache (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
-#############################################################################
+##############################################################################
+# HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
+##############################################################################
 
 # HPC Cache throughput / size (GBs) options
 #   Standard_L4_5G - 21623                Read Only
@@ -25,9 +25,9 @@ hpcCache = {
   }
 }
 
-################################################################################
-# Avere vFXT (https://docs.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
-################################################################################
+#################################################################################
+# Avere vFXT (https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
+#################################################################################
 
 vfxtCache = {
   cluster = {
@@ -51,16 +51,16 @@ vfxtCache = {
   }
 }
 
-######################################################################################
-# Storage Targets (https://docs.microsoft.com/azure/hpc-cache/hpc-cache-add-storage) #
-######################################################################################
+#######################################################################################
+# Storage Targets (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-add-storage) #
+#######################################################################################
 
 storageTargetsNfs = [
   {
     name        = "" # "RenderFarm"
     storageHost = ""
     hpcCache = {
-      usageModel = "WRITE_AROUND" # https://docs.microsoft.com/azure/hpc-cache/cache-usage-models
+      usageModel = "WRITE_AROUND" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
     }
     vfxtCache = {
       cachePolicy    = "Clients Bypassing the Cluster"

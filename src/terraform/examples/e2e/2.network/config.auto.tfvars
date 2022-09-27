@@ -1,8 +1,8 @@
 resourceGroupName = "ArtistAnywhere.Network"
 
-################################################################################################
-# Virtual Network (https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview) #
-################################################################################################
+########################################################################################@########
+# Virtual Network (https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) #
+########################################################################################@########
 
 computeNetwork = {
   name               = "Compute"
@@ -30,6 +30,12 @@ computeNetwork = {
     },
     {
       name              = "GatewaySubnet"
+      addressSpace      = ["10.1.254.0/24"]
+      serviceEndpoints  = []
+      serviceDelegation = ""
+    },
+    {
+      name              = "AzureBastionSubnet"
       addressSpace      = ["10.1.255.0/24"]
       serviceEndpoints  = []
       serviceDelegation = ""
@@ -76,6 +82,10 @@ storageNetworkSubnetIndex = {
   netApp    = 2
 }
 
+################################################################################################################
+# Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
+################################################################################################################
+
 networkPeering = {
   enabled                     = true
   allowRemoteNetworkAccess    = true
@@ -83,13 +93,28 @@ networkPeering = {
   allowNetworkGatewayTransit  = false
 }
 
-###########################################################################
-# Private DNS (https://docs.microsoft.com/azure/dns/private-dns-overview) #
-###########################################################################
+############################################################################
+# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
+############################################################################
 
 privateDns = {
   zoneName               = "artist.studio"
   enableAutoRegistration = true
+}
+
+##############################################################################
+# Bastion (https://learn.microsoft.com/en-us/azure/bastion/bastion-overview) #
+##############################################################################
+
+bastion = {
+  enabled             = true
+  sku                 = "Standard"
+  scaleUnitCount      = 2
+  enableFileCopy      = true
+  enableCopyPaste     = true
+  enableIpConnect     = true
+  enableTunneling     = true
+  enableShareableLink = false
 }
 
 ###########################
@@ -98,17 +123,17 @@ privateDns = {
 
 networkGateway = {
   type = ""
-  //type = "Vpn"          # https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
-  //type = "ExpressRoute" # https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
+  //type = "Vpn"          # https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
+  //type = "ExpressRoute" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
   address = {
     type             = "Standard"
     allocationMethod = "Static"
   }
 }
 
-##############################################################################################################
-# Virtual Network Gateway (VPN) (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) #
-##############################################################################################################
+###############################################################################################################
+# Virtual Network Gateway (VPN) (https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) #
+###############################################################################################################
 
 vpnGateway = {
   sku                = "VpnGw2"
@@ -116,16 +141,16 @@ vpnGateway = {
   generation         = "Generation2"
   enableBgp          = false
   enableActiveActive = false
-  pointToSiteClient = { # https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
+  pointToSiteClient = { # https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
     addressSpace    = []
     certificateName = ""
     certificateData = ""
   }
 }
 
-#########################################################################################################################
-# Local Network Gateway (VPN) (https://docs.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng) #
-#########################################################################################################################
+##########################################################################################################################
+# Local Network Gateway (VPN) (https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng) #
+##########################################################################################################################
 
 vpnGatewayLocal = {
   fqdn         = "" # Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
@@ -139,15 +164,15 @@ vpnGatewayLocal = {
   }
 }
 
-######################################################################################################################################
-# Virtual Network Gateway (ExpressRoute) (https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) #
-######################################################################################################################################
+#######################################################################################################################################
+# Virtual Network Gateway (ExpressRoute) (https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) #
+#######################################################################################################################################
 
 expressRouteGateway = {
-  sku = "" # https://docs.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
+  sku = "" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   connection = {
     circuitId        = ""    # Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
     authorizationKey = ""
-    enableFastPath   = false # https://docs.microsoft.com/azure/expressroute/about-fastpath
+    enableFastPath   = false # https://learn.microsoft.com/azure/expressroute/about-fastpath
   }
 }

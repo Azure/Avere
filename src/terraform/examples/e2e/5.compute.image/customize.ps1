@@ -48,9 +48,9 @@ Write-Host "Machine Size: $machineSize"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
-#   NVv3 (https://docs.microsoft.com/azure/virtual-machines/nvv3-series)
-# NCT4v3 (https://docs.microsoft.com/azure/virtual-machines/nct4-v3-series)
-#   NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
+#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
+# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
+#   NVv5 (https://learn.microsoft.com/azure/virtual-machines/nva10v5-series)
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("_T4_v3")) -or
     ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5"))) {
@@ -134,7 +134,7 @@ if ($machineType -eq "Scheduler") {
   netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
   $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
   $installFileLog = "$env:TMP\bitrock_installer.log"
   Copy-Item -Path $installFileLog -Destination $binDirectory\bitrock_installer_server.log
   Remove-Item -Path $installFileLog -Force
@@ -215,6 +215,17 @@ if ($renderEngines -like "*Unreal*") {
   $setupScript = $setupScript.Replace("pause", "rem pause")
   Set-Content -Path $installFile -Value $setupScript
   Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+
+  Write-Host "Customize (Start): Unreal Pixel Streaming"
+  $installFile = "setup.bat"
+  Set-Location -Path "$rendererPathUnreal/Samples/PixelStreaming/WebServers/SignallingWebServer/platform_scripts/cmd"
+  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  $installFile = "setup.bat"
+  Set-Location -Path "$rendererPathUnreal/Samples/PixelStreaming/WebServers/MatchMaker/platform_scripts/cmd"
+  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): Unreal Pixel Streaming"
+
   if ($machineType -eq "Workstation") {
     Write-Host "Customize (Start): Unreal Visual Studio Project Files"
     & "$rendererPathUnreal\GenerateProjectFiles.bat"
@@ -288,11 +299,11 @@ if ($renderEngines -like "*Houdini*") {
 
 if ($machineType -eq "Farm") {
   if (Test-Path -Path "C:\Windows\Temp\onTerminate.ps1") {
-    Write-Host "Customize (Start): Scheduled Event Handler"
+    Write-Host "Customize (Start): CycleCloud Event Handler"
     New-Item -ItemType Directory -Path "C:\cycle\jetpack\scripts" -Force
     Copy-Item -Path "C:\Windows\Temp\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onPreempt.ps1"
     Copy-Item -Path "C:\Windows\Temp\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onTerminate.ps1"
-    Write-Host "Customize (End): Scheduled Event Handler"
+    Write-Host "Customize (End): CycleCloud Event Handler"
   }
   Write-Host "Customize (Start): Privacy Experience"
   $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
@@ -302,6 +313,14 @@ if ($machineType -eq "Farm") {
 }
 
 if ($machineType -eq "Workstation") {
+  Write-Host "Customize (Start): Teradici PCoIP Agent"
+  $versionInfo = "22.04.0"
+  $installFile = "pcoip-agent-graphics_$versionInfo.exe"
+  $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Write-Host "Customize (End): Teradici PCoIP Agent"
+
   Write-Host "Customize (Start): Deadline Monitor Shortcut"
   $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
   $scriptShell = New-Object -ComObject WScript.Shell
@@ -311,29 +330,21 @@ if ($machineType -eq "Workstation") {
   $shortcut.Save()
   Write-Host "Customize (End): Deadline Monitor Shortcut"
 
-  Write-Host "Customize (Start): Teradici PCoIP Agent"
-  $versionInfo = "22.04.0"
-  $installFile = "pcoip-agent-graphics_$versionInfo.exe"
-  $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Write-Host "Customize (End): Teradici PCoIP Agent"
+  # Write-Host "Customize (Start): Cinebench"
+  # $versionInfo = "R23"
+  # $installFile = "Cinebench$versionInfo.zip"
+  # $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
+  # Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  # Expand-Archive -Path $installFile
+  # Write-Host "Customize (End): Cinebench"
+
+  # Write-Host "Customize (Start): VRay Benchmark"
+  # $versionInfo = "5.02.00"
+  # $installFile = "vray-benchmark-$versionInfo.exe"
+  # $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+  # Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  # $installFile = "vray-benchmark-$versionInfo-cli.exe"
+  # $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+  # Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  # Write-Host "Customize (End): VRay Benchmark"
 }
-
-# Write-Host "Customize (Start): Cinebench"
-# $versionInfo = "R23"
-# $installFile = "Cinebench$versionInfo.zip"
-# $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-# Expand-Archive -Path $installFile
-# Write-Host "Customize (End): Cinebench"
-
-# Write-Host "Customize (Start): VRay Benchmark"
-# $versionInfo = "5.02.00"
-# $installFile = "vray-benchmark-$versionInfo.exe"
-# $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-# $installFile = "vray-benchmark-$versionInfo-cli.exe"
-# $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-# Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-# Write-Host "Customize (End): VRay Benchmark"

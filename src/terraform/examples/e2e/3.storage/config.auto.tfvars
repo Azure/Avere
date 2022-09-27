@@ -1,23 +1,23 @@
 resourceGroupName = "ArtistAnywhere.Storage"
 
-##################################################################################
-# Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction) #
-##################################################################################
+###################################################################################
+# Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction) #
+###################################################################################
 
 storageAccounts = [
   {
     name                 = "azrender1" # Name must be globally unique (lowercase alphanumeric)
-    type                 = "StorageV2" # https://docs.microsoft.com/azure/storage/common/storage-account-overview
-    tier                 = "Standard"  # https://docs.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
-    redundancy           = "LRS"       # https://docs.microsoft.com/azure/storage/common/storage-redundancy
-    enableBlobNfsV3      = true        # https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = false       # https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    enableSecureTransfer = true        # https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    privateEndpointTypes = [           # https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
+    type                 = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
+    tier                 = "Standard"  # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
+    redundancy           = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+    enableBlobNfsV3      = true        # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = false       # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    enableSecureTransfer = true        # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    privateEndpointTypes = [           # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
       "blob",
       "file"
     ]
-    blobContainers = [                 # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    blobContainers = [                 # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
         name       = "show"
         accessType = "private"
@@ -26,7 +26,7 @@ storageAccounts = [
         ]
       }
     ]
-    fileShares = [                     # https://docs.microsoft.com/azure/storage/files/storage-files-introduction
+    fileShares = [                     # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
         name     = "show"
         tier     = "TransactionOptimized"
@@ -37,18 +37,18 @@ storageAccounts = [
   },
   {
     name                 = "azrender2"   # Name must be globally unique (lowercase alphanumeric)
-    type                 = "FileStorage" # https://docs.microsoft.com/azure/storage/common/storage-account-overview
-    tier                 = "Premium"     # https://docs.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
-    redundancy           = "LRS"         # https://docs.microsoft.com/azure/storage/common/storage-redundancy
-    enableBlobNfsV3      = false         # https://docs.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = true          # https://docs.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    enableSecureTransfer = false         # https://docs.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    privateEndpointTypes = [             # https://docs.microsoft.com/azure/storage/common/storage-private-endpoints
+    type                 = "FileStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
+    tier                 = "Premium"     # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
+    redundancy           = "LRS"         # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+    enableBlobNfsV3      = false         # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = true          # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    enableSecureTransfer = false         # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    privateEndpointTypes = [             # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
       "file"
     ]
-    blobContainers = [                   # https://docs.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    blobContainers = [                   # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
     ]
-    fileShares = [                       # https://docs.microsoft.com/azure/storage/files/storage-files-introduction
+    fileShares = [                       # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
         name     = "show"
         tier     = "Premium"
@@ -59,9 +59,9 @@ storageAccounts = [
   }
 ]
 
-######################################################################################################
-# NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
-######################################################################################################
+#######################################################################################################
+# NetApp Files (https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
+#######################################################################################################
 
 netAppAccount = {
   name = ""
@@ -164,7 +164,7 @@ storageNetwork = {
   resourceGroupName   = ""
   subnetNamePrimary   = ""
   subnetNameSecondary = ""
-  serviceEndpointSubnets = [ # https://docs.microsoft.com/azure/storage/common/storage-network-security#grant-access-from-a-virtual-network
+  serviceEndpointSubnets = [ # https://learn.microsoft.com/azure/storage/common/storage-network-security#grant-access-from-a-virtual-network
     {
       name               = ""
       regionName         = ""

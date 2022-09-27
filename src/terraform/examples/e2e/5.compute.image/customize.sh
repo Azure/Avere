@@ -27,9 +27,9 @@ echo "Machine Size: $machineSize"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
-#   NVv3 (https://docs.microsoft.com/azure/virtual-machines/nvv3-series)
-# NCT4v3 (https://docs.microsoft.com/azure/virtual-machines/nct4-v3-series)
-#   NVv5 (https://docs.microsoft.com/azure/virtual-machines/nva10v5-series)
+#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
+# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
+#   NVv5 (https://learn.microsoft.com/azure/virtual-machines/nva10v5-series)
 if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
       ($machineSize == Standard_NC* && $machineSize == *_T4_v3) ||
       ($machineSize == Standard_NV* && $machineSize == *_v5) ]]; then
@@ -146,7 +146,7 @@ echo "Customize (End): Deadline Download"
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Deadline Repository"
   installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> $installFile.txt
+  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> $installFile.txt
   installFileLog="/tmp/bitrock_installer.log"
   cp $installFileLog $binDirectory/bitrock_installer_server.log
   rm -f $installFileLog
@@ -227,6 +227,16 @@ if [[ $renderEngines == *Unreal* ]]; then
   $rendererPathUnreal/Setup.sh
   # $rendererPathUnreal/GenerateProjectFiles.sh
   # make -C $rendererPathUnreal
+
+  # echo "Customize (Start): Unreal Pixel Streaming"
+  # cd $rendererPathUnreal/Samples/PixelStreaming/WebServers/SignallingWebServer/platform_scripts/bash
+  # chmod +x *.sh
+  # ./setup.sh
+  # cd $rendererPathUnreal/Samples/PixelStreaming/WebServers/MatchMaker/platform_scripts/bash
+  # chmod +x *.sh
+  # ./setup.sh
+  # cd $binDirectory
+  # echo "Customize (End): Unreal Pixel Streaming"
   echo "Customize (End): Unreal Engine"
 fi
 
@@ -288,11 +298,11 @@ fi
 
 if [ $machineType == "Farm" ]; then
   if [ -f /tmp/onTerminate.sh ]; then
-    echo "Customize (Start): Scheduled Event Handler"
+    echo "Customize (Start): CycleCloud Event Handler"
     mkdir -p /opt/cycle/jetpack/scripts
     cp /tmp/onTerminate.sh /opt/cycle/jetpack/scripts/onPreempt.sh
     cp /tmp/onTerminate.sh /opt/cycle/jetpack/scripts/onTerminate.sh
-    echo "Customize (End): Scheduled Event Handler"
+    echo "Customize (End): CycleCloud Event Handler"
   fi
 fi
 
@@ -311,20 +321,38 @@ if [ $machineType == "Workstation" ]; then
   yum -y install usb-vhci
   yum -y install pcoip-agent-graphics
   echo "Customize (End): Teradici PCoIP Agent"
+
+  # echo "Customize (Start): Cinebench"
+  # versionInfo="R23"
+  # installFile="Cinebench$versionInfo.zip"
+  # downloadUrl="$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
+  # curl -o $installFile -L $downloadUrl
+  # unzip $installFile
+  # echo "Customize (End): Cinebench"
+
+  # echo "Customize (Start): VRay Benchmark"
+  # versionInfo="5.02.00"
+  # installFile="vray-benchmark-$versionInfo"
+  # downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+  # curl -o $installFile -L $downloadUrl
+  # chmod +x $installFile
+  # echo "Customize (End): VRay Benchmark"
+
+  # echo "Customize (Start): Visual Studio Code"
+  # yum -y install libX11
+  # yum -y install libXcomposite
+  # yum -y install libXdamage
+  # yum -y install libXext
+  # yum -y install libXrandr
+  # yum -y install libsecret
+  # yum -y install libxkbfile
+  # yum -y install atk
+  # yum -y install at-spi2-atk
+  # yum -y install cairo
+  # yum -y install gdk-pixbuf2
+  # yum -y install gtk3
+  # installFile="vscode.rpm"
+  # downloadUrl="https://code.visualstudio.com/sha/download?build=stable&os=linux-rpm-x64"
+  # curl -o $installFile -L $downloadUrl
+  # rpm -i $installFile
 fi
-
-# echo "Customize (Start): Cinebench"
-# versionInfo="R23"
-# installFile="Cinebench$versionInfo.zip"
-# downloadUrl="$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-# curl -o $installFile -L $downloadUrl
-# unzip $installFile
-# echo "Customize (End): Cinebench"
-
-# echo "Customize (Start): VRay Benchmark"
-# versionInfo="5.02.00"
-# installFile="vray-benchmark-$versionInfo"
-# downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-# curl -o $installFile -L $downloadUrl
-# chmod +x $installFile
-# echo "Customize (End): VRay Benchmark"

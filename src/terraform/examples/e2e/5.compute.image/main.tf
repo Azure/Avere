@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.8"
+  required_version = ">= 1.3.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.21.1"
+      version = "~>3.24.0"
     }
   }
   backend "azurerm" {
@@ -141,19 +141,19 @@ resource "azurerm_resource_group" "image" {
 }
 
 resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Virtual Machine Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_role_assignment" "storage" {
-  role_definition_name = "Storage Blob Data Reader" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader
+  role_definition_name = "Storage Blob Data Reader" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = data.azurerm_storage_account.storage.id
 }
 
 resource "azurerm_role_assignment" "image" {
-  role_definition_name = "Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
+  role_definition_name = "Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.image.id
 }
@@ -294,7 +294,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       },
       "variables": {
         "imageBuilderApiVersion": "2022-02-14",
-        "imageGalleryApiVersion": "2022-03-03",
+        "imageGalleryApiVersion": "2022-08-03",
         "localDownloadPathLinux": "/tmp/",
         "localDownloadPathWindows": "/Windows/Temp/"
       },
@@ -444,7 +444,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.outputVersion, '0.0.0'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminPassword'))))]",
+            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.machineType, 'Scheduler'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminPassword'))))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

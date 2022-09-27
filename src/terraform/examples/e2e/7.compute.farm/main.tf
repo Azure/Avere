@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.8"
+  required_version = ">= 1.3.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.21.1"
+      version = "~>3.24.0"
     }
   }
   backend "azurerm" {
@@ -158,7 +158,7 @@ locals {
 }
 
 resource "azurerm_role_assignment" "farm" {
-  role_definition_name = "Virtual Machine Contributor" # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
   scope                = azurerm_resource_group.farm.id
 }

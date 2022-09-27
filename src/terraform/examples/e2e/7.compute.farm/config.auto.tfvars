@@ -1,8 +1,8 @@
 resourceGroupName = "ArtistAnywhere.Farm"
 
-#####################################################################################################
-# Virtual Machine Scale Sets (https://docs.microsoft.com/azure/virtual-machine-scale-sets/overview) #
-#####################################################################################################
+######################################################################################################
+# Virtual Machine Scale Sets (https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) #
+######################################################################################################
 
 virtualMachineScaleSets = [
   {
@@ -17,7 +17,7 @@ virtualMachineScaleSets = [
       disk = {
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
-        ephemeral = { # https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
+        ephemeral = { # https://learn.microsoft.com/azure/virtual-machines/ephemeral-os-disks
           enabled   = true
           placement = "ResourceDisk"
         }
@@ -46,17 +46,17 @@ virtualMachineScaleSets = [
       enabled = false
     }
     spot = {
-      enabled         = true     # https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" # https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       # https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
+      enabled         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
+      machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminationNotification = {  # https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+    terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enabled      = true
       timeoutDelay = "PT5M"
     }
   },
   {
-    name    = "" # WinFarm
+    name    = "" # "WinFarm"
     imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
@@ -67,7 +67,7 @@ virtualMachineScaleSets = [
       disk = {
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
-        ephemeral = { # https://docs.microsoft.com/azure/virtual-machines/ephemeral-os-disks
+        ephemeral = { # https://learn.microsoft.com/azure/virtual-machines/ephemeral-os-disks
           enabled   = true
           placement = "ResourceDisk"
         }
@@ -96,11 +96,11 @@ virtualMachineScaleSets = [
       enabled = false
     }
     spot = {
-      enabled         = true     # https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" # https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       # https://docs.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
+      enabled         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
+      machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
-    terminationNotification = {  # https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+    terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enabled      = true
       timeoutDelay = "PT5M"
     }

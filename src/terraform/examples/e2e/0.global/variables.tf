@@ -12,12 +12,12 @@ variable "terraformStorageContainerName" {
   default = "terraform"
 }
 
-# Managed Identity (https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview)
+# Managed Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview)
 variable "managedIdentityName" {
   default = "AzRender" # Alphanumeric, underscores and hyphens are allowed
 }
 
-# Key Vault (https://docs.microsoft.com/azure/key-vault/general/overview)
+# Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview)
 variable "keyVaultName" {
   default = "AzRender" # Set to a globally unique name (alphanumeric, hyphens)
 }

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.2.8"
+  required_version = ">= 1.3.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.21.1"
+      version = "~>3.24.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -251,7 +251,7 @@ data "http" "current_host" {
 }
 
 locals {
-  useDependencyConfig = var.storageNetwork.name != ""
+  useDependencyConfig    = var.storageNetwork.name != ""
   serviceEndpointSubnets = local.useDependencyConfig ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network[0].outputs.storageEndpointSubnets
   privateDnsZones = distinct(flatten([
     for storageAccount in var.storageAccounts : [
@@ -397,9 +397,9 @@ locals {
   hammerspaceEnableHighAvailability = var.hammerspace.namePrefix != "" && var.hammerspace.metadata.machine.count > 1
 }
 
-##################################################################################
-# Storage (https://docs.microsoft.com/azure/storage/common/storage-introduction) #
-##################################################################################
+###################################################################################
+# Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction) #
+###################################################################################
 
 resource "azurerm_resource_group" "storage" {
   name     = var.resourceGroupName
@@ -482,7 +482,7 @@ resource "azurerm_private_endpoint" "storage" {
   ]
 }
 
-resource "azurerm_role_assignment" "storage_account_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
+resource "azurerm_role_assignment" "storage_account_contributor" { # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   for_each = {
     for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableBlobNfsV3 && storageAccount.name != ""
   }
@@ -494,7 +494,7 @@ resource "azurerm_role_assignment" "storage_account_contributor" { # https://doc
   ]
 }
 
-resource "azurerm_role_assignment" "storage_blob_data_contributor" { # https://docs.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
+resource "azurerm_role_assignment" "storage_blob_data_contributor" { # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   for_each = {
     for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableBlobNfsV3 && storageAccount.name != ""
   }
@@ -546,9 +546,9 @@ resource "azurerm_storage_share" "shares" {
   ]
 }
 
-######################################################################################################
-# NetApp Files (https://docs.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
-######################################################################################################
+#######################################################################################################
+# NetApp Files (https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
+#######################################################################################################
 
 resource "azurerm_resource_group" "netapp" {
   count    = var.netAppAccount.name != "" ? 1 : 0
