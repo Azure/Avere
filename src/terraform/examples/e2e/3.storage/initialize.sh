@@ -2,7 +2,7 @@
 
 ADMIN_PASSWORD=${adminPassword} /usr/bin/hs-init-admin-pw
 
-if [ ${machineSize} == Standard_HB* ]; then
+if [[ ${machineSize} == Standard_HB* ]]; then
   sed -i '/OS.EnableRDMA=/c\OS.EnableRDMA=y' /etc/waagent.conf
   systemctl restart waagent
 fi
