@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.3.0"
+  required_version = ">= 1.3.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.24.0"
+      version = "~>3.26.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~>2.28.1"
+      version = "~>2.29.0"
     }
   }
   backend "azurerm" {
@@ -171,7 +171,8 @@ variable "hammerspace" {
           )
         }
       )
-      enableProximityPlacement = bool
+      enableProximityPlacement   = bool
+      enableMarketplaceAgreement = bool
     }
   )
 }
@@ -682,7 +683,7 @@ resource "azurerm_managed_disk" "storage" {
 }
 
 resource "azurerm_marketplace_agreement" "hammerspace" {
-  count     = var.hammerspace.namePrefix != "" ? 1 : 0
+  count     = var.hammerspace.namePrefix != "" && var.hammerspace.enableMarketplaceAgreement ? 1 : 0
   publisher = local.hammerspaceImagePublisher
   offer     = local.hammerspaceImageProduct
   plan      = local.hammerspaceImageName
@@ -882,6 +883,71 @@ resource "azurerm_lb_probe" "storage" {
   loadbalancer_id = azurerm_lb.storage[0].id
   protocol        = "Tcp"
   port            = 4505
+}
+
+resource "azurerm_resource_group_template_deployment" "admin" {
+  count               = var.hammerspace.namePrefix != "" ? 1 : 0
+  name                = "admin"
+  resource_group_name = azurerm_resource_group.hammerspace[0].name
+  deployment_mode     = "Incremental"
+  parameters_content  = jsonencode({
+    "namePrefix" = {
+      value = var.hammerspace.namePrefix
+    },
+    "adminPassword" = {
+      value = data.azurerm_key_vault_secret.admin_password.value
+    }
+  })
+  template_content = <<TEMPLATE
+    {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "namePrefix": {
+          "type": "string"
+        },
+        "adminPassword": {
+          "type": "string"
+        }
+      },
+      "variables": {
+        "prefix": "[hsfunc.normalize(parameters('namePrefix'))]",
+        "adminUsername": "[concat('user', uniqueString(variables('prefix')))]",
+        "adminPassword": "[concat(uniqueString(variables('prefix')), 'Hh7!')]"
+      },
+      "functions": [
+        {
+          "namespace": "hsfunc",
+          "members": {
+            "normalize": {
+              "parameters": [
+                {
+                  "name": "ins",
+                  "type": "String"
+                }
+              ],
+              "output": {
+                "type": "String",
+                "value": "[replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(parameters('ins'), '!', ''), '@', ''), '#', ''), '$', ''), '%', ''), '^', ''), '&', ''), '*', ''), '(', ''), ')', ''), '_', ''), '+', ''), '=', ''), ':', ''), ';', ''), '?', ''), '/', ''), '.', ''), '>', ''), ',', ''), '<', '')]"
+              }
+            }
+          }
+        }
+      ],
+      "resources": [
+      ],
+      "outputs": {
+        "adminUsername": {
+          "type": "string",
+          "value": "[variables('adminUserName')]"
+        },
+        "adminPassword": {
+          "type": "string",
+          "value": "[variables('adminPassword')]"
+        }
+      }
+    }
+  TEMPLATE
 }
 
 output "resourceGroupName" {

@@ -152,7 +152,8 @@ hammerspace = {
       disablePasswordAuth = false
     }
   }
-  enableProximityPlacement = false
+  enableProximityPlacement   = false
+  enableMarketplaceAgreement = true
 }
 
 ##############################################################################

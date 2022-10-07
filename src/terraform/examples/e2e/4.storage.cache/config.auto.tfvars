@@ -49,6 +49,7 @@ vfxtCache = {
     enableProactive  = "Support" # https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
     rollingTraceFlag = "0xe4001" # https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#rolling_trace_flag
   }
+  enableMarketplaceAgreement = true
 }
 
 #######################################################################################

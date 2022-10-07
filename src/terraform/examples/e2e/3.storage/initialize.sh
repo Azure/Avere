@@ -3,8 +3,10 @@
 ADMIN_PASSWORD=${adminPassword} /usr/bin/hs-init-admin-pw
 
 if [ ${machineSize} == Standard_HB* ]; then
-    : # TODO: Enable InfiniBand (HBvX)
-    # hscli interface-update --node-name  Hammerspace1Dsx1.Hammerspace1.azure  --interface-name ib0 --ip 172.16.0.21/16
-    # hscli interface-update --node-name  Hammerspace1Dsx2.Hammerspace1.azure  --interface-name ib0 --ip 172.16.0.20/16
-    # hscli volume-update --internal-id 18 --additional-ip-add 172.16.0.21,,rdma
+  sed -i '/OS.EnableRDMA=/c\OS.EnableRDMA=y' /etc/waagent.conf
+  systemctl restart waagent
 fi
+
+# hscli interface-update --node-name hs1Dsx1.hs1.azure  --interface-name ib0 --ip 172.16.0.21/16
+# hscli interface-update --node-name hs1Dsx2.hs1.azure  --interface-name ib0 --ip 172.16.0.20/16
+# hscli volume-update --internal-id 18 --additional-ip-add 172.16.0.21,,rdma

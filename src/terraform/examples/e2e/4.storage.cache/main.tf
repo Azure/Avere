@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.0"
+  required_version = ">= 1.3.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.24.0"
+      version = "~>3.26.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -84,6 +84,7 @@ variable "vfxtCache" {
           rollingTraceFlag = string
         }
       )
+      enableMarketplaceAgreement = bool
     }
   )
 }
@@ -304,7 +305,7 @@ resource "azurerm_role_assignment" "cache_contributor" {
 }
 
 resource "azurerm_marketplace_agreement" "cache" {
-  count     = var.enableHpcCache ? 0 : 1
+  count     = var.vfxtCache.enableMarketplaceAgreement && !var.enableHpcCache ? 1 : 0
   publisher = "Microsoft-Avere"
   offer     = "vFXT"
   plan      = "Avere-vFXT-Controller"
