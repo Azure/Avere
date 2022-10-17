@@ -827,8 +827,8 @@ resource "azurerm_virtual_machine_extension" "storage" {
     )}"
   })
   depends_on = [
-    azurerm_linux_virtual_machine.storage_metadata,
-    azurerm_linux_virtual_machine.storage_data
+    azurerm_virtual_machine_data_disk_attachment.storage_metadata,
+    azurerm_virtual_machine_data_disk_attachment.storage_data
   ]
 }
 

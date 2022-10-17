@@ -10,18 +10,20 @@ for ($i = 0; $i -lt 12; $i++) {
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 }
 
-$mountFile = "C:\Windows\Temp\mounts.bat"
-New-Item -ItemType File -Path $mountFile
-%{ for fsMount in fileSystemMounts }
-  Add-Content -Path $mountFile -Value "${fsMount}"
-%{ endfor }
+%{ if length(fileSystemMounts) > 0 }
+  $mountFile = "C:\Windows\Temp\mounts.bat"
+  New-Item -ItemType File -Path $mountFile
+  %{ for fsMount in fileSystemMounts }
+    Add-Content -Path $mountFile -Value "${fsMount}"
+  %{ endfor }
 
-$taskName = "AAA Storage Mounts"
-$taskAction = New-ScheduledTaskAction -Execute $mountFile
-$taskTrigger = New-ScheduledTaskTrigger -AtStartup
-Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
+  $taskName = "AAA Storage Mounts"
+  $taskAction = New-ScheduledTaskAction -Execute $mountFile
+  $taskTrigger = New-ScheduledTaskTrigger -AtStartup
+  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 
-Start-Process -FilePath $mountFile -Wait -RedirectStandardOutput "$mountFile.output.txt" -RedirectStandardError "$mountFile.error.txt"
-%{ for fsPermission in fileSystemPermissions }
-  ${fsPermission}
-%{ endfor }
+  Start-Process -FilePath $mountFile -Wait -RedirectStandardOutput "$mountFile.output.txt" -RedirectStandardError "$mountFile.error.txt"
+  %{ for fsPermission in fileSystemPermissions }
+    ${fsPermission}
+  %{ endfor }
+%{ endif }

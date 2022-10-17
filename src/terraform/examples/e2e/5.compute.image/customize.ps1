@@ -17,9 +17,9 @@ Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
 Write-Host "Customize (End): Resize OS Disk"
 
 Write-Host "Customize (Start): Git"
-$versionInfo = "2.37.3"
+$versionInfo = "2.38.0"
 $installFile = "Git-$versionInfo-64-bit.exe"
-$downloadUrl = "https://github.com/git-for-windows/git/releases/download/v$versionInfo.windows.1/$installFile"
+$downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 $toolPathGit = "C:\Program Files\Git\bin"
@@ -28,8 +28,12 @@ Write-Host "Customize (End): Git"
 Write-Host "Customize (Start): Visual Studio"
 $versionInfo = "2022"
 $installFile = "VisualStudioSetup.exe"
-$downloadUrl = "https://c2rsetup.officeapps.live.com/c2r/downloadVS.aspx?sku=community&channel=Release&version=VS$versionInfo&includeRecommended=true"
-$workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended --add Microsoft.NetCore.Component.Runtime.3.1 --add Component.Unreal"
+$downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
+$workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended"
+$workloadIds += " --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended"
+$workloadIds += " --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended"
+$workloadIds += " --add Microsoft.NetCore.Component.Runtime.3.1"
+$workloadIds += " --add Component.Unreal"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
 Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
 $toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
@@ -98,6 +102,7 @@ $rendererPaths = ""
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
 $rendererPathPBRT = "C:\Program Files\PBRT3"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
+$rendererPathUnrealStream = "$rendererPathUnreal\Stream"
 $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
 $rendererPathMaya = "C:\Program Files\Autodesk\Maya2023"
 $rendererPath3DSMax = "C:\Program Files\Autodesk\3ds Max 2023"
@@ -109,7 +114,7 @@ if ($renderEngines -like "*PBRT*") {
   $rendererPaths += ";$rendererPathPBRT\Release"
 }
 if ($renderEngines -like "*Unreal*") {
-  $rendererPaths += ";$rendererPathUnrealEditor"
+  $rendererPaths += ";$rendererPathUnreal"
 }
 if ($renderEngines -like "*Maya*") {
   $rendererPaths += ";$rendererPathMaya"
@@ -203,35 +208,24 @@ if ($renderEngines -like "*Unreal*") {
   $installFile = "dism.exe"
   $featureName = "NetFX3"
   Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
-  $versionInfo = "5.0.3"
-  $installFile = "UnrealEngine-$versionInfo-release.zip"
-  $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
+  $installFile = "UnrealEngine-5.1.zip"
+  $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Expand-Archive -Path $installFile -DestinationPath "$rendererPathUnreal"
-  Move-Item -Path "$rendererPathUnreal\Unreal*\*" -Destination "$rendererPathUnreal"
+  Expand-Archive -Path $installFile
+  New-Item -ItemType Directory -Path "$rendererPathUnreal" -Force
+  Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
   $installFile = "$rendererPathUnreal\Setup.bat"
   $setupScript = Get-Content -Path $installFile
   $setupScript = $setupScript.Replace("/register", "/register /unattended")
   $setupScript = $setupScript.Replace("pause", "rem pause")
   Set-Content -Path $installFile -Value $setupScript
   Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-
-  Write-Host "Customize (Start): Unreal Pixel Streaming"
-  $installFile = "setup.bat"
-  Set-Location -Path "$rendererPathUnreal/Samples/PixelStreaming/WebServers/SignallingWebServer/platform_scripts/cmd"
-  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  $installFile = "setup.bat"
-  Set-Location -Path "$rendererPathUnreal/Samples/PixelStreaming/WebServers/MatchMaker/platform_scripts/cmd"
-  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
-  Set-Location -Path $binDirectory
-  Write-Host "Customize (End): Unreal Pixel Streaming"
-
   if ($machineType -eq "Workstation") {
-    Write-Host "Customize (Start): Unreal Visual Studio Project Files"
+    Write-Host "Customize (Start): Unreal Project Files"
     & "$rendererPathUnreal\GenerateProjectFiles.bat"
     [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
     Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait -RedirectStandardOutput "msbuild-ue5.output.txt" -RedirectStandardError "msbuild-ue5.error.txt"
-    Write-Host "Customize (End): Unreal Visual Studio Project Files"
+    Write-Host "Customize (End): Unreal Project Files"
     Write-Host "Customize (Start): Unreal Visual Studio Plugin"
     $installFile = "UnrealVS.vsix"
     Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
@@ -246,6 +240,24 @@ if ($renderEngines -like "*Unreal*") {
     Write-Host "Customize (End): Unreal Editor Shortcut"
   }
   Write-Host "Customize (End): Unreal Engine"
+}
+
+if ($renderEngines -like "*Unreal,PixelStream*") {
+  Write-Host "Customize (Start): Unreal Pixel Streaming"
+  $installFile = "PixelStreamingInfrastructure-UE5.1.zip"
+  $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Expand-Archive -Path $installFile
+  New-Item -ItemType Directory -Path "$rendererPathUnrealStream" -Force
+  Move-Item -Path "PixelStreaming*\PixelStreaming*\*" -Destination "$rendererPathUnrealStream"
+  $installFile = "setup.bat"
+  Set-Location -Path "$rendererPathUnrealStream/SignallingWebServer/platform_scripts/cmd"
+  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  $installFile = "setup.bat"
+  Set-Location -Path "$rendererPathUnrealStream/MatchMaker/platform_scripts/cmd"
+  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): Unreal Pixel Streaming"
 }
 
 if ($renderEngines -like "*Maya*") {
@@ -314,7 +326,7 @@ if ($machineType -eq "Farm") {
 
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP Agent"
-  $versionInfo = "22.04.0"
+  $versionInfo = "22.09.0"
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl

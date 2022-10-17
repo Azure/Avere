@@ -214,8 +214,9 @@ if [ ${cycleCloud.enabled} == true ]; then
   make altinstall
   cd ..
 
-  installFile="scaleLib.tar.gz"
-  downloadUrl="https://github.com/Azure/cyclecloud-scalelib/archive/refs/tags/0.2.7.tar.gz"
+  versionInfo="0.2.11"
+  installFile="cyclecloud-scalelib-$versionInfo.tar.gz"
+  downloadUrl="https://github.com/Azure/cyclecloud-scalelib/archive/refs/tags/$versionInfo.tar.gz"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   pip3 install ./tools/cyclecloud_api*.whl

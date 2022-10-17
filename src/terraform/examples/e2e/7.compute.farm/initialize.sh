@@ -23,12 +23,14 @@ echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
 systemctl --now enable terminate.timer
 
-%{ for fsMount in fileSystemMounts }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
-mount -a
-%{ for fsPermission in fileSystemPermissions }
-  ${fsPermission}
-%{ endfor }
+%{ if length(fileSystemMounts) > 0 }
+  %{ for fsMount in fileSystemMounts }
+    fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+    mkdir -p $fsMountPoint
+    echo "${fsMount}" >> /etc/fstab
+  %{ endfor }
+  mount -a
+  %{ for fsPermission in fileSystemPermissions }
+    ${fsPermission}
+  %{ endfor }
+%{ endif }

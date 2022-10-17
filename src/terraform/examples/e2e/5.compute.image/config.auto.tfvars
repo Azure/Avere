@@ -115,7 +115,7 @@ imageTemplates = [
         "Blender",
         "PBRT",
         "Unity",
-        "Unreal",
+        "Unreal,PixelStream",
         # "Maya",
         # "Houdini"
       ]
@@ -153,7 +153,7 @@ imageTemplates = [
       machineType    = "Farm"
       machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
       osDiskSizeGB   = 480                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 360                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      timeoutMinutes = 420                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       runElevated    = false
       renderEngines  = [
@@ -187,7 +187,7 @@ imageTemplates = [
         "Blender",
         "PBRT",
         "Unity",
-        "Unreal",
+        "Unreal,PixelStream",
         # "Maya",
         # "3DSMax",
         # "Houdini"

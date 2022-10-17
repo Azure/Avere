@@ -39,7 +39,7 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent &> $installFile.txt
+  ./$installFile --silent &> "$installFile.txt"
   echo "Customize (End): NVIDIA GPU GRID Driver"
 fi
 
@@ -117,6 +117,7 @@ rendererPaths=""
 rendererPathBlender="/usr/local/blender3"
 rendererPathPBRT="/usr/local/pbrt3"
 rendererPathUnreal="/usr/local/unreal5"
+rendererPathUnrealStream="$rendererPathUnreal/stream"
 rendererPathMaya="/usr/autodesk/maya2023/bin"
 rendererPathHoudini="/usr/local/houdini19"
 if [[ $renderEngines == *Blender* ]]; then
@@ -146,7 +147,7 @@ echo "Customize (End): Deadline Download"
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Deadline Repository"
   installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> $installFile.txt
+  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> "$installFile.txt"
   installFileLog="/tmp/bitrock_installer.log"
   cp $installFileLog $binDirectory/bitrock_installer_server.log
   rm -f $installFileLog
@@ -166,7 +167,7 @@ else
   [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
   installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
 fi
-./$installFile $installArgs &> $installFile.txt
+./$installFile $installArgs &> "$installFile.txt"
 cp /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
 deadlineCommandName="ChangeRepositorySkipValidation"
 $schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
@@ -217,27 +218,41 @@ fi
 if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (Start): Unreal Engine"
   yum -y install libicu
-  versionInfo="5.0.3"
-  installFile="UnrealEngine-$versionInfo-release.tar.gz"
-  downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
+  installFile="UnrealEngine-5.1.zip"
+  downloadUrl="$storageContainerUrl/Unreal/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
+  unzip $installFile
+  cd Unreal*
   mkdir -p $rendererPathUnreal
-  tar -xzf $installFile -C $rendererPathUnreal
-  mv $rendererPathUnreal/Unreal*/* $rendererPathUnreal
+  mv * $rendererPathUnreal
   $rendererPathUnreal/Setup.sh
-  # $rendererPathUnreal/GenerateProjectFiles.sh
-  # make -C $rendererPathUnreal
-
-  # echo "Customize (Start): Unreal Pixel Streaming"
-  # cd $rendererPathUnreal/Samples/PixelStreaming/WebServers/SignallingWebServer/platform_scripts/bash
-  # chmod +x *.sh
-  # ./setup.sh
-  # cd $rendererPathUnreal/Samples/PixelStreaming/WebServers/MatchMaker/platform_scripts/bash
-  # chmod +x *.sh
-  # ./setup.sh
-  # cd $binDirectory
-  # echo "Customize (End): Unreal Pixel Streaming"
+  cd $binDirectory
+  if [ $machineType == "Workstation" ]; then
+    echo "Customize (Start): Unreal Project Files"
+    $rendererPathUnreal/GenerateProjectFiles.sh
+    make -C $rendererPathUnreal
+    echo "Customize (End): Unreal Project Files"
+  fi
   echo "Customize (End): Unreal Engine"
+fi
+
+if [[ $renderEngines == *Unreal,PixelStream* ]]; then
+  echo "Customize (Start): Unreal Pixel Streaming"
+  installFile="PixelStreamingInfrastructure-UE5.1.zip"
+  downloadUrl="$storageContainerUrl/Unreal/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  unzip $installFile
+  cd PixelStreaming*
+  mkdir -p $rendererPathUnrealStream
+  mv * $rendererPathUnrealStream
+  cd $rendererPathUnrealStream/SignallingWebServer/platform_scripts/bash
+  chmod +x *.sh
+  ./setup.sh
+  cd $rendererPathUnrealStream/MatchMaker/platform_scripts/bash
+  chmod +x *.sh
+  ./setup.sh
+  cd $binDirectory
+  echo "Customize (End): Unreal Pixel Streaming"
 fi
 
 if [[ $renderEngines == *Maya* ]]; then
@@ -312,14 +327,14 @@ if [ $machineType == "Workstation" ]; then
   echo "Customize (End): Workstation Desktop"
 
   echo "Customize (Start): Teradici PCoIP Agent"
-  versionInfo="22.04.0"
-  installFile="teradici-pcoip-agent_rpm.sh"
+  versionInfo="22.09.0"
+  installFile="pcoip-agent-offline-centos7.9_$versionInfo-1.el7.x86_64.tar.gz"
   downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  chmod +x $installFile
-  ./$installFile &> $installFile.txt
+  tar -xzf $installFile
+  installfile="install-pcoip-agent.sh"
+  ./$installFile pcopi-agent-graphics &> "$installFile.txt"
   yum -y install usb-vhci
-  yum -y install pcoip-agent-graphics
   echo "Customize (End): Teradici PCoIP Agent"
 
   # echo "Customize (Start): Cinebench"
