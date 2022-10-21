@@ -30,6 +30,7 @@ hpcCache = {
 #################################################################################
 
 vfxtCache = {
+  localTimezone = "UTC"
   cluster = {
     nodeSize       = 1024 # Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
     nodeCount      = 3    # Set to a minimum of 3 nodes up to a maximum of 16 nodes

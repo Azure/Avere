@@ -8,10 +8,8 @@ storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08
 
 echo "Customize (Start): Platform Utilities"
 yum -y install epel-release
-yum -y install python-pip
+yum -y install gcc gcc-c++
 yum -y install nfs-utils
-yum -y install cmake
-yum -y install gcc
 yum -y install git
 yum -y install jq
 echo "Customize (End): Platform Utilities"
@@ -39,7 +37,7 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent &> "$installFile.txt"
+  ./$installFile --silent
   echo "Customize (End): NVIDIA GPU GRID Driver"
 fi
 
@@ -72,7 +70,7 @@ if [ $machineType == "Scheduler" ]; then
   yum -y install cyclecloud8
   cd /opt/cycle_server
   sed -i 's/webServerEnableHttps=false/webServerEnableHttps=true/' ./config/cycle_server.properties
-  unzip ./tools/cyclecloud-cli.zip
+  unzip -q ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir /usr/local/cyclecloud
   cycleCloudAdminName="cc_admin"
   cycleCloudInitFile="cycle_initialize.json"
@@ -113,13 +111,15 @@ schedulerCertificateFile="Deadline10Client.pfx"
 schedulerRepositoryLocalMount="/mnt/scheduler"
 schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
 
-rendererPaths=""
 rendererPathBlender="/usr/local/blender3"
+rendererPathCMAKE="/usr/local/cmake"
 rendererPathPBRT="/usr/local/pbrt3"
 rendererPathUnreal="/usr/local/unreal5"
 rendererPathUnrealStream="$rendererPathUnreal/stream"
 rendererPathMaya="/usr/autodesk/maya2023/bin"
 rendererPathHoudini="/usr/local/houdini19"
+
+rendererPaths=""
 if [[ $renderEngines == *Blender* ]]; then
   rendererPaths="$rendererPaths:$rendererPathBlender"
 fi
@@ -147,7 +147,7 @@ echo "Customize (End): Deadline Download"
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Deadline Repository"
   installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath &> "$installFile.txt"
+  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath
   installFileLog="/tmp/bitrock_installer.log"
   cp $installFileLog $binDirectory/bitrock_installer_server.log
   rm -f $installFileLog
@@ -167,7 +167,7 @@ else
   [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
   installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
 fi
-./$installFile $installArgs &> "$installFile.txt"
+./$installFile $installArgs
 cp /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
 deadlineCommandName="ChangeRepositorySkipValidation"
 $schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
@@ -192,11 +192,17 @@ fi
 
 if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (Start): PBRT"
-  pip install cmake
+  versionInfo="3.24.2"
+  installFile="cmake-$versionInfo-linux-x86_64.sh"
+  downloadUrl="$storageContainerUrl/CMake/$versionInfo/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  chmod +x $installFile
+  mkdir -p $rendererPathCMAKE
+  ./$installFile --skip-license --prefix=$rendererPathCMAKE
   versionInfo="v3"
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
   mkdir -p $rendererPathPBRT
-  cmake -B $rendererPathPBRT -S $binDirectory/pbrt-$versionInfo/
+  /usr/local/cmake/bin/cmake -B $rendererPathPBRT -S $binDirectory/pbrt-$versionInfo/
   make -C $rendererPathPBRT
   echo "Customize (End): PBRT"
 fi
@@ -221,7 +227,7 @@ if [[ $renderEngines == *Unreal* ]]; then
   installFile="UnrealEngine-5.1.zip"
   downloadUrl="$storageContainerUrl/Unreal/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  unzip $installFile
+  unzip -q $installFile
   cd Unreal*
   mkdir -p $rendererPathUnreal
   mv * $rendererPathUnreal
@@ -241,7 +247,7 @@ if [[ $renderEngines == *Unreal,PixelStream* ]]; then
   installFile="PixelStreamingInfrastructure-UE5.1.zip"
   downloadUrl="$storageContainerUrl/Unreal/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  unzip $installFile
+  unzip -q $installFile
   cd PixelStreaming*
   mkdir -p $rendererPathUnrealStream
   mv * $rendererPathUnrealStream
@@ -332,42 +338,6 @@ if [ $machineType == "Workstation" ]; then
   downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
-  installfile="install-pcoip-agent.sh"
-  ./$installFile pcopi-agent-graphics &> "$installFile.txt"
-  yum -y install usb-vhci
+  ./install-pcoip-agent.sh pcoip-agent-graphics usb-vhci
   echo "Customize (End): Teradici PCoIP Agent"
-
-  # echo "Customize (Start): Cinebench"
-  # versionInfo="R23"
-  # installFile="Cinebench$versionInfo.zip"
-  # downloadUrl="$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-  # curl -o $installFile -L $downloadUrl
-  # unzip $installFile
-  # echo "Customize (End): Cinebench"
-
-  # echo "Customize (Start): VRay Benchmark"
-  # versionInfo="5.02.00"
-  # installFile="vray-benchmark-$versionInfo"
-  # downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  # curl -o $installFile -L $downloadUrl
-  # chmod +x $installFile
-  # echo "Customize (End): VRay Benchmark"
-
-  # echo "Customize (Start): Visual Studio Code"
-  # yum -y install libX11
-  # yum -y install libXcomposite
-  # yum -y install libXdamage
-  # yum -y install libXext
-  # yum -y install libXrandr
-  # yum -y install libsecret
-  # yum -y install libxkbfile
-  # yum -y install atk
-  # yum -y install at-spi2-atk
-  # yum -y install cairo
-  # yum -y install gdk-pixbuf2
-  # yum -y install gtk3
-  # installFile="vscode.rpm"
-  # downloadUrl="https://code.visualstudio.com/sha/download?build=stable&os=linux-rpm-x64"
-  # curl -o $installFile -L $downloadUrl
-  # rpm -i $installFile
 fi

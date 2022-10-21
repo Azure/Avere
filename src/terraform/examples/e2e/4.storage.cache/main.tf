@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.3.2"
+  required_version = ">= 1.3.3"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.26.0"
+      version = "~>3.28.0"
     }
     avere = {
       source  = "hashicorp/avere"
-      version = "~>1.3.2"
+      version = "~>1.3.3"
     }
   }
   backend "azurerm" {
@@ -59,6 +59,7 @@ variable "hpcCache" {
 variable "vfxtCache" {
   type = object(
     {
+      localTimezone = string
       cluster = object(
         {
           nodeSize       = number
@@ -360,6 +361,7 @@ resource "avere_vfxt" "cache" {
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount
   user_assigned_managed_identity  = data.azurerm_user_assigned_identity.identity.id
+  timezone                        = var.vfxtCache.localTimezone
   dynamic "core_filer" {
     for_each = {
       for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if storageTargetNfs.name != ""

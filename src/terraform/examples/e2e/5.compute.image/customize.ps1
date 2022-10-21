@@ -21,7 +21,7 @@ $versionInfo = "2.38.0"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath .\$installFile -ArgumentList "/SILENT /NORESTART" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+Start-Process -FilePath $installFile -ArgumentList "/SILENT /NORESTART" -Wait
 $toolPathGit = "C:\Program Files\Git\bin"
 Write-Host "Customize (End): Git"
 
@@ -35,7 +35,7 @@ $workloadIds += " --add Microsoft.VisualStudio.Workload.NativeGame;includeRecomm
 $workloadIds += " --add Microsoft.NetCore.Component.Runtime.3.1"
 $workloadIds += " --add Component.Unreal"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath .\$installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+Start-Process -FilePath $installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait
 $toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
 $toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 $toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
@@ -62,7 +62,7 @@ if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath .\$installFile -ArgumentList "/s /noreboot" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath $installFile -ArgumentList "/s /noreboot" -Wait
   Write-Host "Customize (End): NVIDIA GPU GRID Driver"
 }
 
@@ -71,7 +71,7 @@ if ($machineType -eq "Scheduler") {
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait
   Write-Host "Customize (End): Azure CLI"
 }
 
@@ -98,7 +98,6 @@ $schedulerCertificateFile = "Deadline10Client.pfx"
 $schedulerRepositoryLocalMount = "S:\"
 $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
 
-$rendererPaths = ""
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
 $rendererPathPBRT = "C:\Program Files\PBRT3"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
@@ -107,6 +106,8 @@ $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
 $rendererPathMaya = "C:\Program Files\Autodesk\Maya2023"
 $rendererPath3DSMax = "C:\Program Files\Autodesk\3ds Max 2023"
 $rendererPathHoudini = "C:\Program Files\Side Effects Software\Houdini19"
+
+$rendererPaths = ""
 if ($renderEngines -like "*Blender*") {
   $rendererPaths += ";$rendererPathBlender"
 }
@@ -139,7 +140,7 @@ if ($machineType -eq "Scheduler") {
   netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
   $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
   $installFileLog = "$env:TMP\bitrock_installer.log"
   Copy-Item -Path $installFileLog -Destination $binDirectory\bitrock_installer_server.log
   Remove-Item -Path $installFileLog -Force
@@ -166,10 +167,10 @@ if ($machineType -eq "Scheduler") {
   }
   $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
 }
-Start-Process -FilePath .\$installFile -ArgumentList $installArgs -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
 Copy-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
 $deadlineCommandName = "ChangeRepositorySkipValidation"
-Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait -RedirectStandardOutput "$deadlineCommandName-output.txt" -RedirectStandardError "$deadlineCommandName-error.txt"
+Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
 Set-Location -Path $binDirectory
 Write-Host "Customize (End): Deadline Client"
 
@@ -179,7 +180,7 @@ if ($renderEngines -like "*Blender*") {
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait
   Write-Host "Customize (End): Blender"
 }
 
@@ -187,8 +188,8 @@ if ($renderEngines -like "*PBRT*") {
   Write-Host "Customize (Start): PBRT"
   $versionInfo = "v3"
   Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-S $binDirectory\pbrt-$versionInfo -B ""$rendererPathPBRT""" -Wait -RedirectStandardOutput "cmake-pbrt-$versionInfo.output.txt" -RedirectStandardError "cmake-pbrt-$versionInfo.error.txt"
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "msbuild-pbrt-$versionInfo.output.txt" -RedirectStandardError "msbuild-pbrt-$versionInfo.error.txt"
+  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-S $binDirectory\pbrt-$versionInfo -B ""$rendererPathPBRT""" -Wait
+  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait
   Write-Host "Customize (End): PBRT"
 }
 
@@ -198,7 +199,7 @@ if ($renderEngines -like "*Unity*") {
   $installFile = "UnityHubSetup.exe"
   $downloadUrl = "$storageContainerUrl/Unity/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath $installFile -ArgumentList "/S" -Wait
   Write-Host "Customize (End): Unity"
 }
 
@@ -219,16 +220,16 @@ if ($renderEngines -like "*Unreal*") {
   $setupScript = $setupScript.Replace("/register", "/register /unattended")
   $setupScript = $setupScript.Replace("pause", "rem pause")
   Set-Content -Path $installFile -Value $setupScript
-  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath "$installFile" -Wait
   if ($machineType -eq "Workstation") {
     Write-Host "Customize (Start): Unreal Project Files"
     & "$rendererPathUnreal\GenerateProjectFiles.bat"
     [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
-    Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait -RedirectStandardOutput "msbuild-ue5.output.txt" -RedirectStandardError "msbuild-ue5.error.txt"
+    Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait
     Write-Host "Customize (End): Unreal Project Files"
     Write-Host "Customize (Start): Unreal Visual Studio Plugin"
     $installFile = "UnrealVS.vsix"
-    Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+    Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait
     Write-Host "Customize (End): Unreal Visual Studio Plugin"
     Write-Host "Customize (Start): Unreal Editor Shortcut"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Epic Unreal Editor.lnk"
@@ -252,10 +253,10 @@ if ($renderEngines -like "*Unreal,PixelStream*") {
   Move-Item -Path "PixelStreaming*\PixelStreaming*\*" -Destination "$rendererPathUnrealStream"
   $installFile = "setup.bat"
   Set-Location -Path "$rendererPathUnrealStream/SignallingWebServer/platform_scripts/cmd"
-  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath $installFile -Wait
   $installFile = "setup.bat"
   Set-Location -Path "$rendererPathUnrealStream/MatchMaker/platform_scripts/cmd"
-  Start-Process -FilePath ./$installFile -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath $installFile -Wait
   Set-Location -Path $binDirectory
   Write-Host "Customize (End): Unreal Pixel Streaming"
 }
@@ -267,7 +268,7 @@ if ($renderEngines -like "*Maya*") {
   $downloadUrl = "$storageContainerUrl/Maya/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Expand-Archive -Path $installFile
-  Start-Process -FilePath ".\Autodesk_Maya*\Setup.exe" -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath ".\Autodesk_Maya*\Setup.exe" -ArgumentList "--silent"
   Start-Sleep -Seconds 360
   Write-Host "Customize (End): Maya"
 }
@@ -279,7 +280,7 @@ if ($renderEngines -like "*3DSMax*") {
   $downloadUrl = "$storageContainerUrl/3DSMax/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Expand-Archive -Path $installFile
-  Start-Process -FilePath ".\Autodesk_3ds_Max*\Setup.exe" -ArgumentList "--silent" -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath ".\Autodesk_3ds_Max*\Setup.exe" -ArgumentList "--silent"
   Start-Sleep -Seconds 360
   Write-Host "Customize (End): 3DS Max"
 }
@@ -305,7 +306,7 @@ if ($renderEngines -like "*Houdini*") {
   if ($renderEngines -like "*3DSMax*") {
     $installArgs += " /Engine3dsMax=Yes"
   }
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /AcceptEULA=$versionEULA /InstallDir=$rendererPathHoudini $installArgs" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath $installFile -ArgumentList "/S /AcceptEULA=$versionEULA /InstallDir=$rendererPathHoudini $installArgs" -Wait
   Write-Host "Customize (End): Houdini"
 }
 
@@ -330,7 +331,7 @@ if ($machineType -eq "Workstation") {
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installFile.output.txt" -RedirectStandardError "$installFile.error.txt"
+  Start-Process -FilePath $installFile -ArgumentList "/S /NoPostReboot /Force" -Wait
   Write-Host "Customize (End): Teradici PCoIP Agent"
 
   Write-Host "Customize (Start): Deadline Monitor Shortcut"
@@ -341,22 +342,4 @@ if ($machineType -eq "Workstation") {
   $shortcut.TargetPath = "$schedulerPath\deadlinemonitor.exe"
   $shortcut.Save()
   Write-Host "Customize (End): Deadline Monitor Shortcut"
-
-  # Write-Host "Customize (Start): Cinebench"
-  # $versionInfo = "R23"
-  # $installFile = "Cinebench$versionInfo.zip"
-  # $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-  # Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  # Expand-Archive -Path $installFile
-  # Write-Host "Customize (End): Cinebench"
-
-  # Write-Host "Customize (Start): VRay Benchmark"
-  # $versionInfo = "5.02.00"
-  # $installFile = "vray-benchmark-$versionInfo.exe"
-  # $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  # Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  # $installFile = "vray-benchmark-$versionInfo-cli.exe"
-  # $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  # Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  # Write-Host "Customize (End): VRay Benchmark"
 }

@@ -4,8 +4,8 @@ ADMIN_PASSWORD=${adminPassword} /usr/bin/hs-init-admin-pw
 
 if [[ ${machineSize} == Standard_HB* ]]; then
   sed -i '/OS.EnableRDMA=/c\OS.EnableRDMA=y' /etc/waagent.conf
-  shutdown -r 1
   #echo "systemctl restart waagent" | at now +1 minutes
+  shutdown -r 1
 fi
 
 # hscli interface-update --node-name hs1Dsx1.hs1.azure  --interface-name ib0 --ip 172.16.0.21/16
