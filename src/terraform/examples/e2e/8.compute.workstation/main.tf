@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
   }
   backend "azurerm" {
@@ -35,8 +35,19 @@ variable "resourceGroupName" {
 variable "virtualMachines" {
   type = list(object(
     {
-      name        = string
-      imageId     = string
+      name = string
+      image = object(
+        {
+          id = string
+          plan = object(
+            {
+              name      = string
+              product   = string
+              publisher = string
+            }
+          )
+        }
+      )
       machineSize = string
       operatingSystem = object(
         {
@@ -108,7 +119,6 @@ data "azurerm_log_analytics_workspace" "monitor" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -118,19 +128,42 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "terraform_remote_state" "image" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = module.global.securityResourceGroupName
+    storage_account_name = module.global.securityStorageAccountName
+    container_name       = module.global.terraformStorageContainerName
+    key                  = "5.compute.image"
+  }
+}
+
 data "azurerm_virtual_network" "compute" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name  = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "workstation" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.workstation].name
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.workstation].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 locals {
-  useDependencyConfig = var.computeNetwork.name != ""
+  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+  stateExistsImage   = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
+  virtualMachinesLinux = [
+    for virtualMachine in var.virtualMachines : merge(virtualMachine, {
+      image = {
+        id = virtualMachine.image.id
+        plan = {
+          name      = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku)
+          product   = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer)
+          publisher = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher)
+        }
+      }
+    }) if virtualMachine.operatingSystem.type == "Linux"
+  ]
 }
 
 resource "azurerm_resource_group" "workstation" {
@@ -154,12 +187,12 @@ resource "azurerm_network_interface" "workstation" {
 
 resource "azurerm_linux_virtual_machine" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.stateExistsImage ? local.virtualMachinesLinux : var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.workstation.name
   location                        = azurerm_resource_group.workstation.location
-  source_image_id                 = each.value.imageId
+  source_image_id                 = each.value.image.id
   size                            = each.value.machineSize
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
@@ -177,6 +210,14 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   }
   boot_diagnostics {
     storage_account_uri = null
+  }
+  dynamic "plan" {
+    for_each = each.value.image.plan.name == "" ? [] : [1]
+    content {
+      name      = each.value.image.plan.name
+      product   = each.value.image.plan.product
+      publisher = each.value.image.plan.publisher
+    }
   }
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -238,7 +279,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
   location            = azurerm_resource_group.workstation.location
-  source_image_id     = each.value.imageId
+  source_image_id     = each.value.image.id
   size                = each.value.machineSize
   admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value

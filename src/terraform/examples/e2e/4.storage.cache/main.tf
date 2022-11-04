@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -169,7 +169,6 @@ data "azurerm_key_vault_key" "cache_encryption" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -188,27 +187,26 @@ data "azurerm_resource_group" "network" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name  = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].name
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.cache].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  count                = local.useDependencyConfig ? 0 : 1
-  name                 = data.terraform_remote_state.network[0].outputs.privateDns.zoneName
-  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
+  name                = data.terraform_remote_state.network.outputs.privateDns.zoneName
+  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 locals {
-  useDependencyConfig       = var.computeNetwork.name != ""
-  deployPrivateDnsZone    = local.useDependencyConfig && var.computeNetwork.privateDns.zoneName != ""
-  vfxtControllerAddress   = local.useDependencyConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 39)
-  vfxtVServerFirstAddress = local.useDependencyConfig ? "" : cidrhost(data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 40)
+  stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+  deployPrivateDnsZone    = !local.stateExistsNetwork && var.computeNetwork.privateDns.zoneName != ""
+  vfxtControllerAddress   = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 39)
+  vfxtVServerFirstAddress = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 40)
   vfxtVServerAddressCount = 12
 }
 
@@ -409,8 +407,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
 
 resource "azurerm_private_dns_a_record" "cache" {
   name                = "cache"
-  resource_group_name = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].resource_group_name : data.azurerm_private_dns_zone.network[0].resource_group_name
-  zone_name           = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].name : data.azurerm_private_dns_zone.network[0].name
+  resource_group_name = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].resource_group_name : data.azurerm_private_dns_zone.network.resource_group_name
+  zone_name           = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].name : data.azurerm_private_dns_zone.network.name
   records             = var.enableHpcCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
   ttl                 = 300
 }

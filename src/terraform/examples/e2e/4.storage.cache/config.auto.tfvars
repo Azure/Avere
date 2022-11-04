@@ -93,9 +93,9 @@ storageTargetsNfsBlob = [
   }
 ]
 
-##############################################################################
-# Optional dependency configuration for existing Virtual Network deployments #
-##############################################################################
+#######################################################################
+# Optional resource dependency configuration for existing deployments #
+#######################################################################
 
 computeNetwork = {
   name              = ""

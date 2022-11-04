@@ -14,8 +14,8 @@ The following *core principles* are implemented throughout the AAA solution depl
 | [2 Network](#2-network) | Deploy [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
 | [3 Storage](#3-storage) | Deploy [Blob (NFS v3 with sample content)](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
 | [4 Storage Cache](#4-storage-cache) | Deploy [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
-| [5 Compute Image](#5-compute-image) | Deploy [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L10) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L10) |
-| [6 Compute Scheduler](#6-compute-scheduler) | Deploy [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for job scheduling with optional [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) integration. | No, continue to use your current job scheduler | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L10) |
+| [5 Compute Image](#5-compute-image) | Deploy [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L11) | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L11) |
+| [6 Compute Scheduler](#6-compute-scheduler) | Deploy [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for job scheduling with optional [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) integration. | No, continue to use your current job scheduler | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L11) |
 | [7 Compute Farm](#7-compute-farm) | Deploy [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes, if [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) not deployed. Otherwise, No | Yes, if [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) not deployed. Otherwise, No |
 | [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploy [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
 | [9 GitOps](#9-gitops) | Enable [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
@@ -292,22 +292,24 @@ For example, the following sample **PBRT** output image was rendering in Azure v
 > ######
 > Unlike the Blender splash screen data that is included in the AAA GitHub repository within the Storage module, the following PBRT Moana Island data must be downloaded, decompressed and uploaded into your storage system *before* the following job command is submitted.
 >
-> * **[Moana Island Base Package](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-basepackage-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
+> * **[Moana Island Base Data (44.8 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-basepackage-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
 
-> * **[Moana Island PBRT Package](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-pbrt-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
+> * **[Moana Island PBRT v3 Data (6.3 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-pbrt-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
+
+> * **[Moana Island PBRT v4 Data (5.5 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-pbrtV4-v2.0.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
 
 #### Linux Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt -arguments "--outfile /mnt/show/write/pbrt/moana/island.png /mnt/show/read/pbrt/moana/pbrt/island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt3 -arguments "--outfile /mnt/show/write/pbrt/moana/island.png /mnt/show/read/pbrt/moana/island/pbrt/island.pbrt"
 </code></p>
 
 #### Windows Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt.exe -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\pbrt\island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\island\pbrt\island.pbrt"
 </code></p>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

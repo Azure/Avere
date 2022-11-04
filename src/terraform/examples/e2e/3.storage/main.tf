@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~>2.29.0"
+      version = "~>2.30.0"
     }
   }
   backend "azurerm" {
@@ -206,7 +206,6 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -221,24 +220,24 @@ data "azurerm_resource_group" "network" {
 }
 
 data "azurerm_virtual_network" "storage" {
-  name                 = local.useDependencyConfig ? var.storageNetwork.name : data.terraform_remote_state.network[0].outputs.storageNetwork.name
-  resource_group_name  = local.useDependencyConfig ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                = !local.stateExistsNetwork ? var.storageNetwork.name : data.terraform_remote_state.network.outputs.storageNetwork.name
+  resource_group_name = !local.stateExistsNetwork ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "storage_primary" {
-  name                 = local.useDependencyConfig ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.primary].name
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetworkSubnetIndex.primary].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
 data "azurerm_subnet" "storage_secondary" {
-  name                 = local.useDependencyConfig ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.secondary].name
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetworkSubnetIndex.secondary].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
 data "azurerm_subnet" "storage_netapp" {
-  name                 = local.useDependencyConfig ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network[0].outputs.storageNetwork.subnets[data.terraform_remote_state.network[0].outputs.storageNetworkSubnetIndex.netApp].name
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetworkSubnetIndex.netApp].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
@@ -252,8 +251,8 @@ data "http" "current_host" {
 }
 
 locals {
-  useDependencyConfig    = var.storageNetwork.name != ""
-  serviceEndpointSubnets = local.useDependencyConfig ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network[0].outputs.storageEndpointSubnets
+  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+  serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
   privateDnsZones = distinct(flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpointType in storageAccount.privateEndpointTypes : {
@@ -328,21 +327,21 @@ locals {
   hammerspaceImageVersion   = "4.6.6"
   hammerspaceMetadataNodes = [
     for i in range(var.hammerspace.metadata.machine.count) : merge(var.hammerspace.metadata,
-      {index = i},
-      {name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}"}
+      { index = i },
+      { name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}" }
     ) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDataNodes = [
     for i in range(var.hammerspace.data.machine.count) : merge(var.hammerspace.data,
-      {index = i},
-      {name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}"}
+      { index = i },
+      { name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}" }
     ) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDataDisks = [
     for i in range(var.hammerspace.data.machine.count * var.hammerspace.data.dataDisk.count) : merge(var.hammerspace.data,
-      {index       = i % var.hammerspace.data.dataDisk.count + 1},
-      {machineName = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}"},
-      {name        = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}DataDisk${i % var.hammerspace.data.dataDisk.count + 1}"}
+      { index       = i % var.hammerspace.data.dataDisk.count + 1 },
+      { machineName = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}" },
+      { name        = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}DataDisk${i % var.hammerspace.data.dataDisk.count + 1}" }
     ) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDomainName = var.hammerspace.domainName == "" ? "${var.hammerspace.namePrefix}.azure" : var.hammerspace.domainName
@@ -821,8 +820,8 @@ resource "azurerm_virtual_machine_extension" "storage" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile("initialize.sh", merge(
-        {machineSize   = each.value.machine.size},
-        {adminPassword = data.azurerm_key_vault_secret.admin_password.value}
+        { machineSize   = each.value.machine.size },
+        { adminPassword = data.azurerm_key_vault_secret.admin_password.value }
       ))
     )}"
   })

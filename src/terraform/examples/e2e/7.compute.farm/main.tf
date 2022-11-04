@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
   }
   backend "azurerm" {
@@ -35,8 +35,19 @@ variable "resourceGroupName" {
 variable "virtualMachineScaleSets" {
   type = list(object(
     {
-      name    = string
-      imageId = string
+      name = string
+      image = object(
+        {
+          id = string
+          plan = object(
+            {
+              name      = string
+              product   = string
+              publisher = string
+            }
+          )
+        }
+      )
       machine = object (
         {
           size  = string
@@ -132,7 +143,6 @@ data "azurerm_log_analytics_workspace" "monitor" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -142,19 +152,42 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "terraform_remote_state" "image" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = module.global.securityResourceGroupName
+    storage_account_name = module.global.securityStorageAccountName
+    container_name       = module.global.terraformStorageContainerName
+    key                  = "5.compute.image"
+  }
+}
+
 data "azurerm_virtual_network" "compute" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name  = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.farm].name
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 locals {
-  useDependencyConfig = var.computeNetwork.name != ""
+  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+  stateExistsImage   = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
+  virtualMachineScaleSetsLinux = [
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet, {
+      image = {
+        id = virtualMachineScaleSet.image.id
+        plan = {
+          name      = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku)
+          product   = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer)
+          publisher = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher)
+        }
+      }
+    }) if virtualMachineScaleSet.operatingSystem.type == "Linux"
+  ]
 }
 
 resource "azurerm_role_assignment" "farm" {
@@ -170,12 +203,12 @@ resource "azurerm_resource_group" "farm" {
 
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   for_each = {
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
+    for virtualMachineScaleSet in local.stateExistsImage ? local.virtualMachineScaleSetsLinux : var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name
   location                        = azurerm_resource_group.farm.location
-  source_image_id                 = each.value.imageId
+  source_image_id                 = each.value.image.id
   sku                             = each.value.machine.size
   instances                       = each.value.machine.count
   admin_username                  = each.value.adminLogin.userName
@@ -213,6 +246,14 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   }
   boot_diagnostics {
     storage_account_uri = null
+  }
+  dynamic "plan" {
+    for_each = each.value.image.plan.name == "" ? [] : [1]
+    content {
+      name      = each.value.image.plan.name
+      product   = each.value.image.plan.product
+      publisher = each.value.image.plan.publisher
+    }
   }
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -268,7 +309,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   name                   = each.value.name
   resource_group_name    = azurerm_resource_group.farm.name
   location               = azurerm_resource_group.farm.location
-  source_image_id        = each.value.imageId
+  source_image_id        = each.value.image.id
   sku                    = each.value.machine.size
   instances              = each.value.machine.count
   admin_username         = each.value.adminLogin.userName

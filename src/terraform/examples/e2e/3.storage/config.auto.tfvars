@@ -156,9 +156,9 @@ hammerspace = {
   enableMarketplaceAgreement = true
 }
 
-##############################################################################
-# Optional dependency configuration for existing Virtual Network deployments #
-##############################################################################
+#######################################################################
+# Optional resource dependency configuration for existing deployments #
+#######################################################################
 
 storageNetwork = {
   name                = ""

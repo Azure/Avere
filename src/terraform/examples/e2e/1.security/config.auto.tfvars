@@ -21,6 +21,10 @@ keyVault = {
       value = "ConnectionKey"
     },
     {
+      name  = "AdminUsername"
+      value = "azadmin"
+    },
+    {
       name  = "AdminPassword"
       value = "P@ssword1234"
     }

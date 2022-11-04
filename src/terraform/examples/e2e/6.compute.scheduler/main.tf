@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
   }
   backend "azurerm" {
@@ -35,8 +35,19 @@ variable "resourceGroupName" {
 variable "virtualMachines" {
   type = list(object(
     {
-      name        = string
-      imageId     = string
+      name = string
+      image = object(
+        {
+          id = string
+          plan = object(
+            {
+              name      = string
+              product   = string
+              publisher = string
+            }
+          )
+        }
+      )
       machineSize = string
       operatingSystem = object(
         {
@@ -76,15 +87,8 @@ variable "virtualMachines" {
               )
               cycleCloud = object(
                 {
-                  enabled = bool
-                  storageAccount = object(
-                    {
-                      name       = string
-                      type       = string
-                      tier       = string
-                      redundancy = string
-                    }
-                  )
+                  enabled            = bool
+                  storageAccountName = string
                 }
               )
             }
@@ -111,12 +115,12 @@ variable "computeNetwork" {
   )
 }
 
-variable "computeFarmImage" {
+variable "computeGallery" {
   type = object(
     {
-      id                = string
-      imageGalleryName  = string
-      resourceGroupName = string
+      name                  = string
+      resourceGroupName     = string
+      imageVersionIdDefault = string
     }
   )
 }
@@ -133,6 +137,11 @@ data "azurerm_key_vault" "vault" {
   resource_group_name = module.global.securityResourceGroupName
 }
 
+data "azurerm_key_vault_secret" "admin_username" {
+  name         = module.global.keyVaultSecretNameAdminUsername
+  key_vault_id = data.azurerm_key_vault.vault.id
+}
+
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
   key_vault_id = data.azurerm_key_vault.vault.id
@@ -144,7 +153,6 @@ data "azurerm_log_analytics_workspace" "monitor" {
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -155,7 +163,6 @@ data "terraform_remote_state" "network" {
 }
 
 data "terraform_remote_state" "image" {
-  count   = var.computeFarmImage.id != "" ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -166,26 +173,39 @@ data "terraform_remote_state" "image" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name  = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.subnetName : data.terraform_remote_state.network[0].outputs.computeNetwork.subnets[data.terraform_remote_state.network[0].outputs.computeNetworkSubnetIndex.farm].name
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                 = local.useDependencyConfig ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network[0].outputs.privateDns.zoneName
-  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
+  name                = !local.stateExistsNetwork ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
+  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 locals {
-  useDependencyConfig    = var.computeNetwork.name != ""
-  imageIdFarm            = var.computeFarmImage.id != "" ? var.computeFarmImage.id : "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
-  imageGalleryName       = var.computeFarmImage.id != "" ? var.computeFarmImage.imageGalleryName : data.terraform_remote_state.image[0].outputs.imageGallery.name
-  imageResourceGroupName = var.computeFarmImage.id != "" ? var.computeFarmImage.resourceGroupName : data.terraform_remote_state.image[0].outputs.resourceGroupName
+  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+  stateExistsImage       = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
+  imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : data.terraform_remote_state.image.outputs.imageGallery.name
+  imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : data.terraform_remote_state.image.outputs.resourceGroupName
+  imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
+  virtualMachinesLinux = [
+    for virtualMachine in var.virtualMachines : merge(virtualMachine, {
+      image = {
+        id = virtualMachine.image.id
+        plan = {
+          name      = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku)
+          product   = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer)
+          publisher = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher)
+        }
+      }
+    }) if virtualMachine.operatingSystem.type == "Linux"
+  ]
   schedulerMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
   ]
@@ -212,12 +232,12 @@ resource "azurerm_network_interface" "scheduler" {
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.stateExistsImage ? local.virtualMachinesLinux : var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.scheduler.name
   location                        = azurerm_resource_group.scheduler.location
-  source_image_id                 = each.value.imageId
+  source_image_id                 = each.value.image.id
   size                            = each.value.machineSize
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
@@ -238,6 +258,14 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   }
   boot_diagnostics {
     storage_account_uri = null
+  }
+  dynamic "plan" {
+    for_each = each.value.image.plan.name == "" ? [] : [1]
+    content {
+      name      = each.value.image.plan.name
+      product   = each.value.image.plan.product
+      publisher = each.value.image.plan.publisher
+    }
   }
   dynamic "admin_ssh_key" {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -264,16 +292,17 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        {tenantId                 = data.azurerm_client_config.current.tenant_id},
-        {subscriptionId           = data.azurerm_client_config.current.subscription_id},
-        {regionName               = module.global.regionName},
-        {networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name},
-        {networkName              = data.azurerm_virtual_network.compute.name},
-        {networkSubnetName        = data.azurerm_subnet.farm.name},
-        {imageIdFarm              = local.imageIdFarm},
-        {imageGalleryName         = local.imageGalleryName},
-        {imageResourceGroupName   = local.imageResourceGroupName},
-        {adminPassword            = data.azurerm_key_vault_secret.admin_password.value}
+        { tenantId                 = data.azurerm_client_config.current.tenant_id },
+        { subscriptionId           = data.azurerm_client_config.current.subscription_id },
+        { regionName               = module.global.regionName },
+        { networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name },
+        { networkName              = data.azurerm_virtual_network.compute.name },
+        { networkSubnetName        = data.azurerm_subnet.farm.name },
+        { imageResourceGroupName   = local.imageResourceGroupName },
+        { imageGalleryName         = local.imageGalleryName },
+        { imageVersionIdDefault    = local.imageVersionIdDefault },
+        { adminUsername            = data.azurerm_key_vault_secret.admin_username.value },
+        { adminPassword            = data.azurerm_key_vault_secret.admin_password.value }
       ))
     )}"
   })
@@ -310,7 +339,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
   location            = azurerm_resource_group.scheduler.location
-  source_image_id     = each.value.imageId
+  source_image_id     = each.value.image.id
   size                = each.value.machineSize
   admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value
@@ -330,6 +359,14 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   }
   boot_diagnostics {
     storage_account_uri = null
+  }
+  dynamic "plan" {
+    for_each = each.value.image.plan.name == "" ? [] : [1]
+    content {
+      name      = each.value.image.plan.name
+      product   = each.value.image.plan.product
+      publisher = each.value.image.plan.publisher
+    }
   }
   depends_on = [
     azurerm_network_interface.scheduler
@@ -384,19 +421,6 @@ resource "azurerm_private_dns_a_record" "scheduler" {
   zone_name           = data.azurerm_private_dns_zone.network.name
   records             = [azurerm_network_interface.scheduler[local.schedulerMachineNames[0]].private_ip_address]
   ttl                 = 300
-}
-
-resource "azurerm_storage_account" "cycle_cloud" {
-  for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.customExtension.parameters.cycleCloud.enabled
-  }
-  name                            = each.value.customExtension.parameters.cycleCloud.storageAccount.name
-  resource_group_name             = azurerm_resource_group.scheduler.name
-  location                        = azurerm_resource_group.scheduler.location
-  account_kind                    = each.value.customExtension.parameters.cycleCloud.storageAccount.type
-  account_tier                    = each.value.customExtension.parameters.cycleCloud.storageAccount.tier
-  account_replication_type        = each.value.customExtension.parameters.cycleCloud.storageAccount.redundancy
-  allow_nested_items_to_be_public = false
 }
 
 resource "azurerm_role_assignment" "cycle_cloud" {

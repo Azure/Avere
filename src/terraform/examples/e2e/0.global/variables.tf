@@ -1,3 +1,7 @@
+####################
+# Global Variables #
+####################
+
 variable "regionName" {
   default = "SouthCentralUS" # Set to the target Azure region name (az account list-locations --query [].name)
 }
@@ -25,6 +29,9 @@ variable "keyVaultName" {
 # KeyVault secret names
 variable "keyVaultSecretNameGatewayConnection" {
   default = "GatewayConnection"
+}
+variable "keyVaultSecretNameAdminUsername" {
+  default = "AdminUsername"
 }
 variable "keyVaultSecretNameAdminPassword" {
   default = "AdminPassword"
@@ -63,6 +70,9 @@ output "keyVaultName" {
 
 output "keyVaultSecretNameGatewayConnection" {
   value = var.keyVaultSecretNameGatewayConnection
+}
+output "keyVaultSecretNameAdminUsername" {
+  value = var.keyVaultSecretNameAdminUsername
 }
 output "keyVaultSecretNameAdminPassword" {
   value = var.keyVaultSecretNameAdminPassword

@@ -6,33 +6,36 @@ cd $binDirectory
 storageContainerUrl="https://azrender.blob.core.windows.net/bin"
 storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
 
-echo "Customize (Start): Platform Utilities"
-yum -y install epel-release
-yum -y install gcc gcc-c++
-yum -y install nfs-utils
-yum -y install git
-yum -y install jq
-echo "Customize (End): Platform Utilities"
-
 echo "Customize (Start): Image Build Parameters"
 buildConfig=$(echo $buildConfigEncoded | base64 -d)
 machineType=$(echo $buildConfig | jq -r .machineType)
 machineSize=$(echo $buildConfig | jq -r .machineSize)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
+adminUsername=$(echo $buildConfig | jq -r .adminUsername)
 adminPassword=$(echo $buildConfig | jq -r .adminPassword)
 echo "Machine Type: $machineType"
 echo "Machine Size: $machineSize"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
-#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
-# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
+echo "Customize (Start): Platform Utilities"
+dnf -y install epel-release
+dnf -y install gcc gcc-c++
+dnf -y install nfs-utils
+dnf -y install cmake
+dnf -y install git
+echo "Customize (End): Platform Utilities"
+
 #   NVv5 (https://learn.microsoft.com/azure/virtual-machines/nva10v5-series)
-if [[ ($machineSize == Standard_NV* && $machineSize == *_v3) ||
+# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
+#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
+if [[ ($machineSize == Standard_NV* && $machineSize == *_v5) ||
       ($machineSize == Standard_NC* && $machineSize == *_T4_v3) ||
-      ($machineSize == Standard_NV* && $machineSize == *_v5) ]]; then
+      ($machineSize == Standard_NV* && $machineSize == *_v3) ]]; then
   echo "Customize (Start): NVIDIA GPU GRID Driver"
-  yum -y install "kernel-devel-$(uname --kernel-release)"
+  dnf -y install make
+  dnf -y install elfutils-libelf-devel
+  dnf -y install "kernel-devel-$(uname --kernel-release)"
   installFile="nvidia-gpu-grid.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
@@ -51,7 +54,7 @@ if [ $machineType == "Scheduler" ]; then
   echo "enabled=1" >> $repoFile
   echo "gpgcheck=1" >> $repoFile
   echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoFile
-  yum -y install azure-cli
+  dnf -y install azure-cli
   echo "Customize (End): Azure CLI"
 fi
 
@@ -67,18 +70,20 @@ if [ $machineType == "Scheduler" ]; then
   echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $cycleCloudRepoPath
   echo "gpgcheck=1" >> $cycleCloudRepoPath
   echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $cycleCloudRepoPath
-  yum -y install cyclecloud8
+  dnf -y install java-1.8.0-openjdk
+  JAVA_HOME=/bin/java
+  dnf -y install cyclecloud8
   cd /opt/cycle_server
   sed -i 's/webServerEnableHttps=false/webServerEnableHttps=true/' ./config/cycle_server.properties
   unzip -q ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir /usr/local/cyclecloud
-  cycleCloudAdminName="cc_admin"
+  cd $binDirectory
   cycleCloudInitFile="cycle_initialize.json"
   echo "[" > $cycleCloudInitFile
   echo "{" >> $cycleCloudInitFile
   echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
   echo "\"Name\": \"cycleserver.installation.initial_user\"," >> $cycleCloudInitFile
-  echo "\"Value\": \"$cycleCloudAdminName\"" >> $cycleCloudInitFile
+  echo "\"Value\": \"$adminUsername\"" >> $cycleCloudInitFile
   echo "}," >> $cycleCloudInitFile
   echo "{" >> $cycleCloudInitFile
   echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
@@ -94,7 +99,7 @@ if [ $machineType == "Scheduler" ]; then
   echo "}," >> $cycleCloudInitFile
   echo "{" >> $cycleCloudInitFile
   echo "\"AdType\": \"AuthenticatedUser\"," >> $cycleCloudInitFile
-  echo "\"Name\": \"$cycleCloudAdminName\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"$adminUsername\"," >> $cycleCloudInitFile
   echo "\"RawPassword\": \"$adminPassword\"," >> $cycleCloudInitFile
   echo "\"Superuser\": true" >> $cycleCloudInitFile
   echo "}" >> $cycleCloudInitFile
@@ -105,15 +110,17 @@ fi
 
 schedulerVersion="10.1.23.6"
 schedulerPath="/opt/Thinkbox/Deadline10/bin"
-schedulerDatabasePath="/DeadlineDatabase"
+schedulerDatabaseHost=$(hostname)
+schedulerDatabasePort=27017
 schedulerRepositoryPath="/DeadlineRepository"
-schedulerCertificateFile="Deadline10Client.pfx"
+schedulerCertificateName="Deadline10"
+schedulerCertificateFile="$schedulerCertificateName.pfx"
 schedulerRepositoryLocalMount="/mnt/scheduler"
 schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
 
 rendererPathBlender="/usr/local/blender3"
-rendererPathCMAKE="/usr/local/cmake"
-rendererPathPBRT="/usr/local/pbrt3"
+rendererPathPBRT3="/usr/local/pbrt/v3"
+rendererPathPBRT4="/usr/local/pbrt/v4"
 rendererPathUnreal="/usr/local/unreal5"
 rendererPathUnrealStream="$rendererPathUnreal/stream"
 rendererPathMaya="/usr/autodesk/maya2023/bin"
@@ -122,9 +129,6 @@ rendererPathHoudini="/usr/local/houdini19"
 rendererPaths=""
 if [[ $renderEngines == *Blender* ]]; then
   rendererPaths="$rendererPaths:$rendererPathBlender"
-fi
-if [[ $renderEngines == *PBRT* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathPBRT"
 fi
 if [[ $renderEngines == *Unreal* ]]; then
   rendererPaths="$rendererPaths:$rendererPathUnreal"
@@ -146,13 +150,34 @@ echo "Customize (End): Deadline Download"
 
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Deadline Repository"
-  installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-  ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath
-  installFileLog="/tmp/bitrock_installer.log"
-  cp $installFileLog $binDirectory/bitrock_installer_server.log
-  rm -f $installFileLog
-  cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
+  dnf -y install python3.9
+  pip3.9 install pyOpenSSL
+  installFile="SSLGeneration-master.zip"
+  downloadUrl="$storageContainerUrl/Deadline/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  unzip -q $installFile
+  cd "SSLGeneration-master"
+  python3.9 ssl_gen.py --ca --cert-org Azure --cert-ou Render
+  python3.9 ssl_gen.py --server --cert-name $schedulerCertificateName
+  python3.9 ssl_gen.py --client --cert-name $schedulerCertificateName
+  python3.9 ssl_gen.py --pfx --cert-name $schedulerCertificateName
+  mkdir -p $schedulerRepositoryPath
+  cp ./keys/$schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
   chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
+  cd $binDirectory
+  mongoDbRepoPath="/etc/yum.repos.d/mongodb.repo"
+  echo "[mongodb-org-4.2]" > $mongoDbRepoPath
+  echo "name=MongoDB" >> $mongoDbRepoPath
+  echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.2/x86_64/" >> $mongoDbRepoPath
+  echo "gpgcheck=1" >> $mongoDbRepoPath
+  echo "enabled=1" >> $mongoDbRepoPath
+  echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc" >> $mongoDbRepoPath
+  dnf -y install mongodb-org
+  systemctl enable mongod
+  systemctl start mongod
+  installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
+  ./$installFile --mode unattended --dbLicenseAcceptance accept --dbcacert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
+  mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_server.log
   echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
   exportfs -a
   echo "Customize (End): Deadline Repository"
@@ -168,18 +193,17 @@ else
   installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
 fi
 ./$installFile $installArgs
-cp /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
-deadlineCommandName="ChangeRepositorySkipValidation"
-$schedulerPath/deadlinecommand -$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate "" &> $deadlineCommandName.txt
+mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
+$schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
 echo "Customize (End): Deadline Client"
 
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
-  yum -y install libXi
-  yum -y install libXxf86vm
-  yum -y install libXfixes
-  yum -y install libXrender
-  yum -y install libGL
+  dnf -y install libXi
+  dnf -y install libXxf86vm
+  dnf -y install libXfixes
+  dnf -y install libXrender
+  dnf -y install libGL
   versionInfo="3.3.1"
   installFile="blender-$versionInfo-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
@@ -191,20 +215,27 @@ if [[ $renderEngines == *Blender* ]]; then
 fi
 
 if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT"
-  versionInfo="3.24.2"
-  installFile="cmake-$versionInfo-linux-x86_64.sh"
-  downloadUrl="$storageContainerUrl/CMake/$versionInfo/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  chmod +x $installFile
-  mkdir -p $rendererPathCMAKE
-  ./$installFile --skip-license --prefix=$rendererPathCMAKE
+  echo "Customize (Start): PBRT v3"
   versionInfo="v3"
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
-  mkdir -p $rendererPathPBRT
-  /usr/local/cmake/bin/cmake -B $rendererPathPBRT -S $binDirectory/pbrt-$versionInfo/
-  make -C $rendererPathPBRT
-  echo "Customize (End): PBRT"
+  mkdir -p $rendererPathPBRT3
+  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo/
+  make -C $rendererPathPBRT3
+  ln -s $rendererPathPBRT3/pbrt /usr/bin/pbrt3
+  echo "Customize (End): PBRT v3"
+  echo "Customize (Start): PBRT v4"
+  dnf -y install mesa-libGL-devel
+  dnf -y install libXrandr-devel
+  dnf -y install libXinerama-devel
+  dnf -y install libXcursor-devel
+  dnf -y install libXi-devel
+  versionInfo="v4"
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
+  mkdir -p $rendererPathPBRT4
+  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo/
+  make -C $rendererPathPBRT4
+  ln -s $rendererPathPBRT4/pbrt /usr/bin/pbrt4
+  echo "Customize (End): PBRT v4"
 fi
 
 if [[ $renderEngines == *Unity* ]]; then
@@ -217,18 +248,19 @@ if [[ $renderEngines == *Unity* ]]; then
   echo "gpgcheck=1" >> $unityRepoPath
   echo "gpgkey=https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" >> $unityRepoPath
   echo "repo_gpgcheck=1" >> $unityRepoPath
-  yum -y install unityhub
+  dnf -y install unityhub
   echo "Customize (End): Unity"
 fi
 
 if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (Start): Unreal Engine"
-  yum -y install libicu
-  installFile="UnrealEngine-5.1.zip"
+  dnf -y install libicu
+  versionInfo="5.1"
+  installFile="UnrealEngine-$versionInfo.zip"
   downloadUrl="$storageContainerUrl/Unreal/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   unzip -q $installFile
-  cd Unreal*
+  cd UnrealEngine-$versionInfo
   mkdir -p $rendererPathUnreal
   mv * $rendererPathUnreal
   $rendererPathUnreal/Setup.sh
@@ -244,11 +276,12 @@ fi
 
 if [[ $renderEngines == *Unreal,PixelStream* ]]; then
   echo "Customize (Start): Unreal Pixel Streaming"
-  installFile="PixelStreamingInfrastructure-UE5.1.zip"
+  versionInfo="5.1"
+  installFile="PixelStreamingInfrastructure-UE$versionInfo.zip"
   downloadUrl="$storageContainerUrl/Unreal/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   unzip -q $installFile
-  cd PixelStreaming*
+  cd PixelStreamingInfrastructure-UE$versionInfo
   mkdir -p $rendererPathUnrealStream
   mv * $rendererPathUnrealStream
   cd $rendererPathUnrealStream/SignallingWebServer/platform_scripts/bash
@@ -263,21 +296,21 @@ fi
 
 if [[ $renderEngines == *Maya* ]]; then
   echo "Customize (Start): Maya"
-  yum -y install libGL
-  yum -y install libGLU
-  yum -y install libjpeg
-  yum -y install libtiff
-  yum -y install libXmu
-  yum -y install libXpm
-  yum -y install libXi
-  yum -y install libXinerama
-  yum -y install libXrender
-  yum -y install libXrandr
-  yum -y install libXcomposite
-  yum -y install libXcursor
-  yum -y install libXtst
-  yum -y install libxkbcommon
-  yum -y install fontconfig
+  dnf -y install libGL
+  dnf -y install libGLU
+  dnf -y install libjpeg
+  dnf -y install libtiff
+  dnf -y install libXmu
+  dnf -y install libXpm
+  dnf -y install libXi
+  dnf -y install libXinerama
+  dnf -y install libXrender
+  dnf -y install libXrandr
+  dnf -y install libXcomposite
+  dnf -y install libXcursor
+  dnf -y install libXtst
+  dnf -y install libxkbcommon
+  dnf -y install fontconfig
   versionInfo="2023"
   installFile="Autodesk_Maya_${versionInfo}_ML_Linux_64bit.tgz"
   downloadUrl="$storageContainerUrl/Maya/$versionInfo/$installFile$storageContainerSas"
@@ -295,16 +328,16 @@ fi
 
 if [[ $renderEngines == *Houdini* ]]; then
   echo "Customize (Start): Houdini"
-  yum -y install libGL
-  yum -y install libXi
-  yum -y install libXtst
-  yum -y install libXrender
-  yum -y install libXrandr
-  yum -y install libXcursor
-  yum -y install libXcomposite
-  yum -y install libXScrnSaver
-  yum -y install libxkbcommon
-  yum -y install fontconfig
+  dnf -y install libGL
+  dnf -y install libXi
+  dnf -y install libXtst
+  dnf -y install libXrender
+  dnf -y install libXrandr
+  dnf -y install libXcursor
+  dnf -y install libXcomposite
+  dnf -y install libXScrnSaver
+  dnf -y install libxkbcommon
+  dnf -y install fontconfig
   versionInfo="19.0.561"
   versionEULA="2021-10-13"
   installFile="houdini-$versionInfo-linux_x86_64_gcc9.3.tar.gz"
@@ -329,7 +362,8 @@ fi
 
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Workstation Desktop"
-  yum -y groups install "KDE Plasma Workspaces"
+  dnf config-manager --set-enabled powertools
+  dnf -y groups install "KDE Plasma Workspaces"
   echo "Customize (End): Workstation Desktop"
 
   echo "Customize (Start): Teradici PCoIP Agent"
@@ -340,4 +374,12 @@ if [ $machineType == "Workstation" ]; then
   tar -xzf $installFile
   ./install-pcoip-agent.sh pcoip-agent-graphics usb-vhci
   echo "Customize (End): Teradici PCoIP Agent"
+
+  echo "Customize (Start): V-Ray Benchmark"
+  versionInfo="5.02.00"
+  installFile="vray-benchmark-$versionInfo"
+  downloadUrl="$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  chmod +x $installFile
+  echo "Customize (End): V-Ray Benchmark"
 fi

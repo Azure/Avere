@@ -76,7 +76,7 @@ if [ ${cycleCloud.enabled} == true ]; then
   echo "\"AzureRMTenantId\": \"${tenantId}\"," >> $cycleAccountFile
   echo "\"AzureRMSubscriptionId\": \"${subscriptionId}\"," >> $cycleAccountFile
   echo "\"AzureRMUseManagedIdentity\": true," >> $cycleAccountFile
-  echo "\"RMStorageAccount\": \"${cycleCloud.storageAccount.name}\"," >> $cycleAccountFile
+  echo "\"RMStorageAccount\": \"${cycleCloud.storageAccountName}\"," >> $cycleAccountFile
   echo "\"RMStorageContainer\": \"cyclecloud\"" >> $cycleAccountFile
   echo "}" >> $cycleAccountFile
 
@@ -145,7 +145,7 @@ if [ ${cycleCloud.enabled} == true ]; then
   echo "Label = Node Image" >> $clusterTemplateFile
   echo "Config.Plugin = pico.form.Dropdown" >> $clusterTemplateFile
   echo "Config.Entries := $imageList" >> $clusterTemplateFile
-  echo "DefaultValue = ${imageIdFarm}" >> $clusterTemplateFile
+  echo "DefaultValue = ${imageVersionIdDefault}" >> $clusterTemplateFile
   echo "Required = true" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[parameter initialNodeCount]]]" >> $clusterTemplateFile
@@ -197,22 +197,9 @@ if [ ${cycleCloud.enabled} == true ]; then
   echo "Label = Credentials" >> $clusterTemplateFile
   echo "ParameterType = Cloud.Credentials" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  cyclecloud initialize --url=https://localhost:8443 --username=cc_admin --password="${adminPassword}" --batch --verify-ssl=false
+  cyclecloud initialize --url=https://localhost:8443 --username="${adminUsername}" --password="${adminPassword}" --batch --verify-ssl=false
   cyclecloud account create -f $cycleAccountFile
   cyclecloud import_template -f $clusterTemplateFile
-
-  versionInfo="3.9.13"
-  installFile="Python-$versionInfo.tgz"
-  downloadUrl="https://www.python.org/ftp/python/$versionInfo/$installFile"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  yum -y install zlib-devel
-  yum -y install libffi-devel
-  yum -y install openssl-devel
-  cd Python*
-  ./configure --enable-optimizations
-  make altinstall
-  cd ..
 
   versionInfo="0.2.11"
   installFile="cyclecloud-scalelib-$versionInfo.tar.gz"
@@ -220,7 +207,7 @@ if [ ${cycleCloud.enabled} == true ]; then
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   pip3 install ./tools/cyclecloud_api*.whl
-  cd cyclecloud-scalelib*
-  /usr/local/bin/python3.9 -m pip install -r dev-requirements.txt
-  /usr/local/bin/python3.9 setup.py build
+  cd cyclecloud-scalelib-$versionInfo
+  python3.9 -m pip install -r dev-requirements.txt
+  python3.9 setup.py build
 fi

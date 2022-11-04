@@ -6,8 +6,15 @@ resourceGroupName = "ArtistAnywhere.Scheduler"
 
 virtualMachines = [
   {
-    name        = "LnxScheduler"
-    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
+    name = "LnxScheduler"
+    image = {
+      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
+      plan = {
+        name      = ""
+        product   = ""
+        publisher = ""
+      }
+    }
     machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
@@ -38,13 +45,8 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
-          enabled = false
-          storageAccount = {
-            name       = ""
-            type       = "StorageV2"
-            tier       = "Standard"
-            redundancy = "LRS"
-          }
+          enabled            = false
+          storageAccountName = "azrender0"
         }
       }
     }
@@ -53,8 +55,15 @@ virtualMachines = [
     }
   },
   {
-    name        = "" # "WinScheduler"
-    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
+    name = "" # "WinScheduler"
+    image = {
+      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
+      plan = {
+        name      = ""
+        product   = ""
+        publisher = ""
+      }
+    }
     machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
@@ -85,13 +94,8 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
-          enabled = false
-          storageAccount = {
-            name       = ""
-            type       = "StorageV2"
-            tier       = "Standard"
-            redundancy = "LRS"
-          }
+          enabled            = false
+          storageAccountName = "azrender1"
         }
       }
     }
@@ -101,9 +105,9 @@ virtualMachines = [
   }
 ]
 
-##############################################################################
-# Optional dependency configuration for existing Virtual Network deployments #
-##############################################################################
+#######################################################################
+# Optional resource dependency configuration for existing deployments #
+#######################################################################
 
 computeNetwork = {
   name               = ""
@@ -112,8 +116,8 @@ computeNetwork = {
   privateDnsZoneName = ""
 }
 
-computeFarmImage = {
-  id                = ""
-  imageGalleryName  = ""
-  resourceGroupName = ""
+computeGallery = { # Only applies if customExtension.cycleCloud.enabled = true
+  name                  = ""
+  resourceGroupName     = ""
+  imageVersionIdDefault = ""
 }

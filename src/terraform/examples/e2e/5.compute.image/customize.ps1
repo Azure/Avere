@@ -10,6 +10,17 @@ Set-Location -Path $binDirectory
 $storageContainerUrl = "https://azrender.blob.core.windows.net/bin"
 $storageContainerSas = "?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
 
+Write-Host "Customize (Start): Image Build Parameters"
+$buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
+$buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
+$machineType = $buildConfig.machineType
+$machineSize = $buildConfig.machineSize
+$renderEngines = $buildConfig.renderEngines -join ","
+Write-Host "Machine Type: $machineType"
+Write-Host "Machine Size: $machineSize"
+Write-Host "Render Engines: $renderEngines"
+Write-Host "Customize (End): Image Build Parameters"
+
 Write-Host "Customize (Start): Resize OS Disk"
 $osDriveLetter = "C"
 $partitionSize = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
@@ -17,7 +28,7 @@ Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
 Write-Host "Customize (End): Resize OS Disk"
 
 Write-Host "Customize (Start): Git"
-$versionInfo = "2.38.0"
+$versionInfo = "2.38.1"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
@@ -41,23 +52,12 @@ $toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Communit
 $toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
 Write-Host "Customize (End): Visual Studio"
 
-Write-Host "Customize (Start): Image Build Parameters"
-$buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
-$buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
-$machineType = $buildConfig.machineType
-$machineSize = $buildConfig.machineSize
-$renderEngines = $buildConfig.renderEngines -join ","
-Write-Host "Machine Type: $machineType"
-Write-Host "Machine Size: $machineSize"
-Write-Host "Render Engines: $renderEngines"
-Write-Host "Customize (End): Image Build Parameters"
-
-#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
-# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
 #   NVv5 (https://learn.microsoft.com/azure/virtual-machines/nva10v5-series)
-if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3")) -or
+# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
+#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
+if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("_T4_v3")) -or
-    ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5"))) {
+    ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3"))) {
   Write-Host "Customize (Start): NVIDIA GPU GRID Driver"
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
@@ -99,7 +99,8 @@ $schedulerRepositoryLocalMount = "S:\"
 $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
 
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
-$rendererPathPBRT = "C:\Program Files\PBRT3"
+$rendererPathPBRT3 = "C:\Program Files\PBRT\v3"
+$rendererPathPBRT4 = "C:\Program Files\PBRT\v4"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
 $rendererPathUnrealStream = "$rendererPathUnreal\Stream"
 $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
@@ -110,9 +111,6 @@ $rendererPathHoudini = "C:\Program Files\Side Effects Software\Houdini19"
 $rendererPaths = ""
 if ($renderEngines -like "*Blender*") {
   $rendererPaths += ";$rendererPathBlender"
-}
-if ($renderEngines -like "*PBRT*") {
-  $rendererPaths += ";$rendererPathPBRT\Release"
 }
 if ($renderEngines -like "*Unreal*") {
   $rendererPaths += ";$rendererPathUnreal"
@@ -140,10 +138,9 @@ if ($machineType -eq "Scheduler") {
   netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
   Set-Location -Path "Deadline*"
   $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost localhost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
   $installFileLog = "$env:TMP\bitrock_installer.log"
-  Copy-Item -Path $installFileLog -Destination $binDirectory\bitrock_installer_server.log
-  Remove-Item -Path $installFileLog -Force
+  Move-Item -Path $installFileLog -Destination $binDirectory\bitrock_installer_server.log
   Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
   New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
   Set-Location -Path $binDirectory
@@ -168,9 +165,8 @@ if ($machineType -eq "Scheduler") {
   $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
 }
 Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-Copy-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
-$deadlineCommandName = "ChangeRepositorySkipValidation"
-Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-$deadlineCommandName Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
+Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
+Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
 Set-Location -Path $binDirectory
 Write-Host "Customize (End): Deadline Client"
 
@@ -185,12 +181,20 @@ if ($renderEngines -like "*Blender*") {
 }
 
 if ($renderEngines -like "*PBRT*") {
-  Write-Host "Customize (Start): PBRT"
+  Write-Host "Customize (Start): PBRT v3"
   $versionInfo = "v3"
   Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-S $binDirectory\pbrt-$versionInfo -B ""$rendererPathPBRT""" -Wait
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait
-  Write-Host "Customize (End): PBRT"
+  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo" -Wait
+  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT3\Release\pbrt.exe" -Path "C:\Program Files\pbrt3"
+  Write-Host "Customize (End): PBRT v3"
+  Write-Host "Customize (Start): PBRT v4"
+  $versionInfo = "v4"
+  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait
+  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo" -Wait
+  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT4\Release\pbrt.exe" -Path "C:\Program Files\pbrt4"
+  Write-Host "Customize (End): PBRT v4"
 }
 
 if ($renderEngines -like "*Unity*") {
@@ -333,6 +337,24 @@ if ($machineType -eq "Workstation") {
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath $installFile -ArgumentList "/S /NoPostReboot /Force" -Wait
   Write-Host "Customize (End): Teradici PCoIP Agent"
+
+  Write-Host "Customize (Start): V-Ray Benchmark"
+  $versionInfo = "5.02.00"
+  $installFile = "vray-benchmark-$versionInfo.exe"
+  $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  $installFile = "vray-benchmark-$versionInfo-cli.exe"
+  $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Write-Host "Customize (End): V-Ray Benchmark"
+
+  Write-Host "Customize (Start): Cinebench"
+  $versionInfo = "R23"
+  $installFile = "Cinebench$versionInfo.zip"
+  $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Cinebench"
 
   Write-Host "Customize (Start): Deadline Monitor Shortcut"
   $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"

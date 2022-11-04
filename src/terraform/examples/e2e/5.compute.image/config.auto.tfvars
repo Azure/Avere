@@ -11,12 +11,9 @@ imageGallery = {
       name       = "Linux"
       type       = "Linux"
       generation = "V2"
-      publisher  = "OpenLogic"
-      offer      = "CentOS"
-      sku        = "7_9-Gen2"
-      # publisher  = "AlmaLinux"
-      # offer      = "AlmaLinux"
-      # sku        = "9-Gen2"
+      publisher  = "AlmaLinux"
+      offer      = "AlmaLinux"
+      sku        = "8-Gen2"
     },
     {
       name       = "WinScheduler"
@@ -196,9 +193,9 @@ imageTemplates = [
   }
 ]
 
-##############################################################################
-# Optional dependency configuration for existing Virtual Network deployments #
-##############################################################################
+#######################################################################
+# Optional resource dependency configuration for existing deployments #
+#######################################################################
 
 computeNetwork = {
   name              = ""

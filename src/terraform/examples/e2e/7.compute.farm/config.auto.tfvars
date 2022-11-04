@@ -6,8 +6,15 @@ resourceGroupName = "ArtistAnywhere.Farm"
 
 virtualMachineScaleSets = [
   {
-    name    = "LnxFarm"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
+    name = "LnxFarm"
+    image = {
+      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
+      plan = {
+        name      = ""
+        product   = ""
+        publisher = ""
+      }
+    }
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 10
@@ -33,8 +40,8 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
-          # "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
-          # "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
+          "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
+          "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
           # "cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemPermissions = [
@@ -56,8 +63,15 @@ virtualMachineScaleSets = [
     }
   },
   {
-    name    = "" # "WinFarm"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
+    name = "" # "WinFarm"
+    image = {
+      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
+      plan = {
+        name      = ""
+        product   = ""
+        publisher = ""
+      }
+    }
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 10
@@ -83,8 +97,8 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
-          # "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:",
-          # "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:",
+          "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:",
+          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:",
           # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\show R:"
         ]
         fileSystemPermissions = [
@@ -107,9 +121,9 @@ virtualMachineScaleSets = [
   }
 ]
 
-##############################################################################
-# Optional dependency configuration for existing Virtual Network deployments #
-##############################################################################
+#######################################################################
+# Optional resource dependency configuration for existing deployments #
+#######################################################################
 
 computeNetwork = {
   name              = ""

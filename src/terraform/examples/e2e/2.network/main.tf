@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
   }
   backend "azurerm" {
@@ -201,8 +201,8 @@ locals {
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for virtualNetworkSubnet in virtualNetwork.subnets : merge(virtualNetworkSubnet,
-        {regionName         = virtualNetwork.regionName},
-        {virtualNetworkName = virtualNetwork.name}
+        { regionName         = virtualNetwork.regionName },
+        { virtualNetworkName = virtualNetwork.name }
       )
     ]
   ])

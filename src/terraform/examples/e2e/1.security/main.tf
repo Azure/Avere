@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
   }
 }
@@ -204,13 +204,13 @@ output "managedIdentityName" {
 
 output "storage" {
   value = merge(var.storage,
-    {name = module.global.securityStorageAccountName}
+    { name = module.global.securityStorageAccountName }
   )
 }
 
 output "keyVault" {
   value = merge(var.keyVault,
-    {name = module.global.keyVaultName}
+    { name = module.global.keyVaultName }
   )
 }
 

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.3"
+  required_version = ">= 1.3.4"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.28.0"
+      version = "~>3.29.1"
     }
   }
   backend "azurerm" {
@@ -17,7 +17,7 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
     template_deployment {
-      delete_nested_items_during_deletion = true
+      delete_nested_items_during_deletion = false
     }
   }
 }
@@ -51,7 +51,7 @@ variable "imageGallery" {
 variable "imageTemplates" {
   type = list(object(
     {
-      name       = string
+      name = string
       image = object(
         {
           definitionName   = string
@@ -95,13 +95,17 @@ data "azurerm_key_vault" "vault" {
   resource_group_name = module.global.securityResourceGroupName
 }
 
+data "azurerm_key_vault_secret" "admin_username" {
+  name         = module.global.keyVaultSecretNameAdminUsername
+  key_vault_id = data.azurerm_key_vault.vault.id
+}
+
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
 data "terraform_remote_state" "network" {
-  count   = local.useDependencyConfig ? 0 : 1
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.securityResourceGroupName
@@ -116,8 +120,8 @@ data "azurerm_resource_group" "network" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                = local.useDependencyConfig ? var.computeNetwork.name : data.terraform_remote_state.network[0].outputs.computeNetwork.name
-  resource_group_name = local.useDependencyConfig ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network[0].outputs.resourceGroupName
+  name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_storage_account" "storage" {
@@ -126,7 +130,7 @@ data "azurerm_storage_account" "storage" {
 }
 
 locals {
-  useDependencyConfig     = var.computeNetwork.name != ""
+  stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
   customizeScriptLinux    = "customize.sh"
   customizeScriptWindows  = "customize.ps1"
   terminateScript1Linux   = "terminate.sh"
@@ -217,15 +221,6 @@ resource "azurerm_shared_image_gallery" "gallery" {
   location            = azurerm_resource_group.image.location
 }
 
-# resource "azurerm_marketplace_agreement" "gallery" {
-#   for_each = {
-#     for imageDefinition in var.imageGallery.imageDefinitions : imageDefinition.name => imageDefinition if imageDefinition.type == "Linux"
-#   }
-#   publisher = each.value.publisher
-#   offer     = each.value.offer
-#   plan      = each.value.sku
-# }
-
 resource "azurerm_shared_image" "definitions" {
   count               = length(var.imageGallery.imageDefinitions)
   name                = var.imageGallery.imageDefinitions[count.index].name
@@ -239,9 +234,6 @@ resource "azurerm_shared_image" "definitions" {
     offer     = var.imageGallery.imageDefinitions[count.index].offer
     sku       = var.imageGallery.imageDefinitions[count.index].sku
   }
-  # depends_on = [
-  #   azurerm_marketplace_agreement.gallery
-  # ]
 }
 
 resource "azurerm_resource_group_template_deployment" "image_builder" {
@@ -264,6 +256,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     "imageScriptContainer" = {
       value = "https://${data.azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
     },
+    "keyVaultSecretAdminUsername" = {
+      value = data.azurerm_key_vault_secret.admin_username.value
+    }
     "keyVaultSecretAdminPassword" = {
       value = data.azurerm_key_vault_secret.admin_password.value
     }
@@ -286,6 +281,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           "type": "array"
         },
         "imageScriptContainer": {
+          "type": "string"
+        },
+        "keyVaultSecretAdminUsername": {
           "type": "string"
         },
         "keyVaultSecretAdminPassword": {
@@ -342,6 +340,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   "type": "string"
                 },
                 {
+                  "name": "adminUsername",
+                  "type": "string"
+                },
+                {
                   "name": "adminPassword",
                   "type": "string"
                 }
@@ -367,7 +369,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminPassword', parameters('adminPassword')))))))]"
+                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminUsername', parameters('adminUsername')), createObject('adminPassword', parameters('adminPassword')))))))]"
                     ]
                   }
                 ]
@@ -439,12 +441,13 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             },
             "source": {
               "type": "PlatformImage",
+              "planInfo": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Linux'), json(concat('{\"planName\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku), '\", \"planProduct\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer), '\", \"planPublisher\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher), '\"}')), json('null'))]",
               "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
               "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.machineType, 'Scheduler'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminPassword'))))]",
+            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.machineType, 'Scheduler'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword'))))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {
@@ -491,4 +494,10 @@ output "imageGallery" {
 
 output "imageTemplates" {
   value = var.imageTemplates
+}
+
+output "imageDefinitionsLinux" {
+  value = [
+    for imageDefinition in var.imageGallery.imageDefinitions: imageDefinition if imageDefinition.type == "Linux"
+  ]
 }
