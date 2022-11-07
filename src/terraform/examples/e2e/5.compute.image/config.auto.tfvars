@@ -63,6 +63,7 @@ imageTemplates = [
       timeoutMinutes = 120               # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = false
+      renderManager  = "Deadline"
       renderEngines  = []
     }
   },
@@ -82,13 +83,12 @@ imageTemplates = [
       timeoutMinutes = 240                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       runElevated    = false
+      renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
         "PBRT",
         "Unity",
-        "Unreal",
-        # "Maya",
-        # "Houdini"
+        "Unreal"
       ]
     }
   },
@@ -108,13 +108,12 @@ imageTemplates = [
       timeoutMinutes = 240                       # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "2.0.0"
       runElevated    = false
+      renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
         "PBRT",
         "Unity",
-        "Unreal,PixelStream",
-        # "Maya",
-        # "Houdini"
+        "Unreal,PixelStream"
       ]
     }
   },
@@ -134,6 +133,7 @@ imageTemplates = [
       timeoutMinutes = 180               # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "0.0.0"
       runElevated    = true
+      renderManager  = "Deadline"
       renderEngines  = []
     }
   },
@@ -153,14 +153,12 @@ imageTemplates = [
       timeoutMinutes = 420                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "1.0.0"
       runElevated    = false
+      renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
         "PBRT",
         "Unity",
-        "Unreal",
-        # "Maya",
-        # "3DSMax",
-        # "Houdini"
+        "Unreal"
       ]
     }
   },
@@ -180,14 +178,12 @@ imageTemplates = [
       timeoutMinutes = 420                       # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
       outputVersion  = "2.0.0"
       runElevated    = false
+      renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
         "PBRT",
         "Unity",
-        "Unreal,PixelStream",
-        # "Maya",
-        # "3DSMax",
-        # "Houdini"
+        "Unreal,PixelStream"
       ]
     }
   }

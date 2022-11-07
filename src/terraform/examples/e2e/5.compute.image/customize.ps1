@@ -15,6 +15,7 @@ $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
 $buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
 $machineType = $buildConfig.machineType
 $machineSize = $buildConfig.machineSize
+$renderManager = $buildConfig.renderManager
 $renderEngines = $buildConfig.renderEngines -join ","
 Write-Host "Machine Type: $machineType"
 Write-Host "Machine Size: $machineSize"
@@ -58,12 +59,20 @@ Write-Host "Customize (End): Visual Studio"
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("_T4_v3")) -or
     ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3"))) {
-  Write-Host "Customize (Start): NVIDIA GPU GRID Driver"
+  Write-Host "Customize (Start): NVIDIA GPU Driver (GRID)"
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath $installFile -ArgumentList "/s /noreboot" -Wait
-  Write-Host "Customize (End): NVIDIA GPU GRID Driver"
+  Write-Host "Customize (End): NVIDIA GPU Driver (GRID)"
+} elseif ($machineSize.StartsWith("Standard_N")) {
+  Write-Host "Customize (Start): NVIDIA GPU Driver (CUDA)"
+  $versionInfo = "11.8.0"
+  $installFile = "cuda_${versionInfo}_522.06_windows.exe"
+  $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Start-Process -FilePath $installFile -ArgumentList "/s /noreboot" -Wait
+  Write-Host "Customize (End): NVIDIA GPU Driver (CUDA)"
 }
 
 if ($machineType -eq "Scheduler") {
@@ -104,9 +113,6 @@ $rendererPathPBRT4 = "C:\Program Files\PBRT\v4"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
 $rendererPathUnrealStream = "$rendererPathUnreal\Stream"
 $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
-$rendererPathMaya = "C:\Program Files\Autodesk\Maya2023"
-$rendererPath3DSMax = "C:\Program Files\Autodesk\3ds Max 2023"
-$rendererPathHoudini = "C:\Program Files\Side Effects Software\Houdini19"
 
 $rendererPaths = ""
 if ($renderEngines -like "*Blender*") {
@@ -114,15 +120,6 @@ if ($renderEngines -like "*Blender*") {
 }
 if ($renderEngines -like "*Unreal*") {
   $rendererPaths += ";$rendererPathUnreal"
-}
-if ($renderEngines -like "*Maya*") {
-  $rendererPaths += ";$rendererPathMaya"
-}
-if ($renderEngines -like "*3DSMax*") {
-  $rendererPaths += ";$rendererPath3DSMax"
-}
-if ($renderEngines -like "*Houdini*") {
-  $rendererPaths += ";$rendererPathHoudini\bin"
 }
 setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
 
@@ -139,8 +136,7 @@ if ($machineType -eq "Scheduler") {
   Set-Location -Path "Deadline*"
   $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
   Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
-  $installFileLog = "$env:TMP\bitrock_installer.log"
-  Move-Item -Path $installFileLog -Destination $binDirectory\bitrock_installer_server.log
+  Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_server.log
   Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
   New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
   Set-Location -Path $binDirectory
@@ -199,16 +195,15 @@ if ($renderEngines -like "*PBRT*") {
 
 if ($renderEngines -like "*Unity*") {
   Write-Host "Customize (Start): Unity"
-  $versionInfo = "3.0"
   $installFile = "UnityHubSetup.exe"
-  $downloadUrl = "$storageContainerUrl/Unity/$versionInfo/$installFile$storageContainerSas"
+  $downloadUrl = "https://public-cdn.cloud.unity3d.com/hub/prod/$installFile"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath $installFile -ArgumentList "/S" -Wait
   Write-Host "Customize (End): Unity"
 }
 
 if ($renderEngines -like "*Unreal*") {
-  Write-Host "Customize (Start): Unreal Engine"
+  Write-Host "Customize (Start): Unreal"
   netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
   $installFile = "dism.exe"
   $featureName = "NetFX3"
@@ -244,7 +239,7 @@ if ($renderEngines -like "*Unreal*") {
     $shortcut.Save()
     Write-Host "Customize (End): Unreal Editor Shortcut"
   }
-  Write-Host "Customize (End): Unreal Engine"
+  Write-Host "Customize (End): Unreal"
 }
 
 if ($renderEngines -like "*Unreal,PixelStream*") {
@@ -263,55 +258,6 @@ if ($renderEngines -like "*Unreal,PixelStream*") {
   Start-Process -FilePath $installFile -Wait
   Set-Location -Path $binDirectory
   Write-Host "Customize (End): Unreal Pixel Streaming"
-}
-
-if ($renderEngines -like "*Maya*") {
-  Write-Host "Customize (Start): Maya"
-  $versionInfo = "2023"
-  $installFile = "Autodesk_Maya_${versionInfo}_ML_Windows_64bit.zip"
-  $downloadUrl = "$storageContainerUrl/Maya/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Expand-Archive -Path $installFile
-  Start-Process -FilePath ".\Autodesk_Maya*\Setup.exe" -ArgumentList "--silent"
-  Start-Sleep -Seconds 360
-  Write-Host "Customize (End): Maya"
-}
-
-if ($renderEngines -like "*3DSMax*") {
-  Write-Host "Customize (Start): 3DS Max"
-  $versionInfo = "2023"
-  $installFile = "Autodesk_3ds_Max_${versionInfo}_EFGJKPS_Win_64bit.zip"
-  $downloadUrl = "$storageContainerUrl/3DSMax/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Expand-Archive -Path $installFile
-  Start-Process -FilePath ".\Autodesk_3ds_Max*\Setup.exe" -ArgumentList "--silent"
-  Start-Sleep -Seconds 360
-  Write-Host "Customize (End): 3DS Max"
-}
-
-if ($renderEngines -like "*Houdini*") {
-  Write-Host "Customize (Start): Houdini"
-  $versionInfo = "19.0.561"
-  $versionEULA = "2021-10-13"
-  $installFile = "houdini-$versionInfo-win64-vc142.exe"
-  $downloadUrl = "$storageContainerUrl/Houdini/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  if ($machineType -eq "Workstation") {
-    $installArgs = "/MainApp=Yes"
-  } else {
-    $installArgs = "/HoudiniEngineOnly=Yes"
-  }
-  if ($renderEngines -like "*Unreal*") {
-    $installArgs += " /EngineUnreal=Yes"
-  }
-  if ($renderEngines -like "*Maya*") {
-    $installArgs += " /EngineMaya=Yes"
-  }
-  if ($renderEngines -like "*3DSMax*") {
-    $installArgs += " /Engine3dsMax=Yes"
-  }
-  Start-Process -FilePath $installFile -ArgumentList "/S /AcceptEULA=$versionEULA /InstallDir=$rendererPathHoudini $installArgs" -Wait
-  Write-Host "Customize (End): Houdini"
 }
 
 if ($machineType -eq "Farm") {

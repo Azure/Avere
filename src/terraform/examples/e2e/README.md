@@ -289,14 +289,14 @@ For example, the following sample **PBRT** output image was rendering in Azure v
   <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
 </p>
 
-> ######
-> Unlike the Blender splash screen data that is included in the AAA GitHub repository within the Storage module, the following PBRT Moana Island data must be downloaded, decompressed and uploaded into your storage system *before* the following job command is submitted.
->
-> * **[Moana Island Base Data (44.8 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-basepackage-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
+######
+Unlike the Blender splash screen data that is included in the AAA GitHub repository within the Storage module, the following PBRT Moana Island data must be downloaded, decompressed and uploaded into your storage system *before* the following job command is submitted.
 
-> * **[Moana Island PBRT v3 Data (6.3 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-pbrt-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
+* **[Moana Island Base Data (44.8 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-basepackage-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
 
-> * **[Moana Island PBRT v4 Data (5.5 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-pbrtV4-v2.0.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
+* **[Moana Island PBRT v3 Data (6.3 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-pbrt-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
+
+* **[Moana Island PBRT v4 Data (5.5 GBs Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/Moana/island-pbrtV4-v2.0.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
 
 #### Linux Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*

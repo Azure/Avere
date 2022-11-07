@@ -69,6 +69,7 @@ variable "imageTemplates" {
           timeoutMinutes = number
           outputVersion  = string
           runElevated    = bool
+          renderManager  = string
           renderEngines  = list(string)
         }
       )
