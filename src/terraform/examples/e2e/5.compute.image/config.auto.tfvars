@@ -93,6 +93,31 @@ imageTemplates = [
     }
   },
   {
+    name  = "LnxFarmBatch"
+    image = {
+      definitionName   = "Linux"
+      customizeScript  = "customize.sh"
+      terminateScript1 = "terminate.sh"
+      terminateScript2 = "onTerminate.sh"
+      inputVersion     = "Latest"
+    }
+    build = {
+      machineType    = "Farm"
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 240                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      outputVersion  = "1.0.0"
+      runElevated    = false
+      renderManager  = ""
+      renderEngines  = [
+        "Blender",
+        "PBRT",
+        "Unity",
+        "Unreal"
+      ]
+    }
+  },
+  {
     name  = "LnxArtist"
     image = {
       definitionName   = "Linux"

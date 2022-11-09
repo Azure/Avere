@@ -53,6 +53,14 @@ $toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Communit
 $toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
 Write-Host "Customize (End): Visual Studio"
 
+Write-Host "Customize (Start): Python"
+$versionInfo = "3.11.0"
+$installFile = "python-$versionInfo-amd64.exe"
+$downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
+Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait
+Write-Host "Customize (End): Python"
+
 #   NVv5 (https://learn.microsoft.com/azure/virtual-machines/nva10v5-series)
 # NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
 #   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
@@ -99,13 +107,15 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$schedulerVersion = "10.1.23.6"
-$schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
-$schedulerDatabasePath = "C:\DeadlineDatabase"
-$schedulerRepositoryPath = "C:\DeadlineRepository"
-$schedulerCertificateFile = "Deadline10Client.pfx"
-$schedulerRepositoryLocalMount = "S:\"
-$schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
+if ($renderManager -eq "Deadline") {
+  $schedulerVersion = "10.1.23.6"
+  $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
+  $schedulerDatabasePath = "C:\DeadlineDatabase"
+  $schedulerRepositoryPath = "C:\DeadlineRepository"
+  $schedulerCertificateFile = "Deadline10Client.pfx"
+  $schedulerRepositoryLocalMount = "S:\"
+  $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
+}
 
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
 $rendererPathPBRT3 = "C:\Program Files\PBRT\v3"
@@ -123,48 +133,50 @@ if ($renderEngines -like "*Unreal*") {
 }
 setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
 
-Write-Host "Customize (Start): Deadline Download"
-$installFile = "Deadline-$schedulerVersion-windows-installers.zip"
-$downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Expand-Archive -Path $installFile
-Write-Host "Customize (End): Deadline Download"
+if ($renderManager -eq "Deadline") {
+  Write-Host "Customize (Start): Deadline Download"
+  $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
+  $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
+  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Deadline Download"
 
-if ($machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): Deadline Repository"
-  netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
-  Set-Location -Path "Deadline*"
-  $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-  Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
-  Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_server.log
-  Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
-  New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
-  Set-Location -Path $binDirectory
-  Write-Host "Customize (End): Deadline Repository"
-}
-
-Write-Host "Customize (Start): Deadline Client"
-netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerPath\deadlineworker.exe"
-netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerPath\deadlinemonitor.exe"
-netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
-Set-Location -Path "Deadline*"
-$installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-$installArgs = "--mode unattended"
-if ($machineType -eq "Scheduler") {
-  $installArgs = "$installArgs --slavestartup false --launcherservice false"
-} else {
-  if ($machineType -eq "Farm") {
-    $workerStartup = "true"
-  } else {
-    $workerStartup = "false"
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Deadline Repository"
+    netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
+    Set-Location -Path "Deadline*"
+    $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
+    Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
+    Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_server.log
+    Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
+    New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
+    Set-Location -Path $binDirectory
+    Write-Host "Customize (End): Deadline Repository"
   }
-  $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+
+  Write-Host "Customize (Start): Deadline Client"
+  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerPath\deadlineworker.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerPath\deadlinemonitor.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
+  Set-Location -Path "Deadline*"
+  $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
+  $installArgs = "--mode unattended"
+  if ($machineType -eq "Scheduler") {
+    $installArgs = "$installArgs --slavestartup false --launcherservice false"
+  } else {
+    if ($machineType -eq "Farm") {
+      $workerStartup = "true"
+    } else {
+      $workerStartup = "false"
+    }
+    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+  }
+  Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
+  Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
+  Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): Deadline Client"
 }
-Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
-Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
-Set-Location -Path $binDirectory
-Write-Host "Customize (End): Deadline Client"
 
 if ($renderEngines -like "*Blender*") {
   Write-Host "Customize (Start): Blender"

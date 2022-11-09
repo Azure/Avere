@@ -25,7 +25,7 @@ virtualMachineScaleSets = [
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
         ephemeral = { # https://learn.microsoft.com/azure/virtual-machines/ephemeral-os-disks
-          enabled   = true
+          enable    = true
           placement = "ResourceDisk"
         }
       }
@@ -36,7 +36,7 @@ virtualMachineScaleSets = [
       disablePasswordAuth = false
     }
     customExtension = {
-      enabled  = true
+      enable   = true
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
@@ -49,16 +49,22 @@ virtualMachineScaleSets = [
         ]
       }
     }
+    healthExtension = {
+      enable      = false
+      protocol    = "http"
+      port        = 80
+      requestPath = "/"
+    }
     monitorExtension = {
-      enabled = false
+      enable = false
     }
     spot = {
-      enabled         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      enable          = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enabled      = true
+      enable       = true
       timeoutDelay = "PT5M"
     }
   },
@@ -82,7 +88,7 @@ virtualMachineScaleSets = [
         storageType = "Standard_LRS"
         cachingType = "ReadOnly"
         ephemeral = { # https://learn.microsoft.com/azure/virtual-machines/ephemeral-os-disks
-          enabled   = true
+          enable    = true
           placement = "ResourceDisk"
         }
       }
@@ -93,7 +99,7 @@ virtualMachineScaleSets = [
       disablePasswordAuth = false
     }
     customExtension = {
-      enabled  = true
+      enable   = true
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
@@ -106,16 +112,22 @@ virtualMachineScaleSets = [
         ]
       }
     }
+    healthExtension = {
+      enable      = false
+      protocol    = "http"
+      port        = 80
+      requestPath = "/"
+    }
     monitorExtension = {
-      enabled = false
+      enable = false
     }
     spot = {
-      enabled         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      enable          = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
       machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enabled      = true
+      enable       = true
       timeoutDelay = "PT5M"
     }
   }

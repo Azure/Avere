@@ -29,7 +29,7 @@ Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTri
 while ($null -eq (Get-ScheduledTask $taskName -ErrorAction SilentlyContinue)) {
   Start-Sleep -Seconds 1
 }
-if ("${autoScale.enabled}" -ne "true") {
+if ("${autoScale.enable}" -ne "true") {
   Disable-ScheduledTask -TaskName $taskName
 }
 

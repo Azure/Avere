@@ -3,7 +3,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.29.1"
+      version = "~>3.30.0"
+    }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~>2.30.0"
     }
   }
   backend "azurerm" {
@@ -30,6 +34,26 @@ module "global" {
 
 variable "resourceGroupName" {
   type = string
+}
+
+variable "batchAccount" {
+  type = object(
+    {
+      enable = bool
+      name   = string
+      storageAccount = object(
+        {
+          name              = string
+          resourceGroupName = string
+        }
+      )
+      encryption = object(
+        {
+          enable = bool
+        }
+      )
+    }
+  )
 }
 
 variable "virtualMachines" {
@@ -69,14 +93,14 @@ variable "virtualMachines" {
       )
       customExtension = object(
         {
-          enabled  = bool
+          enable   = bool
           fileName = string
           parameters = object(
             {
               fileSystemMounts = list(string)
               autoScale = object(
                 {
-                  enabled                  = bool
+                  enable                   = bool
                   fileName                 = string
                   scaleSetName             = string
                   resourceGroupName        = string
@@ -87,7 +111,7 @@ variable "virtualMachines" {
               )
               cycleCloud = object(
                 {
-                  enabled            = bool
+                  enable             = bool
                   storageAccountName = string
                 }
               )
@@ -97,7 +121,7 @@ variable "virtualMachines" {
       )
       monitorExtension = object(
         {
-          enabled = bool
+          enable = bool
         }
       )
     }
@@ -147,6 +171,11 @@ data "azurerm_key_vault_secret" "admin_password" {
   key_vault_id = data.azurerm_key_vault.vault.id
 }
 
+data "azurerm_key_vault_key" "batch_encryption" {
+  name         = module.global.keyVaultKeyNameBatchEncryption
+  key_vault_id = data.azurerm_key_vault.vault.id
+}
+
 data "azurerm_log_analytics_workspace" "monitor" {
   name                = module.global.monitorWorkspaceName
   resource_group_name = module.global.securityResourceGroupName
@@ -188,6 +217,10 @@ data "azurerm_private_dns_zone" "network" {
   resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
+data "azuread_service_principal" "batch" {
+  display_name = "Microsoft Azure Batch"
+}
+
 locals {
   stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
   stateExistsImage       = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
@@ -216,9 +249,50 @@ resource "azurerm_resource_group" "scheduler" {
   location = module.global.regionName
 }
 
+resource "azurerm_role_assignment" "batch" {
+  count                = var.batchAccount.enable ? 1 : 0
+  role_definition_name = "Contributor"
+  principal_id         = data.azuread_service_principal.batch.object_id
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+}
+
+resource "azurerm_batch_account" "scheduler" {
+  count                               = var.batchAccount.enable ? 1 : 0
+  name                                = var.batchAccount.name
+  resource_group_name                 = azurerm_resource_group.scheduler.name
+  location                            = azurerm_resource_group.scheduler.location
+  storage_account_id                  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.batchAccount.storageAccount.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${var.batchAccount.storageAccount.name}"
+  storage_account_node_identity       = data.azurerm_user_assigned_identity.identity.id
+  storage_account_authentication_mode = "BatchAccountManagedIdentity"
+  pool_allocation_mode                = "UserSubscription"
+  public_network_access_enabled       = false
+  allowed_authentication_modes = [
+    "AAD"
+  ]
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
+  }
+  key_vault_reference {
+    id  = data.azurerm_key_vault.vault.id
+    url = data.azurerm_key_vault.vault.vault_uri
+  }
+  dynamic encryption {
+    for_each = var.batchAccount.encryption.enable ? [1] : [0]
+    content {
+      key_vault_key_id = data.azurerm_key_vault_key.batch_encryption.resource_id
+    }
+  }
+  depends_on = [
+    azurerm_role_assignment.batch
+  ]
+}
+
 resource "azurerm_network_interface" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && !var.batchAccount.enable
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
@@ -232,7 +306,7 @@ resource "azurerm_network_interface" "scheduler" {
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in local.stateExistsImage ? local.virtualMachinesLinux : var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.stateExistsImage ? local.virtualMachinesLinux : var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux" && !var.batchAccount.enable
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.scheduler.name
@@ -253,13 +327,15 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
     caching              = each.value.operatingSystem.disk.cachingType
   }
   identity {
-    type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
   }
   boot_diagnostics {
     storage_account_uri = null
   }
-  dynamic "plan" {
+  dynamic plan {
     for_each = each.value.image.plan.name == "" ? [] : [1]
     content {
       name      = each.value.image.plan.name
@@ -267,7 +343,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
       publisher = each.value.image.plan.publisher
     }
   }
-  dynamic "admin_ssh_key" {
+  dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
     content {
       username   = each.value.adminLogin.userName
@@ -281,7 +357,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "custom_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux" && !var.batchAccount.enable
   }
   name                       = "Custom"
   type                       = "CustomScript"
@@ -313,7 +389,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && !var.batchAccount.enable
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -334,7 +410,7 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
 
 resource "azurerm_windows_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows" && !var.batchAccount.enable
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
@@ -354,13 +430,15 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
     caching              = each.value.operatingSystem.disk.cachingType
   }
   identity {
-    type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
   }
   boot_diagnostics {
     storage_account_uri = null
   }
-  dynamic "plan" {
+  dynamic plan {
     for_each = each.value.image.plan.name == "" ? [] : [1]
     content {
       name      = each.value.image.plan.name
@@ -375,7 +453,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "custom_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows" && !var.batchAccount.enable
   }
   name                       = "Custom"
   type                       = "CustomScriptExtension"
@@ -395,7 +473,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && !var.batchAccount.enable
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"
@@ -415,17 +493,19 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
 }
 
 resource "azurerm_private_dns_a_record" "scheduler" {
-  count               = length(azurerm_network_interface.scheduler) == 0 ? 0 : 1
+  count               = !var.batchAccount.enable ? 1 : 0
   name                = "scheduler"
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
-  records             = [azurerm_network_interface.scheduler[local.schedulerMachineNames[0]].private_ip_address]
   ttl                 = 300
+  records = [
+    azurerm_network_interface.scheduler[local.schedulerMachineNames[0]].private_ip_address
+  ]
 }
 
 resource "azurerm_role_assignment" "cycle_cloud" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.customExtension.parameters.cycleCloud.enabled
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.customExtension.parameters.cycleCloud.enable && !var.batchAccount.enable
   }
   role_definition_name = "Contributor"
   principal_id         = data.azurerm_user_assigned_identity.identity.principal_id

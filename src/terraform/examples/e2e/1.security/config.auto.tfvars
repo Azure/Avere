@@ -31,6 +31,19 @@ keyVault = {
   ]
   keys = [
     {
+      name = "BatchEncryption"
+      type = "RSA"
+      size = 2048
+      operations = [
+        "decrypt",
+        "encrypt",
+        "sign",
+        "unwrapKey",
+        "verify",
+        "wrapKey"
+      ]
+    },
+    {
       name = "CacheEncryption"
       type = "RSA"
       size = 2048

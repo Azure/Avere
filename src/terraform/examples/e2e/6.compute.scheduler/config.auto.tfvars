@@ -1,5 +1,21 @@
 resourceGroupName = "ArtistAnywhere.Scheduler"
 
+############################################################################
+# Batch (https://learn.microsoft.com/azure/batch/batch-technical-overview) #
+############################################################################
+
+batchAccount = {
+  enable = false
+  name   = "azrender"
+  storageAccount = {
+    name              = "azrender0"
+    resourceGroupName = "ArtistAnywhere"
+  }
+  encryption = {
+    enable = false
+  }
+}
+
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
 #########################################################################
@@ -29,14 +45,14 @@ virtualMachines = [
       disablePasswordAuth = false
     }
     customExtension = {
-      enabled  = true
+      enable   = true
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         autoScale = {
-          enabled                  = false
+          enable                   = false
           fileName                 = "scale.sh"
           scaleSetName             = "LnxFarm"
           resourceGroupName        = "ArtistAnywhere.Farm"
@@ -45,13 +61,13 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
-          enabled            = false
+          enable             = false
           storageAccountName = "azrender0"
         }
       }
     }
     monitorExtension = {
-      enabled = false
+      enable = false
     }
   },
   {
@@ -78,14 +94,14 @@ virtualMachines = [
       disablePasswordAuth = false
     }
     customExtension = {
-      enabled  = true
+      enable   = true
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
           "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:"
         ]
         autoScale = {
-          enabled                  = false
+          enable                   = false
           fileName                 = "scale.ps1"
           scaleSetName             = "WinFarm"
           resourceGroupName        = "ArtistAnywhere.Farm"
@@ -94,13 +110,13 @@ virtualMachines = [
           workerIdleDeleteSeconds  = 3600
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
-          enabled            = false
+          enable             = false
           storageAccountName = "azrender1"
         }
       }
     }
     monitorExtension = {
-      enabled = false
+      enable = false
     }
   }
 ]
@@ -116,7 +132,7 @@ computeNetwork = {
   privateDnsZoneName = ""
 }
 
-computeGallery = { # Only applies if customExtension.cycleCloud.enabled = true
+computeGallery = { # Only applies if customExtension.cycleCloud.enable = true
   name                  = ""
   resourceGroupName     = ""
   imageVersionIdDefault = ""

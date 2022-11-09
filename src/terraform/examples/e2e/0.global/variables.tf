@@ -38,6 +38,9 @@ variable "keyVaultSecretNameAdminPassword" {
 }
 
 # KeyVault key names
+variable "keyVaultKeyNameBatchEncryption" {
+  default = "BatchEncryption"
+}
 variable "keyVaultKeyNameCacheEncryption" {
   default = "CacheEncryption"
 }
@@ -78,6 +81,9 @@ output "keyVaultSecretNameAdminPassword" {
   value = var.keyVaultSecretNameAdminPassword
 }
 
+output "keyVaultKeyNameBatchEncryption" {
+  value = var.keyVaultKeyNameBatchEncryption
+}
 output "keyVaultKeyNameCacheEncryption" {
   value = var.keyVaultKeyNameCacheEncryption
 }

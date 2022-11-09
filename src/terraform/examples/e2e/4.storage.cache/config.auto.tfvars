@@ -1,7 +1,6 @@
 resourceGroupName = "ArtistAnywhere.Cache"
 
-cacheName      = "cache" # Set to a uniquely identifiable cache name
-enableHpcCache = true    # Set to false for Avere vFXT cache deployment
+cacheName = "cache" # Set to a uniquely identifiable cache name
 
 ##############################################################################
 # HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
@@ -15,12 +14,13 @@ enableHpcCache = true    # Set to false for Avere vFXT cache deployment
 #      Standard_4G - 6144, 12288, 24576   Read Write
 #      Standard_8G - 12288, 24576, 49152  Read Write
 hpcCache = {
+  enable     = true
   throughput = "Standard_L4_5G"
   size       = 21623
   mtuSize    = 1500
   ntpHost    = "time.windows.com"
   encryption = {
-    enabled   = false
+    enable    = false
     rotateKey = false
   }
 }

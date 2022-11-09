@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.29.1"
+      version = "~>3.30.0"
     }
   }
   backend "azurerm" {
@@ -88,7 +88,7 @@ variable "storageNetworkSubnetIndex" {
 variable "networkPeering" {
   type = object(
     {
-      enabled                     = bool
+      enable                      = bool
       allowRemoteNetworkAccess    = bool
       allowRemoteForwardedTraffic = bool
       allowNetworkGatewayTransit  = bool
@@ -108,7 +108,7 @@ variable "privateDns" {
 variable "bastion" {
   type = object(
     {
-      enabled             = bool
+      enable              = bool
       sku                 = string
       scaleUnitCount      = number
       enableFileCopy      = bool
@@ -161,7 +161,7 @@ variable "vpnGatewayLocal" {
       addressSpace = list(string)
       bgp = object(
         {
-          enabled        = bool
+          enable         = bool
           asn            = number
           peerWeight     = number
           peeringAddress = string
@@ -246,7 +246,7 @@ resource "azurerm_subnet" "network" {
   service_endpoints                             = each.value.serviceEndpoints
   private_endpoint_network_policies_enabled     = each.value.name == "GatewaySubnet"
   private_link_service_network_policies_enabled = each.value.name == "GatewaySubnet"
-  dynamic "delegation" {
+  dynamic delegation {
     for_each = each.value.serviceDelegation != "" ? [1] : []
     content {
       name = "delegation"
@@ -268,7 +268,7 @@ resource "azurerm_network_security_group" "network" {
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
   security_rule {
-    name                       = "AllowSSH"
+    name                       = "AllowInSSH"
     priority                   = 2000
     direction                  = "Inbound"
     access                     = "Allow"
@@ -279,7 +279,7 @@ resource "azurerm_network_security_group" "network" {
     destination_port_range     = "22"
   }
   security_rule {
-    name                       = "AllowRDP"
+    name                       = "AllowInRDP"
     priority                   = 2100
     direction                  = "Inbound"
     access                     = "Allow"
@@ -288,6 +288,28 @@ resource "azurerm_network_security_group" "network" {
     source_port_range          = "*"
     destination_address_prefix = "*"
     destination_port_range     = "3389"
+  }
+  security_rule {
+    name                       = "AllowOutARM"
+    priority                   = 2000
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "AzureResourceManager"
+    source_port_range          = "*"
+    destination_address_prefix = "*"
+    destination_port_range     = "*"
+  }
+  security_rule {
+    name                       = "DenyOutInternet"
+    priority                   = 2100
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_address_prefix      = "Internet"
+    source_port_range          = "*"
+    destination_address_prefix = "*"
+    destination_port_range     = "*"
   }
 }
 
@@ -308,7 +330,7 @@ resource "azurerm_subnet_network_security_group_association" "network" {
 ################################################################################################################
 
 resource "azurerm_virtual_network_peering" "network_peering_up" {
-  count                        = var.networkPeering.enabled ? length(local.virtualNetworks) - 1 : 0
+  count                        = var.networkPeering.enable ? length(local.virtualNetworks) - 1 : 0
   name                         = "${local.virtualNetworks[count.index].name}.${local.virtualNetworks[count.index + 1].name}"
   resource_group_name          = azurerm_resource_group.network.name
   virtual_network_name         = local.virtualNetworks[count.index].name
@@ -322,7 +344,7 @@ resource "azurerm_virtual_network_peering" "network_peering_up" {
 }
 
 resource "azurerm_virtual_network_peering" "network_peering_down" {
-  count                        = var.networkPeering.enabled ? length(local.virtualNetworks) - 1 : 0
+  count                        = var.networkPeering.enable ? length(local.virtualNetworks) - 1 : 0
   name                         = "${local.virtualNetworks[count.index + 1].name}.${local.virtualNetworks[count.index].name}"
   resource_group_name          = azurerm_resource_group.network.name
   virtual_network_name         = local.virtualNetworks[count.index + 1].name
@@ -358,12 +380,12 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   ]
 }
 
-##############################################################################
-# Bastion (https://learn.microsoft.com/en-us/azure/bastion/bastion-overview) #
-##############################################################################
+########################################################################
+# Bastion (https://learn.microsoft.com/azure/bastion/bastion-overview) #
+########################################################################
 
 resource "azurerm_network_security_group" "bastion" {
-  count               = var.bastion.enabled ? 1 : 0
+  count               = var.bastion.enable ? 1 : 0
   name                = "Bastion"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
@@ -458,7 +480,7 @@ resource "azurerm_network_security_group" "bastion" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "bastion" {
-  count                     = var.bastion.enabled ? 1 : 0
+  count                     = var.bastion.enable ? 1 : 0
   subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.computeNetwork.name}/subnets/AzureBastionSubnet"
   network_security_group_id = azurerm_network_security_group.bastion[0].id
   depends_on = [
@@ -467,7 +489,7 @@ resource "azurerm_subnet_network_security_group_association" "bastion" {
 }
 
 resource "azurerm_public_ip" "bastion_address" {
-  count               = var.bastion.enabled ? 1 : 0
+  count               = var.bastion.enable ? 1 : 0
   name                = "Bastion"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
@@ -479,7 +501,7 @@ resource "azurerm_public_ip" "bastion_address" {
 }
 
 resource "azurerm_bastion_host" "compute" {
-  count                  = var.bastion.enabled ? 1 : 0
+  count                  = var.bastion.enable ? 1 : 0
   name                   = "Bastion"
   resource_group_name    = azurerm_resource_group.network.name
   location               = azurerm_resource_group.network.location
@@ -556,7 +578,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
     public_ip_address_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/publicIPAddresses/${each.value.name}${local.virtualGatewayActiveActive ? "1" : ""}"
     subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
   }
-  dynamic "ip_configuration" {
+  dynamic ip_configuration {
     for_each = local.virtualGatewayActiveActive ? [1] : []
     content {
       name                 = "ipConfig2"
@@ -564,7 +586,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
       subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
     }
   }
-  dynamic "ip_configuration" {
+  dynamic ip_configuration {
     for_each = local.virtualGatewayActiveActive && length(var.vpnGateway.pointToSiteClient.addressSpace) > 0 ? [1] : []
     content {
       name                 = "ipConfig3"
@@ -572,7 +594,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
       subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
     }
   }
-  dynamic "vpn_client_configuration" {
+  dynamic vpn_client_configuration {
     for_each = length(var.vpnGateway.pointToSiteClient.addressSpace) > 0 ? [1] : []
     content {
       address_space = var.vpnGateway.pointToSiteClient.addressSpace
@@ -630,8 +652,8 @@ resource "azurerm_local_network_gateway" "vpn" {
   gateway_fqdn        = var.vpnGatewayLocal.address == "" ? var.vpnGatewayLocal.fqdn : null
   gateway_address     = var.vpnGatewayLocal.fqdn == "" ? var.vpnGatewayLocal.address : null
   address_space       = var.vpnGatewayLocal.addressSpace
-  dynamic "bgp_settings" {
-    for_each = var.vpnGatewayLocal.bgp.enabled ? [1] : []
+  dynamic bgp_settings {
+    for_each = var.vpnGatewayLocal.bgp.enable ? [1] : []
     content {
       asn                 = var.vpnGatewayLocal.bgp.asn
       peer_weight         = var.vpnGatewayLocal.bgp.peerWeight
@@ -649,7 +671,7 @@ resource "azurerm_virtual_network_gateway_connection" "site_to_site" {
   virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[count.index].id
   local_network_gateway_id   = azurerm_local_network_gateway.vpn[count.index].id
   shared_key                 = data.azurerm_key_vault_secret.gateway_connection.value
-  enable_bgp                 = var.vpnGatewayLocal.bgp.enabled
+  enable_bgp                 = var.vpnGatewayLocal.bgp.enable
 }
 
 ##########################################

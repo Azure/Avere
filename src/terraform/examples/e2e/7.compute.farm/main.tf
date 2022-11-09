@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.29.1"
+      version = "~>3.30.0"
     }
   }
   backend "azurerm" {
@@ -59,11 +59,11 @@ variable "virtualMachineScaleSets" {
           type = string
           disk = object(
             {
-              storageType     = string
-              cachingType     = string
+              storageType = string
+              cachingType = string
               ephemeral = object(
                 {
-                  enabled   = bool
+                  enable    = bool
                   placement = string
                 }
               )
@@ -80,7 +80,7 @@ variable "virtualMachineScaleSets" {
       )
       customExtension = object(
         {
-          enabled  = bool
+          enable   = bool
           fileName = string
           parameters = object(
             {
@@ -90,21 +90,29 @@ variable "virtualMachineScaleSets" {
           )
         }
       )
+      healthExtension = object(
+        {
+          enable      = bool
+          protocol    = string
+          port        = number
+          requestPath = string
+        }
+      )
       monitorExtension = object(
         {
-          enabled = bool
+          enable = bool
         }
       )
       spot = object(
         {
-          enabled         = bool
+          enable          = bool
           evictionPolicy  = string
           machineMaxPrice = number
         }
       )
       terminationNotification = object(
         {
-          enabled      = bool
+          enable       = bool
           timeoutDelay = string
         }
       )
@@ -214,9 +222,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
-  priority                        = each.value.spot.enabled ? "Spot" : "Regular"
-  eviction_policy                 = each.value.spot.enabled ? each.value.spot.evictionPolicy : null
-  max_bid_price                   = each.value.spot.enabled ? each.value.spot.machineMaxPrice : -1
+  priority                        = each.value.spot.enable ? "Spot" : "Regular"
+  eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
+  max_bid_price                   = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group          = false
   overprovision                   = false
   network_interface {
@@ -232,8 +240,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
-    dynamic "diff_disk_settings" {
-      for_each = each.value.operatingSystem.disk.ephemeral.enabled ? [1] : []
+    dynamic diff_disk_settings {
+      for_each = each.value.operatingSystem.disk.ephemeral.enable ? [1] : []
       content {
         option    = "Local"
         placement = each.value.operatingSystem.disk.ephemeral.placement
@@ -241,13 +249,15 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   identity {
-    type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
   }
   boot_diagnostics {
     storage_account_uri = null
   }
-  dynamic "plan" {
+  dynamic plan {
     for_each = each.value.image.plan.name == "" ? [] : [1]
     content {
       name      = each.value.image.plan.name
@@ -255,14 +265,14 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       publisher = each.value.image.plan.publisher
     }
   }
-  dynamic "admin_ssh_key" {
+  dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
     content {
       username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
     }
   }
-  dynamic "extension" {
+  dynamic extension {
     for_each = each.value.customExtension.fileName != "" ? [1] : []
     content {
       name                       = "Custom"
@@ -277,8 +287,23 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       })
     }
   }
-  dynamic "extension" {
-    for_each = each.value.monitorExtension.enabled ? [1] : []
+  dynamic extension {
+    for_each = each.value.healthExtension.enable ? [1] : []
+    content {
+      name                       = "Health"
+      type                       = "ApplicationHealthLinux"
+      publisher                  = "Microsoft.ManagedServices"
+      type_handler_version       = "1.0"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        "protocol"   : each.value.healthExtension.protocol
+        "port"       : each.value.healthExtension.port
+        "requestPath": each.value.healthExtension.requestPath
+      })
+    }
+  }
+  dynamic extension {
+    for_each = each.value.monitorExtension.enable ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorLinuxAgent"
@@ -293,10 +318,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       })
     }
   }
-  dynamic "termination_notification" {
-    for_each = each.value.terminationNotification.enabled ? [1] : []
+  dynamic termination_notification {
+    for_each = each.value.terminationNotification.enable ? [1] : []
     content {
-      enabled = each.value.terminationNotification.enabled
+      enabled = each.value.terminationNotification.enable
       timeout = each.value.terminationNotification.timeoutDelay
     }
   }
@@ -314,9 +339,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   instances              = each.value.machine.count
   admin_username         = each.value.adminLogin.userName
   admin_password         = data.azurerm_key_vault_secret.admin_password.value
-  priority               = each.value.spot.enabled ? "Spot" : "Regular"
-  eviction_policy        = each.value.spot.enabled ? each.value.spot.evictionPolicy : null
-  max_bid_price          = each.value.spot.enabled ? each.value.spot.machineMaxPrice : -1
+  priority               = each.value.spot.enable ? "Spot" : "Regular"
+  eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
+  max_bid_price          = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group = false
   overprovision          = false
   network_interface {
@@ -331,8 +356,8 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
-    dynamic "diff_disk_settings" {
-      for_each = each.value.operatingSystem.disk.ephemeral.enabled ? [1] : []
+    dynamic diff_disk_settings {
+      for_each = each.value.operatingSystem.disk.ephemeral.enable ? [1] : []
       content {
         option    = "Local"
         placement = each.value.operatingSystem.disk.ephemeral.placement
@@ -340,14 +365,16 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   identity {
-    type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
   }
   boot_diagnostics {
     storage_account_uri = null
   }
-  dynamic "extension" {
-    for_each = each.value.customExtension.enabled ? [1] : []
+  dynamic extension {
+    for_each = each.value.customExtension.enable ? [1] : []
     content {
       name                       = "Custom"
       type                       = "CustomScriptExtension"
@@ -361,8 +388,23 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       })
     }
   }
-  dynamic "extension" {
-    for_each = each.value.monitorExtension.enabled ? [1] : []
+  dynamic extension {
+    for_each = each.value.healthExtension.enable ? [1] : []
+    content {
+      name                       = "Health"
+      type                       = "ApplicationHealthWindows"
+      publisher                  = "Microsoft.ManagedServices"
+      type_handler_version       = "1.0"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        "protocol"   : each.value.healthExtension.protocol
+        "port"       : each.value.healthExtension.port
+        "requestPath": each.value.healthExtension.requestPath
+      })
+    }
+  }
+  dynamic extension {
+    for_each = each.value.monitorExtension.enable ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorWindowsAgent"
@@ -377,10 +419,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       })
     }
   }
-  dynamic "termination_notification" {
-    for_each = each.value.terminationNotification.enabled ? [1] : []
+  dynamic termination_notification {
+    for_each = each.value.terminationNotification.enable ? [1] : []
     content {
-      enabled = each.value.terminationNotification.enabled
+      enabled = each.value.terminationNotification.enable
       timeout = each.value.terminationNotification.timeoutDelay
     }
   }

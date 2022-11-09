@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.29.1"
+      version = "~>3.30.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -35,20 +35,17 @@ variable "cacheName" {
   type = string
 }
 
-variable "enableHpcCache" {
-  type = bool
-}
-
 variable "hpcCache" {
   type = object(
     {
+      enable     = bool
       throughput = string
       size       = number
       mtuSize    = number
       ntpHost    = string
       encryption = object(
         {
-          enabled   = bool
+          enable    = bool
           rotateKey = bool
         }
       )
@@ -220,7 +217,7 @@ resource "azurerm_resource_group" "cache" {
 ##############################################################################
 
 resource "azurerm_hpc_cache" "cache" {
-  count               = var.enableHpcCache ? 1 : 0
+  count               = var.hpcCache.enable ? 1 : 0
   name                = var.cacheName
   resource_group_name = azurerm_resource_group.cache.name
   location            = azurerm_resource_group.cache.location
@@ -235,20 +232,20 @@ resource "azurerm_hpc_cache" "cache" {
       data.azurerm_user_assigned_identity.identity.id
     ]
   }
-  key_vault_key_id                           = var.hpcCache.encryption.enabled ? data.azurerm_key_vault_key.cache_encryption.id : null
-  automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enabled ? var.hpcCache.encryption.rotateKey : null
+  key_vault_key_id                           = var.hpcCache.encryption.enable ? data.azurerm_key_vault_key.cache_encryption.id : null
+  automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enable ? var.hpcCache.encryption.rotateKey : null
 }
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
   for_each = {
-    for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if var.enableHpcCache && storageTargetNfs.name != ""
+    for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if var.hpcCache.enable && storageTargetNfs.name != ""
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.cache.name
   cache_name          = azurerm_hpc_cache.cache[0].name
   target_host_name    = each.value.storageHost
   usage_model         = each.value.hpcCache.usageModel
-  dynamic "namespace_junction" {
+  dynamic namespace_junction {
     for_each = each.value.namespaceJunctions
     content {
       nfs_export     = namespace_junction.value["storageExport"]
@@ -260,7 +257,7 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
 
 resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   for_each = {
-    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.enableHpcCache && storageTargetNfsBlob.name != ""
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
   }
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.cache.name
@@ -304,14 +301,14 @@ resource "azurerm_role_assignment" "cache_contributor" {
 }
 
 resource "azurerm_marketplace_agreement" "cache" {
-  count     = var.vfxtCache.enableMarketplaceAgreement && !var.enableHpcCache ? 1 : 0
+  count     = var.vfxtCache.enableMarketplaceAgreement && !var.hpcCache.enable ? 1 : 0
   publisher = "Microsoft-Avere"
   offer     = "vFXT"
   plan      = "Avere-vFXT-Controller"
 }
 
 module "vfxt_controller" {
-  count                             = var.enableHpcCache ? 0 : 1
+  count                             = var.hpcCache.enable ? 0 : 1
   source                            = "github.com/Azure/Avere/src/terraform/modules/controller3"
   create_resource_group             = false
   resource_group_name               = var.resourceGroupName
@@ -335,7 +332,7 @@ module "vfxt_controller" {
 }
 
 resource "avere_vfxt" "cache" {
-  count                           = var.enableHpcCache ? 0 : 1
+  count                           = var.hpcCache.enable ? 0 : 1
   vfxt_cluster_name               = lower(var.cacheName)
   azure_resource_group            = var.resourceGroupName
   location                        = module.global.regionName
@@ -360,7 +357,7 @@ resource "avere_vfxt" "cache" {
   vserver_ip_count                = local.vfxtVServerAddressCount
   user_assigned_managed_identity  = data.azurerm_user_assigned_identity.identity.id
   timezone                        = var.vfxtCache.localTimezone
-  dynamic "core_filer" {
+  dynamic core_filer {
     for_each = {
       for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if storageTargetNfs.name != ""
     }
@@ -370,7 +367,7 @@ resource "avere_vfxt" "cache" {
       cache_policy              = core_filer.value["vfxtCache"].cachePolicy
       nfs_connection_multiplier = core_filer.value["vfxtCache"].nfsConnections
       custom_settings           = core_filer.value["vfxtCache"].customSettings
-      dynamic "junction" {
+      dynamic junction {
         for_each = core_filer.value["namespaceJunctions"]
         content {
           core_filer_export   = junction.value["storageExport"]
@@ -409,7 +406,7 @@ resource "azurerm_private_dns_a_record" "cache" {
   name                = "cache"
   resource_group_name = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].resource_group_name : data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].name : data.azurerm_private_dns_zone.network.name
-  records             = var.enableHpcCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+  records             = var.hpcCache.enable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
   ttl                 = 300
 }
 
@@ -422,15 +419,15 @@ output "cacheName" {
 }
 
 output "cacheControllerAddress" {
-  value = var.enableHpcCache ? "" : avere_vfxt.cache[0].controller_address
+  value = var.hpcCache.enable ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].controller_address : ""
 }
 
 output "cacheManagementAddress" {
-  value = var.enableHpcCache ? "" : avere_vfxt.cache[0].vfxt_management_ip
+  value = var.hpcCache.enable ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vfxt_management_ip: ""
 }
 
 output "cacheMountAddresses" {
-  value = var.enableHpcCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+  value = var.hpcCache.enable && length(azurerm_hpc_cache.cache) > 0 ? azurerm_hpc_cache.cache[0].mount_addresses : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vserver_ip_addresses : ""
 }
 
 output "cachePrivateDnsFqdn" {

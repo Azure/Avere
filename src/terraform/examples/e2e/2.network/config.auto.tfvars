@@ -87,7 +87,7 @@ storageNetworkSubnetIndex = {
 ################################################################################################################
 
 networkPeering = {
-  enabled                     = true
+  enable                      = true
   allowRemoteNetworkAccess    = true
   allowRemoteForwardedTraffic = false
   allowNetworkGatewayTransit  = false
@@ -102,12 +102,12 @@ privateDns = {
   enableAutoRegistration = true
 }
 
-##############################################################################
-# Bastion (https://learn.microsoft.com/en-us/azure/bastion/bastion-overview) #
-##############################################################################
+########################################################################
+# Bastion (https://learn.microsoft.com/azure/bastion/bastion-overview) #
+########################################################################
 
 bastion = {
-  enabled             = true
+  enable              = true
   sku                 = "Standard"
   scaleUnitCount      = 2
   enableFileCopy      = true
@@ -157,7 +157,7 @@ vpnGatewayLocal = {
   address      = "" # OR set the public IP address of your on-prem VPN gateway device. Do not set both.
   addressSpace = []
   bgp = {
-    enabled        = false
+    enable         = false
     asn            = 0
     peerWeight     = 0
     peeringAddress = ""

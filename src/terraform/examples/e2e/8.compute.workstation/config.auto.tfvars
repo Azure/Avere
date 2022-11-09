@@ -29,7 +29,7 @@ virtualMachines = [
       disablePasswordAuth = false
     }
     customExtension = {
-      enabled  = true
+      enable   = true
       fileName = "initialize.sh"
       parameters = {
         fileSystemMounts = [
@@ -40,7 +40,7 @@ virtualMachines = [
       }
     }
     monitorExtension = {
-      enabled = false
+      enable = false
     }
   },
   {
@@ -67,7 +67,7 @@ virtualMachines = [
       disablePasswordAuth = false
     }
     customExtension = {
-      enabled  = true
+      enable   = true
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMounts = [
@@ -78,7 +78,7 @@ virtualMachines = [
       }
     }
     monitorExtension = {
-      enabled = false
+      enable = false
     }
   }
 ]

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.29.1"
+      version = "~>3.30.0"
     }
   }
   backend "azurerm" {
@@ -69,7 +69,7 @@ variable "virtualMachines" {
       )
       customExtension = object(
         {
-          enabled  = bool
+          enable   = bool
           fileName = string
           parameters = object(
             {
@@ -81,7 +81,7 @@ variable "virtualMachines" {
       )
       monitorExtension = object(
         {
-          enabled = bool
+          enable = bool
         }
       )
     }
@@ -205,13 +205,15 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     caching              = each.value.operatingSystem.disk.cachingType
   }
   identity {
-    type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
   }
   boot_diagnostics {
     storage_account_uri = null
   }
-  dynamic "plan" {
+  dynamic plan {
     for_each = each.value.image.plan.name == "" ? [] : [1]
     content {
       name      = each.value.image.plan.name
@@ -219,7 +221,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
       publisher = each.value.image.plan.publisher
     }
   }
-  dynamic "admin_ssh_key" {
+  dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
     content {
       username   = each.value.adminLogin.userName
@@ -233,7 +235,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "custom_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Custom"
   type                       = "CustomScript"
@@ -253,7 +255,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -291,8 +293,10 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     caching              = each.value.operatingSystem.disk.cachingType
   }
   identity {
-    type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.identity.id]
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.identity.id
+    ]
   }
   boot_diagnostics {
     storage_account_uri = null
@@ -304,7 +308,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "custom_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Custom"
   type                       = "CustomScriptExtension"
@@ -324,7 +328,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enabled && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.29.1"
+      version = "~>3.30.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -592,7 +592,7 @@ resource "azurerm_netapp_volume" "storage" {
   pool_name           = each.value.capacityPoolName
   account_name        = var.netAppAccount.name
   subnet_id           = data.azurerm_subnet.storage_netapp.id
-  dynamic "export_policy_rule" {
+  dynamic export_policy_rule {
     for_each = each.value.exportPolicies
     content {
       rule_index          = export_policy_rule.value["ruleIndex"]

@@ -108,15 +108,17 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
-schedulerVersion="10.1.23.6"
-schedulerPath="/opt/Thinkbox/Deadline10/bin"
-schedulerDatabaseHost="localhost"
-schedulerDatabasePort="27017"
-schedulerRepositoryPath="/DeadlineRepository"
-schedulerCertificateName="Deadline10Client"
-schedulerCertificateFile="$schedulerCertificateName.pfx"
-schedulerRepositoryLocalMount="/mnt/scheduler"
-schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
+if [ $renderManager == "Deadline" ]; then
+  schedulerVersion="10.1.23.6"
+  schedulerPath="/opt/Thinkbox/Deadline10/bin"
+  schedulerDatabaseHost="localhost"
+  schedulerDatabasePort="27017"
+  schedulerRepositoryPath="/DeadlineRepository"
+  schedulerCertificateName="Deadline10Client"
+  schedulerCertificateFile="$schedulerCertificateName.pfx"
+  schedulerRepositoryLocalMount="/mnt/scheduler"
+  schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
+fi
 
 rendererPathBlender="/usr/local/blender3"
 rendererPathPBRT3="/usr/local/pbrt/v3"
@@ -133,66 +135,73 @@ if [[ $renderEngines == *Unreal* ]]; then
 fi
 echo "PATH=$PATH:$schedulerPath$rendererPaths:/usr/local/cyclecloud/bin" > /etc/profile.d/aaa.sh
 
-echo "Customize (Start): Deadline Download"
-installFile="Deadline-$schedulerVersion-linux-installers.tar"
-downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
-curl -o $installFile -L $downloadUrl
-tar -xzf $installFile
-echo "Customize (End): Deadline Download"
-
-if [ $machineType == "Scheduler" ]; then
-  echo "Customize (Start): OpenSSL Certificates"
-  pip3.9 install pyOpenSSL
-  installFile="SSLGeneration-master.zip"
-  downloadUrl="$storageContainerUrl/Deadline/$installFile$storageContainerSas"
+if [ $renderManager == "Deadline" ]; then
+  echo "Customize (Start): Deadline Download"
+  installFile="Deadline-$schedulerVersion-linux-installers.tar"
+  downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  unzip -q $installFile
-  cd "SSLGeneration-master"
-  schedulerCertificateOrg="Azure"
-  schedulerCertificateOrgUnit="HPCRender"
-  python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --ca
-  python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --server --cert-name $schedulerCertificateName
-  python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --client --cert-name $schedulerCertificateName
-  python3.9 ssl_gen.py --cert-name $schedulerCertificateName --pfx
-  mkdir -p $schedulerRepositoryPath
-  cp ./keys/$schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
-  chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
-  cd $binDirectory
-  echo "Customize (End): OpenSSL Certificates"
-  echo "Customize (Start): Mongo DB"
-  mongoDbRepoPath="/etc/yum.repos.d/mongodb.repo"
-  echo "[mongodb-org-4.2]" > $mongoDbRepoPath
-  echo "name=MongoDB" >> $mongoDbRepoPath
-  echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.2/x86_64/" >> $mongoDbRepoPath
-  echo "gpgcheck=1" >> $mongoDbRepoPath
-  echo "enabled=1" >> $mongoDbRepoPath
-  echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc" >> $mongoDbRepoPath
-  dnf -y install mongodb-org
-  systemctl enable mongod
-  systemctl start mongod
-  echo "Customize (End): Mongo DB"
-  echo "Customize (Start): Deadline Repository"
-  installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-  ./$installFile --mode unattended --dbLicenseAcceptance accept --dbclientcert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
-  mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_server.log
-  echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
-  exportfs -a
-  echo "Customize (End): Deadline Repository"
-fi
+  tar -xzf $installFile
+  echo "Customize (End): Deadline Download"
 
-echo "Customize (Start): Deadline Client"
-installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-installArgs="--mode unattended"
-if [ $machineType == "Scheduler" ]; then
-  installArgs="$installArgs --slavestartup false --launcherdaemon false"
-else
-  [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
-  installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+  if [ $machineType == "Scheduler" ]; then
+    echo "Customize (Start): OpenSSL Certificates"
+    pip3.9 install pyOpenSSL
+    installFile="SSLGeneration-master.zip"
+    downloadUrl="$storageContainerUrl/Deadline/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    unzip -q $installFile
+    cd "SSLGeneration-master"
+    schedulerCertificateOrg="Azure"
+    schedulerCertificateOrgUnit="HPCRender"
+    python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --ca
+    python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --server --cert-name $schedulerCertificateName
+    python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --client --cert-name $schedulerCertificateName
+    python3.9 ssl_gen.py --cert-name $schedulerCertificateName --pfx
+    cd "keys"
+    openssl pkcs12 -in $schedulerCertificateFile -out $schedulerCertificateName.pem -passin pass: -passout pass: -nocerts -nodes
+    schedulerCertificateKeyFile="$(pwd)/$schedulerCertificateName.pem"
+    schedulerCertificateAuthorityFile="$(pwd)/ca.crt"
+    mkdir -p $schedulerRepositoryPath
+    cp ./$schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
+    chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
+    cd $binDirectory
+    echo "Customize (End): OpenSSL Certificates"
+    echo "Customize (Start): Mongo DB"
+    mongoDbRepoPath="/etc/yum.repos.d/mongodb.repo"
+    echo "[mongodb-org-4.2]" > $mongoDbRepoPath
+    echo "name=MongoDB" >> $mongoDbRepoPath
+    echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.2/x86_64/" >> $mongoDbRepoPath
+    echo "gpgcheck=1" >> $mongoDbRepoPath
+    echo "enabled=1" >> $mongoDbRepoPath
+    echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc" >> $mongoDbRepoPath
+    dnf -y install mongodb-org
+    # sed -i "/bindIp:/a ssl:\n  mode: requireSSL\n  PEMKeyFile: $schedulerCertificateKeyFile\n  CAFile: $schedulerCertificateAuthorityFile" /etc/mongod.conf
+    systemctl enable mongod
+    systemctl start mongod
+    echo "Customize (End): Mongo DB"
+    echo "Customize (Start): Deadline Repository"
+    installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
+    ./$installFile --mode unattended --dbLicenseAcceptance accept --dbclientcert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
+    mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_server.log
+    echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
+    exportfs -a
+    echo "Customize (End): Deadline Repository"
+  fi
+
+  echo "Customize (Start): Deadline Client"
+  installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
+  installArgs="--mode unattended"
+  if [ $machineType == "Scheduler" ]; then
+    installArgs="$installArgs --slavestartup false --launcherdaemon false"
+  else
+    [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
+    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+  fi
+  ./$installFile $installArgs
+  mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
+  $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
+  echo "Customize (End): Deadline Client"
 fi
-./$installFile $installArgs
-mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
-$schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
-echo "Customize (End): Deadline Client"
 
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
@@ -217,7 +226,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
   mkdir -p $rendererPathPBRT3
   cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo/
-  make -C $rendererPathPBRT3
+  make -C $rendererPathPBRT3 -j $(nproc)
   ln -s $rendererPathPBRT3/pbrt /usr/bin/pbrt3
   echo "Customize (End): PBRT v3"
   echo "Customize (Start): PBRT v4"
@@ -230,7 +239,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
   mkdir -p $rendererPathPBRT4
   cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo/
-  make -C $rendererPathPBRT4
+  make -C $rendererPathPBRT4 -j $(nproc)
   ln -s $rendererPathPBRT4/pbrt /usr/bin/pbrt4
   echo "Customize (End): PBRT v4"
 fi
@@ -265,7 +274,7 @@ if [[ $renderEngines == *Unreal* ]]; then
   if [ $machineType == "Workstation" ]; then
     echo "Customize (Start): Unreal Project Files"
     $rendererPathUnreal/GenerateProjectFiles.sh
-    make -C $rendererPathUnreal
+    make -C $rendererPathUnreal -j $(nproc)
     echo "Customize (End): Unreal Project Files"
   fi
   echo "Customize (End): Unreal"
