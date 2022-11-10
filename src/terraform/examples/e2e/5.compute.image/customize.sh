@@ -111,7 +111,7 @@ fi
 if [ $renderManager == "Deadline" ]; then
   schedulerVersion="10.1.23.6"
   schedulerPath="/opt/Thinkbox/Deadline10/bin"
-  schedulerDatabaseHost="localhost"
+  schedulerDatabaseHost="$(hostname)"
   schedulerDatabasePort="27017"
   schedulerRepositoryPath="/DeadlineRepository"
   schedulerCertificateName="Deadline"
