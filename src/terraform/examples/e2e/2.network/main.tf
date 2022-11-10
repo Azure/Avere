@@ -186,14 +186,14 @@ variable "expressRouteGateway" {
   )
 }
 
-data "azurerm_key_vault" "vault" {
+data "azurerm_key_vault" "solution" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_key_vault_secret" "gateway_connection" {
   name         = module.global.keyVaultSecretNameGatewayConnection
-  key_vault_id = data.azurerm_key_vault.vault.id
+  key_vault_id = data.azurerm_key_vault.solution.id
 }
 
 locals {

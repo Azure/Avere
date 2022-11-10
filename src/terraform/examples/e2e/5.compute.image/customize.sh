@@ -114,7 +114,7 @@ if [ $renderManager == "Deadline" ]; then
   schedulerDatabaseHost="localhost"
   schedulerDatabasePort="27017"
   schedulerRepositoryPath="/DeadlineRepository"
-  schedulerCertificateName="Deadline10Client"
+  schedulerCertificateName="Deadline"
   schedulerCertificateFile="$schedulerCertificateName.pfx"
   schedulerRepositoryLocalMount="/mnt/scheduler"
   schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
@@ -154,15 +154,16 @@ if [ $renderManager == "Deadline" ]; then
     schedulerCertificateOrg="Azure"
     schedulerCertificateOrgUnit="HPCRender"
     python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --ca
-    python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --server --cert-name $schedulerCertificateName
-    python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --client --cert-name $schedulerCertificateName
+    python3.9 ssl_gen.py --cert-name $schedulerCertificateName --server
+    python3.9 ssl_gen.py --cert-name $schedulerCertificateName --client
     python3.9 ssl_gen.py --cert-name $schedulerCertificateName --pfx
     cd "keys"
-    openssl pkcs12 -in $schedulerCertificateFile -out $schedulerCertificateName.pem -passin pass: -passout pass: -nocerts -nodes
     schedulerCertificateKeyFile="$(pwd)/$schedulerCertificateName.pem"
     schedulerCertificateAuthorityFile="$(pwd)/ca.crt"
+    cat $schedulerCertificateName.crt > $schedulerCertificateKeyFile
+    cat $schedulerCertificateName.key >> $schedulerCertificateKeyFile
     mkdir -p $schedulerRepositoryPath
-    cp ./$schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
+    cp $schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
     chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
     cd $binDirectory
     echo "Customize (End): OpenSSL Certificates"
@@ -175,13 +176,20 @@ if [ $renderManager == "Deadline" ]; then
     echo "enabled=1" >> $mongoDbRepoPath
     echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc" >> $mongoDbRepoPath
     dnf -y install mongodb-org
-    # sed -i "/bindIp:/a ssl:\n  mode: requireSSL\n  PEMKeyFile: $schedulerCertificateKeyFile\n  CAFile: $schedulerCertificateAuthorityFile" /etc/mongod.conf
+    sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/' /etc/mongod.conf
+    sed -i "/bindIp: 0.0.0.0/a\  tls:" /etc/mongod.conf
+    sed -i "/tls:/a\    mode: allowTLS" /etc/mongod.conf
+    sed -i "/mode: allowTLS/a\    certificateKeyFile: $schedulerCertificateKeyFile" /etc/mongod.conf
+    sed -i "/certificateKeyFile:/a\    CAFile: $schedulerCertificateAuthorityFile" /etc/mongod.conf
+    # sed -i 's/#security:/security:/' /etc/mongod.conf
+    # sed -i "/security:/a\  authorization: enabled" /etc/mongod.conf
     systemctl enable mongod
     systemctl start mongod
     echo "Customize (End): Mongo DB"
     echo "Customize (Start): Deadline Repository"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    ./$installFile --mode unattended --dbLicenseAcceptance accept --dbclientcert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
+    # ./$installFile --mode unattended --dbLicenseAcceptance accept --dbauth true --dbssl true --dbclientcert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
+    ./$installFile --mode unattended --dbLicenseAcceptance accept --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
     mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_server.log
     echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
@@ -199,7 +207,8 @@ if [ $renderManager == "Deadline" ]; then
   fi
   ./$installFile $installArgs
   mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
-  $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
+  # $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
+  $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount
   echo "Customize (End): Deadline Client"
 fi
 

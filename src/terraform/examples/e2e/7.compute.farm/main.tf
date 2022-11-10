@@ -130,19 +130,19 @@ variable "computeNetwork" {
   )
 }
 
-data "azurerm_user_assigned_identity" "identity" {
+data "azurerm_user_assigned_identity" "solution" {
   name                = module.global.managedIdentityName
   resource_group_name = module.global.securityResourceGroupName
 }
 
-data "azurerm_key_vault" "vault" {
+data "azurerm_key_vault" "solution" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.vault.id
+  key_vault_id = data.azurerm_key_vault.solution.id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
@@ -200,7 +200,7 @@ locals {
 
 resource "azurerm_role_assignment" "farm" {
   role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
   scope                = azurerm_resource_group.farm.id
 }
 
@@ -251,7 +251,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.identity.id
+      data.azurerm_user_assigned_identity.solution.id
     ]
   }
   boot_diagnostics {
@@ -367,7 +367,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.identity.id
+      data.azurerm_user_assigned_identity.solution.id
     ]
   }
   boot_diagnostics {

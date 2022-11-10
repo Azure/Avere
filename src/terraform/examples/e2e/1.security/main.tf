@@ -105,7 +105,7 @@ resource "azurerm_resource_group" "security" {
   location = module.global.regionName
 }
 
-resource "azurerm_user_assigned_identity" "identity" {
+resource "azurerm_user_assigned_identity" "solution" {
   name                = module.global.managedIdentityName
   resource_group_name = azurerm_resource_group.security.name
   location            = azurerm_resource_group.security.location
@@ -126,7 +126,7 @@ resource "azurerm_storage_container" "container" {
   storage_account_name = azurerm_storage_account.storage.name
 }
 
-resource "azurerm_key_vault" "vault" {
+resource "azurerm_key_vault" "solution" {
   name                       = module.global.keyVaultName
   resource_group_name        = azurerm_resource_group.security.name
   location                   = azurerm_resource_group.security.location
@@ -143,7 +143,7 @@ resource "azurerm_key_vault_secret" "secrets" {
   }
   name         = each.value.name
   value        = each.value.value
-  key_vault_id = azurerm_key_vault.vault.id
+  key_vault_id = azurerm_key_vault.solution.id
 }
 
 resource "azurerm_key_vault_key" "keys" {
@@ -154,7 +154,7 @@ resource "azurerm_key_vault_key" "keys" {
   key_type     = each.value.type
   key_size     = each.value.size
   key_opts     = each.value.operations
-  key_vault_id = azurerm_key_vault.vault.id
+  key_vault_id = azurerm_key_vault.solution.id
 }
 
 resource "azurerm_key_vault_certificate" "certificates" {
@@ -162,7 +162,7 @@ resource "azurerm_key_vault_certificate" "certificates" {
     for certificate in var.keyVault.certificates : certificate.name => certificate
   }
   name         = each.value.name
-  key_vault_id = azurerm_key_vault.vault.id
+  key_vault_id = azurerm_key_vault.solution.id
   certificate_policy {
     x509_certificate_properties {
       subject            = each.value.subject

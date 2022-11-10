@@ -151,29 +151,29 @@ variable "computeGallery" {
 
 data "azurerm_client_config" "current" {}
 
-data "azurerm_user_assigned_identity" "identity" {
+data "azurerm_user_assigned_identity" "solution" {
   name                = module.global.managedIdentityName
   resource_group_name = module.global.securityResourceGroupName
 }
 
-data "azurerm_key_vault" "vault" {
+data "azurerm_key_vault" "solution" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
   name         = module.global.keyVaultSecretNameAdminUsername
-  key_vault_id = data.azurerm_key_vault.vault.id
+  key_vault_id = data.azurerm_key_vault.solution.id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.vault.id
+  key_vault_id = data.azurerm_key_vault.solution.id
 }
 
 data "azurerm_key_vault_key" "batch_encryption" {
   name         = module.global.keyVaultKeyNameBatchEncryption
-  key_vault_id = data.azurerm_key_vault.vault.id
+  key_vault_id = data.azurerm_key_vault.solution.id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
@@ -262,27 +262,28 @@ resource "azurerm_batch_account" "scheduler" {
   resource_group_name                 = azurerm_resource_group.scheduler.name
   location                            = azurerm_resource_group.scheduler.location
   storage_account_id                  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.batchAccount.storageAccount.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${var.batchAccount.storageAccount.name}"
-  storage_account_node_identity       = data.azurerm_user_assigned_identity.identity.id
+  storage_account_node_identity       = data.azurerm_user_assigned_identity.solution.id
   storage_account_authentication_mode = "BatchAccountManagedIdentity"
   pool_allocation_mode                = "UserSubscription"
   public_network_access_enabled       = false
   allowed_authentication_modes = [
-    "AAD"
+    "AAD",
+    "TaskAuthenticationToken"
   ]
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.identity.id
+      data.azurerm_user_assigned_identity.solution.id
     ]
   }
   key_vault_reference {
-    id  = data.azurerm_key_vault.vault.id
-    url = data.azurerm_key_vault.vault.vault_uri
+    id  = data.azurerm_key_vault.solution.id
+    url = data.azurerm_key_vault.solution.vault_uri
   }
   dynamic encryption {
     for_each = var.batchAccount.encryption.enable ? [1] : [0]
     content {
-      key_vault_key_id = data.azurerm_key_vault_key.batch_encryption.resource_id
+      key_vault_key_id = data.azurerm_key_vault_key.batch_encryption.id
     }
   }
   depends_on = [
@@ -329,7 +330,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.identity.id
+      data.azurerm_user_assigned_identity.solution.id
     ]
   }
   boot_diagnostics {
@@ -432,7 +433,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.identity.id
+      data.azurerm_user_assigned_identity.solution.id
     ]
   }
   boot_diagnostics {
@@ -508,7 +509,7 @@ resource "azurerm_role_assignment" "cycle_cloud" {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.customExtension.parameters.cycleCloud.enable && !var.batchAccount.enable
   }
   role_definition_name = "Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.identity.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
 }
 
