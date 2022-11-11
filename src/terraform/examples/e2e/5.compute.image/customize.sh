@@ -34,7 +34,7 @@ echo "Customize (End): Build Platform"
 if [[ ($machineSize == Standard_NV* && $machineSize == *_v5) ||
       ($machineSize == Standard_NC* && $machineSize == *_T4_v3) ||
       ($machineSize == Standard_NV* && $machineSize == *_v3) ]]; then
-  echo "Customize (Start): NVIDIA GPU Driver (GRID)"
+  echo "Customize (Start): NVIDIA GPU (GRID)"
   dnf -y install "kernel-devel-$(uname --kernel-release)"
   dnf -y install elfutils-libelf-devel
   installFile="nvidia-gpu-grid.run"
@@ -42,12 +42,12 @@ if [[ ($machineSize == Standard_NV* && $machineSize == *_v5) ||
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
   ./$installFile --silent
-  echo "Customize (End): NVIDIA GPU Driver (GRID)"
+  echo "Customize (End): NVIDIA GPU (GRID)"
 elif [[ $machineSize == Standard_N* ]]; then
-  echo "Customize (Start): NVIDIA GPU Driver (CUDA)"
-  dnf config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-  dnf -y install cuda-drivers
-  echo "Customize (End): NVIDIA GPU Driver (CUDA)"
+  echo "Customize (Start): NVIDIA GPU (CUDA)"
+  dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+  dnf -y install cuda
+  echo "Customize (End): NVIDIA GPU (CUDA)"
 fi
 
 if [ $machineType == "Scheduler" ]; then
@@ -232,10 +232,10 @@ fi
 if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (Start): PBRT v3"
   versionInfo="v3"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo.git.output.txt 2> pbrt-$versionInfo.git.error.txt
   mkdir -p $rendererPathPBRT3
-  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo/
-  make -C $rendererPathPBRT3 -j $(nproc)
+  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo.cmake.output.txt 2> pbrt-$versionInfo.cmake.error.txt
+  make -j -C $rendererPathPBRT3 1> pbrt-$versionInfo.make.output.txt 2> pbrt-$versionInfo.make.error.txt
   ln -s $rendererPathPBRT3/pbrt /usr/bin/pbrt3
   echo "Customize (End): PBRT v3"
   echo "Customize (Start): PBRT v4"
@@ -245,12 +245,32 @@ if [[ $renderEngines == *PBRT* ]]; then
   dnf -y install libXcursor-devel
   dnf -y install libXi-devel
   versionInfo="v4"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo.git.output.txt 2> pbrt-$versionInfo.git.error.txt
   mkdir -p $rendererPathPBRT4
-  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo/
-  make -C $rendererPathPBRT4 -j $(nproc)
+  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo.cmake.output.txt 2> pbrt-$versionInfo.cmake.error.txt
+  make -j -C $rendererPathPBRT4 1> pbrt-$versionInfo.make.output.txt 2> pbrt-$versionInfo.make.error.txt
   ln -s $rendererPathPBRT4/pbrt /usr/bin/pbrt4
   echo "Customize (End): PBRT v4"
+  if [[ $renderEngines == *PBRT,Moana* ]]; then
+    echo "Customize (Start): PBRT (Moana Island)"
+    dataDirectory="moana"
+    mkdir $dataDirectory
+    cd $dataDirectory
+    installFile="island-basepackage-v1.1.tgz"
+    downloadUrl="$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    tar -xzf $installFile
+    installFile="island-pbrt-v1.1.tgz"
+    downloadUrl="$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    tar -xzf $installFile
+    installFile="island-pbrtV4-v2.0.tgz"
+    downloadUrl="$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    tar -xzf $installFile
+    cd $binDirectory
+    echo "Customize (End): PBRT (Moana Island)"
+  fi
 fi
 
 if [[ $renderEngines == *Unity* ]]; then
@@ -283,7 +303,7 @@ if [[ $renderEngines == *Unreal* ]]; then
   if [ $machineType == "Workstation" ]; then
     echo "Customize (Start): Unreal Project Files"
     $rendererPathUnreal/GenerateProjectFiles.sh
-    make -C $rendererPathUnreal -j $(nproc)
+    make -j -C $rendererPathUnreal
     echo "Customize (End): Unreal Project Files"
   fi
   echo "Customize (End): Unreal"

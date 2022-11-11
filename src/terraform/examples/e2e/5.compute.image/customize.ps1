@@ -37,21 +37,18 @@ Start-Process -FilePath $installFile -ArgumentList "/SILENT /NORESTART" -Wait
 $toolPathGit = "C:\Program Files\Git\bin"
 Write-Host "Customize (End): Git"
 
-Write-Host "Customize (Start): Visual Studio"
+Write-Host "Customize (Start): Visual Studio Build Tools"
 $versionInfo = "2022"
-$installFile = "VisualStudioSetup.exe"
-$downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
-$workloadIds = "--add Microsoft.VisualStudio.Workload.ManagedDesktop;includeRecommended"
-$workloadIds += " --add Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended"
-$workloadIds += " --add Microsoft.VisualStudio.Workload.NativeGame;includeRecommended"
-$workloadIds += " --add Microsoft.NetCore.Component.Runtime.3.1"
-$workloadIds += " --add Component.Unreal"
+$installFile = "vs_buildtools.exe"
+$downloadUrl = "https://aka.ms/vs/17/release/$installFile"
 Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-Start-Process -FilePath $installFile -ArgumentList "--quiet --norestart $workloadIds" -Wait
-$toolPathVSIX = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE"
-$toolPathCMake = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-$toolPathMSBuild = "C:\Program Files\Microsoft Visual Studio\$versionInfo\Community\Msbuild\Current\Bin"
-Write-Host "Customize (End): Visual Studio"
+$componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
+$componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
+$componentIds += " --add Microsoft.NetCore.Component.Runtime.3.1"
+Start-Process -FilePath $installFile -ArgumentList "--quiet --norestart $componentIds" -Wait
+$toolPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+$toolPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin"
+Write-Host "Customize (End): Visual Studio Build Tools"
 
 Write-Host "Customize (Start): Python"
 $versionInfo = "3.11.0"
@@ -67,20 +64,20 @@ Write-Host "Customize (End): Python"
 if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) -or
     ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("_T4_v3")) -or
     ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3"))) {
-  Write-Host "Customize (Start): NVIDIA GPU Driver (GRID)"
+  Write-Host "Customize (Start): NVIDIA GPU (GRID)"
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath $installFile -ArgumentList "/s /noreboot" -Wait
-  Write-Host "Customize (End): NVIDIA GPU Driver (GRID)"
+  Write-Host "Customize (End): NVIDIA GPU (GRID)"
 } elseif ($machineSize.StartsWith("Standard_N")) {
-  Write-Host "Customize (Start): NVIDIA GPU Driver (CUDA)"
+  Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
   $versionInfo = "11.8.0"
   $installFile = "cuda_${versionInfo}_522.06_windows.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
   Start-Process -FilePath $installFile -ArgumentList "/s /noreboot" -Wait
-  Write-Host "Customize (End): NVIDIA GPU Driver (CUDA)"
+  Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 }
 
 if ($machineType -eq "Scheduler") {
@@ -191,18 +188,38 @@ if ($renderEngines -like "*Blender*") {
 if ($renderEngines -like "*PBRT*") {
   Write-Host "Customize (Start): PBRT v3"
   $versionInfo = "v3"
-  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo" -Wait
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT3\Release\pbrt.exe" -Path "C:\Program Files\pbrt3"
+  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo.git.output.txt" -RedirectStandardError "pbrt-$versionInfo.git.error.txt"
+  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo.cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo.cmake.error.txt"
+  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo.msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo.msbuild.error.txt"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT3\Release\pbrt.exe" -Path "C:\Windows\pbrt3"
   Write-Host "Customize (End): PBRT v3"
   Write-Host "Customize (Start): PBRT v4"
   $versionInfo = "v4"
-  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo" -Wait
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT4\Release\pbrt.exe" -Path "C:\Program Files\pbrt4"
+  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo.git.output.txt" -RedirectStandardError "pbrt-$versionInfo.git.error.txt"
+  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo.cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo.cmake.error.txt"
+  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo.msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo.msbuild.error.txt"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT4\Release\pbrt.exe" -Path "C:\Windows\pbrt4"
   Write-Host "Customize (End): PBRT v4"
+  if ($renderEngines -like "*PBRT,Moana*") {
+    Write-Host "Customize (Start): PBRT (Moana Island)"
+    $dataDirectory = "moana"
+    New-Item -ItemType Directory -Path $dataDirectory -Force
+    Set-Location -Path $dataDirectory
+    $installFile = "island-basepackage-v1.1.tgz"
+    $downloadUrl = "$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+    tar -xzf $installFile
+    $installFile = "island-pbrt-v1.1.tgz"
+    $downloadUrl = "$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+    tar -xzf $installFile
+    $installFile = "island-pbrtV4-v2.0.tgz"
+    $downloadUrl = "$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+    tar -xzf $installFile
+    Set-Location -Path $binDirectory
+    Write-Host "Customize (End): PBRT (Moana Island)"
+  }
 }
 
 if ($renderEngines -like "*Unity*") {
@@ -238,10 +255,6 @@ if ($renderEngines -like "*Unreal*") {
     [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
     Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait
     Write-Host "Customize (End): Unreal Project Files"
-    Write-Host "Customize (Start): Unreal Visual Studio Plugin"
-    $installFile = "UnrealVS.vsix"
-    Start-Process -FilePath "$toolPathVSIX\VSIXInstaller.exe" -ArgumentList "/quiet /admin ""$rendererPathUnreal\Engine\Extras\UnrealVS\$installFile""" -Wait
-    Write-Host "Customize (End): Unreal Visual Studio Plugin"
     Write-Host "Customize (Start): Unreal Editor Shortcut"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Epic Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell

@@ -29,7 +29,7 @@ imageGallery = {
       generation = "V2"
       publisher  = "MicrosoftWindowsDesktop"
       offer      = "Windows-10"
-      sku        = "Win10-21H2-Pro-G2"
+      sku        = "Win10-22H2-Pro-G2"
     },
     {
       name       = "WinArtist"
@@ -93,7 +93,7 @@ imageTemplates = [
     }
   },
   {
-    name  = "LnxFarmBatch"
+    name  = "LnxFarmPBRT"
     image = {
       definitionName   = "Linux"
       customizeScript  = "customize.sh"
@@ -110,10 +110,7 @@ imageTemplates = [
       runElevated    = false
       renderManager  = ""
       renderEngines  = [
-        "Blender",
-        "PBRT",
-        "Unity",
-        "Unreal"
+        "PBRT,Moana"
       ]
     }
   },
@@ -184,6 +181,28 @@ imageTemplates = [
         "PBRT",
         "Unity",
         "Unreal"
+      ]
+    }
+  },
+  {
+    name  = "WinFarmPBRT"
+    image = {
+      definitionName   = "WinFarm"
+      customizeScript  = "customize.ps1"
+      terminateScript1 = "terminate.ps1"
+      terminateScript2 = "onTerminate.ps1"
+      inputVersion     = "Latest"
+    }
+    build = {
+      machineType    = "Farm"
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      osDiskSizeGB   = 480                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
+      timeoutMinutes = 420                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      outputVersion  = "1.0.0"
+      runElevated    = false
+      renderManager  = ""
+      renderEngines  = [
+        "PBRT,Moana"
       ]
     }
   },
