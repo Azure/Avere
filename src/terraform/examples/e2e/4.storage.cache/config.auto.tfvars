@@ -6,7 +6,7 @@ cacheName = "cache" # Set to a uniquely identifiable cache name
 # HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
 ##############################################################################
 
-# HPC Cache throughput / size (GBs) options
+# HPC Cache throughput / size (GB) options
 #   Standard_L4_5G - 21623                Read Only
 #     Standard_L9G - 43246                Read Only
 #    Standard_L16G - 86491                Read Only
@@ -32,7 +32,7 @@ hpcCache = {
 vfxtCache = {
   localTimezone = "UTC"
   cluster = {
-    nodeSize       = 1024 # Set to either 1024 GBs (1 TB) or 4096 GBs (4 TBs) nodes
+    nodeSize       = 1024 # Set to either 1024 GB (1 TB) or 4096 GB (4 TB) nodes
     nodeCount      = 3    # Set to a minimum of 3 nodes up to a maximum of 16 nodes
     adminUsername  = "azadmin"
     sshPublicKey   = ""

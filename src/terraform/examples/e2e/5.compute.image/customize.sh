@@ -257,15 +257,15 @@ if [[ $renderEngines == *PBRT* ]]; then
     mkdir $dataDirectory
     cd $dataDirectory
     installFile="island-basepackage-v1.1.tgz"
-    downloadUrl="$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
     tar -xzf $installFile
     installFile="island-pbrt-v1.1.tgz"
-    downloadUrl="$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
     tar -xzf $installFile
     installFile="island-pbrtV4-v2.0.tgz"
-    downloadUrl="$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
     tar -xzf $installFile
     cd $binDirectory

@@ -206,15 +206,15 @@ if ($renderEngines -like "*PBRT*") {
     New-Item -ItemType Directory -Path $dataDirectory -Force
     Set-Location -Path $dataDirectory
     $installFile = "island-basepackage-v1.1.tgz"
-    $downloadUrl = "$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
     Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
     tar -xzf $installFile
     $installFile = "island-pbrt-v1.1.tgz"
-    $downloadUrl = "$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
     Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
     tar -xzf $installFile
     $installFile = "island-pbrtV4-v2.0.tgz"
-    $downloadUrl = "$storageContainerUrl/PBRT/Moana/$installFile$storageContainerSas"
+    $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
     Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
     tar -xzf $installFile
     Set-Location -Path $binDirectory
