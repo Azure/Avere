@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Solution Deployment Framework
 
-AAA is a *modular and customizable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) framework* for *automated deployment* of the [Azure rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). By securely extending your content creation pipeline via the [Azure HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) managed service, you can [globally enable](https://azure.microsoft.com/global-infrastructure/geographies) remote artists with highly scalable render farm compute using any [Azure virtual machine size](https://learn.microsoft.com/azure/virtual-machines/sizes), including [Azure HPC Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc) and [Azure GPU Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu).
+Azure Artist Anywhere (AAA) is a *modular and customizable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) deployment framework* for the [Azure rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). Enable your remote artists with global render farm scale using [Azure HPC Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc) and [Azure GPU Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu).
 
 The following *core principles* are implemented throughout the AAA solution deployment framework.
 * Integration of security best practices, including [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview), [Private Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview).
@@ -121,7 +121,7 @@ chmod 755 $localDirectory/terraform-provider-avere_$latestVersion
 ### Windows / PowerShell
 
 <p><code>
-$latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest | ConvertFrom-Json).tag_name
+$latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest -UseBasicParsing | ConvertFrom-Json).tag_name
 </code></p>
 <p><code>
 $downloadUrl = "https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere.exe"
@@ -133,7 +133,7 @@ $localDirectory = "$Env:AppData\terraform.d\plugins\registry.terraform.io\hashic
 New-Item -ItemType Directory -Path $localDirectory -Force
 </code></p>
 <p><code>
-Invoke-WebRequest -OutFile $localDirectory\terraform-provider-avere_$latestVersion.exe -Uri $downloadUrl
+Invoke-WebRequest -Uri $downloadUrl -OutFile $localDirectory\terraform-provider-avere_$latestVersion.exe -UseBasicParsing
 </code></p>
 
 ### Deployment Steps
@@ -279,7 +279,7 @@ deadlinecommand -SubmitCommandLineJob -name White-Lands -executable blender -arg
 deadlinecommand -SubmitCommandLineJob -name White-Lands -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.2\splash.blend --render-output W:\blender\3.2\splash####.png --render-frame 1"
 </code></p>
 
-### 10.2 [Physically-Based Rendering Toolkit (PBRT)](https://pbrt.org)
+### 10.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org)
 
 For example, the following sample **PBRT** output image was rendering in Azure via the **Deadline** job submission command below.
 
@@ -299,17 +299,25 @@ Unlike the Blender splash screen data that is included in the AAA GitHub reposit
 * **[Moana Island PBRT v4 Data (5.5 GiB Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/moana/island-pbrtV4-v2.0.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
 
 #### Linux Render Farm
-*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt3 -arguments "--outfile /mnt/show/write/pbrt/moana/island.png /mnt/show/read/pbrt/moana/island/pbrt/island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -arguments "--outfile /mnt/show/write/pbrt/moana/island-v3.png /mnt/show/read/pbrt/moana/island/pbrt/island.pbrt"
+</code></p>
+
+<p><code>
+deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -arguments "--outfile /mnt/show/write/pbrt/moana/island-v4.png /mnt/show/read/pbrt/moana/island/pbrt-v4/island.pbrt"
 </code></p>
 
 #### Windows Render Farm
-*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island.png R:\pbrt\moana\island\pbrt\island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt"
+</code></p>
+
+<p><code>
+deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"
 </code></p>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

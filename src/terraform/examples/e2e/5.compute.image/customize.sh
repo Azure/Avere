@@ -1,64 +1,83 @@
 #!/bin/bash -ex
 
+binPaths=""
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
 storageContainerUrl="https://azrender.blob.core.windows.net/bin"
 storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
 
+echo "Customize (Start): Image Build Platform"
+dnf -y install epel-release
+dnf -y install gcc gcc-c++
+dnf -y install python-pip
+dnf -y install nfs-utils
+dnf -y install cmake
+dnf -y install git
+dnf -y install jq
+echo "Customize (End): Image Build Platform"
+
 echo "Customize (Start): Image Build Parameters"
 buildConfig=$(echo $buildConfigEncoded | base64 -d)
 machineType=$(echo $buildConfig | jq -r .machineType)
-machineSize=$(echo $buildConfig | jq -r .machineSize)
+gpuPlatform=$(echo $buildConfig | jq -c .gpuPlatform)
 renderManager=$(echo $buildConfig | jq -r .renderManager)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
 adminUsername=$(echo $buildConfig | jq -r .adminUsername)
 adminPassword=$(echo $buildConfig | jq -r .adminPassword)
 echo "Machine Type: $machineType"
-echo "Machine Size: $machineSize"
+echo "GPU Platform: $gpuPlatform"
+echo "Render Manager: $renderManager"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
-echo "Customize (Start): Build Platform"
-dnf -y install epel-release
-dnf -y install gcc gcc-c++
-dnf -y install python3.9
-dnf -y install nfs-utils
-dnf -y install cmake
-dnf -y install git
-echo "Customize (End): Build Platform"
-
-#   NVv5 (https://learn.microsoft.com/azure/virtual-machines/nva10v5-series)
-# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
-#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
-if [[ ($machineSize == Standard_NV* && $machineSize == *_v5) ||
-      ($machineSize == Standard_NC* && $machineSize == *_T4_v3) ||
-      ($machineSize == Standard_NV* && $machineSize == *_v3) ]]; then
+if [[ $gpuPlatform == *GRID* ]]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
-  dnf -y install "kernel-devel-$(uname --kernel-release)"
-  dnf -y install elfutils-libelf-devel
+  dnf -y install kernel-devel-$(uname -r)
   installFile="nvidia-gpu-grid.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent
+  ./$installFile -s 1> nvidia-grid.output.txt 2> nvidia-grid.error.txt
   echo "Customize (End): NVIDIA GPU (GRID)"
-elif [[ $machineSize == Standard_N* ]]; then
+fi
+
+if [[ $gpuPlatform == *CUDA* ]] || [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (Start): NVIDIA GPU (CUDA)"
-  dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-  dnf -y install cuda
+  dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
+  dnf -y install cuda 1> nvidia-cuda.output.txt 2> nvidia-cuda.error.txt
   echo "Customize (End): NVIDIA GPU (CUDA)"
+fi
+
+if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
+  echo "Customize (Start): NVIDIA GPU (OptiX)"
+  versionInfo="7.6.0"
+  installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64-31894579.sh"
+  downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  chmod +x $installFile
+  sdkDirectory="nvidia-optix"
+  mkdir $sdkDirectory
+  ./$installFile --skip-license --prefix="$binDirectory/$sdkDirectory" 1> nvidia-optix.output.txt 2> nvidia-optix.error.txt
+  dnf -y install mesa-libGL-devel
+  dnf -y install libXrandr-devel
+  dnf -y install libXinerama-devel
+  dnf -y install libXcursor-devel
+  buildDirectory="$binDirectory/$sdkDirectory/build"
+  mkdir $buildDirectory
+  cmake -B $buildDirectory -S $binDirectory/$sdkDirectory/SDK -A x64 1> nvidia-optix-cmake.output.txt 2> nvidia-optix-cmake.error.txt
+  make -j -C $buildDirectory 1> nvidia-optix-make.output.txt 2> nvidia-optix-make.error.txt
+  binPaths="$binPaths:$buildDirectory/bin"
+  echo "Customize (End): NVIDIA GPU (OptiX)"
 fi
 
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+  dnf -y install https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm
   dnf -y install azure-cli
   echo "Customize (End): Azure CLI"
-fi
 
-if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
   echo "Customize (End): NFS Server"
@@ -73,7 +92,9 @@ if [ $machineType == "Scheduler" ]; then
   dnf -y install java-1.8.0-openjdk
   JAVA_HOME=/bin/java
   dnf -y install cyclecloud8
+  binPaths="$binPaths:/usr/local/cyclecloud/bin"
   cd /opt/cycle_server
+  pip install ./tools/cyclecloud_api*.whl
   sed -i 's/webServerEnableHttps=false/webServerEnableHttps=true/' ./config/cycle_server.properties
   unzip -q ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir /usr/local/cyclecloud
@@ -118,6 +139,7 @@ if [ $renderManager == "Deadline" ]; then
   schedulerCertificateFile="$schedulerCertificateName.pfx"
   schedulerRepositoryLocalMount="/mnt/scheduler"
   schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
+  binPaths="$binPaths:$schedulerPath"
 fi
 
 rendererPathBlender="/usr/local/blender3"
@@ -126,14 +148,13 @@ rendererPathPBRT4="/usr/local/pbrt/v4"
 rendererPathUnreal="/usr/local/unreal5"
 rendererPathUnrealStream="$rendererPathUnreal/stream"
 
-rendererPaths=""
 if [[ $renderEngines == *Blender* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathBlender"
+  binPaths="$binPaths:$rendererPathBlender"
 fi
 if [[ $renderEngines == *Unreal* ]]; then
-  rendererPaths="$rendererPaths:$rendererPathUnreal"
+  binPaths="$binPaths:$rendererPathUnreal"
 fi
-echo "PATH=$PATH:$schedulerPath$rendererPaths:/usr/local/cyclecloud/bin" > /etc/profile.d/aaa.sh
+echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
 
 if [ $renderManager == "Deadline" ]; then
   echo "Customize (Start): Deadline Download"
@@ -145,7 +166,7 @@ if [ $renderManager == "Deadline" ]; then
 
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): OpenSSL Certificates"
-    pip3.9 install pyOpenSSL
+    pip install pyOpenSSL
     installFile="SSLGeneration-master.zip"
     downloadUrl="$storageContainerUrl/Deadline/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
@@ -153,10 +174,10 @@ if [ $renderManager == "Deadline" ]; then
     cd "SSLGeneration-master"
     schedulerCertificateOrg="Azure"
     schedulerCertificateOrgUnit="HPCRender"
-    python3.9 ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --ca
-    python3.9 ssl_gen.py --cert-name $schedulerCertificateName --server
-    python3.9 ssl_gen.py --cert-name $schedulerCertificateName --client
-    python3.9 ssl_gen.py --cert-name $schedulerCertificateName --pfx
+    python ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --ca
+    python ssl_gen.py --cert-name $schedulerCertificateName --server
+    python ssl_gen.py --cert-name $schedulerCertificateName --client
+    python ssl_gen.py --cert-name $schedulerCertificateName --pfx
     cd "keys"
     schedulerCertificateKeyFile="$(pwd)/$schedulerCertificateName.pem"
     schedulerCertificateAuthorityFile="$(pwd)/ca.crt"
@@ -167,6 +188,7 @@ if [ $renderManager == "Deadline" ]; then
     chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
     cd $binDirectory
     echo "Customize (End): OpenSSL Certificates"
+
     echo "Customize (Start): Mongo DB"
     mongoDbRepoPath="/etc/yum.repos.d/mongodb.repo"
     echo "[mongodb-org-4.2]" > $mongoDbRepoPath
@@ -177,15 +199,16 @@ if [ $renderManager == "Deadline" ]; then
     echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc" >> $mongoDbRepoPath
     dnf -y install mongodb-org
     sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/' /etc/mongod.conf
-    sed -i "/bindIp: 0.0.0.0/a\  tls:" /etc/mongod.conf
-    sed -i "/tls:/a\    mode: allowTLS" /etc/mongod.conf
-    sed -i "/mode: allowTLS/a\    certificateKeyFile: $schedulerCertificateKeyFile" /etc/mongod.conf
-    sed -i "/certificateKeyFile:/a\    CAFile: $schedulerCertificateAuthorityFile" /etc/mongod.conf
+    # sed -i "/bindIp: 0.0.0.0/a\  tls:" /etc/mongod.conf
+    # sed -i "/tls:/a\    mode: requireTLS" /etc/mongod.conf
+    # sed -i "/mode: requireTLS/a\    certificateKeyFile: $schedulerCertificateKeyFile" /etc/mongod.conf
+    # sed -i "/certificateKeyFile:/a\    CAFile: $schedulerCertificateAuthorityFile" /etc/mongod.conf
     # sed -i 's/#security:/security:/' /etc/mongod.conf
     # sed -i "/security:/a\  authorization: enabled" /etc/mongod.conf
     systemctl enable mongod
     systemctl start mongod
     echo "Customize (End): Mongo DB"
+
     echo "Customize (Start): Deadline Repository"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
     # ./$installFile --mode unattended --dbLicenseAcceptance accept --dbauth true --dbssl true --dbclientcert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
@@ -232,12 +255,13 @@ fi
 if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (Start): PBRT v3"
   versionInfo="v3"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo.git.output.txt 2> pbrt-$versionInfo.git.error.txt
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.txt 2> pbrt-$versionInfo-git.error.txt
   mkdir -p $rendererPathPBRT3
-  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo.cmake.output.txt 2> pbrt-$versionInfo.cmake.error.txt
-  make -j -C $rendererPathPBRT3 1> pbrt-$versionInfo.make.output.txt 2> pbrt-$versionInfo.make.error.txt
+  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo -A x64 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
+  make -j -C $rendererPathPBRT3 1> pbrt-$versionInfo-make.output.txt 2> pbrt-$versionInfo-make.error.txt
   ln -s $rendererPathPBRT3/pbrt /usr/bin/pbrt3
   echo "Customize (End): PBRT v3"
+
   echo "Customize (Start): PBRT v4"
   dnf -y install mesa-libGL-devel
   dnf -y install libXrandr-devel
@@ -245,32 +269,33 @@ if [[ $renderEngines == *PBRT* ]]; then
   dnf -y install libXcursor-devel
   dnf -y install libXi-devel
   versionInfo="v4"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo.git.output.txt 2> pbrt-$versionInfo.git.error.txt
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.txt 2> pbrt-$versionInfo-git.error.txt
   mkdir -p $rendererPathPBRT4
-  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo.cmake.output.txt 2> pbrt-$versionInfo.cmake.error.txt
-  make -j -C $rendererPathPBRT4 1> pbrt-$versionInfo.make.output.txt 2> pbrt-$versionInfo.make.error.txt
+  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo -A x64 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
+  make -j -C $rendererPathPBRT4 1> pbrt-$versionInfo-make.output.txt 2> pbrt-$versionInfo-make.error.txt
   ln -s $rendererPathPBRT4/pbrt /usr/bin/pbrt4
   echo "Customize (End): PBRT v4"
-  if [[ $renderEngines == *PBRT,Moana* ]]; then
-    echo "Customize (Start): PBRT (Moana Island)"
-    dataDirectory="moana"
-    mkdir $dataDirectory
-    cd $dataDirectory
-    installFile="island-basepackage-v1.1.tgz"
-    downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-    curl -o $installFile -L $downloadUrl
-    tar -xzf $installFile
-    installFile="island-pbrt-v1.1.tgz"
-    downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-    curl -o $installFile -L $downloadUrl
-    tar -xzf $installFile
-    installFile="island-pbrtV4-v2.0.tgz"
-    downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-    curl -o $installFile -L $downloadUrl
-    tar -xzf $installFile
-    cd $binDirectory
-    echo "Customize (End): PBRT (Moana Island)"
-  fi
+fi
+
+if [[ $renderEngines == *PBRT.Moana* ]]; then
+  echo "Customize (Start): PBRT (Moana Island)"
+  dataDirectory="moana"
+  mkdir $dataDirectory
+  cd $dataDirectory
+  installFile="island-basepackage-v1.1.tgz"
+  downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  installFile="island-pbrt-v1.1.tgz"
+  downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  installFile="island-pbrtV4-v2.0.tgz"
+  downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  cd $binDirectory
+  echo "Customize (End): PBRT (Moana Island)"
 fi
 
 if [[ $renderEngines == *Unity* ]]; then
@@ -309,7 +334,7 @@ if [[ $renderEngines == *Unreal* ]]; then
   echo "Customize (End): Unreal"
 fi
 
-if [[ $renderEngines == *Unreal,PixelStream* ]]; then
+if [[ $renderEngines == *Unreal.PixelStream* ]]; then
   echo "Customize (Start): Unreal Pixel Streaming"
   versionInfo="5.1"
   installFile="PixelStreamingInfrastructure-UE$versionInfo.zip"
@@ -346,8 +371,8 @@ if [ $machineType == "Workstation" ]; then
   echo "Customize (End): Workstation Desktop"
 
   echo "Customize (Start): Teradici PCoIP Agent"
-  versionInfo="22.09.0"
-  installFile="pcoip-agent-offline-centos7.9_$versionInfo-1.el7.x86_64.tar.gz"
+  versionInfo="22.09.2"
+  installFile="pcoip-agent-offline-rhel8.6_$versionInfo-1.el8.x86_64.tar.gz"
   downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile

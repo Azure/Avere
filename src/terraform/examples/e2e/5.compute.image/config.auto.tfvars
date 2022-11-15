@@ -13,7 +13,7 @@ imageGallery = {
       generation = "V2"
       publisher  = "AlmaLinux"
       offer      = "AlmaLinux"
-      sku        = "8-Gen2"
+      sku        = "9-Gen2"
     },
     {
       name       = "WinScheduler"
@@ -48,7 +48,7 @@ imageGallery = {
 
 imageTemplates = [
   {
-    name  = "LnxScheduler"
+    name = "LnxScheduler"
     image = {
       definitionName   = "Linux"
       customizeScript  = "customize.sh"
@@ -59,16 +59,16 @@ imageTemplates = [
     build = {
       machineType    = "Scheduler"
       machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 120               # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      gpuPlatform    = []                # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 0
+      timeoutMinutes = 120
       outputVersion  = "0.0.0"
-      runElevated    = false
       renderManager  = "Deadline"
       renderEngines  = []
     }
   },
   {
-    name  = "LnxFarm"
+    name = "LnxFarm"
     image = {
       definitionName   = "Linux"
       customizeScript  = "customize.sh"
@@ -79,43 +79,21 @@ imageTemplates = [
     build = {
       machineType    = "Farm"
       machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      gpuPlatform    = []                    # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 480
+      timeoutMinutes = 240
       outputVersion  = "1.0.0"
-      runElevated    = false
       renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
-        "PBRT",
-        "Unity",
-        "Unreal"
+        "PBRT"
+        # "Unity",
+        # "Unreal"
       ]
     }
   },
   {
-    name  = "LnxFarmPBRT"
-    image = {
-      definitionName   = "Linux"
-      customizeScript  = "customize.sh"
-      terminateScript1 = "terminate.sh"
-      terminateScript2 = "onTerminate.sh"
-      inputVersion     = "Latest"
-    }
-    build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      outputVersion  = "1.1.0"
-      runElevated    = false
-      renderManager  = ""
-      renderEngines  = [
-        "PBRT,Moana"
-      ]
-    }
-  },
-  {
-    name  = "LnxArtist"
+    name = "LnxArtist"
     image = {
       definitionName   = "Linux"
       customizeScript  = "customize.sh"
@@ -126,21 +104,22 @@ imageTemplates = [
     build = {
       machineType    = "Workstation"
       machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 512                       # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 240                       # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      gpuPlatform    = ["GRID"]                  # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 512
+      timeoutMinutes = 240
       outputVersion  = "2.0.0"
-      runElevated    = false
       renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
-        "PBRT",
-        "Unity",
-        "Unreal,PixelStream"
+        "PBRT"
+        # "Unity",
+        # "Unreal",
+        # "Unreal.PixelStream"
       ]
     }
   },
   {
-    name  = "WinScheduler"
+    name = "WinScheduler"
     image = {
       definitionName   = "WinScheduler"
       customizeScript  = "customize.ps1"
@@ -151,16 +130,16 @@ imageTemplates = [
     build = {
       machineType    = "Scheduler"
       machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 0                 # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 180               # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      gpuPlatform    = []                # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 0
+      timeoutMinutes = 180
       outputVersion  = "0.0.0"
-      runElevated    = true
       renderManager  = "Deadline"
       renderEngines  = []
     }
   },
   {
-    name  = "WinFarm"
+    name = "WinFarm"
     image = {
       definitionName   = "WinFarm"
       customizeScript  = "customize.ps1"
@@ -171,43 +150,21 @@ imageTemplates = [
     build = {
       machineType    = "Farm"
       machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 420                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      gpuPlatform    = []                    # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 480
+      timeoutMinutes = 420
       outputVersion  = "1.0.0"
-      runElevated    = false
       renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
-        "PBRT",
-        "Unity",
-        "Unreal"
+        "PBRT"
+        # "Unity",
+        # "Unreal"
       ]
     }
   },
   {
-    name  = "WinFarmPBRT"
-    image = {
-      definitionName   = "WinFarm"
-      customizeScript  = "customize.ps1"
-      terminateScript1 = "terminate.ps1"
-      terminateScript2 = "onTerminate.ps1"
-      inputVersion     = "Latest"
-    }
-    build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 480                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 420                   # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
-      outputVersion  = "1.1.0"
-      runElevated    = false
-      renderManager  = ""
-      renderEngines  = [
-        "PBRT,Moana"
-      ]
-    }
-  },
-  {
-    name  = "WinArtist"
+    name = "WinArtist"
     image = {
       definitionName   = "WinArtist"
       customizeScript  = "customize.ps1"
@@ -218,16 +175,17 @@ imageTemplates = [
     build = {
       machineType    = "Workstation"
       machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      osDiskSizeGB   = 512                       # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#osdisksizegb
-      timeoutMinutes = 420                       # https://learn.microsoft.com/azure/virtual-machines/linux/image-builder-json#properties-buildtimeoutinminutes
+      gpuPlatform    = ["GRID"]                  # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 512
+      timeoutMinutes = 420
       outputVersion  = "2.0.0"
-      runElevated    = false
       renderManager  = "Deadline"
       renderEngines  = [
         "Blender",
-        "PBRT",
-        "Unity",
-        "Unreal,PixelStream"
+        "PBRT"
+        # "Unity",
+        # "Unreal",
+        # "Unreal.PixelStream"
       ]
     }
   }

@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 $databaseFile = "C:\Windows\Temp\database.ps1"
 New-Item -ItemType File -Path $databaseFile

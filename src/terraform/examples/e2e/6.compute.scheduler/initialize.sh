@@ -206,8 +206,7 @@ if [ ${cycleCloud.enable} == true ]; then
   downloadUrl="https://github.com/Azure/cyclecloud-scalelib/archive/refs/tags/$versionInfo.tar.gz"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
-  pip3 install ./tools/cyclecloud_api*.whl
   cd cyclecloud-scalelib-$versionInfo
-  python3.9 -m pip install -r dev-requirements.txt
-  python3.9 setup.py build
+  pip install -r dev-requirements.txt
+  python setup.py build
 fi

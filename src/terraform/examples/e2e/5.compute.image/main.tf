@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.30.0"
+      version = "~>3.31.0"
     }
   }
   backend "azurerm" {
@@ -65,10 +65,10 @@ variable "imageTemplates" {
         {
           machineType    = string
           machineSize    = string
+          gpuPlatform    = list(string)
           osDiskSizeGB   = number
           timeoutMinutes = number
           outputVersion  = string
-          runElevated    = bool
           renderManager  = string
           renderEngines  = list(string)
         }
@@ -301,31 +301,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         {
           "namespace": "fx",
           "members": {
-            "GetMachineRenameCommands": {
-              "parameters": [
-                {
-                  "name": "osType",
-                  "type": "string"
-                },
-                {
-                  "name": "imageTemplate",
-                  "type": "object"
-                }
-              ],
-              "output": {
-                "type": "array",
-                "value": [
-                  {
-                    "type": "[if(equals(parameters('osType'), 'Windows'), 'PowerShell', 'Shell')]",
-                    "inline": "[createArray(if(equals(parameters('osType'), 'Windows'), concat('Rename-Computer -NewName ', parameters('imageTemplate').name), concat('hostname ', parameters('imageTemplate').name)))]"
-                  },
-                  {
-                    "type": "[if(equals(parameters('osType'), 'Windows'), 'WindowsRestart', 'Shell')]",
-                    "inline": "[if(equals(parameters('osType'), 'Windows'), json('null'), createArray(':'))]"
-                  }
-                ]
-              }
-            },
             "GetCustomizeCommandsLinux": {
               "parameters": [
                 {
@@ -352,6 +327,12 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "output": {
                 "type": "array",
                 "value": [
+                  {
+                    "type": "Shell",
+                    "inline": [
+                      "[concat('hostname ', parameters('imageTemplate').name)]"
+                    ]
+                  },
                   {
                     "type": "File",
                     "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customizeScript)]",
@@ -395,6 +376,15 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 "type": "array",
                 "value": [
                   {
+                    "type": "PowerShell",
+                    "inline": [
+                      "[concat('Rename-Computer -NewName ', parameters('imageTemplate').name)]"
+                    ]
+                  },
+                  {
+                    "type": "WindowsRestart"
+                  },
+                  {
                     "type": "File",
                     "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customizeScript)]",
                     "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript)]"
@@ -414,7 +404,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                     "inline": [
                       "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildConfigEncoded ', base64(string(parameters('imageTemplate').build))))]"
                     ],
-                    "runElevated": "[parameters('imageTemplate').build.runElevated]"
+                    "runElevated": "[if(equals(parameters('imageTemplate').build.machineType, 'Scheduler'), true(), false())]"
                   }
                 ]
               }
@@ -448,7 +438,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[concat(if(equals(parameters('imageTemplates')[copyIndex()].build.machineType, 'Scheduler'), fx.GetMachineRenameCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()]), createArray()), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword'))))]",
+            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword')))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

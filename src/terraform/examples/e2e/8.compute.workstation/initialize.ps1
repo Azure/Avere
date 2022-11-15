@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 %{ if teradiciLicenseKey != "" }
   $agentFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"

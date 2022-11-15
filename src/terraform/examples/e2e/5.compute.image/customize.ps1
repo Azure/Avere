@@ -3,24 +3,14 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
+$binPaths = ""
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
 $storageContainerUrl = "https://azrender.blob.core.windows.net/bin"
 $storageContainerSas = "?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
-
-Write-Host "Customize (Start): Image Build Parameters"
-$buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
-$buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
-$machineType = $buildConfig.machineType
-$machineSize = $buildConfig.machineSize
-$renderManager = $buildConfig.renderManager
-$renderEngines = $buildConfig.renderEngines -join ","
-Write-Host "Machine Type: $machineType"
-Write-Host "Machine Size: $machineSize"
-Write-Host "Render Engines: $renderEngines"
-Write-Host "Customize (End): Image Build Parameters"
 
 Write-Host "Customize (Start): Resize OS Disk"
 $osDriveLetter = "C"
@@ -32,67 +22,94 @@ Write-Host "Customize (Start): Git"
 $versionInfo = "2.38.1"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
 Start-Process -FilePath $installFile -ArgumentList "/SILENT /NORESTART" -Wait
-$toolPathGit = "C:\Program Files\Git\bin"
+$binPathGit = "C:\Program Files\Git\bin"
+$binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
 
 Write-Host "Customize (Start): Visual Studio Build Tools"
 $versionInfo = "2022"
 $installFile = "vs_buildtools.exe"
 $downloadUrl = "https://aka.ms/vs/17/release/$installFile"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
 $componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
 $componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
-$componentIds += " --add Microsoft.NetCore.Component.Runtime.3.1"
 Start-Process -FilePath $installFile -ArgumentList "--quiet --norestart $componentIds" -Wait
-$toolPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-$toolPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin"
+$binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+$binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin"
+$binPaths += ";$binPathCMake;$binPathMSBuild"
 Write-Host "Customize (End): Visual Studio Build Tools"
 
 Write-Host "Customize (Start): Python"
 $versionInfo = "3.11.0"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
-Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
 Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait
 Write-Host "Customize (End): Python"
 
-#   NVv5 (https://learn.microsoft.com/azure/virtual-machines/nva10v5-series)
-# NCT4v3 (https://learn.microsoft.com/azure/virtual-machines/nct4-v3-series)
-#   NVv3 (https://learn.microsoft.com/azure/virtual-machines/nvv3-series)
-if (($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v5")) -or
-    ($machineSize.StartsWith("Standard_NC") -and $machineSize.EndsWith("_T4_v3")) -or
-    ($machineSize.StartsWith("Standard_NV") -and $machineSize.EndsWith("_v3"))) {
+Write-Host "Customize (Start): Image Build Parameters"
+$buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
+$buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
+$machineType = $buildConfig.machineType
+$gpuPlatform = $buildConfig.gpuPlatform
+$renderManager = $buildConfig.renderManager
+$renderEngines = $buildConfig.renderEngines
+Write-Host "Machine Type: $machineType"
+Write-Host "GPU Platform: $gpuPlatform"
+Write-Host "Render Manager: $renderManager"
+Write-Host "Render Engines: $renderEngines"
+Write-Host "Customize (End): Image Build Parameters"
+
+if ($gpuPlatform -contains "GRID") {
   Write-Host "Customize (Start): NVIDIA GPU (GRID)"
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath $installFile -ArgumentList "/s /noreboot" -Wait
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  Start-Process -FilePath ./$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-grid.output.txt" -RedirectStandardError "nvidia-grid.error.txt"
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
-} elseif ($machineSize.StartsWith("Standard_N")) {
+}
+
+if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
   $versionInfo = "11.8.0"
   $installFile = "cuda_${versionInfo}_522.06_windows.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-  Start-Process -FilePath $installFile -ArgumentList "/s /noreboot" -Wait
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  Start-Process -FilePath ./$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-cuda.output.txt" -RedirectStandardError "nvidia-cuda.error.txt"
+  [System.Environment]::SetEnvironmentVariable("CUDA_TOOLKIT_ROOT_DIR", "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8", [System.EnvironmentVariableTarget]::Machine)
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
+}
+
+if ($gpuPlatform -contains "CUDA.OptiX") {
+  Write-Host "Customize (Start): NVIDIA GPU (OptiX)"
+  $versionInfo = "7.6.0"
+  $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-31894579.exe"
+  $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  Start-Process -FilePath ./$installFile -ArgumentList "/s /n" -Wait -RedirectStandardOutput "nvidia-optix.output.txt" -RedirectStandardError "nvidia-optix.error.txt"
+  $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
+  $buildDirectory = "$sdkDirectory\build"
+  New-Item -ItemType Directory $buildDirectory -Force
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -A x64" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
+  $binPaths += ";$buildDirectory\bin\Release"
+  Write-Host "Customize (End): NVIDIA GPU (OptiX)"
 }
 
 if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): Azure CLI"
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait
   Write-Host "Customize (End): Azure CLI"
-}
 
-if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): NFS Server"
   Install-WindowsFeature -Name "FS-NFS-Service"
   Write-Host "Customize (End): NFS Server"
+
   Write-Host "Customize (Start): NFS Client"
   Install-WindowsFeature -Name "NFS-Client"
   Write-Host "Customize (End): NFS Client"
@@ -112,6 +129,7 @@ if ($renderManager -eq "Deadline") {
   $schedulerCertificateFile = "Deadline10Client.pfx"
   $schedulerRepositoryLocalMount = "S:\"
   $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
+  $binPaths += ";$schedulerPath"
 }
 
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
@@ -121,20 +139,19 @@ $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
 $rendererPathUnrealStream = "$rendererPathUnreal\Stream"
 $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
 
-$rendererPaths = ""
-if ($renderEngines -like "*Blender*") {
-  $rendererPaths += ";$rendererPathBlender"
+if ($renderEngines -contains "Blender") {
+  $binPaths += ";$rendererPathBlender"
 }
-if ($renderEngines -like "*Unreal*") {
-  $rendererPaths += ";$rendererPathUnreal"
+if ($renderEngines -contains "Unreal") {
+  $binPaths += ";$rendererPathUnreal"
 }
-setx PATH "$env:PATH;$schedulerPath$rendererPaths" /m
+setx PATH "$env:PATH$binPaths" /m
 
 if ($renderManager -eq "Deadline") {
   Write-Host "Customize (Start): Deadline Download"
   $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
   $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Expand-Archive -Path $installFile
   Write-Host "Customize (End): Deadline Download"
 
@@ -175,63 +192,65 @@ if ($renderManager -eq "Deadline") {
   Write-Host "Customize (End): Deadline Client"
 }
 
-if ($renderEngines -like "*Blender*") {
+if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
   $versionInfo = "3.3.1"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait
   Write-Host "Customize (End): Blender"
 }
 
-if ($renderEngines -like "*PBRT*") {
+if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (Start): PBRT v3"
   $versionInfo = "v3"
-  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo.git.output.txt" -RedirectStandardError "pbrt-$versionInfo.git.error.txt"
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo.cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo.cmake.error.txt"
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo.msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo.msbuild.error.txt"
+  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo -A x64" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
   New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT3\Release\pbrt.exe" -Path "C:\Windows\pbrt3"
   Write-Host "Customize (End): PBRT v3"
+
   Write-Host "Customize (Start): PBRT v4"
   $versionInfo = "v4"
-  Start-Process -FilePath "$toolPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo.git.output.txt" -RedirectStandardError "pbrt-$versionInfo.git.error.txt"
-  Start-Process -FilePath "$toolPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo.cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo.cmake.error.txt"
-  Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo.msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo.msbuild.error.txt"
+  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo -A x64" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
   New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT4\Release\pbrt.exe" -Path "C:\Windows\pbrt4"
   Write-Host "Customize (End): PBRT v4"
-  if ($renderEngines -like "*PBRT,Moana*") {
-    Write-Host "Customize (Start): PBRT (Moana Island)"
-    $dataDirectory = "moana"
-    New-Item -ItemType Directory -Path $dataDirectory -Force
-    Set-Location -Path $dataDirectory
-    $installFile = "island-basepackage-v1.1.tgz"
-    $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-    tar -xzf $installFile
-    $installFile = "island-pbrt-v1.1.tgz"
-    $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-    tar -xzf $installFile
-    $installFile = "island-pbrtV4-v2.0.tgz"
-    $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-    Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
-    tar -xzf $installFile
-    Set-Location -Path $binDirectory
-    Write-Host "Customize (End): PBRT (Moana Island)"
-  }
 }
 
-if ($renderEngines -like "*Unity*") {
+if ($renderEngines -contains "PBRT.Moana") {
+  Write-Host "Customize (Start): PBRT (Moana Island)"
+  $dataDirectory = "moana"
+  New-Item -ItemType Directory -Path $dataDirectory -Force
+  Set-Location -Path $dataDirectory
+  $installFile = "island-basepackage-v1.1.tgz"
+  $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  tar -xzf $installFile
+  $installFile = "island-pbrt-v1.1.tgz"
+  $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  tar -xzf $installFile
+  $installFile = "island-pbrtV4-v2.0.tgz"
+  $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  tar -xzf $installFile
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): PBRT (Moana Island)"
+}
+
+if ($renderEngines -contains "Unity") {
   Write-Host "Customize (Start): Unity"
   $installFile = "UnityHubSetup.exe"
   $downloadUrl = "https://public-cdn.cloud.unity3d.com/hub/prod/$installFile"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Start-Process -FilePath $installFile -ArgumentList "/S" -Wait
   Write-Host "Customize (End): Unity"
 }
 
-if ($renderEngines -like "*Unreal*") {
+if ($renderEngines -contains "Unreal") {
   Write-Host "Customize (Start): Unreal"
   netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
   $installFile = "dism.exe"
@@ -239,7 +258,7 @@ if ($renderEngines -like "*Unreal*") {
   Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
   $installFile = "UnrealEngine-5.1.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Expand-Archive -Path $installFile
   New-Item -ItemType Directory -Path "$rendererPathUnreal" -Force
   Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
@@ -252,8 +271,8 @@ if ($renderEngines -like "*Unreal*") {
   if ($machineType -eq "Workstation") {
     Write-Host "Customize (Start): Unreal Project Files"
     & "$rendererPathUnreal\GenerateProjectFiles.bat"
-    [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet")
-    Start-Process -FilePath "$toolPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait
+    [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet", [System.EnvironmentVariableTarget]::Machine)
+    Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait
     Write-Host "Customize (End): Unreal Project Files"
     Write-Host "Customize (Start): Unreal Editor Shortcut"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Epic Unreal Editor.lnk"
@@ -267,11 +286,11 @@ if ($renderEngines -like "*Unreal*") {
   Write-Host "Customize (End): Unreal"
 }
 
-if ($renderEngines -like "*Unreal,PixelStream*") {
+if ($renderEngines -contains "Unreal.PixelStream") {
   Write-Host "Customize (Start): Unreal Pixel Streaming"
   $installFile = "PixelStreamingInfrastructure-UE5.1.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Expand-Archive -Path $installFile
   New-Item -ItemType Directory -Path "$rendererPathUnrealStream" -Force
   Move-Item -Path "PixelStreaming*\PixelStreaming*\*" -Destination "$rendererPathUnrealStream"
@@ -302,10 +321,10 @@ if ($machineType -eq "Farm") {
 
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP Agent"
-  $versionInfo = "22.09.0"
+  $versionInfo = "22.09.2"
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Start-Process -FilePath $installFile -ArgumentList "/S /NoPostReboot /Force" -Wait
   Write-Host "Customize (End): Teradici PCoIP Agent"
 
@@ -313,17 +332,17 @@ if ($machineType -eq "Workstation") {
   $versionInfo = "5.02.00"
   $installFile = "vray-benchmark-$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   $installFile = "vray-benchmark-$versionInfo-cli.exe"
   $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Write-Host "Customize (End): V-Ray Benchmark"
 
   Write-Host "Customize (Start): Cinebench"
   $versionInfo = "R23"
   $installFile = "Cinebench$versionInfo.zip"
   $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -OutFile $installFile -Uri $downloadUrl
+  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Expand-Archive -Path $installFile
   Write-Host "Customize (End): Cinebench"
 
