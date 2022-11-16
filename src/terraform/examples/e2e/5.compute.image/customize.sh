@@ -84,7 +84,7 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): NFS Server"
 
   echo "Customize (Start): CycleCloud"
-  cycleCloudPath="usr/local/cyclecloud"
+  cycleCloudPath="/usr/local/cyclecloud"
   cycleCloudRepoPath="/etc/yum.repos.d/cyclecloud.repo"
   echo "[cyclecloud]" > $cycleCloudRepoPath
   echo "name=CycleCloud" >> $cycleCloudRepoPath
