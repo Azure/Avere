@@ -13,6 +13,7 @@ dnf -y install gcc gcc-c++
 dnf -y install python-pip
 dnf -y install nfs-utils
 dnf -y install cmake
+dnf -y install unzip
 dnf -y install git
 dnf -y install jq
 echo "Customize (End): Image Build Platform"
@@ -65,7 +66,7 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   dnf -y install libXcursor-devel
   buildDirectory="$binDirectory/$sdkDirectory/build"
   mkdir $buildDirectory
-  cmake -B $buildDirectory -S $binDirectory/$sdkDirectory/SDK -A x64 1> nvidia-optix-cmake.output.txt 2> nvidia-optix-cmake.error.txt
+  cmake -B $buildDirectory -S $binDirectory/$sdkDirectory/SDK 1> nvidia-optix-cmake.output.txt 2> nvidia-optix-cmake.error.txt
   make -j -C $buildDirectory 1> nvidia-optix-make.output.txt 2> nvidia-optix-make.error.txt
   binPaths="$binPaths:$buildDirectory/bin"
   echo "Customize (End): NVIDIA GPU (OptiX)"
@@ -83,6 +84,7 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): NFS Server"
 
   echo "Customize (Start): CycleCloud"
+  cycleCloudPath="usr/local/cyclecloud"
   cycleCloudRepoPath="/etc/yum.repos.d/cyclecloud.repo"
   echo "[cyclecloud]" > $cycleCloudRepoPath
   echo "name=CycleCloud" >> $cycleCloudRepoPath
@@ -92,12 +94,11 @@ if [ $machineType == "Scheduler" ]; then
   dnf -y install java-1.8.0-openjdk
   JAVA_HOME=/bin/java
   dnf -y install cyclecloud8
-  binPaths="$binPaths:/usr/local/cyclecloud/bin"
+  binPaths="$binPaths:$cycleCloudPath/bin"
   cd /opt/cycle_server
   pip install ./tools/cyclecloud_api*.whl
-  sed -i 's/webServerEnableHttps=false/webServerEnableHttps=true/' ./config/cycle_server.properties
   unzip -q ./tools/cyclecloud-cli.zip
-  ./cyclecloud-cli-installer/install.sh --installdir /usr/local/cyclecloud
+  ./cyclecloud-cli-installer/install.sh --installdir $cycleCloudPath
   cd $binDirectory
   cycleCloudInitFile="cycle_initialize.json"
   echo "[" > $cycleCloudInitFile
@@ -257,7 +258,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   versionInfo="v3"
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.txt 2> pbrt-$versionInfo-git.error.txt
   mkdir -p $rendererPathPBRT3
-  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo -A x64 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
+  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
   make -j -C $rendererPathPBRT3 1> pbrt-$versionInfo-make.output.txt 2> pbrt-$versionInfo-make.error.txt
   ln -s $rendererPathPBRT3/pbrt /usr/bin/pbrt3
   echo "Customize (End): PBRT v3"
@@ -271,7 +272,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   versionInfo="v4"
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.txt 2> pbrt-$versionInfo-git.error.txt
   mkdir -p $rendererPathPBRT4
-  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo -A x64 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
+  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
   make -j -C $rendererPathPBRT4 1> pbrt-$versionInfo-make.output.txt 2> pbrt-$versionInfo-make.error.txt
   ln -s $rendererPathPBRT4/pbrt /usr/bin/pbrt4
   echo "Customize (End): PBRT v4"
@@ -281,20 +282,18 @@ if [[ $renderEngines == *PBRT.Moana* ]]; then
   echo "Customize (Start): PBRT (Moana Island)"
   dataDirectory="moana"
   mkdir $dataDirectory
-  cd $dataDirectory
   installFile="island-basepackage-v1.1.tgz"
   downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
+  tar -xzf $installFile -C $dataDirectory
   installFile="island-pbrt-v1.1.tgz"
   downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
+  tar -xzf $installFile -C $dataDirectory
   installFile="island-pbrtV4-v2.0.tgz"
   downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  cd $binDirectory
+  tar -xzf $installFile -C $dataDirectory
   echo "Customize (End): PBRT (Moana Island)"
 fi
 
@@ -365,19 +364,23 @@ if [ $machineType == "Farm" ]; then
 fi
 
 if [ $machineType == "Workstation" ]; then
-  echo "Customize (Start): Workstation Desktop"
-  dnf config-manager --set-enabled powertools
-  dnf -y groups install "KDE Plasma Workspaces"
-  echo "Customize (End): Workstation Desktop"
+  echo "Customize (Start): Desktop Environment"
+  dnf config-manager --set-enabled crb
+  dnf -y groups install "KDE Plasma Workspaces" 1> kde.output.txt 2> kde.error.txt
+  echo "Customize (End): Desktop Environment"
 
-  echo "Customize (Start): Teradici PCoIP Agent"
+  echo "Customize (Start): Teradici PCoIP"
   versionInfo="22.09.2"
   installFile="pcoip-agent-offline-rhel8.6_$versionInfo-1.el8.x86_64.tar.gz"
   downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  ./install-pcoip-agent.sh pcoip-agent-graphics usb-vhci
-  echo "Customize (End): Teradici PCoIP Agent"
+  installDirectory="pcoip"
+  mkdir $installDirectory
+  tar -xzf $installFile -C $installDirectory
+  cd $installDirectory
+  ./install-pcoip-agent.sh pcoip-agent-graphics usb-vhci 1> pcoip.output.txt 2> pcoip.error.txt
+  cd $installDirectory
+  echo "Customize (End): Teradici PCoIP"
 
   echo "Customize (Start): V-Ray Benchmark"
   versionInfo="5.02.00"

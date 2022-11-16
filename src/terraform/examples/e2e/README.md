@@ -9,33 +9,33 @@ The following *core principles* are implemented throughout the AAA solution depl
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |
-| [0 Global](#0-global) | Define global variables (e.g., region name) and Terraform backend state file storage config. | Yes | Yes |
-| [1 Security](#1-security) | Deploy [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview) and [Blob Storage](https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction) for Terraform state file management. | Yes | Yes |
-| [2 Network](#2-network) | Deploy [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
-| [3 Storage](#3-storage) | Deploy [Blob (NFS v3 with sample content)](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
-| [4 Storage Cache](#4-storage-cache) | Deploy [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
-| [5 Compute Image](#5-compute-image) | Deploy [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L11) | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L11) |
-| [6 Compute Scheduler](#6-compute-scheduler) | Deploy [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for job scheduling with optional [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) integration. | No, continue to use your current job scheduler | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L11) |
-| [7 Compute Farm](#7-compute-farm) | Deploy [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes, if [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) not deployed. Otherwise, No | Yes, if [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) not deployed. Otherwise, No |
-| [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploy [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
-| [9 GitOps](#9-gitops) | Enable [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
-| [10 Render](#10-render) | Submit render farm jobs from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [0 Global](#0-global) | Defines global variables (e.g., region name) and Terraform backend state file storage config. | Yes | Yes |
+| [1 Security](#1-security) | Deploys [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview) and [Blob Storage](https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction) for Terraform state file management. | Yes | Yes |
+| [2 Network](#2-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) and [Bastion](https://learn.microsoft.com/azure/bastion/bastion-overview) with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
+| [3 Storage](#3-storage) | Deploys [Blob (NFS v3 with sample content)](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage. | No | Yes |
+| [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable file caching. | Yes | Maybe, depends on your<br>render scale requirements |
+| [5 Compute Image](#5-compute-image) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are built via the managed [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L11) | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.compute.farm/config.auto.tfvars#L11) |
+| [6 Compute Scheduler](#6-compute-scheduler) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for job scheduling with optional [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) integration. | No, continue to use your current job scheduler | No, specify your custom *image.id* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.compute.scheduler/config.auto.tfvars#L11) |
+| [7 Compute Farm](#7-compute-farm) | Deploys [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) for [Linux](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) and/or [Windows](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) render farms. | Yes, if [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) not deployed. Otherwise, No | Yes, if [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) not deployed. Otherwise, No |
+| [8&#160;Compute&#160;Workstation](#8-compute-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
+| [9 GitOps](#9-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
+| [10 Render](#10-render) | Submits render farm jobs from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
 For example, the following sample output images were rendering in Azure via the AAA solution deployment framework.
 
 [Sprite Fright](#sprite-fright)
 <p align="center">
-  <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
+  <img src=".github/images/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
 
 [White Lands](#white-lands)
 <p align="center">
-  <img src=".github/white-lands.png" alt="White Lands" width="1024" />
+  <img src=".github/images/white-lands.png" alt="White Lands" width="1024" />
 </p>
 
 [Moana Island](#moana-island)
 <p align="center">
-  <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
+  <img src=".github/images/moana-island.png" alt="Moana Island" width="1024" />
 </p>
 
 ## Deployment Prerequisites
@@ -242,7 +242,7 @@ For example, the following sample **Blender** output images were rendering in Az
 #### Sprite Fright
 
 <p align="center">
-  <img src=".github/sprite-fright.png" alt="Sprite Fright" width="1024" />
+  <img src=".github/images/sprite-fright.png" alt="Sprite Fright" width="1024" />
 </p>
 
 #### Linux Render Farm
@@ -262,7 +262,7 @@ deadlinecommand -SubmitCommandLineJob -name Sprite-Fright -executable blender.ex
 #### White Lands
 
 <p align="center">
-  <img src=".github/white-lands.png" alt="White Lands" width="1024" />
+  <img src=".github/images/white-lands.png" alt="White Lands" width="1024" />
 </p>
 
 #### Linux Render Farm
@@ -286,7 +286,7 @@ For example, the following sample **PBRT** output image was rendering in Azure v
 #### Moana Island
 
 <p align="center">
-  <img src=".github/moana-island.png" alt="Moana Island" width="1024" />
+  <img src=".github/images/moana-island.png" alt="Moana Island" width="1024" />
 </p>
 
 ######

@@ -92,7 +92,7 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -A x64" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA GPU (OptiX)"
@@ -206,7 +206,7 @@ if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (Start): PBRT v3"
   $versionInfo = "v3"
   Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo -A x64" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
   New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT3\Release\pbrt.exe" -Path "C:\Windows\pbrt3"
   Write-Host "Customize (End): PBRT v3"
@@ -214,7 +214,7 @@ if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (Start): PBRT v4"
   $versionInfo = "v4"
   Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo -A x64" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
   New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT4\Release\pbrt.exe" -Path "C:\Windows\pbrt4"
   Write-Host "Customize (End): PBRT v4"
@@ -224,20 +224,18 @@ if ($renderEngines -contains "PBRT.Moana") {
   Write-Host "Customize (Start): PBRT (Moana Island)"
   $dataDirectory = "moana"
   New-Item -ItemType Directory -Path $dataDirectory -Force
-  Set-Location -Path $dataDirectory
   $installFile = "island-basepackage-v1.1.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
-  tar -xzf $installFile
+  tar -xzf $installFile -C $dataDirectory
   $installFile = "island-pbrt-v1.1.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
-  tar -xzf $installFile
+  tar -xzf $installFile -C $dataDirectory
   $installFile = "island-pbrtV4-v2.0.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
-  tar -xzf $installFile
-  Set-Location -Path $binDirectory
+  tar -xzf $installFile -C $dataDirectory
   Write-Host "Customize (End): PBRT (Moana Island)"
 }
 
@@ -320,13 +318,13 @@ if ($machineType -eq "Farm") {
 }
 
 if ($machineType -eq "Workstation") {
-  Write-Host "Customize (Start): Teradici PCoIP Agent"
+  Write-Host "Customize (Start): Teradici PCoIP"
   $versionInfo = "22.09.2"
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
   Start-Process -FilePath $installFile -ArgumentList "/S /NoPostReboot /Force" -Wait
-  Write-Host "Customize (End): Teradici PCoIP Agent"
+  Write-Host "Customize (End): Teradici PCoIP"
 
   Write-Host "Customize (Start): V-Ray Benchmark"
   $versionInfo = "5.02.00"

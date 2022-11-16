@@ -268,48 +268,93 @@ resource "azurerm_network_security_group" "network" {
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
   security_rule {
-    name                       = "AllowInSSH"
-    priority                   = 2000
+    name                       = "AllowInSSH[RDP]"
+    priority                   = 3000
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
     source_address_prefix      = "GatewayManager"
     source_port_range          = "*"
     destination_address_prefix = "*"
-    destination_port_range     = "22"
-  }
-  security_rule {
-    name                       = "AllowInRDP"
-    priority                   = 2100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_address_prefix      = "GatewayManager"
-    source_port_range          = "*"
-    destination_address_prefix = "*"
-    destination_port_range     = "3389"
+    destination_port_ranges    = ["22","3389"]
   }
   security_rule {
     name                       = "AllowOutARM"
-    priority                   = 2000
+    priority                   = 3000
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_address_prefix      = "AzureResourceManager"
+    source_address_prefix      = "*"
     source_port_range          = "*"
-    destination_address_prefix = "*"
+    destination_address_prefix = "AzureResourceManager"
     destination_port_range     = "*"
   }
   security_rule {
     name                       = "DenyOutInternet"
-    priority                   = 2100
+    priority                   = 3100
     direction                  = "Outbound"
     access                     = "Deny"
     protocol                   = "*"
-    source_address_prefix      = "Internet"
+    source_address_prefix      = "*"
     source_port_range          = "*"
-    destination_address_prefix = "*"
+    destination_address_prefix = "Internet"
     destination_port_range     = "*"
+  }
+  dynamic security_rule {
+    for_each = each.value.name == "Workstation" ? [1] : []
+    content {
+      name                       = "AllowInPCoIP[TCP]"
+      priority                   = 2000
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_address_prefix      = "Internet"
+      source_port_range          = "*"
+      destination_address_prefix = "*"
+      destination_port_ranges     = ["443","4172","60433"]
+    }
+  }
+  dynamic security_rule {
+    for_each = each.value.name == "Workstation" ? [1] : []
+    content {
+      name                       = "AllowInPCoIP[UDP]"
+      priority                   = 2100
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Udp"
+      source_address_prefix      = "Internet"
+      source_port_range          = "*"
+      destination_address_prefix = "*"
+      destination_port_range     = "4172"
+    }
+  }
+  dynamic security_rule {
+    for_each = each.value.name == "Workstation" ? [1] : []
+    content {
+      name                       = "AllowOutPCoIP[TCP]"
+      priority                   = 2000
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_address_prefix      = "*"
+      source_port_range          = "*"
+      destination_address_prefix = "Internet"
+      destination_port_range     = "443"
+    }
+  }
+  dynamic security_rule {
+    for_each = each.value.name == "Workstation" ? [1] : []
+    content {
+      name                       = "AllowOutPCoIP[UDP]"
+      priority                   = 2100
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Udp"
+      source_address_prefix      = "*"
+      source_port_range          = "*"
+      destination_address_prefix = "Internet"
+      destination_port_range     = "4172"
+    }
   }
 }
 
@@ -390,8 +435,8 @@ resource "azurerm_network_security_group" "bastion" {
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
   security_rule {
-    name                       = "AllowHTTPS"
-    priority                   = 2000
+    name                       = "AllowInHTTPS"
+    priority                   = 3000
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -401,8 +446,8 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_range     = "443"
   }
   security_rule {
-    name                       = "AllowGatewayManager"
-    priority                   = 2100
+    name                       = "AllowInGatewayManager"
+    priority                   = 3100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -412,8 +457,8 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_range     = "443"
   }
   security_rule {
-    name                       = "AllowBastionInbound"
-    priority                   = 2200
+    name                       = "AllowInBastion"
+    priority                   = 3200
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -423,8 +468,8 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_ranges    = ["8080","5701"]
   }
   security_rule {
-    name                       = "AllowLoadBalancer"
-    priority                   = 2300
+    name                       = "AllowInLoadBalancer"
+    priority                   = 3300
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -434,8 +479,8 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_range     = "443"
   }
   security_rule {
-    name                       = "AllowSSH-RDP"
-    priority                   = 2000
+    name                       = "AllowOutSSH[RDP]"
+    priority                   = 3000
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -445,8 +490,8 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_ranges    = ["22","3389"]
   }
   security_rule {
-    name                       = "AllowAzureCloud"
-    priority                   = 2100
+    name                       = "AllowOutAzureCloud"
+    priority                   = 3100
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -456,8 +501,8 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_range     = "443"
   }
   security_rule {
-    name                       = "AllowBastionOutbound"
-    priority                   = 2200
+    name                       = "AllowOutBastion"
+    priority                   = 3200
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -467,8 +512,8 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_ranges    = ["8080","5701"]
   }
   security_rule {
-    name                       = "AllowBastionSession"
-    priority                   = 2300
+    name                       = "AllowOutBastionSession"
+    priority                   = 3300
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
