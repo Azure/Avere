@@ -2,7 +2,7 @@
 
 Azure Artist Anywhere (AAA) is a *modular and customizable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) deployment framework* for the [Azure rendering solution architecture](https://github.com/Azure/Avere/blob/main/src/terraform/burstrenderarchitecture.png). Enable your remote artists with global render farm scale using [Azure HPC Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc) and [Azure GPU Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu).
 
-https://user-images.githubusercontent.com/22285652/202863565-791d9e98-ddda-4c71-9cdb-1a4adc929ad8.mp4
+https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4
 
 The following *core principles* are implemented throughout the AAA solution deployment framework.
 * Integration of security best practices, including [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview), [Private Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview).
