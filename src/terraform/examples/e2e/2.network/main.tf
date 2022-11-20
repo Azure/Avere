@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.4"
+  required_version = ">= 1.3.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.31.0"
+      version = "~>3.32.0"
     }
   }
   backend "azurerm" {
@@ -81,6 +81,14 @@ variable "storageNetworkSubnetIndex" {
       primary   = number
       secondary = number
       netApp    = number
+    }
+  )
+}
+
+variable "networkSecurityGroup" {
+  type = object(
+    {
+      denyOutInternet = bool
     }
   )
 }
@@ -289,16 +297,19 @@ resource "azurerm_network_security_group" "network" {
     destination_address_prefix = "AzureResourceManager"
     destination_port_range     = "*"
   }
-  security_rule {
-    name                       = "DenyOutInternet"
-    priority                   = 3100
-    direction                  = "Outbound"
-    access                     = "Deny"
-    protocol                   = "*"
-    source_address_prefix      = "*"
-    source_port_range          = "*"
-    destination_address_prefix = "Internet"
-    destination_port_range     = "*"
+  dynamic security_rule {
+    for_each = var.networkSecurityGroup.denyOutInternet ? [1] : []
+    content {
+      name                       = "DenyOutInternet"
+      priority                   = 3100
+      direction                  = "Outbound"
+      access                     = "Deny"
+      protocol                   = "*"
+      source_address_prefix      = "*"
+      source_port_range          = "*"
+      destination_address_prefix = "Internet"
+      destination_port_range     = "*"
+    }
   }
   dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []

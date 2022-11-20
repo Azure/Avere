@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.4"
+  required_version = ">= 1.3.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.31.0"
+      version = "~>3.32.0"
     }
   }
 }
@@ -47,9 +47,12 @@ variable "storage" {
 variable "keyVault" {
   type = object(
     {
-      type                    = string
-      enablePurgeProtection   = bool
-      softDeleteRetentionDays = number
+      type                        = string
+      enablePurgeProtection       = bool
+      enableForDeployment         = bool
+      enableForDiskEncryption     = bool
+      enableForTemplateDeployment = bool
+      softDeleteRetentionDays     = number
       secrets = list(object(
         {
           name  = string
@@ -89,11 +92,9 @@ variable "keyVault" {
 variable "monitorWorkspace" {
   type = object(
     {
-      name               = string
-      sku                = string
-      retentionDays      = number
-      publicIngestEnable = bool
-      publicQueryEnable  = bool
+      name          = string
+      sku           = string
+      retentionDays = number
     }
   )
 }
@@ -105,11 +106,19 @@ resource "azurerm_resource_group" "security" {
   location = module.global.regionName
 }
 
+###########################################################################################################################
+# User Assigned Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview) #
+###########################################################################################################################
+
 resource "azurerm_user_assigned_identity" "solution" {
   name                = module.global.managedIdentityName
   resource_group_name = azurerm_resource_group.security.name
   location            = azurerm_resource_group.security.location
 }
+
+#######################################################
+# Storage (https://learn.microsoft.com/azure/storage) #
+#######################################################
 
 resource "azurerm_storage_account" "storage" {
   name                            = module.global.securityStorageAccountName
@@ -126,15 +135,22 @@ resource "azurerm_storage_container" "container" {
   storage_account_name = azurerm_storage_account.storage.name
 }
 
+############################################################################
+# Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
+############################################################################
+
 resource "azurerm_key_vault" "solution" {
-  name                       = module.global.keyVaultName
-  resource_group_name        = azurerm_resource_group.security.name
-  location                   = azurerm_resource_group.security.location
-  tenant_id                  = data.azurerm_client_config.current.tenant_id
-  sku_name                   = var.keyVault.type
-  purge_protection_enabled   = var.keyVault.enablePurgeProtection
-  soft_delete_retention_days = var.keyVault.softDeleteRetentionDays
-  enable_rbac_authorization  = true
+  name                            = module.global.keyVaultName
+  resource_group_name             = azurerm_resource_group.security.name
+  location                        = azurerm_resource_group.security.location
+  tenant_id                       = data.azurerm_client_config.current.tenant_id
+  sku_name                        = var.keyVault.type
+  purge_protection_enabled        = var.keyVault.enablePurgeProtection
+  soft_delete_retention_days      = var.keyVault.softDeleteRetentionDays
+  enabled_for_deployment          = var.keyVault.enableForDeployment
+  enabled_for_disk_encryption     = var.keyVault.enableForDiskEncryption
+  enabled_for_template_deployment = var.keyVault.enableForTemplateDeployment
+  enable_rbac_authorization       = true
 }
 
 resource "azurerm_key_vault_secret" "secrets" {
@@ -184,14 +200,18 @@ resource "azurerm_key_vault_certificate" "certificates" {
   }
 }
 
+######################################################################
+# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
+######################################################################
+
 resource "azurerm_log_analytics_workspace" "monitor" {
   name                       = var.monitorWorkspace.name
   resource_group_name        = azurerm_resource_group.security.name
   location                   = azurerm_resource_group.security.location
   sku                        = var.monitorWorkspace.sku
   retention_in_days          = var.monitorWorkspace.retentionDays
-  internet_ingestion_enabled = var.monitorWorkspace.publicIngestEnable
-  internet_query_enabled     = var.monitorWorkspace.publicQueryEnable
+  internet_ingestion_enabled = false
+  internet_query_enabled     = false
 }
 
 output "resourceGroupName" {

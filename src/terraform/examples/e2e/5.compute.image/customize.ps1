@@ -22,7 +22,7 @@ Write-Host "Customize (Start): Git"
 $versionInfo = "2.38.1"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
-Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
 Start-Process -FilePath $installFile -ArgumentList "/SILENT /NORESTART" -Wait
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
@@ -32,7 +32,7 @@ Write-Host "Customize (Start): Visual Studio Build Tools"
 $versionInfo = "2022"
 $installFile = "vs_buildtools.exe"
 $downloadUrl = "https://aka.ms/vs/17/release/$installFile"
-Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
 $componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
 $componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
 Start-Process -FilePath $installFile -ArgumentList "--quiet --norestart $componentIds" -Wait
@@ -45,7 +45,7 @@ Write-Host "Customize (Start): Python"
 $versionInfo = "3.11.0"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
-Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
 Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait
 Write-Host "Customize (End): Python"
 
@@ -66,7 +66,7 @@ if ($gpuPlatform -contains "GRID") {
   Write-Host "Customize (Start): NVIDIA GPU (GRID)"
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath ./$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-grid.output.txt" -RedirectStandardError "nvidia-grid.error.txt"
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 }
@@ -76,7 +76,7 @@ if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   $versionInfo = "11.8.0"
   $installFile = "cuda_${versionInfo}_522.06_windows.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath ./$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-cuda.output.txt" -RedirectStandardError "nvidia-cuda.error.txt"
   [System.Environment]::SetEnvironmentVariable("CUDA_TOOLKIT_ROOT_DIR", "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8", [System.EnvironmentVariableTarget]::Machine)
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
@@ -87,7 +87,7 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   $versionInfo = "7.6.0"
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-31894579.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath ./$installFile -ArgumentList "/s /n" -Wait -RedirectStandardOutput "nvidia-optix.output.txt" -RedirectStandardError "nvidia-optix.error.txt"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
@@ -102,17 +102,19 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): Azure CLI"
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait
   Write-Host "Customize (End): Azure CLI"
 
-  Write-Host "Customize (Start): NFS Server"
-  Install-WindowsFeature -Name "FS-NFS-Service"
-  Write-Host "Customize (End): NFS Server"
+  if ($renderManager -eq "Deadline") {
+    Write-Host "Customize (Start): NFS Server"
+    Install-WindowsFeature -Name "FS-NFS-Service"
+    Write-Host "Customize (End): NFS Server"
 
-  Write-Host "Customize (Start): NFS Client"
-  Install-WindowsFeature -Name "NFS-Client"
-  Write-Host "Customize (End): NFS Client"
+    Write-Host "Customize (Start): NFS Client"
+    Install-WindowsFeature -Name "NFS-Client"
+    Write-Host "Customize (End): NFS Client"
+  }
 } else {
   Write-Host "Customize (Start): NFS Client"
   $installFile = "dism.exe"
@@ -121,16 +123,22 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-if ($renderManager -eq "Deadline") {
-  $schedulerVersion = "10.1.23.6"
-  $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
-  $schedulerDatabasePath = "C:\DeadlineDatabase"
-  $schedulerRepositoryPath = "C:\DeadlineRepository"
-  $schedulerCertificateFile = "Deadline10Client.pfx"
-  $schedulerRepositoryLocalMount = "S:\"
-  $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
-  $binPaths += ";$schedulerPath"
+switch ($renderManager) {
+  "RoyalRender" {
+    $schedulerVersion = "8.4.02"
+    $schedulerPath = "C:\Program Files\RoyalRender"
+  }
+  "Deadline" {
+    $schedulerVersion = "10.2.0.8"
+    $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
+    $schedulerDatabasePath = "C:\DeadlineDatabase"
+    $schedulerRepositoryPath = "C:\DeadlineRepository"
+    $schedulerCertificateFile = "Deadline10Client.pfx"
+    $schedulerRepositoryLocalMount = "S:\"
+    $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
+  }
 }
+$binPaths += ";$schedulerPath"
 
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
 $rendererPathPBRT3 = "C:\Program Files\PBRT\v3"
@@ -147,49 +155,77 @@ if ($renderEngines -contains "Unreal") {
 }
 setx PATH "$env:PATH$binPaths" /m
 
-if ($renderManager -eq "Deadline") {
-  Write-Host "Customize (Start): Deadline Download"
-  $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
-  $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Deadline Download"
+switch ($renderManager) {
+  "RoyalRender" {
+    Write-Host "Customize (Start): Royal Render Download"
+    $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
+    $downloadUrl = "$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+    Expand-Archive -Path $installFile
+    Write-Host "Customize (End): Royal Render Download"
 
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Deadline Repository"
-    netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
-    Set-Location -Path "Deadline*"
-    $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-    Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
-    Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_server.log
-    Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
-    New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
-    Set-Location -Path $binDirectory
-    Write-Host "Customize (End): Deadline Repository"
-  }
+    Write-Host "Customize (Start): Royal Render Installer"
+    Set-Location -Path "RoyalRender*\RoyalRender*"
+    $installFile = "rrSetup_win.exe"
+    #Start-Process -FilePath .\$installFile -ArgumentList "" -Wait -RedirectStandardOutput "rr-installer.output.txt" -RedirectStandardError "rr-installer.error.txt"
+    Write-Host "Customize (End): Royal Render Installer"
 
-  Write-Host "Customize (Start): Deadline Client"
-  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerPath\deadlineworker.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerPath\deadlinemonitor.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
-  Set-Location -Path "Deadline*"
-  $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-  $installArgs = "--mode unattended"
-  if ($machineType -eq "Scheduler") {
-    $installArgs = "$installArgs --slavestartup false --launcherservice false"
-  } else {
-    if ($machineType -eq "Farm") {
-      $workerStartup = "true"
-    } else {
-      $workerStartup = "false"
+    Set-Location -Path $schedulerPath
+    if ($machineType -eq "Scheduler") {
+      Write-Host "Customize (Start): Royal Render Server"
+
+      Write-Host "Customize (End): Royal Render Server"
     }
-    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+
+    Write-Host "Customize (Start): Royal Render Client"
+
+    Write-Host "Customize (End): Royal Render Client"
+    Set-Location -Path $binDirectory
   }
-  Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-  Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
-  Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
-  Set-Location -Path $binDirectory
-  Write-Host "Customize (End): Deadline Client"
+  "Deadline" {
+    Write-Host "Customize (Start): Deadline Download"
+    $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
+    $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+    Expand-Archive -Path $installFile
+    Write-Host "Customize (End): Deadline Download"
+
+    if ($machineType -eq "Scheduler") {
+      Write-Host "Customize (Start): Deadline Repository"
+      netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
+      Set-Location -Path "Deadline*"
+      $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
+      Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
+      Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_server.log
+      Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
+      New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
+      Set-Location -Path $binDirectory
+      Write-Host "Customize (End): Deadline Repository"
+    }
+
+    Write-Host "Customize (Start): Deadline Client"
+    netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerPath\deadlineworker.exe"
+    netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerPath\deadlinemonitor.exe"
+    netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
+    Set-Location -Path "Deadline*"
+    $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
+    $installArgs = "--mode unattended"
+    if ($machineType -eq "Scheduler") {
+      $installArgs = "$installArgs --slavestartup false --launcherservice false"
+    } else {
+      if ($machineType -eq "Farm") {
+        $workerStartup = "true"
+      } else {
+        $workerStartup = "false"
+      }
+      $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+    }
+    Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
+    Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
+    Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
+    Set-Location -Path $binDirectory
+    Write-Host "Customize (End): Deadline Client"
+  }
 }
 
 if ($renderEngines -contains "Blender") {
@@ -197,7 +233,7 @@ if ($renderEngines -contains "Blender") {
   $versionInfo = "3.3.1"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait
   Write-Host "Customize (End): Blender"
 }
@@ -226,15 +262,15 @@ if ($renderEngines -contains "PBRT.Moana") {
   New-Item -ItemType Directory -Path $dataDirectory -Force
   $installFile = "island-basepackage-v1.1.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   tar -xzf $installFile -C $dataDirectory
   $installFile = "island-pbrt-v1.1.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   tar -xzf $installFile -C $dataDirectory
   $installFile = "island-pbrtV4-v2.0.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   tar -xzf $installFile -C $dataDirectory
   Write-Host "Customize (End): PBRT (Moana Island)"
 }
@@ -243,7 +279,7 @@ if ($renderEngines -contains "Unity") {
   Write-Host "Customize (Start): Unity"
   $installFile = "UnityHubSetup.exe"
   $downloadUrl = "https://public-cdn.cloud.unity3d.com/hub/prod/$installFile"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath $installFile -ArgumentList "/S" -Wait
   Write-Host "Customize (End): Unity"
 }
@@ -256,7 +292,7 @@ if ($renderEngines -contains "Unreal") {
   Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
   $installFile = "UnrealEngine-5.1.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Expand-Archive -Path $installFile
   New-Item -ItemType Directory -Path "$rendererPathUnreal" -Force
   Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
@@ -288,7 +324,7 @@ if ($renderEngines -contains "Unreal.PixelStream") {
   Write-Host "Customize (Start): Unreal Pixel Streaming"
   $installFile = "PixelStreamingInfrastructure-UE5.1.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Expand-Archive -Path $installFile
   New-Item -ItemType Directory -Path "$rendererPathUnrealStream" -Force
   Move-Item -Path "PixelStreaming*\PixelStreaming*\*" -Destination "$rendererPathUnrealStream"
@@ -322,7 +358,7 @@ if ($machineType -eq "Workstation") {
   $versionInfo = "22.09.2"
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath $installFile -ArgumentList "/S /NoPostReboot /Force" -Wait
   Write-Host "Customize (End): Teradici PCoIP"
 
@@ -330,17 +366,17 @@ if ($machineType -eq "Workstation") {
   $versionInfo = "5.02.00"
   $installFile = "vray-benchmark-$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   $installFile = "vray-benchmark-$versionInfo-cli.exe"
   $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Write-Host "Customize (End): V-Ray Benchmark"
 
   Write-Host "Customize (Start): Cinebench"
   $versionInfo = "R23"
   $installFile = "Cinebench$versionInfo.zip"
   $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $installFile -UseBasicParsing
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Expand-Archive -Path $installFile
   Write-Host "Customize (End): Cinebench"
 

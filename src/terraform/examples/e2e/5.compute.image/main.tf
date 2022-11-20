@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.4"
+  required_version = ">= 1.3.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.31.0"
+      version = "~>3.32.0"
     }
   }
   backend "azurerm" {
@@ -404,7 +404,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                     "inline": [
                       "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildConfigEncoded ', base64(string(parameters('imageTemplate').build))))]"
                     ],
-                    "runElevated": "[if(equals(parameters('imageTemplate').build.machineType, 'Scheduler'), true(), false())]"
+                    "runElevated": "[if(and(equals(parameters('imageTemplate').build.renderManager, 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   }
                 ]
               }

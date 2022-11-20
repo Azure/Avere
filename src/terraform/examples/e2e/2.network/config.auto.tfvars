@@ -83,6 +83,14 @@ storageNetworkSubnetIndex = {
 }
 
 ################################################################################################################
+# Network Security Groups (https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview) #
+################################################################################################################
+
+networkSecurityGroup = {
+  denyOutInternet = false
+}
+
+################################################################################################################
 # Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
 ################################################################################################################
 

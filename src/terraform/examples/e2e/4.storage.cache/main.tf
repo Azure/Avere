@@ -1,9 +1,13 @@
 terraform {
-  required_version = ">= 1.3.4"
+  required_version = ">= 1.3.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.31.0"
+      version = "~>3.32.0"
+    }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~>2.30.0"
     }
     avere = {
       source  = "hashicorp/avere"
@@ -199,6 +203,10 @@ data "azurerm_private_dns_zone" "network" {
   resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
+data "azuread_service_principal" "hpc_cache" {
+  display_name = "HPC Cache Resource Provider"
+}
+
 locals {
   stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
   deployPrivateDnsZone    = !local.stateExistsNetwork && var.computeNetwork.privateDns.zoneName != ""
@@ -215,6 +223,24 @@ resource "azurerm_resource_group" "cache" {
 ##############################################################################
 # HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
 ##############################################################################
+
+resource "azurerm_role_assignment" "storage_account" {
+  for_each = {
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
+  }
+  role_definition_name = "Storage Account Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
+  principal_id         = data.azuread_service_principal.hpc_cache.object_id
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
+}
+
+resource "azurerm_role_assignment" "storage_blob_data" {
+  for_each = {
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
+  }
+  role_definition_name = "Storage Blob Data Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
+  principal_id         = data.azuread_service_principal.hpc_cache.object_id
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
+}
 
 resource "azurerm_hpc_cache" "cache" {
   count               = var.hpcCache.enable ? 1 : 0
@@ -234,6 +260,10 @@ resource "azurerm_hpc_cache" "cache" {
   }
   key_vault_key_id                           = var.hpcCache.encryption.enable ? data.azurerm_key_vault_key.cache_encryption.id : null
   automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enable ? var.hpcCache.encryption.rotateKey : null
+  depends_on = [
+    azurerm_role_assignment.storage_account,
+    azurerm_role_assignment.storage_blob_data
+  ]
 }
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
@@ -427,7 +457,7 @@ output "cacheManagementAddress" {
 }
 
 output "cacheMountAddresses" {
-  value = var.hpcCache.enable && length(azurerm_hpc_cache.cache) > 0 ? azurerm_hpc_cache.cache[0].mount_addresses : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vserver_ip_addresses : ""
+  value = var.hpcCache.enable && length(azurerm_hpc_cache.cache) > 0 ? azurerm_hpc_cache.cache[0].mount_addresses : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vserver_ip_addresses : null
 }
 
 output "cachePrivateDnsFqdn" {

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.4"
+  required_version = ">= 1.3.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.31.0"
+      version = "~>3.32.0"
     }
   }
   backend "azurerm" {
@@ -189,9 +189,9 @@ locals {
       image = {
         id = virtualMachineScaleSet.image.id
         plan = {
-          name      = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku)
-          product   = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer)
-          publisher = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher)
+          name      = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
+          product   = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
+          publisher = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
         }
       }
     }) if virtualMachineScaleSet.operatingSystem.type == "Linux"
@@ -235,7 +235,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
-    enable_accelerated_networking = false
+    enable_accelerated_networking = true
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -352,6 +352,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
+    enable_accelerated_networking = true
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType

@@ -1,13 +1,9 @@
 terraform {
-  required_version = ">= 1.3.4"
+  required_version = ">= 1.3.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.31.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~>2.30.0"
+      version = "~>3.32.0"
     }
   }
   backend "azurerm" {
@@ -240,10 +236,6 @@ data "azurerm_subnet" "storage_netapp" {
   name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetworkSubnetIndex.netApp].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
-}
-
-data "azuread_service_principal" "hpc_cache" {
-  display_name = "HPC Cache Resource Provider"
 }
 
 data "http" "current_host" {
@@ -482,30 +474,6 @@ resource "azurerm_private_endpoint" "storage" {
   ]
 }
 
-resource "azurerm_role_assignment" "storage_account_contributor" { # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
-  for_each = {
-    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableBlobNfsV3 && storageAccount.name != ""
-  }
-  role_definition_name = "Storage Account Contributor"
-  principal_id         = data.azuread_service_principal.hpc_cache.object_id
-  scope                = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.name}"
-  depends_on = [
-    azurerm_storage_account.storage
-  ]
-}
-
-resource "azurerm_role_assignment" "storage_blob_data_contributor" { # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
-  for_each = {
-    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableBlobNfsV3 && storageAccount.name != ""
-  }
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azuread_service_principal.hpc_cache.object_id
-  scope                = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.name}"
-  depends_on = [
-    azurerm_storage_account.storage
-  ]
-}
-
 resource "azurerm_storage_container" "containers" {
   for_each = {
     for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer
@@ -653,6 +621,7 @@ resource "azurerm_network_interface" "storage_primary" {
     subnet_id                     = data.azurerm_subnet.storage_primary.id
     private_ip_address_allocation = "Dynamic"
   }
+  enable_accelerated_networking = true
 }
 
 resource "azurerm_network_interface" "storage_secondary" {
@@ -667,6 +636,7 @@ resource "azurerm_network_interface" "storage_secondary" {
     subnet_id                     = data.azurerm_subnet.storage_secondary.id
     private_ip_address_allocation = "Dynamic"
   }
+  enable_accelerated_networking = true
 }
 
 resource "azurerm_managed_disk" "storage" {

@@ -39,14 +39,14 @@ if [[ $gpuPlatform == *GRID* ]]; then
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile -s 1> nvidia-grid.output.txt 2> nvidia-grid.error.txt
+  ./$installFile -s 1> "nvidia-grid.output.txt" 2> "nvidia-grid.error.txt"
   echo "Customize (End): NVIDIA GPU (GRID)"
 fi
 
 if [[ $gpuPlatform == *CUDA* ]] || [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (Start): NVIDIA GPU (CUDA)"
   dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
-  dnf -y install cuda 1> nvidia-cuda.output.txt 2> nvidia-cuda.error.txt
+  dnf -y install cuda 1> "nvidia-cuda.output.txt" 2> "nvidia-cuda.error.txt"
   echo "Customize (End): NVIDIA GPU (CUDA)"
 fi
 
@@ -59,15 +59,15 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   chmod +x $installFile
   sdkDirectory="nvidia-optix"
   mkdir $sdkDirectory
-  ./$installFile --skip-license --prefix="$binDirectory/$sdkDirectory" 1> nvidia-optix.output.txt 2> nvidia-optix.error.txt
+  ./$installFile --skip-license --prefix="$binDirectory/$sdkDirectory" 1> "nvidia-optix.output.txt" 2> "nvidia-optix.error.txt"
   dnf -y install mesa-libGL-devel
   dnf -y install libXrandr-devel
   dnf -y install libXinerama-devel
   dnf -y install libXcursor-devel
   buildDirectory="$binDirectory/$sdkDirectory/build"
   mkdir $buildDirectory
-  cmake -B $buildDirectory -S $binDirectory/$sdkDirectory/SDK 1> nvidia-optix-cmake.output.txt 2> nvidia-optix-cmake.error.txt
-  make -j -C $buildDirectory 1> nvidia-optix-make.output.txt 2> nvidia-optix-make.error.txt
+  cmake -B $buildDirectory -S $binDirectory/$sdkDirectory/SDK 1> "nvidia-optix-cmake.output.txt" 2> "nvidia-optix-cmake.error.txt"
+  make -j -C $buildDirectory 1> "nvidia-optix-make.output.txt" 2> "nvidia-optix-make.error.txt"
   binPaths="$binPaths:$buildDirectory/bin"
   echo "Customize (End): NVIDIA GPU (OptiX)"
 fi
@@ -79,9 +79,11 @@ if [ $machineType == "Scheduler" ]; then
   dnf -y install azure-cli
   echo "Customize (End): Azure CLI"
 
-  echo "Customize (Start): NFS Server"
-  systemctl --now enable nfs-server
-  echo "Customize (End): NFS Server"
+  if [ $renderManager == "Deadline" ]; then
+    echo "Customize (Start): NFS Server"
+    systemctl --now enable nfs-server
+    echo "Customize (End): NFS Server"
+  fi
 
   echo "Customize (Start): CycleCloud"
   cycleCloudPath="/usr/local/cyclecloud"
@@ -130,18 +132,24 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
-if [ $renderManager == "Deadline" ]; then
-  schedulerVersion="10.1.23.6"
-  schedulerPath="/opt/Thinkbox/Deadline10/bin"
-  schedulerDatabaseHost="$(hostname)"
-  schedulerDatabasePort="27017"
-  schedulerRepositoryPath="/DeadlineRepository"
-  schedulerCertificateName="Deadline"
-  schedulerCertificateFile="$schedulerCertificateName.pfx"
-  schedulerRepositoryLocalMount="/mnt/scheduler"
-  schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
-  binPaths="$binPaths:$schedulerPath"
-fi
+case $renderManager in
+  "RoyalRender")
+    schedulerVersion="8.4.02"
+    schedulerPath="/opt/RoyalRender"
+    ;;
+  "Deadline")
+    schedulerVersion="10.2.0.8"
+    schedulerPath="/opt/Thinkbox/Deadline10/bin"
+    schedulerDatabaseHost="$(hostname)"
+    schedulerDatabasePort="27017"
+    schedulerRepositoryPath="/DeadlineRepository"
+    schedulerCertificateName="Deadline"
+    schedulerCertificateFile="$schedulerCertificateName.pfx"
+    schedulerRepositoryLocalMount="/mnt/scheduler"
+    schedulerRepositoryCertificate="$schedulerRepositoryLocalMount/$schedulerCertificateFile"
+    ;;
+esac
+binPaths="$binPaths:$schedulerPath"
 
 rendererPathBlender="/usr/local/blender3"
 rendererPathPBRT3="/usr/local/pbrt/v3"
@@ -157,84 +165,117 @@ if [[ $renderEngines == *Unreal* ]]; then
 fi
 echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
 
-if [ $renderManager == "Deadline" ]; then
-  echo "Customize (Start): Deadline Download"
-  installFile="Deadline-$schedulerVersion-linux-installers.tar"
-  downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  echo "Customize (End): Deadline Download"
-
-  if [ $machineType == "Scheduler" ]; then
-    echo "Customize (Start): OpenSSL Certificates"
-    pip install pyOpenSSL
-    installFile="SSLGeneration-master.zip"
-    downloadUrl="$storageContainerUrl/Deadline/$installFile$storageContainerSas"
+case $renderManager in
+  "RoyalRender")
+    echo "Customize (Start): Royal Render Download"
+    installFile="RoyalRender__${schedulerVersion}__installer.zip"
+    downloadUrl="$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
     unzip -q $installFile
-    cd "SSLGeneration-master"
-    schedulerCertificateOrg="Azure"
-    schedulerCertificateOrgUnit="HPCRender"
-    python ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --ca
-    python ssl_gen.py --cert-name $schedulerCertificateName --server
-    python ssl_gen.py --cert-name $schedulerCertificateName --client
-    python ssl_gen.py --cert-name $schedulerCertificateName --pfx
-    cd "keys"
-    schedulerCertificateKeyFile="$(pwd)/$schedulerCertificateName.pem"
-    schedulerCertificateAuthorityFile="$(pwd)/ca.crt"
-    cat $schedulerCertificateName.crt > $schedulerCertificateKeyFile
-    cat $schedulerCertificateName.key >> $schedulerCertificateKeyFile
-    mkdir -p $schedulerRepositoryPath
-    cp $schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
-    chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
+    echo "Customize (End): Royal Render Download"
+
+    echo "Customize (Start): Royal Render Installer"
+    dnf -y install fontconfig
+    dnf -y install libXrender
+    dnf -y install libXext
+    cd "RoyalRender__${schedulerVersion}__installer"
+    installFile="rrSetup_linux"
+    chmod +x $installFile
+    mkdir $schedulerPath
+    ./$installFile -console -rrRoot $schedulerPath 1> "rr-installer.output.txt" 2> "rr-installer.error.txt"
+    echo "Customize (End): Royal Render Installer"
+
+    cd $schedulerPath
+    if [ $machineType == "Scheduler" ]; then
+      echo "Customize (Start): Royal Render Server"
+
+      echo "Customize (End): Royal Render Server"
+    fi
+
+    echo "Customize (Start): Royal Render Client"
+
+    echo "Customize (End): Royal Render Client"
     cd $binDirectory
-    echo "Customize (End): OpenSSL Certificates"
+    ;;
+  "Deadline")
+    echo "Customize (Start): Deadline Download"
+    installFile="Deadline-$schedulerVersion-linux-installers.tar"
+    downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    tar -xzf $installFile
+    echo "Customize (End): Deadline Download"
 
-    echo "Customize (Start): Mongo DB"
-    mongoDbRepoPath="/etc/yum.repos.d/mongodb.repo"
-    echo "[mongodb-org-4.2]" > $mongoDbRepoPath
-    echo "name=MongoDB" >> $mongoDbRepoPath
-    echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.2/x86_64/" >> $mongoDbRepoPath
-    echo "gpgcheck=1" >> $mongoDbRepoPath
-    echo "enabled=1" >> $mongoDbRepoPath
-    echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc" >> $mongoDbRepoPath
-    dnf -y install mongodb-org
-    sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/' /etc/mongod.conf
-    # sed -i "/bindIp: 0.0.0.0/a\  tls:" /etc/mongod.conf
-    # sed -i "/tls:/a\    mode: requireTLS" /etc/mongod.conf
-    # sed -i "/mode: requireTLS/a\    certificateKeyFile: $schedulerCertificateKeyFile" /etc/mongod.conf
-    # sed -i "/certificateKeyFile:/a\    CAFile: $schedulerCertificateAuthorityFile" /etc/mongod.conf
-    # sed -i 's/#security:/security:/' /etc/mongod.conf
-    # sed -i "/security:/a\  authorization: enabled" /etc/mongod.conf
-    systemctl enable mongod
-    systemctl start mongod
-    echo "Customize (End): Mongo DB"
+    if [ $machineType == "Scheduler" ]; then
+      echo "Customize (Start): OpenSSL Certificates"
+      pip install pyOpenSSL
+      installFile="SSLGeneration-master.zip"
+      downloadUrl="$storageContainerUrl/Deadline/$installFile$storageContainerSas"
+      curl -o $installFile -L $downloadUrl
+      unzip -q $installFile
+      cd "SSLGeneration-master"
+      schedulerCertificateOrg="Azure"
+      schedulerCertificateOrgUnit="HPCRender"
+      python ssl_gen.py --cert-org $schedulerCertificateOrg --cert-ou $schedulerCertificateOrgUnit --ca
+      python ssl_gen.py --cert-name $schedulerCertificateName --server
+      python ssl_gen.py --cert-name $schedulerCertificateName --client
+      python ssl_gen.py --cert-name $schedulerCertificateName --pfx
+      cd "keys"
+      schedulerCertificateKeyFile="$(pwd)/$schedulerCertificateName.pem"
+      schedulerCertificateAuthorityFile="$(pwd)/ca.crt"
+      cat $schedulerCertificateName.crt > $schedulerCertificateKeyFile
+      cat $schedulerCertificateName.key >> $schedulerCertificateKeyFile
+      mkdir -p $schedulerRepositoryPath
+      cp $schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
+      chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
+      cd $binDirectory
+      echo "Customize (End): OpenSSL Certificates"
 
-    echo "Customize (Start): Deadline Repository"
-    installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    # ./$installFile --mode unattended --dbLicenseAcceptance accept --dbauth true --dbssl true --dbclientcert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
-    ./$installFile --mode unattended --dbLicenseAcceptance accept --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
-    mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_server.log
-    echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
-    exportfs -a
-    echo "Customize (End): Deadline Repository"
-  fi
+      echo "Customize (Start): Mongo DB"
+      mongoDbRepoPath="/etc/yum.repos.d/mongodb.repo"
+      echo "[mongodb-org-4.4]" > $mongoDbRepoPath
+      echo "name=MongoDB" >> $mongoDbRepoPath
+      echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.4/x86_64/" >> $mongoDbRepoPath
+      echo "gpgcheck=1" >> $mongoDbRepoPath
+      echo "enabled=1" >> $mongoDbRepoPath
+      echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc" >> $mongoDbRepoPath
+      dnf -y install mongodb-org
+      sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/' /etc/mongod.conf
+      # sed -i "/bindIp: 0.0.0.0/a\  tls:" /etc/mongod.conf
+      # sed -i "/tls:/a\    mode: requireTLS" /etc/mongod.conf
+      # sed -i "/mode: requireTLS/a\    certificateKeyFile: $schedulerCertificateKeyFile" /etc/mongod.conf
+      # sed -i "/certificateKeyFile:/a\    CAFile: $schedulerCertificateAuthorityFile" /etc/mongod.conf
+      # sed -i 's/#security:/security:/' /etc/mongod.conf
+      # sed -i "/security:/a\  authorization: enabled" /etc/mongod.conf
+      systemctl enable mongod
+      systemctl start mongod
+      echo "Customize (End): Mongo DB"
 
-  echo "Customize (Start): Deadline Client"
-  installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-  installArgs="--mode unattended"
-  if [ $machineType == "Scheduler" ]; then
-    installArgs="$installArgs --slavestartup false --launcherdaemon false"
-  else
-    [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
-    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
-  fi
-  ./$installFile $installArgs
-  mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
-  # $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
-  $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount
-  echo "Customize (End): Deadline Client"
-fi
+      echo "Customize (Start): Deadline Repository"
+      installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
+      # ./$installFile --mode unattended --dbLicenseAcceptance accept --dbauth true --dbssl true --dbclientcert $schedulerRepositoryPath/$schedulerCertificateFile --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
+      ./$installFile --mode unattended --dbLicenseAcceptance accept --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerRepositoryPath
+      mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_server.log
+      echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
+      exportfs -a
+      echo "Customize (End): Deadline Repository"
+    fi
+
+    echo "Customize (Start): Deadline Client"
+    installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
+    installArgs="--mode unattended"
+    if [ $machineType == "Scheduler" ]; then
+      installArgs="$installArgs --slavestartup false --launcherdaemon false"
+    else
+      [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
+      installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+    fi
+    ./$installFile $installArgs
+    mv /tmp/bitrock_installer.log $binDirectory/bitrock_installer_client.log
+    # $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
+    $schedulerPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount
+    echo "Customize (End): Deadline Client"
+    ;;
+esac
 
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
@@ -256,10 +297,10 @@ fi
 if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (Start): PBRT v3"
   versionInfo="v3"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.txt 2> pbrt-$versionInfo-git.error.txt
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
   mkdir -p $rendererPathPBRT3
-  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
-  make -j -C $rendererPathPBRT3 1> pbrt-$versionInfo-make.output.txt 2> pbrt-$versionInfo-make.error.txt
+  cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
+  make -j -C $rendererPathPBRT3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
   ln -s $rendererPathPBRT3/pbrt /usr/bin/pbrt3
   echo "Customize (End): PBRT v3"
 
@@ -270,10 +311,10 @@ if [[ $renderEngines == *PBRT* ]]; then
   dnf -y install libXcursor-devel
   dnf -y install libXi-devel
   versionInfo="v4"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.txt 2> pbrt-$versionInfo-git.error.txt
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
   mkdir -p $rendererPathPBRT4
-  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo-cmake.output.txt 2> pbrt-$versionInfo-cmake.error.txt
-  make -j -C $rendererPathPBRT4 1> pbrt-$versionInfo-make.output.txt 2> pbrt-$versionInfo-make.error.txt
+  cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
+  make -j -C $rendererPathPBRT4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
   ln -s $rendererPathPBRT4/pbrt /usr/bin/pbrt4
   echo "Customize (End): PBRT v4"
 fi
@@ -366,7 +407,7 @@ fi
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Desktop Environment"
   dnf config-manager --set-enabled crb
-  dnf -y groups install "KDE Plasma Workspaces" 1> kde.output.txt 2> kde.error.txt
+  dnf -y groups install "KDE Plasma Workspaces" 1> "kde.output.txt" 2> "kde.error.txt"
   echo "Customize (End): Desktop Environment"
 
   echo "Customize (Start): Teradici PCoIP"
@@ -378,7 +419,7 @@ if [ $machineType == "Workstation" ]; then
   mkdir $installDirectory
   tar -xzf $installFile -C $installDirectory
   cd $installDirectory
-  ./install-pcoip-agent.sh pcoip-agent-graphics usb-vhci 1> pcoip.output.txt 2> pcoip.error.txt
+  ./install-pcoip-agent.sh "pcoip-agent-graphics usb-vhci" 1> "pcoip.output.txt" 2> "pcoip.error.txt"
   cd $installDirectory
   echo "Customize (End): Teradici PCoIP"
 

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.4"
+  required_version = ">= 1.3.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.31.0"
+      version = "~>3.32.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -34,26 +34,6 @@ module "global" {
 
 variable "resourceGroupName" {
   type = string
-}
-
-variable "batchAccount" {
-  type = object(
-    {
-      enable = bool
-      name   = string
-      storageAccount = object(
-        {
-          name              = string
-          resourceGroupName = string
-        }
-      )
-      encryption = object(
-        {
-          enable = bool
-        }
-      )
-    }
-  )
 }
 
 variable "virtualMachines" {
@@ -126,6 +106,26 @@ variable "virtualMachines" {
       )
     }
   ))
+}
+
+variable "batchAccount" {
+  type = object(
+    {
+      enable = bool
+      name   = string
+      storageAccount = object(
+        {
+          name              = string
+          resourceGroupName = string
+        }
+      )
+      encryption = object(
+        {
+          enable = bool
+        }
+      )
+    }
+  )
 }
 
 variable "computeNetwork" {
@@ -224,17 +224,17 @@ data "azuread_service_principal" "batch" {
 locals {
   stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
   stateExistsImage       = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
-  imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : data.terraform_remote_state.image.outputs.imageGallery.name
-  imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : data.terraform_remote_state.image.outputs.resourceGroupName
+  imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : try(data.terraform_remote_state.image.outputs.imageGallery.name, "")
+  imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : try(data.terraform_remote_state.image.outputs.resourceGroupName, "")
   imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
   virtualMachinesLinux = [
     for virtualMachine in var.virtualMachines : merge(virtualMachine, {
       image = {
         id = virtualMachine.image.id
         plan = {
-          name      = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku)
-          product   = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer)
-          publisher = lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher)
+          name      = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
+          product   = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
+          publisher = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
         }
       }
     }) if virtualMachine.operatingSystem.type == "Linux"
@@ -249,47 +249,9 @@ resource "azurerm_resource_group" "scheduler" {
   location = module.global.regionName
 }
 
-resource "azurerm_role_assignment" "batch" {
-  count                = var.batchAccount.enable ? 1 : 0
-  role_definition_name = "Contributor"
-  principal_id         = data.azuread_service_principal.batch.object_id
-  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
-}
-
-resource "azurerm_batch_account" "scheduler" {
-  count                               = var.batchAccount.enable ? 1 : 0
-  name                                = var.batchAccount.name
-  resource_group_name                 = azurerm_resource_group.scheduler.name
-  location                            = azurerm_resource_group.scheduler.location
-  storage_account_id                  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.batchAccount.storageAccount.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${var.batchAccount.storageAccount.name}"
-  storage_account_node_identity       = data.azurerm_user_assigned_identity.solution.id
-  storage_account_authentication_mode = "BatchAccountManagedIdentity"
-  pool_allocation_mode                = "UserSubscription"
-  public_network_access_enabled       = false
-  allowed_authentication_modes = [
-    "AAD",
-    "TaskAuthenticationToken"
-  ]
-  identity {
-    type = "UserAssigned"
-    identity_ids = [
-      data.azurerm_user_assigned_identity.solution.id
-    ]
-  }
-  key_vault_reference {
-    id  = data.azurerm_key_vault.solution.id
-    url = data.azurerm_key_vault.solution.vault_uri
-  }
-  dynamic encryption {
-    for_each = var.batchAccount.encryption.enable ? [1] : [0]
-    content {
-      key_vault_key_id = data.azurerm_key_vault_key.batch_encryption.id
-    }
-  }
-  depends_on = [
-    azurerm_role_assignment.batch
-  ]
-}
+#########################################################################
+# Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
+#########################################################################
 
 resource "azurerm_network_interface" "scheduler" {
   for_each = {
@@ -303,6 +265,7 @@ resource "azurerm_network_interface" "scheduler" {
     subnet_id                     = data.azurerm_subnet.farm.id
     private_ip_address_allocation = "Dynamic"
   }
+  enable_accelerated_networking = true
 }
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
@@ -504,6 +467,10 @@ resource "azurerm_private_dns_a_record" "scheduler" {
   ]
 }
 
+######################################################################
+# CycleCloud (https://learn.microsoft.com/azure/cyclecloud/overview) #
+######################################################################
+
 resource "azurerm_role_assignment" "cycle_cloud" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.customExtension.parameters.cycleCloud.enable && !var.batchAccount.enable
@@ -511,6 +478,52 @@ resource "azurerm_role_assignment" "cycle_cloud" {
   role_definition_name = "Contributor"
   principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
   scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+}
+
+############################################################################
+# Batch (https://learn.microsoft.com/azure/batch/batch-technical-overview) #
+############################################################################
+
+resource "azurerm_role_assignment" "batch" {
+  count                = var.batchAccount.enable ? 1 : 0
+  role_definition_name = "Contributor"
+  principal_id         = data.azuread_service_principal.batch.object_id
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+}
+
+resource "azurerm_batch_account" "scheduler" {
+  count                               = var.batchAccount.enable ? 1 : 0
+  name                                = var.batchAccount.name
+  resource_group_name                 = azurerm_resource_group.scheduler.name
+  location                            = azurerm_resource_group.scheduler.location
+  storage_account_id                  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.batchAccount.storageAccount.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${var.batchAccount.storageAccount.name}"
+  storage_account_node_identity       = data.azurerm_user_assigned_identity.solution.id
+  storage_account_authentication_mode = "BatchAccountManagedIdentity"
+  pool_allocation_mode                = "UserSubscription"
+  public_network_access_enabled       = false
+  allowed_authentication_modes = [
+    "AAD",
+    "TaskAuthenticationToken"
+  ]
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.solution.id
+    ]
+  }
+  key_vault_reference {
+    id  = data.azurerm_key_vault.solution.id
+    url = data.azurerm_key_vault.solution.vault_uri
+  }
+  dynamic encryption {
+    for_each = var.batchAccount.encryption.enable ? [1] : [0]
+    content {
+      key_vault_key_id = data.azurerm_key_vault_key.batch_encryption.id
+    }
+  }
+  depends_on = [
+    azurerm_role_assignment.batch
+  ]
 }
 
 output "resourceGroupName" {
