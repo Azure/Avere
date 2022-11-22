@@ -1,5 +1,4 @@
 $ErrorActionPreference = "Stop"
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 $nextMinute = (Get-Date).Minute + 1
 for ($i = 0; $i -lt 12; $i++) {

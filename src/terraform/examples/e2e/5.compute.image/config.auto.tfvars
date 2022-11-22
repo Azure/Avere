@@ -11,9 +11,9 @@ imageGallery = {
       name       = "Linux"
       type       = "Linux"
       generation = "V2"
-      publisher  = "AlmaLinux"
-      offer      = "AlmaLinux"
-      sku        = "9-Gen2"
+      publisher  = "OpenLogic"
+      offer      = "CentOS"
+      sku        = "7_9-Gen2"
     },
     {
       name       = "WinScheduler"
@@ -50,11 +50,10 @@ imageTemplates = [
   {
     name = "LnxScheduler"
     image = {
-      definitionName   = "Linux"
-      customizeScript  = "customize.sh"
-      terminateScript1 = "terminate.sh"
-      terminateScript2 = "onTerminate.sh"
-      inputVersion     = "Latest"
+      definitionName  = "Linux"
+      customizeScript = "customize.sh"
+      terminateScript = "onTerminate.sh"
+      inputVersion    = "Latest"
     }
     build = {
       machineType    = "Scheduler"
@@ -70,11 +69,10 @@ imageTemplates = [
   {
     name = "LnxFarm"
     image = {
-      definitionName   = "Linux"
-      customizeScript  = "customize.sh"
-      terminateScript1 = "terminate.sh"
-      terminateScript2 = "onTerminate.sh"
-      inputVersion     = "Latest"
+      definitionName  = "Linux"
+      customizeScript = "customize.sh"
+      terminateScript = "onTerminate.sh"
+      inputVersion    = "Latest"
     }
     build = {
       machineType    = "Farm"
@@ -95,11 +93,10 @@ imageTemplates = [
   {
     name = "LnxArtist"
     image = {
-      definitionName   = "Linux"
-      customizeScript  = "customize.sh"
-      terminateScript1 = "terminate.sh"
-      terminateScript2 = "onTerminate.sh"
-      inputVersion     = "Latest"
+      definitionName  = "Linux"
+      customizeScript = "customize.sh"
+      terminateScript = "onTerminate.sh"
+      inputVersion    = "Latest"
     }
     build = {
       machineType    = "Workstation"
@@ -113,7 +110,6 @@ imageTemplates = [
         "Blender",
         "PBRT"
         # "Unity",
-        # "Unreal",
         # "Unreal.PixelStream"
       ]
     }
@@ -121,11 +117,10 @@ imageTemplates = [
   {
     name = "WinScheduler"
     image = {
-      definitionName   = "WinScheduler"
-      customizeScript  = "customize.ps1"
-      terminateScript1 = "terminate.ps1"
-      terminateScript2 = "onTerminate.ps1"
-      inputVersion     = "Latest"
+      definitionName  = "WinScheduler"
+      customizeScript = "customize.ps1"
+      terminateScript = "onTerminate.ps1"
+      inputVersion    = "Latest"
     }
     build = {
       machineType    = "Scheduler"
@@ -141,11 +136,10 @@ imageTemplates = [
   {
     name = "WinFarm"
     image = {
-      definitionName   = "WinFarm"
-      customizeScript  = "customize.ps1"
-      terminateScript1 = "terminate.ps1"
-      terminateScript2 = "onTerminate.ps1"
-      inputVersion     = "Latest"
+      definitionName  = "WinFarm"
+      customizeScript = "customize.ps1"
+      terminateScript = "onTerminate.ps1"
+      inputVersion    = "Latest"
     }
     build = {
       machineType    = "Farm"
@@ -166,11 +160,10 @@ imageTemplates = [
   {
     name = "WinArtist"
     image = {
-      definitionName   = "WinArtist"
-      customizeScript  = "customize.ps1"
-      terminateScript1 = "terminate.ps1"
-      terminateScript2 = "onTerminate.ps1"
-      inputVersion     = "Latest"
+      definitionName  = "WinArtist"
+      customizeScript = "customize.ps1"
+      terminateScript = "onTerminate.ps1"
+      inputVersion    = "Latest"
     }
     build = {
       machineType    = "Workstation"
@@ -184,7 +177,6 @@ imageTemplates = [
         "Blender",
         "PBRT"
         # "Unity",
-        # "Unreal",
         # "Unreal.PixelStream"
       ]
     }

@@ -3,7 +3,6 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 $binPaths = ""
 $binDirectory = "C:\Users\Public\Downloads"
@@ -40,14 +39,6 @@ $binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\Bui
 $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin"
 $binPaths += ";$binPathCMake;$binPathMSBuild"
 Write-Host "Customize (End): Visual Studio Build Tools"
-
-Write-Host "Customize (Start): Python"
-$versionInfo = "3.11.0"
-$installFile = "python-$versionInfo-amd64.exe"
-$downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
-(New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait
-Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Image Build Parameters"
 $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
@@ -91,7 +82,7 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   Start-Process -FilePath ./$installFile -ArgumentList "/s /n" -Wait -RedirectStandardOutput "nvidia-optix.output.txt" -RedirectStandardError "nvidia-optix.error.txt"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
-  New-Item -ItemType Directory $buildDirectory -Force
+  New-Item -ItemType Directory $buildDirectory
   Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
   $binPaths += ";$buildDirectory\bin\Release"
@@ -126,19 +117,19 @@ if ($machineType -eq "Scheduler") {
 switch ($renderManager) {
   "RoyalRender" {
     $schedulerVersion = "8.4.02"
-    $schedulerPath = "C:\Program Files\RoyalRender"
   }
   "Deadline" {
-    $schedulerVersion = "10.2.0.8"
-    $schedulerPath = "C:\Program Files\Thinkbox\Deadline10\bin"
+    $schedulerVersion = "10.2.0.9"
+    $schedulerClientPath = "C:\DeadlineClient"
     $schedulerDatabasePath = "C:\DeadlineDatabase"
     $schedulerRepositoryPath = "C:\DeadlineRepository"
     $schedulerCertificateFile = "Deadline10Client.pfx"
     $schedulerRepositoryLocalMount = "S:\"
     $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
+    $schedulerClientBinPath = "$schedulerClientPath\bin"
   }
 }
-$binPaths += ";$schedulerPath"
+$binPaths += ";$schedulerClientBinPath"
 
 $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
 $rendererPathPBRT3 = "C:\Program Files\PBRT\v3"
@@ -165,12 +156,14 @@ switch ($renderManager) {
     Write-Host "Customize (End): Royal Render Download"
 
     Write-Host "Customize (Start): Royal Render Installer"
-    Set-Location -Path "RoyalRender*\RoyalRender*"
+    $rootDirectory = "RoyalRender"
     $installFile = "rrSetup_win.exe"
-    #Start-Process -FilePath .\$installFile -ArgumentList "" -Wait -RedirectStandardOutput "rr-installer.output.txt" -RedirectStandardError "rr-installer.error.txt"
+    $installDirectory = "RoyalRender__${schedulerVersion}__installer"
+    New-Item -ItemType Directory -Path $rootDirectory
+    Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot $rootDirectory" -Wait -RedirectStandardOutput "$rootDirectory.output.txt" -RedirectStandardError "$rootDirectory.error.txt"
     Write-Host "Customize (End): Royal Render Installer"
 
-    Set-Location -Path $schedulerPath
+    Set-Location -Path $rootDirectory
     if ($machineType -eq "Scheduler") {
       Write-Host "Customize (Start): Royal Render Server"
 
@@ -190,26 +183,24 @@ switch ($renderManager) {
     Expand-Archive -Path $installFile
     Write-Host "Customize (End): Deadline Download"
 
+    Set-Location -Path "Deadline*"
     if ($machineType -eq "Scheduler") {
       Write-Host "Customize (Start): Deadline Repository"
       netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
-      Set-Location -Path "Deadline*"
       $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-      Start-Process -FilePath $installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait
-      Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_server.log
+      Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
+      Move-Item -Path $env:TMP\bitrock_installer.log -Destination .\bitrock_installer_server.log
       Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
       New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
-      Set-Location -Path $binDirectory
       Write-Host "Customize (End): Deadline Repository"
     }
 
     Write-Host "Customize (Start): Deadline Client"
-    netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerPath\deadlineworker.exe"
-    netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerPath\deadlinemonitor.exe"
-    netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerPath\deadlinelauncher.exe"
-    Set-Location -Path "Deadline*"
+    netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerClientBinPath\deadlineworker.exe"
+    netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerClientBinPath\deadlinemonitor.exe"
+    netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerClientBinPath\deadlinelauncher.exe"
     $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-    $installArgs = "--mode unattended"
+    $installArgs = "--mode unattended --prefix $schedulerClientPath"
     if ($machineType -eq "Scheduler") {
       $installArgs = "$installArgs --slavestartup false --launcherservice false"
     } else {
@@ -221,10 +212,19 @@ switch ($renderManager) {
       $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
     }
     Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-    Move-Item -Path $env:TMP\bitrock_installer.log -Destination $binDirectory\bitrock_installer_client.log
-    Start-Process -FilePath "$schedulerPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
+    Move-Item -Path $env:TMP\bitrock_installer.log -Destination .\bitrock_installer_client.log
+    Start-Process -FilePath "$schedulerClientBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
     Set-Location -Path $binDirectory
     Write-Host "Customize (End): Deadline Client"
+
+    Write-Host "Customize (Start): Deadline Monitor Shortcut"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $shortcut.WorkingDirectory = $schedulerClientBinPath
+    $shortcut.TargetPath = "$schedulerClientBinPath\deadlinemonitor.exe"
+    $shortcut.Save()
+    Write-Host "Customize (End): Deadline Monitor Shortcut"
   }
 }
 
@@ -259,7 +259,7 @@ if ($renderEngines -contains "PBRT") {
 if ($renderEngines -contains "PBRT.Moana") {
   Write-Host "Customize (Start): PBRT (Moana Island)"
   $dataDirectory = "moana"
-  New-Item -ItemType Directory -Path $dataDirectory -Force
+  New-Item -ItemType Directory -Path $dataDirectory
   $installFile = "island-basepackage-v1.1.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
@@ -284,17 +284,20 @@ if ($renderEngines -contains "Unity") {
   Write-Host "Customize (End): Unity"
 }
 
-if ($renderEngines -contains "Unreal") {
+if ($renderEngines -contains "Unreal" || $renderEngines -contains "Unreal.PixelStream") {
   Write-Host "Customize (Start): Unreal"
-  netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
-  $installFile = "dism.exe"
-  $featureName = "NetFX3"
-  Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
-  $installFile = "UnrealEngine-5.1.zip"
-  $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
+  # netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
+  # $installFile = "dism.exe"
+  # $featureName = "NetFX3"
+  # Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
+  $versionInfo = "5.1.0"
+  $installFile = "UnrealEngine-$versionInfo-release.zip"
+  $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Expand-Archive -Path $installFile
-  New-Item -ItemType Directory -Path "$rendererPathUnreal" -Force
+
+
+  New-Item -ItemType Directory -Path "$rendererPathUnreal"
   Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
   $installFile = "$rendererPathUnreal\Setup.bat"
   $setupScript = Get-Content -Path $installFile
@@ -318,24 +321,24 @@ if ($renderEngines -contains "Unreal") {
     Write-Host "Customize (End): Unreal Editor Shortcut"
   }
   Write-Host "Customize (End): Unreal"
-}
 
-if ($renderEngines -contains "Unreal.PixelStream") {
-  Write-Host "Customize (Start): Unreal Pixel Streaming"
-  $installFile = "PixelStreamingInfrastructure-UE5.1.zip"
-  $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Expand-Archive -Path $installFile
-  New-Item -ItemType Directory -Path "$rendererPathUnrealStream" -Force
-  Move-Item -Path "PixelStreaming*\PixelStreaming*\*" -Destination "$rendererPathUnrealStream"
-  $installFile = "setup.bat"
-  Set-Location -Path "$rendererPathUnrealStream/SignallingWebServer/platform_scripts/cmd"
-  Start-Process -FilePath $installFile -Wait
-  $installFile = "setup.bat"
-  Set-Location -Path "$rendererPathUnrealStream/MatchMaker/platform_scripts/cmd"
-  Start-Process -FilePath $installFile -Wait
-  Set-Location -Path $binDirectory
-  Write-Host "Customize (End): Unreal Pixel Streaming"
+  # if ($renderEngines -contains "Unreal.PixelStream") {
+  #   Write-Host "Customize (Start): Unreal Pixel Streaming"
+  #   $installFile = "PixelStreamingInfrastructure-UE5.1.zip"
+  #   $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
+  #   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+  #   Expand-Archive -Path $installFile
+  #   New-Item -ItemType Directory -Path "$rendererPathUnrealStream"
+  #   Move-Item -Path "PixelStreaming*\PixelStreaming*\*" -Destination "$rendererPathUnrealStream"
+  #   $installFile = "setup.bat"
+  #   Set-Location -Path "$rendererPathUnrealStream/SignallingWebServer/platform_scripts/cmd"
+  #   Start-Process -FilePath $installFile -Wait
+  #   $installFile = "setup.bat"
+  #   Set-Location -Path "$rendererPathUnrealStream/MatchMaker/platform_scripts/cmd"
+  #   Start-Process -FilePath $installFile -Wait
+  #   Set-Location -Path $binDirectory
+  #   Write-Host "Customize (End): Unreal Pixel Streaming"
+  # }
 }
 
 if ($machineType -eq "Farm") {
@@ -361,31 +364,4 @@ if ($machineType -eq "Workstation") {
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
   Start-Process -FilePath $installFile -ArgumentList "/S /NoPostReboot /Force" -Wait
   Write-Host "Customize (End): Teradici PCoIP"
-
-  Write-Host "Customize (Start): V-Ray Benchmark"
-  $versionInfo = "5.02.00"
-  $installFile = "vray-benchmark-$versionInfo.exe"
-  $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  $installFile = "vray-benchmark-$versionInfo-cli.exe"
-  $downloadUrl = "$storageContainerUrl/VRay/Benchmark/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Write-Host "Customize (End): V-Ray Benchmark"
-
-  Write-Host "Customize (Start): Cinebench"
-  $versionInfo = "R23"
-  $installFile = "Cinebench$versionInfo.zip"
-  $downloadUrl = "$storageContainerUrl/Cinebench/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Cinebench"
-
-  Write-Host "Customize (Start): Deadline Monitor Shortcut"
-  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
-  $scriptShell = New-Object -ComObject WScript.Shell
-  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-  $shortcut.WorkingDirectory = $schedulerPath
-  $shortcut.TargetPath = "$schedulerPath\deadlinemonitor.exe"
-  $shortcut.Save()
-  Write-Host "Customize (End): Deadline Monitor Shortcut"
 }
