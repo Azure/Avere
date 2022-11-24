@@ -288,7 +288,7 @@ if ($renderEngines -contains "Unity") {
   Write-Host "Customize (End): Unity"
 }
 
-if ($renderEngines -contains "Unreal" || $renderEngines -contains "Unreal.PixelStream") {
+if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
   Write-Host "Customize (Start): Unreal Engine"
   Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.txt" -RedirectStandardError "net-fx3.error.txt"
   Set-Location -Path C:\
