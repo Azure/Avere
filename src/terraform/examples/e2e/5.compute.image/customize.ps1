@@ -193,7 +193,7 @@ switch ($renderManager) {
       netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
       $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
       Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
-      Move-Item -Path $env:TMP\bitrock_installer.log -Destination .\bitrock_installer_server.log
+      Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.txt
       Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
       New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
       Write-Host "Customize (End): Deadline Repository"
@@ -216,7 +216,7 @@ switch ($renderManager) {
       $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
     }
     Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-    Move-Item -Path $env:TMP\bitrock_installer.log -Destination .\bitrock_installer_client.log
+    Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-client.txt
     Start-Process -FilePath "$schedulerClientBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.txt" -RedirectStandardError "deadline-change-repository.error.txt"
     Set-Location -Path $binDirectory
     Write-Host "Customize (End): Deadline Client"

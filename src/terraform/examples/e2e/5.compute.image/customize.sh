@@ -221,7 +221,7 @@ case $renderManager in
       echo "Customize (Start): Deadline Repository"
       installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
       ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath
-      mv /tmp/*_installer.log ./DeadlineRepository.log
+      mv /tmp/*_installer.log ./deadline-log-repository.txt
       cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
       echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
       exportfs -a
@@ -238,7 +238,7 @@ case $renderManager in
       installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
     fi
     ./$installFile $installArgs
-    mv /tmp/*_installer.log ./DeadlineClient.log
+    mv /tmp/*_installer.log ./deadline-log-client.txt
     $schedulerClientBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ""
     echo "Customize (End): Deadline Client"
     ;;
