@@ -39,19 +39,8 @@ variable "resourceGroupName" {
 variable "virtualMachines" {
   type = list(object(
     {
-      name = string
-      image = object(
-        {
-          id = string
-          plan = object(
-            {
-              name      = string
-              product   = string
-              publisher = string
-            }
-          )
-        }
-      )
+      name        = string
+      imageId     = string
       machineSize = string
       operatingSystem = object(
         {
@@ -264,7 +253,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.scheduler.name
   location                        = azurerm_resource_group.scheduler.location
-  source_image_id                 = each.value.image.id
+  source_image_id                 = each.value.imageId
   size                            = each.value.machineSize
   admin_username                  = each.value.adminLogin.userName
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
@@ -360,7 +349,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
   location            = azurerm_resource_group.scheduler.location
-  source_image_id     = each.value.image.id
+  source_image_id     = each.value.imageId
   size                = each.value.machineSize
   admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value

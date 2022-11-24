@@ -35,19 +35,8 @@ variable "resourceGroupName" {
 variable "virtualMachineScaleSets" {
   type = list(object(
     {
-      name = string
-      image = object(
-        {
-          id = string
-          plan = object(
-            {
-              name      = string
-              product   = string
-              publisher = string
-            }
-          )
-        }
-      )
+      name    = string
+      imageId = string
       machine = object (
         {
           size  = string
@@ -204,7 +193,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name
   location                        = azurerm_resource_group.farm.location
-  source_image_id                 = each.value.image.id
+  source_image_id                 = each.value.imageId
   sku                             = each.value.machine.size
   instances                       = each.value.machine.count
   admin_username                  = each.value.adminLogin.userName
@@ -314,7 +303,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   name                   = each.value.name
   resource_group_name    = azurerm_resource_group.farm.name
   location               = azurerm_resource_group.farm.location
-  source_image_id        = each.value.image.id
+  source_image_id        = each.value.imageId
   sku                    = each.value.machine.size
   instances              = each.value.machine.count
   admin_username         = each.value.adminLogin.userName
