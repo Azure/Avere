@@ -27,25 +27,19 @@ $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
 
-Write-Host "Customize (Start): CMake"
-$versionInfo = "3.25.0"
-$installFile = "cmake-$versionInfo-windows-x86_64.msi"
-$downloadUrl = "$storageContainerUrl/CMake/$versionInfo/$installFile$storageContainerSas"
-(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "cmake.output.txt" -RedirectStandardError "cmake.error.txt"
-$binPathCMake = "C:\Program Files\CMake\bin"
-$binPaths += ";$binPathCMake"
-Write-Host "Customize (End): CMake"
-
-Write-Host "Customize (Start): MSBuild"
+Write-Host "Customize (Start): Visual Studio Build Tools"
 $versionInfo = "2022"
 $installFile = "vs_BuildTools.exe"
 $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath .\$installFile -ArgumentList "--add Microsoft.Component.MSBuild --quiet --norestart" -Wait -RedirectStandardOutput "msbuild.output.txt" -RedirectStandardError "msbuild.error.txt"
+$componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
+$componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
+$componentIds += " --add Microsoft.Component.MSBuild"
+Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs-build-tools.output.txt" -RedirectStandardError "vs-build-tools.error.txt"
+$binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin"
-$binPaths += ";$binPathMSBuild"
-Write-Host "Customize (End): MSBuild"
+$binPaths += ";$binPathCMake;$binPathMSBuild"
+Write-Host "Customize (End): Visual Studio Build Tools"
 
 Write-Host "Customize (Start): Image Build Parameters"
 $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
@@ -311,7 +305,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   Write-Host "Customize (End): Unreal Engine"
 
   if ($machineType -eq "Workstation") {
-    Write-Host "Customize (Start): Visual Studio"
+    Write-Host "Customize (Start): Visual Studio (Community Edition)"
     $versionInfo = "2022"
     $installFile = "VisualStudioSetup.exe"
     $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
@@ -325,7 +319,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
     # [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "C:\Program Files\dotnet\sdk\7.0.100\Sdks", [System.EnvironmentVariableTarget]::Machine)
     # [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false", [System.EnvironmentVariableTarget]::Machine)
     # $binPathDotNet = "C:\Program Files\dotnet"
-    Write-Host "Customize (End): Visual Studio"
+    Write-Host "Customize (End): Visual Studio (Community Edition)"
 
     Write-Host "Customize (Start): Unreal Project Files"
     $installFile = "$rendererPathUnreal\GenerateProjectFiles.bat"
