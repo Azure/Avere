@@ -6,15 +6,8 @@ resourceGroupName = "ArtistAnywhere.Workstation"
 
 virtualMachines = [
   {
-    name = "LnxArtist"
-    image = {
-      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/2.0.0"
-      plan = {
-        name      = ""
-        product   = ""
-        publisher = ""
-      }
-    }
+    name        = "LnxArtist"
+    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/2.0.0"
     machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
@@ -42,17 +35,11 @@ virtualMachines = [
     monitorExtension = {
       enable = false
     }
+    enableAcceleratedNetworking = true
   },
   {
-    name = "WinArtist"
-    image = {
-      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinArtist/versions/2.0.0"
-      plan = {
-        name      = ""
-        product   = ""
-        publisher = ""
-      }
-    }
+    name        = "WinArtist"
+    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinArtist/versions/2.0.0"
     machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"
@@ -80,6 +67,7 @@ virtualMachines = [
     monitorExtension = {
       enable = false
     }
+    enableAcceleratedNetworking = true
   }
 ]
 

@@ -67,7 +67,7 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxFarm"
+    name = "LnxFarm1"
     image = {
       definitionName  = "Linux"
       customizeScript = "customize.sh"
@@ -85,13 +85,35 @@ imageTemplates = [
       renderEngines  = [
         "Blender",
         "PBRT"
-        # "Unity",
-        # "Unreal"
       ]
     }
   },
   {
-    name = "LnxArtist"
+    name = "LnxFarm2"
+    image = {
+      definitionName  = "Linux"
+      customizeScript = "customize.sh"
+      terminateScript = "onTerminate.sh"
+      inputVersion    = "Latest"
+    }
+    build = {
+      machineType    = "Farm"
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform    = []                    # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 480
+      timeoutMinutes = 240
+      outputVersion  = "1.1.0"
+      renderManager  = "Deadline" # RoyalRender or Deadline
+      renderEngines  = [
+        "Blender",
+        "PBRT",
+        "Unity",
+        "Unreal"
+      ]
+    }
+  },
+  {
+    name = "LnxArtist1"
     image = {
       definitionName  = "Linux"
       customizeScript = "customize.sh"
@@ -109,8 +131,30 @@ imageTemplates = [
       renderEngines  = [
         "Blender",
         "PBRT"
-        # "Unity",
-        # "Unreal.PixelStream"
+      ]
+    }
+  },
+  {
+    name = "LnxArtist2"
+    image = {
+      definitionName  = "Linux"
+      customizeScript = "customize.sh"
+      terminateScript = "onTerminate.sh"
+      inputVersion    = "Latest"
+    }
+    build = {
+      machineType    = "Workstation"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform    = ["GRID"]                  # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 512
+      timeoutMinutes = 240
+      outputVersion  = "2.1.0"
+      renderManager  = "Deadline" # RoyalRender or Deadline
+      renderEngines  = [
+        "Blender",
+        "PBRT",
+        "Unity",
+        "Unreal.PixelStream"
       ]
     }
   },
@@ -134,7 +178,7 @@ imageTemplates = [
     }
   },
   {
-    name = "WinFarm"
+    name = "WinFarm1"
     image = {
       definitionName  = "WinFarm"
       customizeScript = "customize.ps1"
@@ -152,13 +196,35 @@ imageTemplates = [
       renderEngines  = [
         "Blender",
         "PBRT"
-        # "Unity",
-        # "Unreal"
       ]
     }
   },
   {
-    name = "WinArtist"
+    name = "WinFarm2"
+    image = {
+      definitionName  = "WinFarm"
+      customizeScript = "customize.ps1"
+      terminateScript = "onTerminate.ps1"
+      inputVersion    = "Latest"
+    }
+    build = {
+      machineType    = "Farm"
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform    = []                    # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 480
+      timeoutMinutes = 420
+      outputVersion  = "1.1.0"
+      renderManager  = "Deadline" # RoyalRender or Deadline
+      renderEngines  = [
+        "Blender",
+        "PBRT",
+        "Unity",
+        "Unreal"
+      ]
+    }
+  },
+  {
+    name = "WinArtist1"
     image = {
       definitionName  = "WinArtist"
       customizeScript = "customize.ps1"
@@ -176,8 +242,30 @@ imageTemplates = [
       renderEngines  = [
         "Blender",
         "PBRT"
-        # "Unity",
-        # "Unreal.PixelStream"
+      ]
+    }
+  },
+  {
+    name = "WinArtist2"
+    image = {
+      definitionName  = "WinArtist"
+      customizeScript = "customize.ps1"
+      terminateScript = "onTerminate.ps1"
+      inputVersion    = "Latest"
+    }
+    build = {
+      machineType    = "Workstation"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform    = ["GRID"]                  # GRID, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 512
+      timeoutMinutes = 420
+      outputVersion  = "2.1.0"
+      renderManager  = "Deadline" # RoyalRender or Deadline
+      renderEngines  = [
+        "Blender",
+        "PBRT",
+        "Unity",
+        "Unreal.PixelStream"
       ]
     }
   }

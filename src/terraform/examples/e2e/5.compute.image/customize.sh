@@ -10,22 +10,20 @@ storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08
 echo "Customize (Start): Image Build Platform"
 yum -y install epel-release
 yum -y install gcc gcc-c++
-yum -y install python-pip
 yum -y install nfs-utils
-# yum -y install cmake
 # yum -y install unzip
+# yum -y install cmake
 yum -y install git
 yum -y install jq
 
 versionInfo="3.25.0"
-installFile="cmake-$versionInfo-linux-x86_64.sh"
-downloadUrl="https://github.com/Kitware/CMake/releases/download/v$versionInfo/$installFile"
+installFile="cmake-$versionInfo-linux-x86_64.tar.gz"
+downloadUrl="$storageContainerUrl/CMake/$versionInfo/$installFile$storageContainerSas"
 curl -o $installFile -L $downloadUrl
-chmod +x $installFile
+tar -xzf $installFile
 installDirectory="cmake"
-mkdir $installDirectory
-./$installFile --skip-license --prefix="$binDirectory/$installDirectory" 1> "cmake.output.txt" 2> "cmake.error.txt"
-binPathCMake="$binDirectory/$installDirectory/bin"
+mv cmake-$versionInfo-linux-x86_64 $installDirectory
+binPathCMake="$(pwd)/$installDirectory/bin"
 binPaths="$binPaths:$binPathCMake"
 echo "Customize (End): Image Build Platform"
 
@@ -115,7 +113,6 @@ if [ $machineType == "Scheduler" ]; then
   yum -y install cyclecloud8
   binPaths="$binPaths:$cycleCloudPath/bin"
   cd /opt/cycle_server
-  pip install ./tools/cyclecloud_api*.whl
   unzip -q ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir $cycleCloudPath
   cd $binDirectory
@@ -170,7 +167,6 @@ rendererPathBlender="/usr/local/blender3"
 rendererPathPBRT3="/usr/local/pbrt/v3"
 rendererPathPBRT4="/usr/local/pbrt/v4"
 rendererPathUnreal="/usr/local/unreal5"
-rendererPathUnrealStream="$rendererPathUnreal/stream"
 
 if [[ $renderEngines == *Blender* ]]; then
   binPaths="$binPaths:$rendererPathBlender"
@@ -291,7 +287,7 @@ if [[ $renderEngines == *PBRT* ]]; then
 fi
 
 if [[ $renderEngines == *PBRT.Moana* ]]; then
-  echo "Customize (Start): PBRT (Moana Island)"
+  echo "Customize (Start): PBRT Data (Moana Island)"
   dataDirectory="moana"
   mkdir $dataDirectory
   installFile="island-basepackage-v1.1.tgz"
@@ -306,7 +302,7 @@ if [[ $renderEngines == *PBRT.Moana* ]]; then
   downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile -C $dataDirectory
-  echo "Customize (End): PBRT (Moana Island)"
+  echo "Customize (End): PBRT Data (Moana Island)"
 fi
 
 if [[ $renderEngines == *Unity* ]]; then
@@ -323,48 +319,38 @@ if [[ $renderEngines == *Unity* ]]; then
   echo "Customize (End): Unity"
 fi
 
-if [[ $renderEngines == *Unreal* ] || [ $renderEngines == *Unreal.PixelStream* ]]; then
-  echo "Customize (Start): Unreal"
-  # yum -y install libicu
+if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
+  echo "Customize (Start): Unreal Engine"
+  yum -y install libicu
   versionInfo="5.1.0"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
+  mkdir $rendererPathUnreal
+  mv UnrealEngine*/* $rendererPathUnreal
+  rm -rf UnrealEngine-$versionInfo-release
+  $rendererPathUnreal/Setup.sh 1> "unreal-engine.output.txt" 2> "unreal-engine.error.txt"
+  echo "Customize (End): Unreal Engine"
 
-
-  cd UnrealEngine-$versionInfo
-  mkdir -p $rendererPathUnreal
-  mv * $rendererPathUnreal
-  $rendererPathUnreal/Setup.sh
-  cd $binDirectory
   if [ $machineType == "Workstation" ]; then
     echo "Customize (Start): Unreal Project Files"
-    $rendererPathUnreal/GenerateProjectFiles.sh
-    make -j -C $rendererPathUnreal
+    $rendererPathUnreal/GenerateProjectFiles.sh 1> "unreal-files-generate.output.txt" 2> "unreal-files-generate.error.txt"
+    make -j -C $rendererPathUnreal 1> "unreal-files-make.output.txt" 2> "unreal-files-make.error.txt"
     echo "Customize (End): Unreal Project Files"
   fi
-  echo "Customize (End): Unreal"
 
-  # if [[ $renderEngines == *Unreal.PixelStream* ]]; then
-  #   echo "Customize (Start): Unreal Pixel Streaming"
-  #   versionInfo="5.1"
-  #   installFile="PixelStreamingInfrastructure-UE$versionInfo.zip"
-  #   downloadUrl="$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-  #   curl -o $installFile -L $downloadUrl
-  #   unzip -q $installFile
-  #   cd PixelStreamingInfrastructure-UE$versionInfo
-  #   mkdir -p $rendererPathUnrealStream
-  #   mv * $rendererPathUnrealStream
-  #   cd $rendererPathUnrealStream/SignallingWebServer/platform_scripts/bash
-  #   chmod +x *.sh
-  #   ./setup.sh
-  #   cd $rendererPathUnrealStream/MatchMaker/platform_scripts/bash
-  #   chmod +x *.sh
-  #   ./setup.sh
-  #   cd $binDirectory
-  #   echo "Customize (End): Unreal Pixel Streaming"
-  # fi
+  if [[ $renderEngines == *Unreal.PixelStream* ]]; then
+    echo "Customize (Start): Unreal Pixel Streaming"
+    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure 1> "unreal-stream-git.output.txt" 2> "unreal-stream-git.error.txt"
+    installFile="PixelStreamingInfrastructure/SignallingWebServer/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 1> "unreal-stream-signalling.output.txt" 2> "unreal-stream-signalling.error.txt"
+    installFile="PixelStreamingInfrastructure/Matchmaker/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 1> "unreal-stream-matchmaker.output.txt" 2> "unreal-stream-matchmaker.error.txt"
+    echo "Customize (End): Unreal Pixel Streaming"
+  fi
 fi
 
 if [ $machineType == "Farm" ]; then
@@ -379,7 +365,6 @@ fi
 
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Desktop Environment"
-  # dnf config-manager --set-enabled crb
   yum -y groups install "KDE Plasma Workspaces" 1> "kde.output.txt" 2> "kde.error.txt"
   echo "Customize (End): Desktop Environment"
 
@@ -388,11 +373,11 @@ if [ $machineType == "Workstation" ]; then
   installFile="pcoip-agent-offline-centos7.9_$versionInfo-1.el7.x86_64.tar.gz"
   downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  installDirectory="pcoip"
+  installDirectory="pcoip-agent"
   mkdir $installDirectory
   tar -xzf $installFile -C $installDirectory
   cd $installDirectory
-  ./install-pcoip-agent.sh "pcoip-agent-graphics usb-vhci" 1> "pcoip.output.txt" 2> "pcoip.error.txt"
-  cd $installDirectory
+  ./install-pcoip-agent.sh pcoip-agent-graphics usb-vhci 1> "$installDirectory.output.txt" 2> "$installDirectory.error.txt"
+  cd $binDirectory
   echo "Customize (End): Teradici PCoIP"
 fi

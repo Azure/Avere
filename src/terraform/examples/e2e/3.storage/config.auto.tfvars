@@ -127,6 +127,7 @@ hammerspace = {
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
+    enableAcceleratedNetworking = true
   }
   data = {
     machine = {
@@ -151,6 +152,7 @@ hammerspace = {
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
+    enableAcceleratedNetworking = true
   }
   enableProximityPlacement   = false
   enableMarketplaceAgreement = true

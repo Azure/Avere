@@ -21,24 +21,31 @@ Write-Host "Customize (Start): Git"
 $versionInfo = "2.38.1"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
-(New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-Start-Process -FilePath $installFile -ArgumentList "/SILENT /NORESTART" -Wait
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+Start-Process -FilePath .\$installFile -ArgumentList "/silent /norestart" -Wait -RedirectStandardOutput "git.output.txt" -RedirectStandardError "git.error.txt"
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
 
-Write-Host "Customize (Start): Visual Studio Build Tools"
+Write-Host "Customize (Start): CMake"
+$versionInfo = "3.25.0"
+$installFile = "cmake-$versionInfo-windows-x86_64.msi"
+$downloadUrl = "$storageContainerUrl/CMake/$versionInfo/$installFile$storageContainerSas"
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "cmake.output.txt" -RedirectStandardError "cmake.error.txt"
+$binPathCMake = "C:\Program Files\CMake\bin"
+$binPaths += ";$binPathCMake"
+Write-Host "Customize (End): CMake"
+
+Write-Host "Customize (Start): MSBuild"
 $versionInfo = "2022"
-$installFile = "vs_buildtools.exe"
-$downloadUrl = "https://aka.ms/vs/17/release/$installFile"
-(New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-$componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
-$componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
-Start-Process -FilePath $installFile -ArgumentList "--quiet --norestart $componentIds" -Wait
-$binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+$installFile = "vs_BuildTools.exe"
+$downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+Start-Process -FilePath .\$installFile -ArgumentList "--add Microsoft.Component.MSBuild --quiet --norestart" -Wait -RedirectStandardOutput "msbuild.output.txt" -RedirectStandardError "msbuild.error.txt"
 $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin"
-$binPaths += ";$binPathCMake;$binPathMSBuild"
-Write-Host "Customize (End): Visual Studio Build Tools"
+$binPaths += ";$binPathMSBuild"
+Write-Host "Customize (End): MSBuild"
 
 Write-Host "Customize (Start): Image Build Parameters"
 $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
@@ -57,8 +64,8 @@ if ($gpuPlatform -contains "GRID") {
   Write-Host "Customize (Start): NVIDIA GPU (GRID)"
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Start-Process -FilePath ./$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-grid.output.txt" -RedirectStandardError "nvidia-grid.error.txt"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-grid.output.txt" -RedirectStandardError "nvidia-grid.error.txt"
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 }
 
@@ -67,8 +74,8 @@ if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   $versionInfo = "11.8.0"
   $installFile = "cuda_${versionInfo}_522.06_windows.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Start-Process -FilePath ./$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-cuda.output.txt" -RedirectStandardError "nvidia-cuda.error.txt"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-cuda.output.txt" -RedirectStandardError "nvidia-cuda.error.txt"
   [System.Environment]::SetEnvironmentVariable("CUDA_TOOLKIT_ROOT_DIR", "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8", [System.EnvironmentVariableTarget]::Machine)
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 }
@@ -78,8 +85,8 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   $versionInfo = "7.6.0"
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-31894579.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Start-Process -FilePath ./$installFile -ArgumentList "/s /n" -Wait -RedirectStandardOutput "nvidia-optix.output.txt" -RedirectStandardError "nvidia-optix.error.txt"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath .\$installFile -ArgumentList "/s /n" -Wait -RedirectStandardOutput "nvidia-optix.output.txt" -RedirectStandardError "nvidia-optix.error.txt"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
@@ -93,7 +100,7 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): Azure CLI"
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait
   Write-Host "Customize (End): Azure CLI"
 
@@ -108,9 +115,7 @@ if ($machineType -eq "Scheduler") {
   }
 } else {
   Write-Host "Customize (Start): NFS Client"
-  $installFile = "dism.exe"
-  $featureName = "ClientForNFS-Infrastructure"
-  Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
+  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" -Wait -RedirectStandardOutput "nfs-client.output.txt" -RedirectStandardError "nfs-client.error.txt"
   Write-Host "Customize (End): NFS Client"
 }
 
@@ -135,7 +140,6 @@ $rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
 $rendererPathPBRT3 = "C:\Program Files\PBRT\v3"
 $rendererPathPBRT4 = "C:\Program Files\PBRT\v4"
 $rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
-$rendererPathUnrealStream = "$rendererPathUnreal\Stream"
 $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
 
 if ($renderEngines -contains "Blender") {
@@ -151,7 +155,7 @@ switch ($renderManager) {
     Write-Host "Customize (Start): Royal Render Download"
     $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
     $downloadUrl = "$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Expand-Archive -Path $installFile
     Write-Host "Customize (End): Royal Render Download"
 
@@ -179,7 +183,7 @@ switch ($renderManager) {
     Write-Host "Customize (Start): Deadline Download"
     $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
     $downloadUrl = "$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Expand-Archive -Path $installFile
     Write-Host "Customize (End): Deadline Download"
 
@@ -213,7 +217,7 @@ switch ($renderManager) {
     }
     Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
     Move-Item -Path $env:TMP\bitrock_installer.log -Destination .\bitrock_installer_client.log
-    Start-Process -FilePath "$schedulerClientBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait
+    Start-Process -FilePath "$schedulerClientBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.txt" -RedirectStandardError "deadline-change-repository.error.txt"
     Set-Location -Path $binDirectory
     Write-Host "Customize (End): Deadline Client"
 
@@ -233,8 +237,8 @@ if ($renderEngines -contains "Blender") {
   $versionInfo = "3.3.1"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait -RedirectStandardOutput "blender.output.txt" -RedirectStandardError "blender.error.txt"
   Write-Host "Customize (End): Blender"
 }
 
@@ -257,86 +261,105 @@ if ($renderEngines -contains "PBRT") {
 }
 
 if ($renderEngines -contains "PBRT.Moana") {
-  Write-Host "Customize (Start): PBRT (Moana Island)"
+  Write-Host "Customize (Start): PBRT Data (Moana Island)"
   $dataDirectory = "moana"
   New-Item -ItemType Directory -Path $dataDirectory
   $installFile = "island-basepackage-v1.1.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   tar -xzf $installFile -C $dataDirectory
   $installFile = "island-pbrt-v1.1.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   tar -xzf $installFile -C $dataDirectory
   $installFile = "island-pbrtV4-v2.0.tgz"
   $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   tar -xzf $installFile -C $dataDirectory
-  Write-Host "Customize (End): PBRT (Moana Island)"
+  Write-Host "Customize (End): PBRT Data (Moana Island)"
 }
 
 if ($renderEngines -contains "Unity") {
   Write-Host "Customize (Start): Unity"
   $installFile = "UnityHubSetup.exe"
   $downloadUrl = "https://public-cdn.cloud.unity3d.com/hub/prod/$installFile"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Start-Process -FilePath $installFile -ArgumentList "/S" -Wait
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "unity-hub.output.txt" -RedirectStandardError "unity-hub.error.txt"
   Write-Host "Customize (End): Unity"
 }
 
 if ($renderEngines -contains "Unreal" || $renderEngines -contains "Unreal.PixelStream") {
-  Write-Host "Customize (Start): Unreal"
-  # netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
-  # $installFile = "dism.exe"
-  # $featureName = "NetFX3"
-  # Start-Process -FilePath $installFile -ArgumentList "/Enable-Feature /FeatureName:$featureName /Online /All /NoRestart" -Wait -Verb RunAs
+  Write-Host "Customize (Start): Unreal Engine"
+  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.txt" -RedirectStandardError "net-fx3.error.txt"
+  Set-Location -Path C:\
   $versionInfo = "5.1.0"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Expand-Archive -Path $installFile
-
-
   New-Item -ItemType Directory -Path "$rendererPathUnreal"
   Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
+  Remove-Item -Path "Unreal*" -Exclude "*.zip" -Recurse
+  Set-Location -Path $binDirectory
   $installFile = "$rendererPathUnreal\Setup.bat"
-  $setupScript = Get-Content -Path $installFile
-  $setupScript = $setupScript.Replace("/register", "/register /unattended")
-  $setupScript = $setupScript.Replace("pause", "rem pause")
-  Set-Content -Path $installFile -Value $setupScript
-  Start-Process -FilePath "$installFile" -Wait
+  $scriptFilePath = $installFile
+  $scriptFileText = Get-Content -Path $scriptFilePath
+  $scriptFileText = $scriptFileText.Replace("/register", "/register /unattended")
+  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+  Set-Content -Path $scriptFilePath -Value $scriptFileText
+  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-engine.output.txt" -RedirectStandardError "unreal-engine.error.txt"
+  Write-Host "Customize (End): Unreal Engine"
+
   if ($machineType -eq "Workstation") {
+    Write-Host "Customize (Start): Visual Studio"
+    $versionInfo = "2022"
+    $installFile = "VisualStudioSetup.exe"
+    $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    # $componentIds = "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+    # $componentIds += " --add Microsoft.VisualStudio.Component.Windows11SDK.22621"
+    # $componentIds += " --add Microsoft.VisualStudio.Component.VSSDK"
+    # $componentIds += " --add Microsoft.NetCore.Component.SDK"
+    # $componentIds += " --add Microsoft.Net.Component.4.8.SDK"
+    # Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs.output.txt" -RedirectStandardError "vs.error.txt"
+    # [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "C:\Program Files\dotnet\sdk\7.0.100\Sdks", [System.EnvironmentVariableTarget]::Machine)
+    # [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false", [System.EnvironmentVariableTarget]::Machine)
+    # $binPathDotNet = "C:\Program Files\dotnet"
+    Write-Host "Customize (End): Visual Studio"
+
     Write-Host "Customize (Start): Unreal Project Files"
-    & "$rendererPathUnreal\GenerateProjectFiles.bat"
-    [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;C:\Program Files\dotnet", [System.EnvironmentVariableTarget]::Machine)
-    Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList "-restore -p:Platform=Win64 -p:Configuration=""Development Editor"" ""$rendererPathUnreal\UE5.sln""" -Wait
+    $installFile = "$rendererPathUnreal\GenerateProjectFiles.bat"
+    $scriptFilePath = $installFile
+    $scriptFileText = Get-Content -Path $scriptFilePath
+    $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+    Set-Content -Path $scriptFilePath -Value $scriptFileText
+    $scriptFilePath = "$rendererPathUnreal\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
+    $scriptFileText = Get-Content -Path $scriptFilePath
+    $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+    Set-Content -Path $scriptFilePath -Value $scriptFileText
+    # Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-files-generate.output.txt" -RedirectStandardError "unreal-files-generate.error.txt"
+    # Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Editor"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-files-build.output.txt" -RedirectStandardError "unreal-files-build.error.txt"
+    # Start-Process -FilePath "$binPathDotNet\dotnet.exe" -ArgumentList "build ""$rendererPathUnreal\UE5.sln"" -c ""Development Editor""" -Wait -RedirectStandardOutput "unreal-files-build.output.txt" -RedirectStandardError "unreal-files-build.error.txt"
     Write-Host "Customize (End): Unreal Project Files"
-    Write-Host "Customize (Start): Unreal Editor Shortcut"
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Epic Unreal Editor.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$rendererPathUnrealEditor"
-    $shortcut.TargetPath = "$rendererPathUnrealEditor\UnrealEditor.exe"
-    $shortcut.Save()
-    Write-Host "Customize (End): Unreal Editor Shortcut"
+
+    # Write-Host "Customize (Start): Unreal Editor"
+    # netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
+    # $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
+    # $scriptShell = New-Object -ComObject WScript.Shell
+    # $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    # $shortcut.WorkingDirectory = "$rendererPathUnrealEditor"
+    # $shortcut.TargetPath = "$rendererPathUnrealEditor\UnrealEditor.exe"
+    # $shortcut.Save()
+    # Write-Host "Customize (End): Unreal Editor"
   }
-  Write-Host "Customize (End): Unreal"
 
   # if ($renderEngines -contains "Unreal.PixelStream") {
   #   Write-Host "Customize (Start): Unreal Pixel Streaming"
-  #   $installFile = "PixelStreamingInfrastructure-UE5.1.zip"
-  #   $downloadUrl = "$storageContainerUrl/Unreal/$installFile$storageContainerSas"
-  #   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  #   Expand-Archive -Path $installFile
-  #   New-Item -ItemType Directory -Path "$rendererPathUnrealStream"
-  #   Move-Item -Path "PixelStreaming*\PixelStreaming*\*" -Destination "$rendererPathUnrealStream"
-  #   $installFile = "setup.bat"
-  #   Set-Location -Path "$rendererPathUnrealStream/SignallingWebServer/platform_scripts/cmd"
-  #   Start-Process -FilePath $installFile -Wait
-  #   $installFile = "setup.bat"
-  #   Set-Location -Path "$rendererPathUnrealStream/MatchMaker/platform_scripts/cmd"
-  #   Start-Process -FilePath $installFile -Wait
-  #   Set-Location -Path $binDirectory
+  #   Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
+  #   $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
+  #   Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.txt" -RedirectStandardError "unreal-stream-signalling.error.txt"
+  #   $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
+  #   Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
   #   Write-Host "Customize (End): Unreal Pixel Streaming"
   # }
 }
@@ -361,7 +384,7 @@ if ($machineType -eq "Workstation") {
   $versionInfo = "22.09.2"
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, $pwd.Path + "\" + $installFile)
-  Start-Process -FilePath $installFile -ArgumentList "/S /NoPostReboot /Force" -Wait
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "pcopi-agent.output.txt" -RedirectStandardError "pcoip-agent.error.txt"
   Write-Host "Customize (End): Teradici PCoIP"
 }

@@ -621,7 +621,7 @@ resource "azurerm_network_interface" "storage_primary" {
     subnet_id                     = data.azurerm_subnet.storage_primary.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = true
+  enable_accelerated_networking = each.value.enableAcceleratedNetworking
 }
 
 resource "azurerm_network_interface" "storage_secondary" {
@@ -636,7 +636,7 @@ resource "azurerm_network_interface" "storage_secondary" {
     subnet_id                     = data.azurerm_subnet.storage_secondary.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = true
+  enable_accelerated_networking = each.value.enableAcceleratedNetworking
 }
 
 resource "azurerm_managed_disk" "storage" {

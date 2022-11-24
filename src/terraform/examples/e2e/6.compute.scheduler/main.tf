@@ -104,6 +104,7 @@ variable "virtualMachines" {
           enable = bool
         }
       )
+      enableAcceleratedNetworking = bool
     }
   ))
 }
@@ -227,18 +228,6 @@ locals {
   imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : try(data.terraform_remote_state.image.outputs.imageGallery.name, "")
   imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : try(data.terraform_remote_state.image.outputs.resourceGroupName, "")
   imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
-  virtualMachinesLinux = [
-    for virtualMachine in var.virtualMachines : merge(virtualMachine, {
-      image = {
-        id = virtualMachine.image.id
-        plan = {
-          name      = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
-          product   = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
-          publisher = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
-        }
-      }
-    }) if virtualMachine.operatingSystem.type == "Linux"
-  ]
   schedulerMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
   ]
@@ -265,12 +254,12 @@ resource "azurerm_network_interface" "scheduler" {
     subnet_id                     = data.azurerm_subnet.farm.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = true
+  enable_accelerated_networking = each.value.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in local.stateExistsImage ? local.virtualMachinesLinux : var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux" && !var.batchAccount.enable
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux" && !var.batchAccount.enable
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.scheduler.name
@@ -298,14 +287,6 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   }
   boot_diagnostics {
     storage_account_uri = null
-  }
-  dynamic plan {
-    for_each = each.value.image.plan.name == "" ? [] : [1]
-    content {
-      name      = each.value.image.plan.name
-      product   = each.value.image.plan.product
-      publisher = each.value.image.plan.publisher
-    }
   }
   dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -401,14 +382,6 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   }
   boot_diagnostics {
     storage_account_uri = null
-  }
-  dynamic plan {
-    for_each = each.value.image.plan.name == "" ? [] : [1]
-    content {
-      name      = each.value.image.plan.name
-      product   = each.value.image.plan.product
-      publisher = each.value.image.plan.publisher
-    }
   }
   depends_on = [
     azurerm_network_interface.scheduler

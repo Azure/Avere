@@ -116,6 +116,7 @@ variable "virtualMachineScaleSets" {
           timeoutDelay = string
         }
       )
+      enableAcceleratedNetworking = bool
     }
   ))
 }
@@ -183,19 +184,6 @@ data "azurerm_subnet" "farm" {
 
 locals {
   stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
-  stateExistsImage   = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
-  virtualMachineScaleSetsLinux = [
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet, {
-      image = {
-        id = virtualMachineScaleSet.image.id
-        plan = {
-          name      = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
-          product   = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
-          publisher = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
-        }
-      }
-    }) if virtualMachineScaleSet.operatingSystem.type == "Linux"
-  ]
 }
 
 resource "azurerm_role_assignment" "farm" {
@@ -211,7 +199,7 @@ resource "azurerm_resource_group" "farm" {
 
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   for_each = {
-    for virtualMachineScaleSet in local.stateExistsImage ? local.virtualMachineScaleSetsLinux : var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name
@@ -235,7 +223,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
-    enable_accelerated_networking = true
+    enable_accelerated_networking = each.value.enableAcceleratedNetworking
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -256,14 +244,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   }
   boot_diagnostics {
     storage_account_uri = null
-  }
-  dynamic plan {
-    for_each = each.value.image.plan.name == "" ? [] : [1]
-    content {
-      name      = each.value.image.plan.name
-      product   = each.value.image.plan.product
-      publisher = each.value.image.plan.publisher
-    }
   }
   dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -352,7 +332,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
-    enable_accelerated_networking = true
+    enable_accelerated_networking = each.value.enableAcceleratedNetworking
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType

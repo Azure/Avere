@@ -200,13 +200,4 @@ if [ ${cycleCloud.enable} == true ]; then
   cyclecloud initialize --url=https://localhost:8443 --username="${adminUsername}" --password="${adminPassword}" --batch --verify-ssl=false
   cyclecloud account create -f $cycleAccountFile
   cyclecloud import_template -f $clusterTemplateFile
-
-  versionInfo="0.2.11"
-  installFile="cyclecloud-scalelib-$versionInfo.tar.gz"
-  downloadUrl="https://github.com/Azure/cyclecloud-scalelib/archive/refs/tags/$versionInfo.tar.gz"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  cd cyclecloud-scalelib-$versionInfo
-  pip install -r dev-requirements.txt
-  python setup.py build
 fi

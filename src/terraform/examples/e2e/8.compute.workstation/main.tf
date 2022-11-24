@@ -84,6 +84,7 @@ variable "virtualMachines" {
           enable = bool
         }
       )
+      enableAcceleratedNetworking = bool
     }
   ))
 }
@@ -151,19 +152,6 @@ data "azurerm_subnet" "workstation" {
 
 locals {
   stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
-  stateExistsImage   = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
-  virtualMachinesLinux = [
-    for virtualMachine in var.virtualMachines : merge(virtualMachine, {
-      image = {
-        id = virtualMachine.image.id
-        plan = {
-          name      = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
-          product   = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
-          publisher = try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
-        }
-      }
-    }) if virtualMachine.operatingSystem.type == "Linux"
-  ]
 }
 
 resource "azurerm_resource_group" "workstation" {
@@ -183,12 +171,12 @@ resource "azurerm_network_interface" "workstation" {
     subnet_id                     = data.azurerm_subnet.workstation.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = true
+  enable_accelerated_networking = each.value.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "workstation" {
   for_each = {
-    for virtualMachine in local.stateExistsImage ? local.virtualMachinesLinux : var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.workstation.name
@@ -213,14 +201,6 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   }
   boot_diagnostics {
     storage_account_uri = null
-  }
-  dynamic plan {
-    for_each = each.value.image.plan.name == "" ? [] : [1]
-    content {
-      name      = each.value.image.plan.name
-      product   = each.value.image.plan.product
-      publisher = each.value.image.plan.publisher
-    }
   }
   dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]

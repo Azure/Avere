@@ -454,9 +454,3 @@ output "imageGallery" {
 output "imageTemplates" {
   value = var.imageTemplates
 }
-
-output "imageDefinitionsLinux" {
-  value = [
-    for imageDefinition in var.imageGallery.imageDefinitions: imageDefinition if imageDefinition.type == "Linux"
-  ]
-}

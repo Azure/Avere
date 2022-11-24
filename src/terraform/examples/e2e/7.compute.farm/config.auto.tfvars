@@ -6,15 +6,8 @@ resourceGroupName = "ArtistAnywhere.Farm"
 
 virtualMachineScaleSets = [
   {
-    name = "LnxFarm"
-    image = {
-      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
-      plan = {
-        name      = ""
-        product   = ""
-        publisher = ""
-      }
-    }
+    name    = "LnxFarm"
+    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 10
@@ -67,17 +60,11 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
     }
+    enableAcceleratedNetworking = true
   },
   {
-    name = "" # "WinFarm"
-    image = {
-      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
-      plan = {
-        name      = ""
-        product   = ""
-        publisher = ""
-      }
-    }
+    name    = "" # "WinFarm"
+    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 10
@@ -130,6 +117,7 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
     }
+    enableAcceleratedNetworking = true
   }
 ]
 
