@@ -1,6 +1,7 @@
 #!/bin/bash -ex
 
-if [ $ccEnabled ]; then
+cycleCloudEnable=false
+if [ $cycleCloudEnable == true ]; then
   deadlineworker -shutdown
   deadlinecommand -DeleteSlave $(hostname)
 else

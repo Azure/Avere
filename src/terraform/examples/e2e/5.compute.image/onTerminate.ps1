@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-if ($ccEnabled) {
+$cycleCloudEnable = $false
+if ($cycleCloudEnable) {
   deadlineworker -shutdown
   deadlinecommand -DeleteSlave $(hostname)
 } else {

@@ -91,7 +91,7 @@ if [ $machineType == "Scheduler" ]; then
   echo "enabled=1" >> $azRepoPath
   echo "gpgcheck=1" >> $azRepoPath
   echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $azRepoPath
-  yum -y install azure-cli
+  yum -y install azure-cli 1> "az-cli.output.txt" 2> "az-cli.error.txt"
   echo "Customize (End): Azure CLI"
 
   if [ $renderManager == "Deadline" ]; then

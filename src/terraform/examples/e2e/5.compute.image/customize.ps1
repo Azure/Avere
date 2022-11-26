@@ -70,7 +70,6 @@ if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-cuda.output.txt" -RedirectStandardError "nvidia-cuda.error.txt"
-  [System.Environment]::SetEnvironmentVariable("CUDA_TOOLKIT_ROOT_DIR", "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8")
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 }
 
@@ -84,7 +83,7 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v11.8""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA GPU (OptiX)"
@@ -95,7 +94,7 @@ if ($machineType -eq "Scheduler") {
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait
+  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
   Write-Host "Customize (End): Azure CLI"
 
   if ($renderManager -eq "Deadline") {

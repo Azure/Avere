@@ -200,4 +200,6 @@ if [ ${cycleCloud.enable} == true ]; then
   cyclecloud initialize --url=https://localhost:8443 --username="${adminUsername}" --password="${adminPassword}" --batch --verify-ssl=false
   cyclecloud account create -f $cycleAccountFile
   cyclecloud import_template -f $clusterTemplateFile
+  sed -i "s/cycleCloudEnable=false/cycleCloudEnable=true/" /opt/cycle/jetpack/scripts/onPreempt.sh
+  sed -i "s/cycleCloudEnable=false/cycleCloudEnable=true/" /opt/cycle/jetpack/scripts/onTerminate.sh
 fi
