@@ -6,7 +6,7 @@ resourceGroupName = "ArtistAnywhere.Network"
 
 computeNetwork = {
   name               = "Compute"
-  regionName         = "SouthCentralUS"
+  regionName         = "WestUS2"
   addressSpace       = ["10.1.0.0/16"]
   dnsServerAddresses = []
   subnets = [
@@ -51,7 +51,7 @@ computeNetworkSubnetIndex = {
 
 storageNetwork = {
   name               = "Storage" # Set name to "" to skip storage network deployment
-  regionName         = "SouthCentralUS"
+  regionName         = "WestUS2"
   addressSpace       = ["10.0.0.0/16"]
   dnsServerAddresses = []
   subnets = [
