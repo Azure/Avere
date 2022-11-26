@@ -76,7 +76,7 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   yum -y install libXcursor-devel
   buildDirectory="$binDirectory/$installDirectory/build"
   mkdir $buildDirectory
-  $binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installDirectory/SDK 1> "nvidia-optix-cmake.output.txt" 2> "nvidia-optix-cmake.error.txt"
+  $binPathCMake/cmake -B $buildDirectory -S "$binDirectory/$installDirectory/sdk" 1> "nvidia-optix-cmake.output.txt" 2> "nvidia-optix-cmake.error.txt"
   make -j -C $buildDirectory 1> "nvidia-optix-make.output.txt" 2> "nvidia-optix-make.error.txt"
   binPaths="$binPaths:$buildDirectory/bin"
   echo "Customize (End): NVIDIA GPU (OptiX)"
@@ -306,7 +306,7 @@ if [[ $renderEngines == *PBRT.Moana* ]]; then
 fi
 
 if [[ $renderEngines == *Unity* ]]; then
-  echo "Customize (Start): Unity"
+  echo "Customize (Start): Unity Hub"
   unityRepoPath="/etc/yum.repos.d/unityhub.repo"
   echo "[unityhub]" > $unityRepoPath
   echo "name=Unity Hub" >> $unityRepoPath
@@ -316,7 +316,7 @@ if [[ $renderEngines == *Unity* ]]; then
   echo "gpgkey=https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" >> $unityRepoPath
   echo "repo_gpgcheck=1" >> $unityRepoPath
   yum -y install unityhub
-  echo "Customize (End): Unity"
+  echo "Customize (End): Unity Hub"
 fi
 
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
@@ -330,13 +330,13 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
   mkdir $rendererPathUnreal
   mv UnrealEngine*/* $rendererPathUnreal
   rm -rf UnrealEngine-$versionInfo-release
-  $rendererPathUnreal/Setup.sh 1> "unreal-engine.output.txt" 2> "unreal-engine.error.txt"
+  $rendererPathUnreal/Setup.sh 1> "unreal-engine-setup.output.txt" 2> "unreal-engine-setup.error.txt"
   echo "Customize (End): Unreal Engine"
 
   if [ $machineType == "Workstation" ]; then
     echo "Customize (Start): Unreal Project Files"
-    $rendererPathUnreal/GenerateProjectFiles.sh 1> "unreal-files-generate.output.txt" 2> "unreal-files-generate.error.txt"
-    make -j -C $rendererPathUnreal 1> "unreal-files-make.output.txt" 2> "unreal-files-make.error.txt"
+    $rendererPathUnreal/GenerateProjectFiles.sh 1> "unreal-project-files-generate.output.txt" 2> "unreal-project-files-generate.error.txt"
+    make -j -C $rendererPathUnreal 1> "unreal-project-files-make.output.txt" 2> "unreal-project-files-make.error.txt"
     echo "Customize (End): Unreal Project Files"
   fi
 
