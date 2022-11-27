@@ -182,8 +182,8 @@ New-Item -ItemType Directory -Path $localDirectory -Force
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute (*Spot*) cores quota available in your Azure subscription.
    * Make sure the **imageId** config references the correct custom image in your Azure subscription.
-   * Make sure the **fileSystemMounts** config has the correct values (e.g., storage account name).
-       * If your config includes cache mounting, which is the default config, make sure [4 Storage Cache](#4-storage-cache) is deployed and *running* before deploying this module.
+   * Make sure the **fileSystemMounts*** configs have the correct values (e.g., storage account name).
+       * If your config has cache mounts, make sure [4 Storage Cache](#4-storage-cache) is deployed and *running* before deploying this module.
    * Make sure the **fileSystemPermissions** config has the appropriate value for your environment.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
@@ -197,8 +197,8 @@ New-Item -ItemType Directory -Path $localDirectory -Force
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **imageId** config references the correct custom image in your Azure subscription.
-   * Make sure the **fileSystemMounts** config has the correct values (e.g., storage cache mount).
-       * If your config includes cache mounting, which is the default config, make sure [4 Storage Cache](#4-storage-cache) is deployed and *running* before deploying this module.
+   * Make sure the **fileSystemMounts*** configs have the correct values (e.g., storage cache mount).
+       * If your config has cache mounts, make sure [4 Storage Cache](#4-storage-cache) is deployed and *running* before deploying this module.
 1. Run `terraform init -backend-config ../0.global/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources

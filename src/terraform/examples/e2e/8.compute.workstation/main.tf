@@ -62,8 +62,11 @@ variable "virtualMachines" {
           fileName = string
           parameters = object(
             {
-              fileSystemMounts   = list(string)
-              teradiciLicenseKey = string
+              fileSystemMountsStorage      = list(string)
+              fileSystemMountsStorageCache = list(string)
+              fileSystemMountsRoyalRender  = list(string)
+              fileSystemMountsDeadline     = list(string)
+              teradiciLicenseKey           = string
             }
           )
         }
@@ -215,7 +218,9 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     "script": "${base64encode(
-      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters)
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
+        { renderManager = module.global.renderManager }
+      ))
     )}"
   })
   depends_on = [
@@ -288,7 +293,9 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
+        { renderManager = module.global.renderManager }
+      )), "UTF-16LE"
     )}"
   })
   depends_on = [

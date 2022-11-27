@@ -68,7 +68,6 @@ variable "imageTemplates" {
           osDiskSizeGB   = number
           timeoutMinutes = number
           outputVersion  = string
-          renderManager  = string
           renderEngines  = list(string)
         }
       )
@@ -223,21 +222,24 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
   resource_group_name = azurerm_resource_group.image.name
   deployment_mode     = "Incremental"
   parameters_content  = jsonencode({
+    "renderManager" = {
+      value = module.global.renderManager
+    }
     "managedIdentityName" = {
       value = module.global.managedIdentityName
-    },
+    }
     "managedIdentityResourceGroupName" = {
       value = module.global.securityResourceGroupName
-    },
+    }
     "imageGalleryName" = {
       value = var.imageGallery.name
-    },
+    }
     "imageTemplates" = {
       value = var.imageTemplates
-    },
+    }
     "imageScriptContainer" = {
       value = "https://${data.azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
-    },
+    }
     "keyVaultSecretAdminUsername" = {
       value = data.azurerm_key_vault_secret.admin_username.value
     }
@@ -250,6 +252,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
       "contentVersion": "1.0.0.0",
       "parameters": {
+        "renderManager": {
+          "type": "string"
+        },
         "managedIdentityName": {
           "type": "string"
         },
@@ -297,6 +302,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   "type": "string"
                 },
                 {
+                  "name": "renderManager",
+                  "type": "string"
+                },
+                {
                   "name": "adminUsername",
                   "type": "string"
                 },
@@ -327,7 +336,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('adminUsername', parameters('adminUsername')), createObject('adminPassword', parameters('adminPassword')))))))]"
+                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')), createObject('adminUsername', parameters('adminUsername')), createObject('adminPassword', parameters('adminPassword')))))))]"
                     ]
                   }
                 ]
@@ -345,6 +354,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 },
                 {
                   "name": "scriptFilePath",
+                  "type": "string"
+                },
+                {
+                  "name": "renderManager",
                   "type": "string"
                 }
               ],
@@ -373,9 +386,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildConfigEncoded ', base64(string(parameters('imageTemplate').build))))]"
+                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')))))))]"
                     ],
-                    "runElevated": "[if(and(equals(parameters('imageTemplate').build.renderManager, 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
+                    "runElevated": "[if(and(equals(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   }
                 ]
               }
@@ -408,7 +421,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword')))]",
+            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows'), parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('renderManager'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword')))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

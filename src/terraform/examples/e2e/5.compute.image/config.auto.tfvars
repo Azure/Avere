@@ -62,7 +62,6 @@ imageTemplates = [
       osDiskSizeGB   = 0
       timeoutMinutes = 120
       outputVersion  = "0.0.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = []
     }
   },
@@ -81,7 +80,6 @@ imageTemplates = [
       osDiskSizeGB   = 480
       timeoutMinutes = 240
       outputVersion  = "1.0.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT"
@@ -103,7 +101,6 @@ imageTemplates = [
       osDiskSizeGB   = 480
       timeoutMinutes = 240
       outputVersion  = "1.1.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT",
@@ -127,7 +124,6 @@ imageTemplates = [
       osDiskSizeGB   = 512
       timeoutMinutes = 240
       outputVersion  = "2.0.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT"
@@ -149,7 +145,6 @@ imageTemplates = [
       osDiskSizeGB   = 512
       timeoutMinutes = 240
       outputVersion  = "2.1.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT",
@@ -173,7 +168,6 @@ imageTemplates = [
       osDiskSizeGB   = 0
       timeoutMinutes = 180
       outputVersion  = "0.0.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = []
     }
   },
@@ -192,7 +186,6 @@ imageTemplates = [
       osDiskSizeGB   = 480
       timeoutMinutes = 420
       outputVersion  = "1.0.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT"
@@ -214,7 +207,6 @@ imageTemplates = [
       osDiskSizeGB   = 480
       timeoutMinutes = 420
       outputVersion  = "1.1.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT",
@@ -238,7 +230,6 @@ imageTemplates = [
       osDiskSizeGB   = 512
       timeoutMinutes = 420
       outputVersion  = "2.0.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT"
@@ -260,7 +251,6 @@ imageTemplates = [
       osDiskSizeGB   = 512
       timeoutMinutes = 420
       outputVersion  = "2.1.0"
-      renderManager  = "Deadline" # RoyalRender or Deadline
       renderEngines  = [
         "Blender",
         "PBRT",

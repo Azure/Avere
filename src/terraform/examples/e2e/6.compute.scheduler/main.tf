@@ -66,7 +66,10 @@ variable "virtualMachines" {
           fileName = string
           parameters = object(
             {
-              fileSystemMounts = list(string)
+              fileSystemMountsStorage      = list(string)
+              fileSystemMountsStorageCache = list(string)
+              fileSystemMountsRoyalRender  = list(string)
+              fileSystemMountsDeadline     = list(string)
               autoScale = object(
                 {
                   enable                   = bool
@@ -305,6 +308,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
         { tenantId                 = data.azurerm_client_config.current.tenant_id },
         { subscriptionId           = data.azurerm_client_config.current.subscription_id },
         { regionName               = module.global.regionName },
+        { renderManager            = module.global.renderManager },
         { networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name },
         { networkName              = data.azurerm_virtual_network.compute.name },
         { networkSubnetName        = data.azurerm_subnet.farm.name },
@@ -389,7 +393,9 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.customExtension.fileName, each.value.customExtension.parameters), "UTF-16LE"
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
+        { renderManager = module.global.renderManager }
+      )), "UTF-16LE"
     )}"
   })
   depends_on = [

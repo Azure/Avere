@@ -32,10 +32,16 @@ virtualMachineScaleSets = [
       enable   = true
       fileName = "initialize.sh"
       parameters = {
-        fileSystemMounts = [
-          "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0",
-          "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0",
+        fileSystemMountsStorage = [
+          "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+        ]
+        fileSystemMountsStorageCache = [
           # "cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+        ]
+        fileSystemMountsRoyalRender = [
+        ]
+        fileSystemMountsDeadline = [
+          "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         fileSystemPermissions = [
           "chmod 777 /mnt/show/write"
@@ -89,10 +95,16 @@ virtualMachineScaleSets = [
       enable   = true
       fileName = "initialize.ps1"
       parameters = {
-        fileSystemMounts = [
-          "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:",
-          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:",
+        fileSystemMountsStorage = [
+          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:"
+        ]
+        fileSystemMountsStorageCache = [
           # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\show R:"
+        ]
+        fileSystemMountsRoyalRender = [
+        ]
+        fileSystemMountsDeadline = [
+          "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:"
         ]
         fileSystemPermissions = [
           "icacls W: /grant Everyone:F"

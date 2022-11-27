@@ -10,20 +10,31 @@ for ($i = 0; $i -lt 12; $i++) {
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 }
 
-%{ if length(fileSystemMounts) > 0 }
-  $mountFile = "C:\Windows\Temp\mounts.bat"
-  New-Item -ItemType File -Path $mountFile
-  %{ for fsMount in fileSystemMounts }
+$mountFile = "C:\Windows\Temp\mounts.bat"
+New-Item -ItemType File -Path $mountFile
+%{ for fsMount in fileSystemMountsStorage }
+  Add-Content -Path $mountFile -Value "${fsMount}"
+%{ endfor }
+%{ for fsMount in fileSystemMountsStorageCache }
+  Add-Content -Path $mountFile -Value "${fsMount}"
+%{ endfor }
+%{ if renderManager == "RoyalRender" }
+  %{ for fsMount in fileSystemMountsRoyalRender }
     Add-Content -Path $mountFile -Value "${fsMount}"
   %{ endfor }
-
-  $taskName = "AAA Storage Mounts"
-  $taskAction = New-ScheduledTaskAction -Execute $mountFile
-  $taskTrigger = New-ScheduledTaskTrigger -AtStartup
-  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
-
-  Start-Process -FilePath $mountFile -Wait -RedirectStandardOutput "$mountFile.output.txt" -RedirectStandardError "$mountFile.error.txt"
-  %{ for fsPermission in fileSystemPermissions }
-    ${fsPermission}
+%{ endif }
+%{ if renderManager == "Deadline" }
+  %{ for fsMount in fileSystemMountsDeadline }
+    Add-Content -Path $mountFile -Value "${fsMount}"
   %{ endfor }
 %{ endif }
+
+$taskName = "AAA File System Mounts"
+$taskAction = New-ScheduledTaskAction -Execute $mountFile
+$taskTrigger = New-ScheduledTaskTrigger -AtStartup
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
+
+Start-Process -FilePath $mountFile -Wait -RedirectStandardOutput "fs-mounts.output.txt" -RedirectStandardError "fs-mounts.error.txt"
+%{ for fsPermission in fileSystemPermissions }
+  ${fsPermission}
+%{ endfor }

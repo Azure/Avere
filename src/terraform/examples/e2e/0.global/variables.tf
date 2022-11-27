@@ -6,6 +6,10 @@ variable "regionName" {
   default = "WestUS2" # Set to the target Azure region name (az account list-locations --query [].name)
 }
 
+variable "renderManager" {
+  default = "Deadline" # RoyalRender or Deadline
+}
+
 variable "securityResourceGroupName" {
   default = "ArtistAnywhere" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 }
@@ -51,6 +55,10 @@ variable "monitorWorkspaceName" {
 
 output "regionName" {
   value = var.regionName
+}
+
+output "renderManager" {
+  value = var.renderManager
 }
 
 output "securityResourceGroupName" {

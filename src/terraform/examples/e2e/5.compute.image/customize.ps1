@@ -114,7 +114,7 @@ if ($machineType -eq "Scheduler") {
 
 switch ($renderManager) {
   "RoyalRender" {
-    $schedulerVersion = "8.4.02"
+    $schedulerVersion = "8.4.03"
   }
   "Deadline" {
     $schedulerVersion = "10.2.0.9"
@@ -161,8 +161,11 @@ switch ($renderManager) {
     Write-Host "Customize (End): Royal Render Installer"
 
     Set-Location -Path $rootDirectory
+    [System.Environment]::SetEnvironmentVariable("RR_ROOT", $pwd.Path)
     if ($machineType -eq "Scheduler") {
       Write-Host "Customize (Start): Royal Render Server"
+      # $installFile = "win__rrServerconsole.bat"
+      # Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "rr-server.output.txt" -RedirectStandardError "rr-server.error.txt"
 
       Write-Host "Customize (End): Royal Render Server"
     }

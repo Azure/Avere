@@ -35,11 +35,30 @@ if [ ${autoScale.enable} == true ]; then
   systemctl --now enable scale.timer
 fi
 
-%{ for fsMount in fileSystemMounts }
+%{ for fsMount in fileSystemMountsStorage }
   fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
   mkdir -p $fsMountPoint
   echo "${fsMount}" >> /etc/fstab
 %{ endfor }
+%{ for fsMount in fileSystemMountsStorageCache }
+  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+  mkdir -p $fsMountPoint
+  echo "${fsMount}" >> /etc/fstab
+%{ endfor }
+%{ if renderManager == "RoyalRender" }
+  %{ for fsMount in fileSystemMountsRoyalRender }
+    fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+    mkdir -p $fsMountPoint
+    echo "${fsMount}" >> /etc/fstab
+  %{ endfor }
+%{ endif }
+%{ if renderManager == "Deadline" }
+  %{ for fsMount in fileSystemMountsDeadline }
+    fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+    mkdir -p $fsMountPoint
+    echo "${fsMount}" >> /etc/fstab
+  %{ endfor }
+%{ endif }
 mount -a
 
 if [ ${cycleCloud.enable} == true ]; then

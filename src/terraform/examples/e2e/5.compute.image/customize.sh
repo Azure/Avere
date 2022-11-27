@@ -148,7 +148,7 @@ fi
 
 case $renderManager in
   "RoyalRender")
-    schedulerVersion="8.4.02"
+    schedulerVersion="8.4.03"
     ;;
   "Deadline")
     schedulerVersion="10.2.0.9"
@@ -198,8 +198,11 @@ case $renderManager in
     echo "Customize (End): Royal Render Installer"
 
     cd $rootDirectory
+    export RR_ROOT=$(pwd)
     if [ $machineType == "Scheduler" ]; then
       echo "Customize (Start): Royal Render Server"
+      # installFile="lx__rrServerconsole.sh"
+      # ./$installFile 1> "rr-server.output.txt" 2> "rr-server.error.txt"
 
       echo "Customize (End): Royal Render Server"
     fi
