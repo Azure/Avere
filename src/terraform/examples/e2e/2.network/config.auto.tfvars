@@ -1,8 +1,8 @@
 resourceGroupName = "ArtistAnywhere.Network"
 
-########################################################################################@########
+#################################################################################################
 # Virtual Network (https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) #
-########################################################################################@########
+#################################################################################################
 
 computeNetwork = {
   name               = "Compute"
@@ -41,12 +41,11 @@ computeNetwork = {
       serviceDelegation = ""
     }
   ]
-}
-
-computeNetworkSubnetIndex = {
-  farm        = 0
-  workstation = 1
-  cache       = 2
+  subnetIndex = { # Make sure each index is in sync with corresponding subnet
+    farm        = 0
+    workstation = 1
+    cache       = 2
+  }
 }
 
 storageNetwork = {
@@ -74,12 +73,11 @@ storageNetwork = {
       serviceDelegation = "Microsoft.Netapp/volumes"
     }
   ]
-}
-
-storageNetworkSubnetIndex = {
-  primary   = 0
-  secondary = 1
-  netApp    = 2
+  subnetIndex = { # Make sure each index is in sync with corresponding subnet
+    primary   = 0
+    secondary = 1
+    netApp    = 2
+  }
 }
 
 ################################################################################################################

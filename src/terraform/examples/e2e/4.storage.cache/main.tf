@@ -193,7 +193,7 @@ data "azurerm_virtual_network" "compute" {
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.cache].name
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
@@ -210,8 +210,8 @@ data "azuread_service_principal" "hpc_cache" {
 locals {
   stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
   deployPrivateDnsZone    = !local.stateExistsNetwork && var.computeNetwork.privateDns.zoneName != ""
-  vfxtControllerAddress   = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 39)
-  vfxtVServerFirstAddress = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.cache].addressSpace[0], 40)
+  vfxtControllerAddress   = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].addressSpace[0], 39)
+  vfxtVServerFirstAddress = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].addressSpace[0], 40)
   vfxtVServerAddressCount = 12
 }
 

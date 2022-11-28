@@ -4,10 +4,10 @@ Azure Artist Anywhere (AAA) is a *modular and customizable [infrastructure-as-co
 
 https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4
 
-The following *core principles* are implemented throughout the AAA solution deployment framework.
-* Integration of security best practices, including [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview), [Private Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview).
-* Any software (render manager, renderer, etc) in a [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
-* Separation of module deployment configuration files (*config.auto.tfvars*) and code files (*main.tf*).
+The following *core design principles* are implemented throughout the AAA solution deployment framework.
+* Integration of security best practices, including [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview) and [Private Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview).
+* Any software (render manager, render engine, etc) in a [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
+* Clean separation of module deployment configuration files (*config.auto.tfvars*) and code files (*main.tf*).
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |

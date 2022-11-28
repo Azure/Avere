@@ -221,19 +221,19 @@ data "azurerm_virtual_network" "storage" {
 }
 
 data "azurerm_subnet" "storage_primary" {
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetworkSubnetIndex.primary].name
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.primary].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
 data "azurerm_subnet" "storage_secondary" {
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetworkSubnetIndex.secondary].name
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.secondary].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
 
 data "azurerm_subnet" "storage_netapp" {
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetworkSubnetIndex.netApp].name
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.netApp].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }

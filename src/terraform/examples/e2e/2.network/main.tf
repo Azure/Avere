@@ -42,16 +42,13 @@ variable "computeNetwork" {
           serviceDelegation = string
         }
       ))
-    }
-  )
-}
-
-variable "computeNetworkSubnetIndex" {
-  type = object(
-    {
-      farm        = number
-      workstation = number
-      cache       = number
+      subnetIndex = object(
+        {
+          farm        = number
+          workstation = number
+          cache       = number
+        }
+      )
     }
   )
 }
@@ -71,16 +68,13 @@ variable "storageNetwork" {
           serviceDelegation = string
         }
       ))
-    }
-  )
-}
-
-variable "storageNetworkSubnetIndex" {
-  type = object(
-    {
-      primary   = number
-      secondary = number
-      netApp    = number
+      subnetIndex = object(
+        {
+          primary   = number
+          secondary = number
+          netApp    = number
+        }
+      )
     }
   )
 }
@@ -772,16 +766,8 @@ output "computeNetwork" {
   value = var.computeNetwork
 }
 
-output "computeNetworkSubnetIndex" {
-  value = var.computeNetworkSubnetIndex
-}
-
 output "storageNetwork" {
   value = var.storageNetwork
-}
-
-output "storageNetworkSubnetIndex" {
-  value = var.storageNetworkSubnetIndex
 }
 
 output "storageEndpointSubnets" {

@@ -137,7 +137,7 @@ data "azurerm_virtual_network" "compute" {
 }
 
 data "azurerm_subnet" "workstation" {
-  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetworkSubnetIndex.workstation].name
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.workstation].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
