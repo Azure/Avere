@@ -7,7 +7,7 @@ https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-
 The following *core design principles* are implemented throughout the AAA solution deployment framework.
 * Integration of security best practices, including [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview), [Private Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview) and [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview).
 * Any custom or 3rd-party software (render manager, render engines, etc) in a [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
-* Clean separation of AAA module deployment configuration files (*config.auto.tfvars*) and code files (*main.tf*) via Terraform.
+* Clean separation of AAA module deployment configuration files (*config.auto.tfvars*) and code files (*main.tf*) via [Terraform](https://www.terraform.io).
 
 | **Module Name** | **Module Description** | **Required for<br>Compute Burst?** | **Required for<br>All Cloud?** |
 | --------------- | ---------------------- | ---------------------------------- | ------------------------------ |
