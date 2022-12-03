@@ -110,7 +110,7 @@ resource "azurerm_resource_group" "security" {
 # User Assigned Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview) #
 ###########################################################################################################################
 
-resource "azurerm_user_assigned_identity" "solution" {
+resource "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
   resource_group_name = azurerm_resource_group.security.name
   location            = azurerm_resource_group.security.location
@@ -139,7 +139,7 @@ resource "azurerm_storage_container" "container" {
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
 ############################################################################
 
-resource "azurerm_key_vault" "solution" {
+resource "azurerm_key_vault" "render" {
   name                            = module.global.keyVaultName
   resource_group_name             = azurerm_resource_group.security.name
   location                        = azurerm_resource_group.security.location
@@ -159,7 +159,7 @@ resource "azurerm_key_vault_secret" "secrets" {
   }
   name         = each.value.name
   value        = each.value.value
-  key_vault_id = azurerm_key_vault.solution.id
+  key_vault_id = azurerm_key_vault.render.id
 }
 
 resource "azurerm_key_vault_key" "keys" {
@@ -170,7 +170,7 @@ resource "azurerm_key_vault_key" "keys" {
   key_type     = each.value.type
   key_size     = each.value.size
   key_opts     = each.value.operations
-  key_vault_id = azurerm_key_vault.solution.id
+  key_vault_id = azurerm_key_vault.render.id
 }
 
 resource "azurerm_key_vault_certificate" "certificates" {
@@ -178,7 +178,7 @@ resource "azurerm_key_vault_certificate" "certificates" {
     for certificate in var.keyVault.certificates : certificate.name => certificate
   }
   name         = each.value.name
-  key_vault_id = azurerm_key_vault.solution.id
+  key_vault_id = azurerm_key_vault.render.id
   certificate_policy {
     x509_certificate_properties {
       subject            = each.value.subject

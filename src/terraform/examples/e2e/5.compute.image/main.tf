@@ -84,24 +84,24 @@ variable "computeNetwork" {
   )
 }
 
-data "azurerm_user_assigned_identity" "solution" {
+data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
   resource_group_name = module.global.securityResourceGroupName
 }
 
-data "azurerm_key_vault" "solution" {
+data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
   name         = module.global.keyVaultSecretNameAdminUsername
-  key_vault_id = data.azurerm_key_vault.solution.id
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.solution.id
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "terraform_remote_state" "network" {
@@ -143,19 +143,19 @@ resource "azurerm_resource_group" "image" {
 
 resource "azurerm_role_assignment" "network" {
   role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_role_assignment" "storage" {
   role_definition_name = "Storage Blob Data Reader" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = data.azurerm_storage_account.storage.id
 }
 
 resource "azurerm_role_assignment" "image" {
   role_definition_name = "Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = azurerm_resource_group.image.id
 }
 

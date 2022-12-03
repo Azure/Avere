@@ -40,7 +40,7 @@ keyVault = {
   ]
   keys = [
     {
-      name = "BatchEncryption"
+      name = "CacheEncryption"
       type = "RSA"
       size = 2048
       operations = [
@@ -53,7 +53,7 @@ keyVault = {
       ]
     },
     {
-      name = "CacheEncryption"
+      name = "ComputeEncryption"
       type = "RSA"
       size = 2048
       operations = [
@@ -75,7 +75,7 @@ keyVault = {
 ######################################################################
 
 monitorWorkspace = {
-  name          = "AzRender"
+  name          = "azRender"
   sku           = "PerGB2018"
   retentionDays = 90
 }

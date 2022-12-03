@@ -195,14 +195,14 @@ variable "storageNetwork" {
   )
 }
 
-data "azurerm_key_vault" "solution" {
+data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.solution.id
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "terraform_remote_state" "network" {

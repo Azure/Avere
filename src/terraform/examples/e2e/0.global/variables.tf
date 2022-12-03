@@ -3,11 +3,11 @@
 ####################
 
 variable "regionName" {
-  default = "WestUS2" # Set to the target Azure region name (az account list-locations --query [].name)
+  default = "WestUS2" # Set default Azure region name (az account list-locations --query [].name)
 }
 
 variable "renderManager" {
-  default = "Deadline" # RoyalRender or Deadline
+  default = "Deadline" # RoyalRender (https://royalrender.de/) or Deadline
 }
 
 variable "securityResourceGroupName" {
@@ -22,12 +22,12 @@ variable "terraformStorageContainerName" {
 
 # Managed Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview)
 variable "managedIdentityName" {
-  default = "AzRender" # Alphanumeric, underscores and hyphens are allowed
+  default = "azRender" # Alphanumeric, underscores and hyphens are allowed
 }
 
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview)
 variable "keyVaultName" {
-  default = "AzRender" # Set to a globally unique name (alphanumeric, hyphens)
+  default = "azRender" # Set to a globally unique name (alphanumeric, hyphens)
 }
 
 # KeyVault secret names
@@ -42,15 +42,15 @@ variable "keyVaultSecretNameAdminPassword" {
 }
 
 # KeyVault key names
-variable "keyVaultKeyNameBatchEncryption" {
-  default = "BatchEncryption"
-}
 variable "keyVaultKeyNameCacheEncryption" {
   default = "CacheEncryption"
 }
+variable "keyVaultKeyNameComputeEncryption" {
+  default = "ComputeEncryption"
+}
 
 variable "monitorWorkspaceName" {
-  default = "AzRender"
+  default = "azRender"
 }
 
 output "regionName" {
@@ -89,11 +89,11 @@ output "keyVaultSecretNameAdminPassword" {
   value = var.keyVaultSecretNameAdminPassword
 }
 
-output "keyVaultKeyNameBatchEncryption" {
-  value = var.keyVaultKeyNameBatchEncryption
-}
 output "keyVaultKeyNameCacheEncryption" {
   value = var.keyVaultKeyNameCacheEncryption
+}
+output "keyVaultKeyNameComputeEncryption" {
+  value = var.keyVaultKeyNameComputeEncryption
 }
 
 output "monitorWorkspaceName" {

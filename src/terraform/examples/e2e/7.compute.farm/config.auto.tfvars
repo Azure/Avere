@@ -10,7 +10,7 @@ virtualMachineScaleSets = [
     imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
-      count = 10
+      count = 1
     }
     operatingSystem = {
       type = "Linux"
@@ -47,12 +47,6 @@ virtualMachineScaleSets = [
           "chmod 777 /mnt/show/write"
         ]
       }
-    }
-    healthExtension = {
-      enable      = false
-      protocol    = "http"
-      port        = 80
-      requestPath = "/"
     }
     monitorExtension = {
       enable = false
@@ -111,12 +105,6 @@ virtualMachineScaleSets = [
         ]
       }
     }
-    healthExtension = {
-      enable      = false
-      protocol    = "http"
-      port        = 80
-      requestPath = "/"
-    }
     monitorExtension = {
       enable = false
     }
@@ -140,6 +128,12 @@ virtualMachineScaleSets = [
 kubernetesClusters = [
   {
     name = ""
+    pool = {
+      name = "default"
+    }
+    machine = {
+      size = "Standard_HB120rs_v2"
+    }
   }
 ]
 

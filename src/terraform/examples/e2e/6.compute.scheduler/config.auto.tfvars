@@ -105,22 +105,6 @@ virtualMachines = [
   }
 ]
 
-############################################################################
-# Batch (https://learn.microsoft.com/azure/batch/batch-technical-overview) #
-############################################################################
-
-batchAccount = {
-  enable = false
-  name   = "azrender"
-  storageAccount = {
-    name              = "azrender0"
-    resourceGroupName = "ArtistAnywhere"
-  }
-  encryption = {
-    enable = false
-  }
-}
-
 #######################################################################
 # Optional resource dependency configuration for existing deployments #
 #######################################################################

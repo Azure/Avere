@@ -89,14 +89,14 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (End): NVIDIA GPU (OptiX)"
 }
 
-Write-Host "Customize (Start): Azure CLI"
-$installFile = "az-cli.msi"
-$downloadUrl = "https://aka.ms/installazurecliwindows"
-(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
-Write-Host "Customize (End): Azure CLI"
-
 if ($machineType -eq "Scheduler") {
+  Write-Host "Customize (Start): Azure CLI"
+  $installFile = "az-cli.msi"
+  $downloadUrl = "https://aka.ms/installazurecliwindows"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
+  Write-Host "Customize (End): Azure CLI"
+
   if ($renderManager -eq "Deadline") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"

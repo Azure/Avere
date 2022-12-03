@@ -154,19 +154,19 @@ variable "computeNetwork" {
 
 data "azurerm_client_config" "current" {}
 
-data "azurerm_user_assigned_identity" "solution" {
+data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
   resource_group_name = module.global.securityResourceGroupName
 }
 
-data "azurerm_key_vault" "solution" {
+data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_key_vault_key" "cache_encryption" {
   name         = module.global.keyVaultKeyNameCacheEncryption
-  key_vault_id = data.azurerm_key_vault.solution.id
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "terraform_remote_state" "network" {
@@ -255,7 +255,7 @@ resource "azurerm_hpc_cache" "cache" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.solution.id
+      data.azurerm_user_assigned_identity.render.id
     ]
   }
   key_vault_key_id                           = var.hpcCache.encryption.enable ? data.azurerm_key_vault_key.cache_encryption.id : null
@@ -303,30 +303,30 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.solution.id
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 resource "azurerm_role_assignment" "identity" {
   role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = data.azurerm_resource_group.identity.id
 }
 
 resource "azurerm_role_assignment" "network" {
   role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_role_assignment" "cache_identity" {
   role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = azurerm_resource_group.cache.id
 }
 
 resource "azurerm_role_assignment" "cache_contributor" {
   role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = azurerm_resource_group.cache.id
 }
 
@@ -350,7 +350,7 @@ module "vfxt_controller" {
   virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
   static_ip_address                 = local.vfxtControllerAddress
-  user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.solution.id
+  user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.render.id
   image_id                          = var.vfxtCache.controller.imageId
   depends_on = [
     azurerm_resource_group.cache,
@@ -385,7 +385,7 @@ resource "avere_vfxt" "cache" {
   global_custom_settings          = var.vfxtCache.cluster.customSettings
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount
-  user_assigned_managed_identity  = data.azurerm_user_assigned_identity.solution.id
+  user_assigned_managed_identity  = data.azurerm_user_assigned_identity.render.id
   timezone                        = var.vfxtCache.localTimezone
   dynamic core_filer {
     for_each = {

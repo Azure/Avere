@@ -37,7 +37,7 @@ variable "virtualMachineScaleSets" {
     {
       name    = string
       imageId = string
-      machine = object (
+      machine = object(
         {
           size  = string
           count = number
@@ -82,14 +82,6 @@ variable "virtualMachineScaleSets" {
           )
         }
       )
-      healthExtension = object(
-        {
-          enable      = bool
-          protocol    = string
-          port        = number
-          requestPath = string
-        }
-      )
       monitorExtension = object(
         {
           enable = bool
@@ -117,6 +109,16 @@ variable "kubernetesClusters" {
   type = list(object(
     {
       name = string
+      pool = object(
+        {
+          name = string
+        }
+      )
+      machine = object(
+        {
+          size = string
+        }
+      )
     }
   ))
 }
@@ -139,19 +141,19 @@ variable "computeNetwork" {
   )
 }
 
-data "azurerm_user_assigned_identity" "solution" {
+data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
   resource_group_name = module.global.securityResourceGroupName
 }
 
-data "azurerm_key_vault" "solution" {
+data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.securityResourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.solution.id
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
@@ -196,7 +198,7 @@ locals {
 
 resource "azurerm_role_assignment" "farm" {
   role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.solution.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = azurerm_resource_group.farm.id
 }
 
@@ -247,7 +249,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.solution.id
+      data.azurerm_user_assigned_identity.render.id
     ]
   }
   boot_diagnostics {
@@ -274,21 +276,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
             { renderManager = module.global.renderManager }
           ))
         )}"
-      })
-    }
-  }
-  dynamic extension {
-    for_each = each.value.healthExtension.enable ? [1] : []
-    content {
-      name                       = "Health"
-      type                       = "ApplicationHealthLinux"
-      publisher                  = "Microsoft.ManagedServices"
-      type_handler_version       = "1.0"
-      auto_upgrade_minor_version = true
-      settings = jsonencode({
-        "protocol"   : each.value.healthExtension.protocol
-        "port"       : each.value.healthExtension.port
-        "requestPath": each.value.healthExtension.requestPath
       })
     }
   }
@@ -358,7 +345,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.solution.id
+      data.azurerm_user_assigned_identity.render.id
     ]
   }
   boot_diagnostics {
@@ -378,21 +365,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
             { renderManager = module.global.renderManager }
           )), "UTF-16LE"
         )}"
-      })
-    }
-  }
-  dynamic extension {
-    for_each = each.value.healthExtension.enable ? [1] : []
-    content {
-      name                       = "Health"
-      type                       = "ApplicationHealthWindows"
-      publisher                  = "Microsoft.ManagedServices"
-      type_handler_version       = "1.0"
-      auto_upgrade_minor_version = true
-      settings = jsonencode({
-        "protocol"   : each.value.healthExtension.protocol
-        "port"       : each.value.healthExtension.port
-        "requestPath": each.value.healthExtension.requestPath
       })
     }
   }
@@ -425,27 +397,31 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
 # Kubernetes Clusters (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
 ################################################################################
 
-resource "azurerm_kubernetes_cluster" "farm" {
-  for_each = {
-    for kubernetesCluster in var.kubernetesClusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
-  }
-  name                = each.value.name
-  resource_group_name = azurerm_resource_group.farm.name
-  location            = azurerm_resource_group.farm.location
-}
+# resource "azurerm_kubernetes_cluster" "farm" {
+#   for_each = {
+#     for kubernetesCluster in var.kubernetesClusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
+#   }
+#   name                = each.value.name
+#   resource_group_name = azurerm_resource_group.farm.name
+#   location            = azurerm_resource_group.farm.location
+#   default_node_pool {
+#     name    = each.value.pool.name
+#     vm_size = each.value.machine.size
+#   }
+# }
 
 ###################################################################################
 # Kubernetes Fleets (https://learn.microsoft.com/azure/kubernetes-fleet/overview) #
 ###################################################################################
 
-resource "azurerm_kubernetes_fleet_manager" "farm" {
-  for_each = {
-    for kubernetesFleet in var.kubernetesFleets : kubernetesFleet.name => kubernetesFleet if kubernetesFleet.name != ""
-  }
-  name                = each.value.name
-  resource_group_name = azurerm_resource_group.farm.name
-  location            = azurerm_resource_group.farm.location
-}
+# resource "azurerm_kubernetes_fleet_manager" "farm" {
+#   for_each = {
+#     for kubernetesFleet in var.kubernetesFleets : kubernetesFleet.name => kubernetesFleet if kubernetesFleet.name != ""
+#   }
+#   name                = each.value.name
+#   resource_group_name = azurerm_resource_group.farm.name
+#   location            = azurerm_resource_group.farm.location
+# }
 
 output "resourceGroupName" {
   value = var.resourceGroupName

@@ -82,23 +82,24 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (End): NVIDIA GPU (OptiX)"
 fi
 
-echo "Customize (Start): Azure CLI"
-azRepoPath="/etc/yum.repos.d/azure-cli.repo"
-echo "[azure-cli]" > $azRepoPath
-echo "name=Azure CLI" >> $azRepoPath
-echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $azRepoPath
-echo "enabled=1" >> $azRepoPath
-echo "gpgcheck=1" >> $azRepoPath
-echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $azRepoPath
-yum -y install azure-cli 1> "az-cli.output.txt" 2> "az-cli.error.txt"
-echo "Customize (End): Azure CLI"
-
 if [ $machineType == "Scheduler" ]; then
+  echo "Customize (Start): Azure CLI"
+  azRepoPath="/etc/yum.repos.d/azure-cli.repo"
+  echo "[azure-cli]" > $azRepoPath
+  echo "name=Azure CLI" >> $azRepoPath
+  echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $azRepoPath
+  echo "enabled=1" >> $azRepoPath
+  echo "gpgcheck=1" >> $azRepoPath
+  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $azRepoPath
+  yum -y install azure-cli 1> "az-cli.output.txt" 2> "az-cli.error.txt"
+  echo "Customize (End): Azure CLI"
+
   if [ $renderManager == "Deadline" ]; then
     echo "Customize (Start): NFS Server"
     systemctl --now enable nfs-server
     echo "Customize (End): NFS Server"
   fi
+
   echo "Customize (Start): CycleCloud"
   cycleCloudPath="/usr/local/cyclecloud"
   cycleCloudRepoPath="/etc/yum.repos.d/cyclecloud.repo"
