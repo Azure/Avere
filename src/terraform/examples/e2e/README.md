@@ -24,9 +24,9 @@ The following *core design principles* are implemented throughout the AAA soluti
 
 For example, the following sample output images were rendering in Azure via the AAA solution deployment framework.
 
-[White Lands](#white-lands)
+[Scanlands](#scanlands)
 <p align="center">
-  <img src=".github/images/white-lands.png" alt="White Lands" width="1024" />
+  <img src=".github/images/scanlands.png" alt="Scanlands" width="1024" />
 </p>
 
 [Moana Island](#moana-island)
@@ -226,24 +226,24 @@ Now that deployment of the AAA solution framework is complete, this section prov
 
 For example, the following sample **Blender** output images were rendering in Azure via the **Deadline** job submission commands below.
 
-#### White Lands
+#### Scanlands
 
 <p align="center">
-  <img src=".github/images/white-lands.png" alt="White Lands" width="1024" />
+  <img src=".github/images/scanlands.png" alt="Scanlands" width="1024" />
 </p>
 
 #### Linux Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name White-Lands -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.2/splash.blend --render-output /mnt/show/write/blender/3.2/splash####.png --render-frame 1"
+deadlinecommand -SubmitCommandLineJob -name Scanlands -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.3/splash.blend --render-output /mnt/show/write/blender/3.3/splash####.png --render-frame 1"
 </code></p>
 
 #### Windows Render Farm
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name White-Lands -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.2\splash.blend --render-output W:\blender\3.2\splash####.png --render-frame 1"
+deadlinecommand -SubmitCommandLineJob -name Scanlands -executable blender.exe -arguments "-b -y -noaudio R:\blender\3.3\splash.blend --render-output W:\blender\3.3\splash####.png --render-frame 1"
 </code></p>
 
 ### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org)
