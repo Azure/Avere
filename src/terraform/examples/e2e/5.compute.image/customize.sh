@@ -16,7 +16,7 @@ yum -y install nfs-utils
 yum -y install git
 yum -y install jq
 
-versionInfo="3.25.0"
+versionInfo="3.25.1"
 installFile="cmake-$versionInfo-linux-x86_64.tar.gz"
 downloadUrl="$storageContainerUrl/CMake/$versionInfo/$installFile$storageContainerSas"
 curl -o $installFile -L $downloadUrl
@@ -82,24 +82,23 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (End): NVIDIA GPU (OptiX)"
 fi
 
-if [ $machineType == "Scheduler" ]; then
-  echo "Customize (Start): Azure CLI"
-  azRepoPath="/etc/yum.repos.d/azure-cli.repo"
-  echo "[azure-cli]" > $azRepoPath
-  echo "name=Azure CLI" >> $azRepoPath
-  echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $azRepoPath
-  echo "enabled=1" >> $azRepoPath
-  echo "gpgcheck=1" >> $azRepoPath
-  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $azRepoPath
-  yum -y install azure-cli 1> "az-cli.output.txt" 2> "az-cli.error.txt"
-  echo "Customize (End): Azure CLI"
+echo "Customize (Start): Azure CLI"
+azRepoPath="/etc/yum.repos.d/azure-cli.repo"
+echo "[azure-cli]" > $azRepoPath
+echo "name=Azure CLI" >> $azRepoPath
+echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $azRepoPath
+echo "enabled=1" >> $azRepoPath
+echo "gpgcheck=1" >> $azRepoPath
+echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $azRepoPath
+yum -y install azure-cli 1> "az-cli.output.txt" 2> "az-cli.error.txt"
+echo "Customize (End): Azure CLI"
 
+if [ $machineType == "Scheduler" ]; then
   if [ $renderManager == "Deadline" ]; then
     echo "Customize (Start): NFS Server"
     systemctl --now enable nfs-server
     echo "Customize (End): NFS Server"
   fi
-
   echo "Customize (Start): CycleCloud"
   cycleCloudPath="/usr/local/cyclecloud"
   cycleCloudRepoPath="/etc/yum.repos.d/cyclecloud.repo"
@@ -153,6 +152,7 @@ case $renderManager in
   "Deadline")
     schedulerVersion="10.2.0.9"
     schedulerClientPath="/DeadlineClient"
+    schedulerDatabaseHost=$(hostname)
     schedulerDatabasePath="/DeadlineDatabase"
     schedulerRepositoryPath="/DeadlineRepository"
     schedulerCertificateFile="Deadline10Client.pfx"
@@ -223,9 +223,10 @@ case $renderManager in
     if [ $machineType == "Scheduler" ]; then
       echo "Customize (Start): Deadline Repository"
       installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-      ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath
+      ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath
       mv /tmp/*_installer.log ./deadline-log-repository.txt
       cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerRepositoryPath/$schedulerCertificateFile
+      chmod +r $schedulerRepositoryPath/$schedulerCertificateFile
       echo "$schedulerRepositoryPath *(rw,no_root_squash)" >> /etc/exports
       exportfs -a
       echo "Customize (End): Deadline Repository"
@@ -259,8 +260,7 @@ if [[ $renderEngines == *Blender* ]]; then
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   tar -xJf $installFile
-  mkdir -p $rendererPathBlender
-  mv blender*/* $rendererPathBlender
+  mv blender-$versionInfo-linux-x64 $rendererPathBlender
   echo "Customize (End): Blender"
 fi
 
@@ -331,8 +331,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   mkdir $rendererPathUnreal
-  mv UnrealEngine*/* $rendererPathUnreal
-  rm -rf UnrealEngine-$versionInfo-release
+  mv UnrealEngine-$versionInfo-release $rendererPathUnreal
   $rendererPathUnreal/Setup.sh 1> "unreal-engine-setup.output.txt" 2> "unreal-engine-setup.error.txt"
   echo "Customize (End): Unreal Engine"
 

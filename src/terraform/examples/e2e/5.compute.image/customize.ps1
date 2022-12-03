@@ -89,14 +89,14 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (End): NVIDIA GPU (OptiX)"
 }
 
-if ($machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): Azure CLI"
-  $installFile = "az-cli.msi"
-  $downloadUrl = "https://aka.ms/installazurecliwindows"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
-  Write-Host "Customize (End): Azure CLI"
+Write-Host "Customize (Start): Azure CLI"
+$installFile = "az-cli.msi"
+$downloadUrl = "https://aka.ms/installazurecliwindows"
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
+Write-Host "Customize (End): Azure CLI"
 
+if ($machineType -eq "Scheduler") {
   if ($renderManager -eq "Deadline") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"
@@ -119,6 +119,7 @@ switch ($renderManager) {
   "Deadline" {
     $schedulerVersion = "10.2.0.9"
     $schedulerClientPath = "C:\DeadlineClient"
+    $schedulerDatabaseHost = $(hostname)
     $schedulerDatabasePath = "C:\DeadlineDatabase"
     $schedulerRepositoryPath = "C:\DeadlineRepository"
     $schedulerCertificateFile = "Deadline10Client.pfx"
@@ -188,7 +189,7 @@ switch ($renderManager) {
       Write-Host "Customize (Start): Deadline Repository"
       netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
       $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-      Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
+      Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
       Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.txt
       Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
       New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite

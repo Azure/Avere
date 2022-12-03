@@ -1,9 +1,13 @@
 terraform {
-  required_version = ">= 1.3.5"
+  required_version = ">= 1.3.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.33.0"
+      version = "~>3.34.0"
+    }
+    time = {
+      source  = "hashicorp/time"
+      version = "~>0.9.1"
     }
   }
   backend "azurerm" {
@@ -39,15 +43,15 @@ variable "storageAccounts" {
       type                 = string
       tier                 = string
       redundancy           = string
+      enableHttpsOnly      = bool
       enableBlobNfsV3      = bool
       enableLargeFileShare = bool
-      enableSecureTransfer = bool
+      enableSampleDataLoad = bool
       privateEndpointTypes = list(string)
       blobContainers = list(object(
         {
-          name       = string
-          accessType = string
-          localPaths = list(string)
+          name        = string
+          sampleFiles = list(string)
         }
       ))
       fileShares = list(object(
@@ -233,7 +237,8 @@ data "azurerm_subnet" "storage_secondary" {
 }
 
 data "azurerm_subnet" "storage_netapp" {
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.netApp].name
+  count                = var.netAppAccount.name != "" ? 1 : 0
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.netAppFiles].name
   resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage.name
 }
@@ -250,7 +255,7 @@ locals {
       for privateEndpointType in storageAccount.privateEndpointTypes : {
         name = "privatelink.${privateEndpointType}.core.windows.net"
       }
-    ] if storageAccount.name != ""
+    ]
   ]))
   privateEndpoints = flatten([
     for storageAccount in var.storageAccounts : [
@@ -260,16 +265,15 @@ locals {
         storageAccountName  = storageAccount.name
         storageAccountId    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${storageAccount.name}"
       }
-    ] if storageAccount.name != ""
+    ]
   ])
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
         name               = blobContainer.name
-        accessType         = blobContainer.accessType
         storageAccountName = storageAccount.name
       }
-    ] if storageAccount.name != ""
+    ] if storageAccount.enableSampleDataLoad
   ])
   blobRootFiles = flatten([
     for storageAccount in var.storageAccounts : [
@@ -280,12 +284,12 @@ locals {
           storageAccountName = storageAccount.name
         }
       ]
-    ] if storageAccount.name != ""
+    ] if storageAccount.enableSampleDataLoad
   ])
   blobDirectoryFiles = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : [
-        for localPath in blobContainer.localPaths : [
+        for localPath in blobContainer.sampleFiles : [
           for blob in fileset(blobContainer.name, "/${localPath}/**") : {
             name               = blob
             containerName      = blobContainer.name
@@ -293,7 +297,7 @@ locals {
           }
         ]
       ]
-    ] if storageAccount.name != ""
+    ] if storageAccount.enableSampleDataLoad
   ])
   fileShares = flatten([
     for storageAccount in var.storageAccounts : [
@@ -304,7 +308,7 @@ locals {
         accessProtocol     = fileShare.protocol
         storageAccountName = storageAccount.name
       }
-    ] if storageAccount.name != ""
+    ] if storageAccount.enableSampleDataLoad
   ])
   netAppVolumes = flatten([
     for capacityPool in var.netAppAccount.capacityPools : [
@@ -400,7 +404,7 @@ resource "azurerm_resource_group" "storage" {
 
 resource "azurerm_storage_account" "storage" {
   for_each = {
-    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.name != ""
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.storage.name
@@ -408,20 +412,22 @@ resource "azurerm_storage_account" "storage" {
   account_kind                    = each.value.type
   account_tier                    = each.value.tier
   account_replication_type        = each.value.redundancy
+  enable_https_traffic_only       = each.value.enableHttpsOnly
   is_hns_enabled                  = each.value.enableBlobNfsV3
   nfsv3_enabled                   = each.value.enableBlobNfsV3
   large_file_share_enabled        = each.value.enableLargeFileShare ? true : null
-  enable_https_traffic_only       = each.value.enableSecureTransfer
+  public_network_access_enabled   = length(local.serviceEndpointSubnets) > 0
   allow_nested_items_to_be_public = false
+  default_to_oauth_authentication = true
   network_rules {
     default_action = "Deny"
     virtual_network_subnet_ids = [
       for serviceEndpointSubnet in local.serviceEndpointSubnets :
         "${data.azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${serviceEndpointSubnet.virtualNetworkName}/subnets/${serviceEndpointSubnet.name}"
     ]
-    ip_rules = [
+    ip_rules = each.value.enableSampleDataLoad ? [
       jsondecode(data.http.current_host.response_body).ip
-    ]
+    ] : []
   }
 }
 
@@ -474,15 +480,24 @@ resource "azurerm_private_endpoint" "storage" {
   ]
 }
 
+resource "time_sleep" "storage_data" {
+  for_each = {
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableSampleDataLoad
+  }
+  create_duration = "30s"
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
+}
+
 resource "azurerm_storage_container" "containers" {
   for_each = {
     for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer
   }
-  name                  = each.value.name
-  container_access_type = each.value.accessType
-  storage_account_name  = each.value.storageAccountName
+  name                 = each.value.name
+  storage_account_name = each.value.storageAccountName
   depends_on = [
-    azurerm_storage_account.storage
+    time_sleep.storage_data
   ]
 }
 
@@ -510,7 +525,7 @@ resource "azurerm_storage_share" "shares" {
   enabled_protocol     = each.value.accessProtocol
   quota                = each.value.size
   depends_on = [
-    azurerm_storage_account.storage
+    time_sleep.storage_data
   ]
 }
 
@@ -518,17 +533,17 @@ resource "azurerm_storage_share" "shares" {
 # NetApp Files (https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
 #######################################################################################################
 
-resource "azurerm_resource_group" "netapp" {
+resource "azurerm_resource_group" "netapp_files" {
   count    = var.netAppAccount.name != "" ? 1 : 0
-  name     = "${var.resourceGroupName}.NetApp"
+  name     = "${var.resourceGroupName}.NetAppFiles"
   location = data.azurerm_virtual_network.storage.location
 }
 
 resource "azurerm_netapp_account" "storage" {
   count               = var.netAppAccount.name != "" ? 1 : 0
   name                = var.netAppAccount.name
-  resource_group_name = azurerm_resource_group.netapp[0].name
-  location            = azurerm_resource_group.netapp[0].location
+  resource_group_name = azurerm_resource_group.netapp_files[0].name
+  location            = azurerm_resource_group.netapp_files[0].location
 }
 
 resource "azurerm_netapp_pool" "storage" {
@@ -536,8 +551,8 @@ resource "azurerm_netapp_pool" "storage" {
     for capacityPool in var.netAppAccount.capacityPools : capacityPool.name => capacityPool if var.netAppAccount.name != ""
   }
   name                = each.value.name
-  resource_group_name = azurerm_resource_group.netapp[0].name
-  location            = azurerm_resource_group.netapp[0].location
+  resource_group_name = azurerm_resource_group.netapp_files[0].name
+  location            = azurerm_resource_group.netapp_files[0].location
   size_in_tb          = each.value.sizeTiB
   service_level       = each.value.serviceLevel
   account_name        = var.netAppAccount.name
@@ -551,15 +566,15 @@ resource "azurerm_netapp_volume" "storage" {
     for volume in local.netAppVolumes : "${volume.capacityPoolName}.${volume.name}" => volume
   }
   name                = each.value.name
-  resource_group_name = azurerm_resource_group.netapp[0].name
-  location            = azurerm_resource_group.netapp[0].location
+  resource_group_name = azurerm_resource_group.netapp_files[0].name
+  location            = azurerm_resource_group.netapp_files[0].location
   storage_quota_in_gb = each.value.sizeGiB
   service_level       = each.value.serviceLevel
   volume_path         = each.value.mountPath
   protocols           = each.value.protocols
   pool_name           = each.value.capacityPoolName
   account_name        = var.netAppAccount.name
-  subnet_id           = data.azurerm_subnet.storage_netapp.id
+  subnet_id           = data.azurerm_subnet.storage_netapp[0].id
   dynamic export_policy_rule {
     for_each = each.value.exportPolicies
     content {
@@ -923,8 +938,8 @@ output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
-output "resourceGroupNameNetApp" {
-  value = var.netAppAccount.name == "" ? "" : azurerm_resource_group.netapp[0].name
+output "resourceGroupNameNetAppFiles" {
+  value = var.netAppAccount.name == "" ? "" : azurerm_resource_group.netapp_files[0].name
 }
 
 output "resourceGroupNameHammerspace" {

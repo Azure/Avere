@@ -33,7 +33,7 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMountsStorage = [
-          "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+          "azrender1.privatelink.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
         ]
         fileSystemMountsStorageCache = [
           # "cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
@@ -96,7 +96,7 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMountsStorage = [
-          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:"
+          "mount -o anon nolock \\\\azrender1.privatelink.blob.core.windows.net\\azrender1\\show W:"
         ]
         fileSystemMountsStorageCache = [
           # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\show R:"
@@ -130,6 +130,26 @@ virtualMachineScaleSets = [
       timeoutDelay = "PT5M"
     }
     enableAcceleratedNetworking = true
+  }
+]
+
+################################################################################
+# Kubernetes Clusters (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
+################################################################################
+
+kubernetesClusters = [
+  {
+    name = ""
+  }
+]
+
+###################################################################################
+# Kubernetes Fleets (https://learn.microsoft.com/azure/kubernetes-fleet/overview) #
+###################################################################################
+
+kubernetesFleets = [
+  {
+    name = ""
   }
 ]
 

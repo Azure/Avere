@@ -26,7 +26,7 @@ virtualMachines = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMountsStorage = [
-          "azrender1.blob.core.windows.net:/azrender1/show /mnt/show nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+          "azrender1.privatelink.blob.core.windows.net:/azrender1/show /mnt/show nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
         ]
         fileSystemMountsStorageCache = [
         ]
@@ -64,7 +64,7 @@ virtualMachines = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMountsStorage = [
-          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:"
+          "mount -o anon nolock \\\\azrender1.privatelink.blob.core.windows.net\\azrender1\\show W:"
         ]
         fileSystemMountsStorageCache = [
         ]

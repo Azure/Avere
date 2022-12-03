@@ -6,33 +6,26 @@ resourceGroupName = "ArtistAnywhere.Storage"
 
 storageAccounts = [
   {
-    name                 = "azrender1" # Name must be globally unique (lowercase alphanumeric)
-    type                 = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
-    tier                 = "Standard"  # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
-    redundancy           = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
-    enableBlobNfsV3      = true        # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = false       # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    enableSecureTransfer = true        # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    privateEndpointTypes = [           # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
-      "blob",
-      "file"
+    name                 = "azrender1"        # Name must be globally unique (lowercase alphanumeric)
+    type                 = "BlockBlobStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
+    tier                 = "Premium"          # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
+    redundancy           = "LRS"              # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+    enableHttpsOnly      = true               # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    enableBlobNfsV3      = true               # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    enableSampleDataLoad = false
+    privateEndpointTypes = [                  # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
+      "blob"
     ]
-    blobContainers = [                 # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    blobContainers = [                        # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
-        name       = "show"
-        accessType = "private"
-        localPaths = [
+        name = "show"
+        sampleFiles = [
           "blender"
         ]
       }
     ]
-    fileShares = [                     # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
-      {
-        name     = "show"
-        tier     = "TransactionOptimized"
-        sizeGiB  = 5120
-        protocol = "SMB"
-      }
+    fileShares = [                            # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
     ]
   },
   {
@@ -40,9 +33,10 @@ storageAccounts = [
     type                 = "FileStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
     tier                 = "Premium"     # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
     redundancy           = "LRS"         # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+    enableHttpsOnly      = true          # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
     enableBlobNfsV3      = false         # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = true          # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    enableSecureTransfer = false         # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    enableSampleDataLoad = false
     privateEndpointTypes = [             # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
       "file"
     ]

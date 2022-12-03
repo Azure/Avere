@@ -6,20 +6,20 @@ resourceGroupName = "ArtistAnywhere.Network"
 
 computeNetwork = {
   name               = "Compute"
-  regionName         = "WestUS2"
+  regionName         = "" # Optional region override
   addressSpace       = ["10.1.0.0/16"]
   dnsServerAddresses = []
   subnets = [
     {
       name              = "Farm"
       addressSpace      = ["10.1.0.0/17"]
-      serviceEndpoints  = ["Microsoft.Storage"],
+      serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
     },
     {
       name              = "Workstation"
       addressSpace      = ["10.1.128.0/18"]
-      serviceEndpoints  = ["Microsoft.Storage"],
+      serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
     },
     {
@@ -30,13 +30,13 @@ computeNetwork = {
     },
     {
       name              = "GatewaySubnet"
-      addressSpace      = ["10.1.254.0/24"]
+      addressSpace      = ["10.1.255.0/26"]
       serviceEndpoints  = []
       serviceDelegation = ""
     },
     {
       name              = "AzureBastionSubnet"
-      addressSpace      = ["10.1.255.0/24"]
+      addressSpace      = ["10.1.255.64/26"]
       serviceEndpoints  = []
       serviceDelegation = ""
     }
@@ -50,7 +50,7 @@ computeNetwork = {
 
 storageNetwork = {
   name               = "Storage" # Set name to "" to skip storage network deployment
-  regionName         = "WestUS2"
+  regionName         = ""        # Optional region override
   addressSpace       = ["10.0.0.0/16"]
   dnsServerAddresses = []
   subnets = [
@@ -65,27 +65,19 @@ storageNetwork = {
       addressSpace      = ["10.0.1.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
-    },
-    {
-      name              = "NetApp"
-      addressSpace      = ["10.0.2.0/24"]
-      serviceEndpoints  = []
-      serviceDelegation = "Microsoft.Netapp/volumes"
+    # },
+    # {
+    #   name              = "NetAppFiles"
+    #   addressSpace      = ["10.0.2.0/24"]
+    #   serviceEndpoints  = []
+    #   serviceDelegation = "Microsoft.Netapp/volumes"
     }
   ]
   subnetIndex = { # Make sure each index is in sync with corresponding subnet
-    primary   = 0
-    secondary = 1
-    netApp    = 2
+    primary     = 0
+    secondary   = 1
+    netAppFiles = 2
   }
-}
-
-################################################################################################################
-# Network Security Groups (https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview) #
-################################################################################################################
-
-networkSecurityGroup = {
-  denyOutInternet = false
 }
 
 ################################################################################################################
@@ -95,8 +87,15 @@ networkSecurityGroup = {
 networkPeering = {
   enable                      = true
   allowRemoteNetworkAccess    = true
-  allowRemoteForwardedTraffic = false
-  allowNetworkGatewayTransit  = false
+  allowRemoteForwardedTraffic = true
+}
+
+##########################################################################################################################
+# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
+##########################################################################################################################
+
+natGateway = {
+  enable = false
 }
 
 ############################################################################
@@ -131,10 +130,6 @@ networkGateway = {
   type = ""
   //type = "Vpn"          # https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
   //type = "ExpressRoute" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
-  address = {
-    type             = "Standard"
-    allocationMethod = "Static"
-  }
 }
 
 ###############################################################################################################

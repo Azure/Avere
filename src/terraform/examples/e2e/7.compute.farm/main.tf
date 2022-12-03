@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.5"
+  required_version = ">= 1.3.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.33.0"
+      version = "~>3.34.0"
     }
   }
   backend "azurerm" {
@@ -109,6 +109,22 @@ variable "virtualMachineScaleSets" {
         }
       )
       enableAcceleratedNetworking = bool
+    }
+  ))
+}
+
+variable "kubernetesClusters" {
+  type = list(object(
+    {
+      name = string
+    }
+  ))
+}
+
+variable "kubernetesFleets" {
+  type = list(object(
+    {
+      name = string
     }
   ))
 }
@@ -403,6 +419,32 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       timeout = each.value.terminationNotification.timeoutDelay
     }
   }
+}
+
+################################################################################
+# Kubernetes Clusters (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
+################################################################################
+
+resource "azurerm_kubernetes_cluster" "farm" {
+  for_each = {
+    for kubernetesCluster in var.kubernetesClusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.farm.name
+  location            = azurerm_resource_group.farm.location
+}
+
+###################################################################################
+# Kubernetes Fleets (https://learn.microsoft.com/azure/kubernetes-fleet/overview) #
+###################################################################################
+
+resource "azurerm_kubernetes_fleet_manager" "farm" {
+  for_each = {
+    for kubernetesFleet in var.kubernetesFleets : kubernetesFleet.name => kubernetesFleet if kubernetesFleet.name != ""
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.farm.name
+  location            = azurerm_resource_group.farm.location
 }
 
 output "resourceGroupName" {

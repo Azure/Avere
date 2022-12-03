@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.5"
+  required_version = ">= 1.3.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.33.0"
+      version = "~>3.34.0"
     }
   }
   backend "azurerm" {
@@ -70,19 +70,11 @@ variable "storageNetwork" {
       ))
       subnetIndex = object(
         {
-          primary   = number
-          secondary = number
-          netApp    = number
+          primary     = number
+          secondary   = number
+          netAppFiles = number
         }
       )
-    }
-  )
-}
-
-variable "networkSecurityGroup" {
-  type = object(
-    {
-      denyOutInternet = bool
     }
   )
 }
@@ -93,7 +85,14 @@ variable "networkPeering" {
       enable                      = bool
       allowRemoteNetworkAccess    = bool
       allowRemoteForwardedTraffic = bool
-      allowNetworkGatewayTransit  = bool
+    }
+  )
+}
+
+variable "natGateway" {
+  type = object(
+    {
+      enable = bool
     }
   )
 }
@@ -125,13 +124,7 @@ variable "bastion" {
 variable "networkGateway" {
   type = object(
     {
-      type    = string
-      address = object(
-        {
-          type             = string
-          allocationMethod = string
-        }
-      )
+      type = string
     }
   )
 }
@@ -199,7 +192,23 @@ data "azurerm_key_vault_secret" "gateway_connection" {
 }
 
 locals {
-  virtualNetworks        = distinct(var.storageNetwork.name == "" ? [var.computeNetwork, var.computeNetwork] : [var.computeNetwork, var.storageNetwork])
+  computeNetwork = var.computeNetwork.regionName == "" ? merge(var.computeNetwork,
+    { regionName = module.global.regionName }
+  ) : var.computeNetwork
+  storageNetwork = var.storageNetwork.regionName == "" ? merge(var.storageNetwork,
+    { regionName = module.global.regionName }
+  ) : var.storageNetwork
+  computeNetworkSubnets = [
+    for virtualNetworkSubnet in local.computeNetwork.subnets : merge(virtualNetworkSubnet,
+      { virtualNetworkName = local.computeNetwork.name }
+    ) if virtualNetworkSubnet.name != "GatewaySubnet"
+  ]
+  storageNetworkSubnets = [
+    for virtualNetworkSubnet in local.storageNetwork.subnets : merge(virtualNetworkSubnet,
+      { virtualNetworkName = local.storageNetwork.name }
+    ) if virtualNetworkSubnet.name != "GatewaySubnet"
+  ]
+  virtualNetworks = distinct(local.storageNetwork.name == "" ? [local.computeNetwork, local.computeNetwork] : [local.computeNetwork, local.storageNetwork])
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for virtualNetworkSubnet in virtualNetwork.subnets : merge(virtualNetworkSubnet,
@@ -219,7 +228,7 @@ locals {
 
 resource "azurerm_resource_group" "network" {
   name     = var.resourceGroupName
-  location = var.computeNetwork.regionName
+  location = local.computeNetwork.regionName
 }
 
 #################################################################################################
@@ -270,17 +279,6 @@ resource "azurerm_network_security_group" "network" {
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
   security_rule {
-    name                       = "AllowInSSH[RDP]"
-    priority                   = 3000
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_address_prefix      = "GatewayManager"
-    source_port_range          = "*"
-    destination_address_prefix = "*"
-    destination_port_ranges    = ["22","3389"]
-  }
-  security_rule {
     name                       = "AllowOutARM"
     priority                   = 3000
     direction                  = "Outbound"
@@ -291,19 +289,27 @@ resource "azurerm_network_security_group" "network" {
     destination_address_prefix = "AzureResourceManager"
     destination_port_range     = "*"
   }
-  dynamic security_rule {
-    for_each = var.networkSecurityGroup.denyOutInternet ? [1] : []
-    content {
-      name                       = "DenyOutInternet"
-      priority                   = 3100
-      direction                  = "Outbound"
-      access                     = "Deny"
-      protocol                   = "*"
-      source_address_prefix      = "*"
-      source_port_range          = "*"
-      destination_address_prefix = "Internet"
-      destination_port_range     = "*"
-    }
+  security_rule {
+    name                       = "AllowOutStorage"
+    priority                   = 3100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_address_prefix      = "*"
+    source_port_range          = "*"
+    destination_address_prefix = "Storage"
+    destination_port_range     = "*"
+  }
+  security_rule {
+    name                       = "DenyOutInternet"
+    priority                   = 4000
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_address_prefix      = "*"
+    source_port_range          = "*"
+    destination_address_prefix = "Internet"
+    destination_port_range     = "*"
   }
   dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []
@@ -387,7 +393,7 @@ resource "azurerm_virtual_network_peering" "network_peering_up" {
   remote_virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.virtualNetworks[count.index + 1].name}"
   allow_virtual_network_access = var.networkPeering.allowRemoteNetworkAccess
   allow_forwarded_traffic      = var.networkPeering.allowRemoteForwardedTraffic
-  allow_gateway_transit        = var.networkPeering.allowNetworkGatewayTransit && contains(local.virtualGatewayNetworkNames, local.virtualNetworks[count.index].name)
+  allow_gateway_transit        = contains(local.virtualGatewayNetworkNames, local.virtualNetworks[count.index].name)
   depends_on = [
     azurerm_subnet_network_security_group_association.network
   ]
@@ -401,10 +407,76 @@ resource "azurerm_virtual_network_peering" "network_peering_down" {
   remote_virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.virtualNetworks[count.index].name}"
   allow_virtual_network_access = var.networkPeering.allowRemoteNetworkAccess
   allow_forwarded_traffic      = var.networkPeering.allowRemoteForwardedTraffic
-  allow_gateway_transit        = var.networkPeering.allowNetworkGatewayTransit && contains(local.virtualGatewayNetworkNames, local.virtualNetworks[count.index + 1].name)
+  allow_gateway_transit        = contains(local.virtualGatewayNetworkNames, local.virtualNetworks[count.index + 1].name)
   depends_on = [
     azurerm_subnet_network_security_group_association.network
   ]
+}
+
+##########################################################################################################################
+# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
+##########################################################################################################################
+
+resource "azurerm_public_ip" "nat_gateway_address_compute" {
+  count               = var.natGateway.enable ? 1 : 0
+  name                = azurerm_nat_gateway.compute[0].name
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+}
+
+resource "azurerm_public_ip" "nat_gateway_address_storage" {
+  count               = var.natGateway.enable ? 1 : 0
+  name                = azurerm_nat_gateway.storage[0].name
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+}
+
+resource "azurerm_nat_gateway" "compute" {
+  count               = var.natGateway.enable ? 1 : 0
+  name                = "${local.computeNetwork.name}.NAT"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku_name            = "Standard"
+}
+
+resource "azurerm_nat_gateway" "storage" {
+  count               = var.natGateway.enable ? 1 : 0
+  name                = "${local.storageNetwork.name}.NAT"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku_name            = "Standard"
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "compute" {
+  count                = var.natGateway.enable ? 1 : 0
+  nat_gateway_id       = azurerm_nat_gateway.compute[0].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_address_compute[0].id
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "storage" {
+  count                = var.natGateway.enable ? 1 : 0
+  nat_gateway_id       = azurerm_nat_gateway.storage[0].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_address_storage[0].id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "compute" {
+  for_each = {
+    for virtualNetworkSubnet in local.computeNetworkSubnets : virtualNetworkSubnet.name => virtualNetworkSubnet if var.natGateway.enable
+  }
+  nat_gateway_id = azurerm_nat_gateway.compute[0].id
+  subnet_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+}
+
+resource "azurerm_subnet_nat_gateway_association" "storage" {
+  for_each = {
+    for virtualNetworkSubnet in local.storageNetworkSubnets : virtualNetworkSubnet.name => virtualNetworkSubnet if var.natGateway.enable
+  }
+  nat_gateway_id = azurerm_nat_gateway.storage[0].id
+  subnet_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
 }
 
 ############################################################################
@@ -441,7 +513,7 @@ resource "azurerm_network_security_group" "bastion" {
   location            = azurerm_resource_group.network.location
   security_rule {
     name                       = "AllowInHTTPS"
-    priority                   = 3000
+    priority                   = 2000
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -452,7 +524,7 @@ resource "azurerm_network_security_group" "bastion" {
   }
   security_rule {
     name                       = "AllowInGatewayManager"
-    priority                   = 3100
+    priority                   = 2100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -463,7 +535,7 @@ resource "azurerm_network_security_group" "bastion" {
   }
   security_rule {
     name                       = "AllowInBastion"
-    priority                   = 3200
+    priority                   = 2200
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -474,7 +546,7 @@ resource "azurerm_network_security_group" "bastion" {
   }
   security_rule {
     name                       = "AllowInLoadBalancer"
-    priority                   = 3300
+    priority                   = 2300
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -485,7 +557,7 @@ resource "azurerm_network_security_group" "bastion" {
   }
   security_rule {
     name                       = "AllowOutSSH[RDP]"
-    priority                   = 3000
+    priority                   = 2000
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -496,7 +568,7 @@ resource "azurerm_network_security_group" "bastion" {
   }
   security_rule {
     name                       = "AllowOutAzureCloud"
-    priority                   = 3100
+    priority                   = 2100
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -507,7 +579,7 @@ resource "azurerm_network_security_group" "bastion" {
   }
   security_rule {
     name                       = "AllowOutBastion"
-    priority                   = 3200
+    priority                   = 2200
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -518,7 +590,7 @@ resource "azurerm_network_security_group" "bastion" {
   }
   security_rule {
     name                       = "AllowOutBastionSession"
-    priority                   = 3300
+    priority                   = 2300
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -531,7 +603,7 @@ resource "azurerm_network_security_group" "bastion" {
 
 resource "azurerm_subnet_network_security_group_association" "bastion" {
   count                     = var.bastion.enable ? 1 : 0
-  subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.computeNetwork.name}/subnets/AzureBastionSubnet"
+  subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}/subnets/AzureBastionSubnet"
   network_security_group_id = azurerm_network_security_group.bastion[0].id
   depends_on = [
     azurerm_subnet.network
@@ -543,8 +615,8 @@ resource "azurerm_public_ip" "bastion_address" {
   name                = "Bastion"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
-  sku                 = var.networkGateway.address.type
-  allocation_method   = var.networkGateway.address.allocationMethod
+  sku                 = "Standard"
+  allocation_method   = "Static"
   depends_on = [
     azurerm_subnet_network_security_group_association.bastion
   ]
@@ -565,45 +637,49 @@ resource "azurerm_bastion_host" "compute" {
   ip_configuration {
     name                 = "ipConfig"
     public_ip_address_id = azurerm_public_ip.bastion_address[0].id
-    subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.computeNetwork.name}/subnets/AzureBastionSubnet"
+    subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}/subnets/AzureBastionSubnet"
   }
+  depends_on = [
+    azurerm_subnet_nat_gateway_association.compute,
+    azurerm_nat_gateway_public_ip_association.compute
+  ]
 }
 
 #######################################
 # Virtual Network Gateway (Public IP) #
 #######################################
 
-resource "azurerm_public_ip" "gateway_address1" {
+resource "azurerm_public_ip" "vnet_gateway_address1" {
   for_each = {
     for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.name => virtualNetwork if var.networkGateway.type != ""
   }
   name                = local.virtualGatewayActiveActive ? "${each.value.name}1" : "${each.value.name}"
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
-  sku                 = var.networkGateway.address.type
-  allocation_method   = var.networkGateway.address.allocationMethod
+  sku                 = "Standard"
+  allocation_method   = "Static"
 }
 
-resource "azurerm_public_ip" "gateway_address2" {
+resource "azurerm_public_ip" "vnet_gateway_address2" {
   for_each = {
     for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.name => virtualNetwork if local.virtualGatewayActiveActive
   }
   name                = "${each.value.name}2"
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
-  sku                 = var.networkGateway.address.type
-  allocation_method   = var.networkGateway.address.allocationMethod
+  sku                 = "Standard"
+  allocation_method   = "Static"
 }
 
-resource "azurerm_public_ip" "gateway_address3" {
+resource "azurerm_public_ip" "vnet_gateway_address3" {
   for_each = {
     for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.name => virtualNetwork if local.virtualGatewayActiveActive && length(var.vpnGateway.pointToSiteClient.addressSpace) > 0
   }
   name                = "${each.value.name}3"
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
-  sku                 = var.networkGateway.address.type
-  allocation_method   = var.networkGateway.address.allocationMethod
+  sku                 = "Standard"
+  allocation_method   = "Static"
 }
 
 #################################
@@ -656,9 +732,9 @@ resource "azurerm_virtual_network_gateway" "vpn" {
   }
   depends_on = [
     azurerm_subnet_network_security_group_association.network,
-    azurerm_public_ip.gateway_address1,
-    azurerm_public_ip.gateway_address2,
-    azurerm_public_ip.gateway_address3
+    azurerm_public_ip.vnet_gateway_address1,
+    azurerm_public_ip.vnet_gateway_address2,
+    azurerm_public_ip.vnet_gateway_address3
   ]
 }
 
@@ -696,9 +772,9 @@ resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_down" {
 
 resource "azurerm_local_network_gateway" "vpn" {
   count               = var.networkGateway.type == "Vpn" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
-  name                = var.computeNetwork.name
+  name                = local.computeNetwork.name
   resource_group_name = azurerm_resource_group.network.name
-  location            = var.computeNetwork.regionName
+  location            = local.computeNetwork.regionName
   gateway_fqdn        = var.vpnGatewayLocal.address == "" ? var.vpnGatewayLocal.fqdn : null
   gateway_address     = var.vpnGatewayLocal.fqdn == "" ? var.vpnGatewayLocal.address : null
   address_space       = var.vpnGatewayLocal.addressSpace
@@ -714,9 +790,9 @@ resource "azurerm_local_network_gateway" "vpn" {
 
 resource "azurerm_virtual_network_gateway_connection" "site_to_site" {
   count                      = var.networkGateway.type == "Vpn" && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "") ? 1 : 0
-  name                       = var.computeNetwork.name
+  name                       = local.computeNetwork.name
   resource_group_name        = azurerm_resource_group.network.name
-  location                   = var.computeNetwork.regionName
+  location                   = local.computeNetwork.regionName
   type                       = "IPsec"
   virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[count.index].id
   local_network_gateway_id   = azurerm_local_network_gateway.vpn[count.index].id
@@ -730,27 +806,27 @@ resource "azurerm_virtual_network_gateway_connection" "site_to_site" {
 
 resource "azurerm_virtual_network_gateway" "express_route" {
   count               = var.networkGateway.type == "ExpressRoute" ? 1 : 0
-  name                = var.computeNetwork.name
+  name                = local.computeNetwork.name
   resource_group_name = azurerm_resource_group.network.name
-  location            = var.computeNetwork.regionName
+  location            = local.computeNetwork.regionName
   type                = var.networkGateway.type
   sku                 = var.expressRouteGateway.sku
   ip_configuration {
     name                 = "ipConfig"
-    public_ip_address_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/publicIPAddresses/${var.computeNetwork.name}"
-    subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${var.computeNetwork.name}/subnets/GatewaySubnet"
+    public_ip_address_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/publicIPAddresses/${local.computeNetwork.name}"
+    subnet_id            = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}/subnets/GatewaySubnet"
   }
   depends_on = [
     azurerm_subnet_network_security_group_association.network,
-    azurerm_public_ip.gateway_address1
+    azurerm_public_ip.vnet_gateway_address1
   ]
 }
 
 resource "azurerm_virtual_network_gateway_connection" "express_route" {
   count                        = var.networkGateway.type == "ExpressRoute" && var.expressRouteGateway.connection.circuitId != "" ? 1 : 0
-  name                         = var.computeNetwork.name
+  name                         = local.computeNetwork.name
   resource_group_name          = azurerm_resource_group.network.name
-  location                     = var.computeNetwork.regionName
+  location                     = local.computeNetwork.regionName
   type                         = "ExpressRoute"
   virtual_network_gateway_id   = azurerm_virtual_network_gateway.express_route[count.index].id
   express_route_circuit_id     = var.expressRouteGateway.connection.circuitId
@@ -763,11 +839,11 @@ output "resourceGroupName" {
 }
 
 output "computeNetwork" {
-  value = var.computeNetwork
+  value = local.computeNetwork
 }
 
 output "storageNetwork" {
-  value = var.storageNetwork
+  value = local.storageNetwork
 }
 
 output "storageEndpointSubnets" {
