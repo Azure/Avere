@@ -86,12 +86,12 @@ variable "computeNetwork" {
 
 data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
@@ -107,9 +107,9 @@ data "azurerm_key_vault_secret" "admin_password" {
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
-    resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.securityStorageAccountName
-    container_name       = module.global.terraformStorageContainerName
+    resource_group_name  = module.global.resourceGroupName
+    storage_account_name = module.global.storageAccountName
+    container_name       = module.global.storageContainerName
     key                  = "1.network"
   }
 }
@@ -124,8 +124,8 @@ data "azurerm_virtual_network" "compute" {
 }
 
 data "azurerm_storage_account" "storage" {
-  name                = module.global.securityStorageAccountName
-  resource_group_name = module.global.securityResourceGroupName
+  name                = module.global.storageAccountName
+  resource_group_name = module.global.resourceGroupName
 }
 
 locals {
@@ -229,7 +229,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       value = module.global.managedIdentityName
     }
     "managedIdentityResourceGroupName" = {
-      value = module.global.securityResourceGroupName
+      value = module.global.resourceGroupName
     }
     "imageGalleryName" = {
       value = var.imageGallery.name

@@ -14,9 +14,6 @@ storageAccounts = [
     enableBlobNfsV3      = true               # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
     enableSampleDataLoad = false
-    privateEndpointTypes = [                  # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
-      "blob"
-    ]
     blobContainers = [                        # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
         name = "show"
@@ -37,9 +34,6 @@ storageAccounts = [
     enableBlobNfsV3      = false         # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = true          # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
     enableSampleDataLoad = false
-    privateEndpointTypes = [             # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
-      "file"
-    ]
     blobContainers = [                   # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
     ]
     fileShares = [                       # https://learn.microsoft.com/azure/storage/files/storage-files-introduction

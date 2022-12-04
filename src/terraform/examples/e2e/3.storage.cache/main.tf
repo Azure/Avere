@@ -156,12 +156,12 @@ data "azurerm_client_config" "current" {}
 
 data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_key" "cache_encryption" {
@@ -172,15 +172,15 @@ data "azurerm_key_vault_key" "cache_encryption" {
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
-    resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.securityStorageAccountName
-    container_name       = module.global.terraformStorageContainerName
+    resource_group_name  = module.global.resourceGroupName
+    storage_account_name = module.global.storageAccountName
+    container_name       = module.global.storageContainerName
     key                  = "1.network"
   }
 }
 
-data "azurerm_resource_group" "identity" {
-  name = module.global.securityResourceGroupName
+data "azurerm_resource_group" "render" {
+  name = module.global.resourceGroupName
 }
 
 data "azurerm_resource_group" "network" {
@@ -309,7 +309,7 @@ data "azurerm_key_vault_secret" "admin_password" {
 resource "azurerm_role_assignment" "identity" {
   role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = data.azurerm_resource_group.identity.id
+  scope                = data.azurerm_resource_group.render.id
 }
 
 resource "azurerm_role_assignment" "network" {

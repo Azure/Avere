@@ -10,13 +10,13 @@ variable "renderManager" {
   default = "Deadline" # RoyalRender (https://royalrender.de/) or Deadline
 }
 
-variable "securityResourceGroupName" {
+variable "resourceGroupName" {
   default = "ArtistAnywhere" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 }
-variable "securityStorageAccountName" {
+variable "storageAccountName" {
   default = "azrender0" # Set to a globally unique name (lowercase alphanumeric)
 }
-variable "terraformStorageContainerName" {
+variable "storageContainerName" {
   default = "terraform"
 }
 
@@ -61,14 +61,14 @@ output "renderManager" {
   value = var.renderManager
 }
 
-output "securityResourceGroupName" {
-  value = var.securityResourceGroupName
+output "resourceGroupName" {
+  value = var.resourceGroupName
 }
-output "securityStorageAccountName" {
-  value = var.securityStorageAccountName
+output "storageAccountName" {
+  value = var.storageAccountName
 }
-output "terraformStorageContainerName" {
-  value = var.terraformStorageContainerName
+output "storageContainerName" {
+  value = var.storageContainerName
 }
 
 output "managedIdentityName" {

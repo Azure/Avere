@@ -46,6 +46,7 @@ variable "computeNetwork" {
         {
           farm        = number
           workstation = number
+          storage     = number
           cache       = number
         }
       )
@@ -89,14 +90,6 @@ variable "networkPeering" {
   )
 }
 
-variable "natGateway" {
-  type = object(
-    {
-      enable = bool
-    }
-  )
-}
-
 variable "privateDns" {
   type = object(
     {
@@ -117,6 +110,14 @@ variable "bastion" {
       enableIpConnect     = bool
       enableTunneling     = bool
       enableShareableLink = bool
+    }
+  )
+}
+
+variable "natGateway" {
+  type = object(
+    {
+      enable = bool
     }
   )
 }
@@ -183,12 +184,17 @@ variable "expressRouteGateway" {
 
 data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "gateway_connection" {
   name         = module.global.keyVaultSecretNameGatewayConnection
   key_vault_id = data.azurerm_key_vault.render.id
+}
+
+data "azurerm_storage_account" "render" {
+  name                = module.global.storageAccountName
+  resource_group_name = module.global.resourceGroupName
 }
 
 locals {
@@ -206,8 +212,12 @@ locals {
   storageNetworkSubnets = [
     for virtualNetworkSubnet in local.storageNetwork.subnets : merge(virtualNetworkSubnet,
       { virtualNetworkName = local.storageNetwork.name }
-    ) if virtualNetworkSubnet.name != "GatewaySubnet"
+    ) if virtualNetworkSubnet.name != "GatewaySubnet" && local.storageNetwork.name != ""
   ]
+  computeStorageSubnet = merge(local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage],
+    { virtualNetworkName = local.computeNetwork.name }
+  )
+  storageSubnets  = setunion(local.storageNetworkSubnets, [local.computeStorageSubnet])
   virtualNetworks = distinct(local.storageNetwork.name == "" ? [local.computeNetwork, local.computeNetwork] : [local.computeNetwork, local.storageNetwork])
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
@@ -413,72 +423,6 @@ resource "azurerm_virtual_network_peering" "network_peering_down" {
   ]
 }
 
-##########################################################################################################################
-# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
-##########################################################################################################################
-
-resource "azurerm_public_ip" "nat_gateway_address_compute" {
-  count               = var.natGateway.enable ? 1 : 0
-  name                = azurerm_nat_gateway.compute[0].name
-  resource_group_name = azurerm_resource_group.network.name
-  location            = azurerm_resource_group.network.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
-}
-
-resource "azurerm_public_ip" "nat_gateway_address_storage" {
-  count               = var.natGateway.enable ? 1 : 0
-  name                = azurerm_nat_gateway.storage[0].name
-  resource_group_name = azurerm_resource_group.network.name
-  location            = azurerm_resource_group.network.location
-  sku                 = "Standard"
-  allocation_method   = "Static"
-}
-
-resource "azurerm_nat_gateway" "compute" {
-  count               = var.natGateway.enable ? 1 : 0
-  name                = "${local.computeNetwork.name}.NAT"
-  resource_group_name = azurerm_resource_group.network.name
-  location            = azurerm_resource_group.network.location
-  sku_name            = "Standard"
-}
-
-resource "azurerm_nat_gateway" "storage" {
-  count               = var.natGateway.enable ? 1 : 0
-  name                = "${local.storageNetwork.name}.NAT"
-  resource_group_name = azurerm_resource_group.network.name
-  location            = azurerm_resource_group.network.location
-  sku_name            = "Standard"
-}
-
-resource "azurerm_nat_gateway_public_ip_association" "compute" {
-  count                = var.natGateway.enable ? 1 : 0
-  nat_gateway_id       = azurerm_nat_gateway.compute[0].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway_address_compute[0].id
-}
-
-resource "azurerm_nat_gateway_public_ip_association" "storage" {
-  count                = var.natGateway.enable ? 1 : 0
-  nat_gateway_id       = azurerm_nat_gateway.storage[0].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway_address_storage[0].id
-}
-
-resource "azurerm_subnet_nat_gateway_association" "compute" {
-  for_each = {
-    for virtualNetworkSubnet in local.computeNetworkSubnets : virtualNetworkSubnet.name => virtualNetworkSubnet if var.natGateway.enable
-  }
-  nat_gateway_id = azurerm_nat_gateway.compute[0].id
-  subnet_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
-}
-
-resource "azurerm_subnet_nat_gateway_association" "storage" {
-  for_each = {
-    for virtualNetworkSubnet in local.storageNetworkSubnets : virtualNetworkSubnet.name => virtualNetworkSubnet if var.natGateway.enable
-  }
-  nat_gateway_id = azurerm_nat_gateway.storage[0].id
-  subnet_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
-}
-
 ############################################################################
 # Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
 ############################################################################
@@ -499,6 +443,130 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   registration_enabled  = var.privateDns.enableAutoRegistration
   depends_on = [
     azurerm_virtual_network.network
+  ]
+}
+
+###############################################################################################
+# Private Endpoint (https://learn.microsoft.com/azure/private-link/private-endpoint-overview) #
+###############################################################################################
+
+resource "azurerm_private_dns_zone" "key_vault" {
+  name                = "privatelink.vaultcore.azure.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "storage_blob" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "storage_file" {
+  name                = "privatelink.file.core.windows.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "key_vault" {
+  name                  = "${local.computeNetwork.name}.vault"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.key_vault.name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}"
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "storage_blob" {
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork
+  }
+  name                  = "${each.value.name}.blob"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.storage_blob.name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}"
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "storage_file" {
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork
+  }
+  name                  = "${each.value.name}.file"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.storage_file.name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}"
+}
+
+resource "azurerm_private_endpoint" "key_vault" {
+  name                = "${data.azurerm_storage_account.render.name}.vault"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.key_vault.virtual_network_id}/subnets/${local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage].name}"
+  private_service_connection {
+    name                           = data.azurerm_key_vault.render.name
+    private_connection_resource_id = data.azurerm_key_vault.render.id
+    is_manual_connection           = false
+    subresource_names = [
+      "vault"
+    ]
+  }
+  private_dns_zone_group {
+    name = data.azurerm_key_vault.render.name
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.key_vault.id
+    ]
+  }
+  depends_on = [
+    azurerm_subnet.network
+  ]
+}
+
+resource "azurerm_private_endpoint" "storage_blob" {
+  for_each = {
+    for storageSubnet in local.storageSubnets : storageSubnet.name => storageSubnet
+  }
+  name                = "${data.azurerm_storage_account.render.name}.blob"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  subnet_id           = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+  private_service_connection {
+    name                           = data.azurerm_storage_account.render.name
+    private_connection_resource_id = data.azurerm_storage_account.render.id
+    is_manual_connection           = false
+    subresource_names = [
+      "blob"
+    ]
+  }
+  private_dns_zone_group {
+    name = data.azurerm_storage_account.render.name
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.storage_blob.id
+    ]
+  }
+  depends_on = [
+    azurerm_private_endpoint.key_vault
+  ]
+}
+
+resource "azurerm_private_endpoint" "storage_file" {
+  for_each = {
+    for storageSubnet in local.storageSubnets : storageSubnet.name => storageSubnet
+  }
+  name                = "${data.azurerm_storage_account.render.name}.file"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  subnet_id           = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+  private_service_connection {
+    name                           = data.azurerm_storage_account.render.name
+    private_connection_resource_id = data.azurerm_storage_account.render.id
+    is_manual_connection           = false
+    subresource_names = [
+      "file"
+    ]
+  }
+  private_dns_zone_group {
+    name = data.azurerm_storage_account.render.name
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.storage_file.id
+    ]
+  }
+  depends_on = [
+    azurerm_private_endpoint.storage_blob
   ]
 }
 
@@ -645,9 +713,75 @@ resource "azurerm_bastion_host" "compute" {
   ]
 }
 
-#######################################
-# Virtual Network Gateway (Public IP) #
-#######################################
+##########################################################################################################################
+# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
+##########################################################################################################################
+
+resource "azurerm_public_ip" "nat_gateway_address_compute" {
+  count               = var.natGateway.enable ? 1 : 0
+  name                = azurerm_nat_gateway.compute[0].name
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+}
+
+resource "azurerm_public_ip" "nat_gateway_address_storage" {
+  count               = local.storageNetwork.name != "" && var.natGateway.enable ? 1 : 0
+  name                = azurerm_nat_gateway.storage[0].name
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+}
+
+resource "azurerm_nat_gateway" "compute" {
+  count               = var.natGateway.enable ? 1 : 0
+  name                = "${local.computeNetwork.name}.Gateway"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku_name            = "Standard"
+}
+
+resource "azurerm_nat_gateway" "storage" {
+  count               = local.storageNetwork.name != "" && var.natGateway.enable ? 1 : 0
+  name                = "${local.storageNetwork.name}.Gateway"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  sku_name            = "Standard"
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "compute" {
+  count                = var.natGateway.enable ? 1 : 0
+  nat_gateway_id       = azurerm_nat_gateway.compute[0].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_address_compute[0].id
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "storage" {
+  count                = local.storageNetwork.name != "" && var.natGateway.enable ? 1 : 0
+  nat_gateway_id       = azurerm_nat_gateway.storage[0].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_address_storage[0].id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "compute" {
+  for_each = {
+    for virtualNetworkSubnet in local.computeNetworkSubnets : virtualNetworkSubnet.name => virtualNetworkSubnet if var.natGateway.enable
+  }
+  nat_gateway_id = azurerm_nat_gateway.compute[0].id
+  subnet_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+}
+
+resource "azurerm_subnet_nat_gateway_association" "storage" {
+  for_each = {
+    for virtualNetworkSubnet in local.storageNetworkSubnets : virtualNetworkSubnet.name => virtualNetworkSubnet if var.natGateway.enable
+  }
+  nat_gateway_id = azurerm_nat_gateway.storage[0].id
+  subnet_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+}
+
+#################################################
+# Virtual Network Gateway (Public IP Addresses) #
+#################################################
 
 resource "azurerm_public_ip" "vnet_gateway_address1" {
   for_each = {

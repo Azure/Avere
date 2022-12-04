@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "5.render.farm"
+    key = "6.render.farm"
   }
 }
 
@@ -143,12 +143,12 @@ variable "computeNetwork" {
 
 data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
@@ -158,15 +158,15 @@ data "azurerm_key_vault_secret" "admin_password" {
 
 data "azurerm_log_analytics_workspace" "monitor" {
   name                = module.global.monitorWorkspaceName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
-    resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.securityStorageAccountName
-    container_name       = module.global.terraformStorageContainerName
+    resource_group_name  = module.global.resourceGroupName
+    storage_account_name = module.global.storageAccountName
+    container_name       = module.global.storageContainerName
     key                  = "1.network"
   }
 }
@@ -174,9 +174,9 @@ data "terraform_remote_state" "network" {
 data "terraform_remote_state" "image" {
   backend = "azurerm"
   config = {
-    resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.securityStorageAccountName
-    container_name       = module.global.terraformStorageContainerName
+    resource_group_name  = module.global.resourceGroupName
+    storage_account_name = module.global.storageAccountName
+    container_name       = module.global.storageContainerName
     key                  = "4.image.builder"
   }
 }

@@ -3,16 +3,6 @@
 //               https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator                                       *
 // ********************************************************************************************************************************************************
 
-#######################################################
-# Storage (https://learn.microsoft.com/azure/storage) #
-#######################################################
-
-storage = {
-  accountType        = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
-  accountRedundancy  = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
-  accountPerformance = "Standard"  # https://learn.microsoft.com/azure/storage/blobs/storage-blob-performance-tiers
-}
-
 ############################################################################
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
 ############################################################################
@@ -68,6 +58,16 @@ keyVault = {
   ]
   certificates = [
   ]
+}
+
+#######################################################
+# Storage (https://learn.microsoft.com/azure/storage) #
+#######################################################
+
+storage = {
+  accountType        = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
+  accountRedundancy  = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+  accountPerformance = "Standard"  # https://learn.microsoft.com/azure/storage/blobs/storage-blob-performance-tiers
 }
 
 ######################################################################

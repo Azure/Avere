@@ -99,10 +99,14 @@ variable "monitorWorkspace" {
   )
 }
 
+data "http" "current" {
+  url = "https://api.ipify.org?format=json"
+}
+
 data "azurerm_client_config" "current" {}
 
-resource "azurerm_resource_group" "security" {
-  name     = module.global.securityResourceGroupName
+resource "azurerm_resource_group" "render" {
+  name     = module.global.resourceGroupName
   location = module.global.regionName
 }
 
@@ -112,27 +116,8 @@ resource "azurerm_resource_group" "security" {
 
 resource "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentityName
-  resource_group_name = azurerm_resource_group.security.name
-  location            = azurerm_resource_group.security.location
-}
-
-#######################################################
-# Storage (https://learn.microsoft.com/azure/storage) #
-#######################################################
-
-resource "azurerm_storage_account" "storage" {
-  name                            = module.global.securityStorageAccountName
-  resource_group_name             = azurerm_resource_group.security.name
-  location                        = azurerm_resource_group.security.location
-  account_kind                    = var.storage.accountType
-  account_replication_type        = var.storage.accountRedundancy
-  account_tier                    = var.storage.accountPerformance
-  allow_nested_items_to_be_public = false
-}
-
-resource "azurerm_storage_container" "container" {
-  name                 = module.global.terraformStorageContainerName
-  storage_account_name = azurerm_storage_account.storage.name
+  resource_group_name = azurerm_resource_group.render.name
+  location            = azurerm_resource_group.render.location
 }
 
 ############################################################################
@@ -141,8 +126,8 @@ resource "azurerm_storage_container" "container" {
 
 resource "azurerm_key_vault" "render" {
   name                            = module.global.keyVaultName
-  resource_group_name             = azurerm_resource_group.security.name
-  location                        = azurerm_resource_group.security.location
+  resource_group_name             = azurerm_resource_group.render.name
+  location                        = azurerm_resource_group.render.location
   tenant_id                       = data.azurerm_client_config.current.tenant_id
   sku_name                        = var.keyVault.type
   purge_protection_enabled        = var.keyVault.enablePurgeProtection
@@ -151,6 +136,13 @@ resource "azurerm_key_vault" "render" {
   enabled_for_disk_encryption     = var.keyVault.enableForDiskEncryption
   enabled_for_template_deployment = var.keyVault.enableForTemplateDeployment
   enable_rbac_authorization       = true
+  network_acls {
+    bypass         = "None"
+    default_action = "Deny"
+    ip_rules = [
+      jsondecode(data.http.current.response_body).ip
+    ]
+  }
 }
 
 resource "azurerm_key_vault_secret" "secrets" {
@@ -200,14 +192,38 @@ resource "azurerm_key_vault_certificate" "certificates" {
   }
 }
 
+#######################################################
+# Storage (https://learn.microsoft.com/azure/storage) #
+#######################################################
+
+resource "azurerm_storage_account" "storage" {
+  name                     = module.global.storageAccountName
+  resource_group_name      = azurerm_resource_group.render.name
+  location                 = azurerm_resource_group.render.location
+  account_kind             = var.storage.accountType
+  account_replication_type = var.storage.accountRedundancy
+  account_tier             = var.storage.accountPerformance
+  network_rules {
+    default_action = "Deny"
+    ip_rules = [
+      jsondecode(data.http.current.response_body).ip
+    ]
+  }
+}
+
+resource "azurerm_storage_container" "container" {
+  name                 = module.global.storageContainerName
+  storage_account_name = azurerm_storage_account.storage.name
+}
+
 ######################################################################
 # Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
 ######################################################################
 
 resource "azurerm_log_analytics_workspace" "monitor" {
   name                       = var.monitorWorkspace.name
-  resource_group_name        = azurerm_resource_group.security.name
-  location                   = azurerm_resource_group.security.location
+  resource_group_name        = azurerm_resource_group.render.name
+  location                   = azurerm_resource_group.render.location
   sku                        = var.monitorWorkspace.sku
   retention_in_days          = var.monitorWorkspace.retentionDays
   internet_ingestion_enabled = false
@@ -215,12 +231,12 @@ resource "azurerm_log_analytics_workspace" "monitor" {
 }
 
 output "resourceGroupName" {
-  value = module.global.securityResourceGroupName
+  value = module.global.resourceGroupName
 }
 
 output "storage" {
   value = merge(var.storage,
-    { name = module.global.securityStorageAccountName }
+    { name = module.global.storageAccountName }
   )
 }
 

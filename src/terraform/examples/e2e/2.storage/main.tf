@@ -47,7 +47,6 @@ variable "storageAccounts" {
       enableBlobNfsV3      = bool
       enableLargeFileShare = bool
       enableSampleDataLoad = bool
-      privateEndpointTypes = list(string)
       blobContainers = list(object(
         {
           name        = string
@@ -195,9 +194,13 @@ variable "storageNetwork" {
   )
 }
 
+data "http" "current" {
+  url = "https://api.ipify.org?format=json"
+}
+
 data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
-  resource_group_name = module.global.securityResourceGroupName
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
@@ -208,65 +211,58 @@ data "azurerm_key_vault_secret" "admin_password" {
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
-    resource_group_name  = module.global.securityResourceGroupName
-    storage_account_name = module.global.securityStorageAccountName
-    container_name       = module.global.terraformStorageContainerName
+    resource_group_name  = module.global.resourceGroupName
+    storage_account_name = module.global.storageAccountName
+    container_name       = module.global.storageContainerName
     key                  = "1.network"
   }
 }
 
 data "azurerm_resource_group" "network" {
-  name = data.azurerm_virtual_network.storage.resource_group_name
+  name = data.azurerm_virtual_network.compute.resource_group_name
+}
+
+data "azurerm_virtual_network" "compute" {
+  name                = !local.stateExistsNetwork ? var.storageNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = !local.stateExistsNetwork ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_virtual_network" "storage" {
+  count               = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
   name                = !local.stateExistsNetwork ? var.storageNetwork.name : data.terraform_remote_state.network.outputs.storageNetwork.name
   resource_group_name = !local.stateExistsNetwork ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
+data "azurerm_subnet" "compute_storage" {
+  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.storage].name
+  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.compute.name
+}
+
 data "azurerm_subnet" "storage_primary" {
+  count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
   name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.primary].name
-  resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.storage.name
+  resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.storage[0].name
 }
 
 data "azurerm_subnet" "storage_secondary" {
+  count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
   name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.secondary].name
-  resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.storage.name
+  resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.storage[0].name
 }
 
 data "azurerm_subnet" "storage_netapp" {
-  count                = var.netAppAccount.name != "" ? 1 : 0
+  count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
   name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.netAppFiles].name
-  resource_group_name  = data.azurerm_virtual_network.storage.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.storage.name
-}
-
-data "http" "current_host" {
-  url = "https://api.ipify.org?format=json"
+  resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.storage[0].name
 }
 
 locals {
   stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
   serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
-  privateDnsZones = distinct(flatten([
-    for storageAccount in var.storageAccounts : [
-      for privateEndpointType in storageAccount.privateEndpointTypes : {
-        name = "privatelink.${privateEndpointType}.core.windows.net"
-      }
-    ]
-  ]))
-  privateEndpoints = flatten([
-    for storageAccount in var.storageAccounts : [
-      for privateEndpointType in storageAccount.privateEndpointTypes : {
-        type                = privateEndpointType
-        privateDnsZoneName  = "privatelink.${privateEndpointType}.core.windows.net"
-        storageAccountName  = storageAccount.name
-        storageAccountId    = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${storageAccount.name}"
-      }
-    ]
-  ])
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
@@ -360,7 +356,7 @@ locals {
       "networks": {
         "eth0": {
           "cluster_ips": [
-            "@METADATA_HOST_IP@/${reverse(split("/", data.azurerm_subnet.storage_primary.address_prefixes[0]))[0]}"
+            "@METADATA_HOST_IP@/${reverse(split("/", try(data.azurerm_subnet.storage_primary[0].address_prefixes[0], data.azurerm_subnet.compute_storage.address_prefixes[0])))[0]}"
           ]
         },
         "eth1": {
@@ -374,7 +370,7 @@ locals {
       "domainname": local.hammerspaceDomainName
       "metadata": {
         "ips": [
-          "@METADATA_HOST_IP@/${reverse(split("/", data.azurerm_subnet.storage_primary.address_prefixes[0]))[0]}"
+          "@METADATA_HOST_IP@/${reverse(split("/", try(data.azurerm_subnet.storage_primary[0].address_prefixes[0], data.azurerm_subnet.compute_storage.address_prefixes[0])))[0]}"
         ]
       }
     },
@@ -399,26 +395,23 @@ locals {
 
 resource "azurerm_resource_group" "storage" {
   name     = var.resourceGroupName
-  location = data.azurerm_virtual_network.storage.location
+  location = try(data.azurerm_virtual_network.storage[0].location, data.azurerm_virtual_network.compute.location)
 }
 
 resource "azurerm_storage_account" "storage" {
   for_each = {
     for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
   }
-  name                            = each.value.name
-  resource_group_name             = azurerm_resource_group.storage.name
-  location                        = azurerm_resource_group.storage.location
-  account_kind                    = each.value.type
-  account_tier                    = each.value.tier
-  account_replication_type        = each.value.redundancy
-  enable_https_traffic_only       = each.value.enableHttpsOnly
-  is_hns_enabled                  = each.value.enableBlobNfsV3
-  nfsv3_enabled                   = each.value.enableBlobNfsV3
-  large_file_share_enabled        = each.value.enableLargeFileShare ? true : null
-  public_network_access_enabled   = length(local.serviceEndpointSubnets) > 0
-  allow_nested_items_to_be_public = false
-  default_to_oauth_authentication = true
+  name                      = each.value.name
+  resource_group_name       = azurerm_resource_group.storage.name
+  location                  = azurerm_resource_group.storage.location
+  account_kind              = each.value.type
+  account_tier              = each.value.tier
+  account_replication_type  = each.value.redundancy
+  enable_https_traffic_only = each.value.enableHttpsOnly
+  is_hns_enabled            = each.value.enableBlobNfsV3
+  nfsv3_enabled             = each.value.enableBlobNfsV3
+  large_file_share_enabled  = each.value.enableLargeFileShare ? true : null
   network_rules {
     default_action = "Deny"
     virtual_network_subnet_ids = [
@@ -426,58 +419,9 @@ resource "azurerm_storage_account" "storage" {
         "${data.azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${serviceEndpointSubnet.virtualNetworkName}/subnets/${serviceEndpointSubnet.name}"
     ]
     ip_rules = each.value.enableSampleDataLoad ? [
-      jsondecode(data.http.current_host.response_body).ip
+      jsondecode(data.http.current.response_body).ip
     ] : []
   }
-}
-
-resource "azurerm_private_dns_zone" "zones" {
-  for_each = {
-    for privateDnsZone in local.privateDnsZones : privateDnsZone.name => privateDnsZone
-  }
-  name                = each.value.name
-  resource_group_name = azurerm_resource_group.storage.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "zone_links" {
-  for_each = {
-    for privateDnsZone in local.privateDnsZones : privateDnsZone.name => privateDnsZone
-  }
-  name                  = data.azurerm_virtual_network.storage.name
-  resource_group_name   = azurerm_resource_group.storage.name
-  private_dns_zone_name = each.value.name
-  virtual_network_id    = data.azurerm_virtual_network.storage.id
-  depends_on = [
-    azurerm_private_dns_zone.zones
-  ]
-}
-
-resource "azurerm_private_endpoint" "storage" {
-  for_each = {
-    for privateEndpoint in local.privateEndpoints : "${privateEndpoint.storageAccountName}.${privateEndpoint.type}" => privateEndpoint
-  }
-  name                = "${each.value.storageAccountName}.${each.value.type}"
-  resource_group_name = azurerm_resource_group.storage.name
-  location            = azurerm_resource_group.storage.location
-  subnet_id           = data.azurerm_subnet.storage_primary.id
-  private_service_connection {
-    name                           = each.value.storageAccountName
-    private_connection_resource_id = each.value.storageAccountId
-    is_manual_connection           = false
-    subresource_names = [
-      each.value.type
-    ]
-  }
-  private_dns_zone_group {
-    name = each.value.storageAccountName
-    private_dns_zone_ids = [
-      "${azurerm_resource_group.storage.id}/providers/Microsoft.Network/privateDnsZones/${each.value.privateDnsZoneName}"
-    ]
-  }
-  depends_on = [
-    azurerm_storage_account.storage,
-    azurerm_private_dns_zone_virtual_network_link.zone_links
-  ]
 }
 
 resource "time_sleep" "storage_data" {
@@ -536,7 +480,7 @@ resource "azurerm_storage_share" "shares" {
 resource "azurerm_resource_group" "netapp_files" {
   count    = var.netAppAccount.name != "" ? 1 : 0
   name     = "${var.resourceGroupName}.NetAppFiles"
-  location = data.azurerm_virtual_network.storage.location
+  location = data.azurerm_virtual_network.storage[0].location
 }
 
 resource "azurerm_netapp_account" "storage" {
@@ -598,7 +542,7 @@ resource "azurerm_netapp_volume" "storage" {
 resource "azurerm_resource_group" "hammerspace" {
   count    = var.hammerspace.namePrefix != "" ? 1 : 0
   name     = "${var.resourceGroupName}.Hammerspace"
-  location = data.azurerm_virtual_network.storage.location
+  location = data.azurerm_virtual_network.storage[0].location
 }
 
 resource "azurerm_proximity_placement_group" "storage" {
@@ -633,7 +577,7 @@ resource "azurerm_network_interface" "storage_primary" {
   location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage_primary.id
+    subnet_id                     = try(data.azurerm_subnet.storage_primary[0].id, data.azurerm_subnet.compute_storage.id)
     private_ip_address_allocation = "Dynamic"
   }
   enable_accelerated_networking = each.value.enableAcceleratedNetworking
@@ -648,7 +592,7 @@ resource "azurerm_network_interface" "storage_secondary" {
   location            = azurerm_resource_group.hammerspace[0].location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.storage_secondary.id
+    subnet_id                     = try(data.azurerm_subnet.storage_secondary[0].id, data.azurerm_subnet.compute_storage.id)
     private_ip_address_allocation = "Dynamic"
   }
   enable_accelerated_networking = each.value.enableAcceleratedNetworking
@@ -824,7 +768,7 @@ resource "azurerm_lb" "storage" {
   sku                 = "Standard"
   frontend_ip_configuration {
     name      = "ipConfigFrontend"
-    subnet_id = data.azurerm_subnet.storage_primary.id
+    subnet_id = try(data.azurerm_subnet.storage_primary[0].id, data.azurerm_subnet.compute_storage.id)
   }
 }
 

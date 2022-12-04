@@ -5,7 +5,7 @@ resourceGroupName = "ArtistAnywhere.Network"
 #################################################################################################
 
 computeNetwork = {
-  name               = "Compute"
+  name               = "Render"
   regionName         = "" # Optional region override
   addressSpace       = ["10.1.0.0/16"]
   dnsServerAddresses = []
@@ -23,8 +23,14 @@ computeNetwork = {
       serviceDelegation = ""
     },
     {
-      name              = "Cache"
+      name              = "Storage"
       addressSpace      = ["10.1.192.0/24"]
+      serviceEndpoints  = ["Microsoft.Storage"]
+      serviceDelegation = ""
+    },
+    {
+      name              = "Cache"
+      addressSpace      = ["10.1.193.0/24"]
       serviceEndpoints  = ["Microsoft.Storage"]
       serviceDelegation = ""
     },
@@ -44,13 +50,14 @@ computeNetwork = {
   subnetIndex = { # Make sure each index is in sync with corresponding subnet
     farm        = 0
     workstation = 1
-    cache       = 2
+    storage     = 2
+    cache       = 3
   }
 }
 
 storageNetwork = {
-  name               = "Storage" # Set name to "" to skip storage network deployment
-  regionName         = ""        # Optional region override
+  name               = "" # Set to "" to skip storage network deployment
+  regionName         = "" # Optional region override
   addressSpace       = ["10.0.0.0/16"]
   dnsServerAddresses = []
   subnets = [
@@ -90,14 +97,6 @@ networkPeering = {
   allowRemoteForwardedTraffic = true
 }
 
-##########################################################################################################################
-# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
-##########################################################################################################################
-
-natGateway = {
-  enable = false
-}
-
 ############################################################################
 # Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
 ############################################################################
@@ -122,6 +121,14 @@ bastion = {
   enableShareableLink = false
 }
 
+##########################################################################################################################
+# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
+##########################################################################################################################
+
+natGateway = {
+  enable = false
+}
+
 ###########################
 # Virtual Network Gateway #
 ###########################
@@ -142,7 +149,7 @@ vpnGateway = {
   generation         = "Generation2"
   enableBgp          = false
   enableActiveActive = false
-  pointToSiteClient = { # https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal
+  pointToSiteClient = {
     addressSpace    = []
     certificateName = ""
     certificateData = ""
@@ -155,7 +162,7 @@ vpnGateway = {
 
 vpnGatewayLocal = {
   fqdn         = "" # Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
-  address      = "" # OR set the public IP address of your on-prem VPN gateway device. Do not set both.
+  address      = "" # or set the public IP address. Do NOT set both "fqdn" and "address" parameters
   addressSpace = []
   bgp = {
     enable         = false
@@ -172,7 +179,7 @@ vpnGatewayLocal = {
 expressRouteGateway = {
   sku = "" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   connection = {
-    circuitId        = ""    # Expected format is "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
+    circuitId        = ""    # Expected format = "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
     authorizationKey = ""
     enableFastPath   = false # https://learn.microsoft.com/azure/expressroute/about-fastpath
   }
