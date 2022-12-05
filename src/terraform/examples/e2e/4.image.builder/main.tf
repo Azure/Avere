@@ -54,10 +54,8 @@ variable "imageTemplates" {
       name = string
       image = object(
         {
-          definitionName  = string
-          customizeScript = string
-          terminateScript = string
-          inputVersion    = string
+          definitionName = string
+          inputVersion   = string
         }
       )
       build = object(
@@ -123,17 +121,8 @@ data "azurerm_virtual_network" "compute" {
   resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
-data "azurerm_storage_account" "storage" {
-  name                = module.global.storageAccountName
-  resource_group_name = module.global.resourceGroupName
-}
-
 locals {
-  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
-  customizeScriptLinux   = "customize.sh"
-  customizeScriptWindows = "customize.ps1"
-  terminateScriptLinux   = "onTerminate.sh"
-  terminateScriptWindows = "onTerminate.ps1"
+  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
 }
 
 resource "azurerm_resource_group" "image" {
@@ -147,53 +136,10 @@ resource "azurerm_role_assignment" "network" {
   scope                = data.azurerm_resource_group.network.id
 }
 
-resource "azurerm_role_assignment" "storage" {
-  role_definition_name = "Storage Blob Data Reader" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = data.azurerm_storage_account.storage.id
-}
-
 resource "azurerm_role_assignment" "image" {
   role_definition_name = "Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
   scope                = azurerm_resource_group.image.id
-}
-
-resource "azurerm_storage_container" "container" {
-  name                 = "image"
-  storage_account_name = data.azurerm_storage_account.storage.name
-}
-
-resource "azurerm_storage_blob" "customize_script_linux" {
-  name                   = local.customizeScriptLinux
-  storage_account_name   = data.azurerm_storage_account.storage.name
-  storage_container_name = azurerm_storage_container.container.name
-  source                 = local.customizeScriptLinux
-  type                   = "Block"
-}
-
-resource "azurerm_storage_blob" "customize_script_windows" {
-  name                   = local.customizeScriptWindows
-  storage_account_name   = data.azurerm_storage_account.storage.name
-  storage_container_name = azurerm_storage_container.container.name
-  source                 = local.customizeScriptWindows
-  type                   = "Block"
-}
-
-resource "azurerm_storage_blob" "terminate_script_linux" {
-  name                   = local.terminateScriptLinux
-  storage_account_name   = data.azurerm_storage_account.storage.name
-  storage_container_name = azurerm_storage_container.container.name
-  source                 = local.terminateScriptLinux
-  type                   = "Block"
-}
-
-resource "azurerm_storage_blob" "terminate_script_windows" {
-  name                   = local.terminateScriptWindows
-  storage_account_name   = data.azurerm_storage_account.storage.name
-  storage_container_name = azurerm_storage_container.container.name
-  source                 = local.terminateScriptWindows
-  type                   = "Block"
 }
 
 resource "azurerm_shared_image_gallery" "gallery" {
@@ -237,9 +183,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     "imageTemplates" = {
       value = var.imageTemplates
     }
-    "imageScriptContainer" = {
-      value = "https://${data.azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.container.name}/"
-    }
     "keyVaultSecretAdminUsername" = {
       value = data.azurerm_key_vault_secret.admin_username.value
     }
@@ -267,9 +210,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         "imageTemplates": {
           "type": "array"
         },
-        "imageScriptContainer": {
-          "type": "string"
-        },
         "keyVaultSecretAdminUsername": {
           "type": "string"
         },
@@ -279,9 +219,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       },
       "variables": {
         "imageBuilderApiVersion": "2022-02-14",
-        "imageGalleryApiVersion": "2022-08-03",
-        "localDownloadPathLinux": "/tmp/",
-        "localDownloadPathWindows": "/Windows/Temp/"
+        "imageGalleryApiVersion": "2022-08-03"
       },
       "functions": [
         {
@@ -290,16 +228,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             "GetCustomizeCommandsLinux": {
               "parameters": [
                 {
-                  "name": "imageScriptContainer",
-                  "type": "string"
-                },
-                {
                   "name": "imageTemplate",
                   "type": "object"
-                },
-                {
-                  "name": "scriptFilePath",
-                  "type": "string"
                 },
                 {
                   "name": "renderManager",
@@ -325,18 +255,18 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customizeScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript)]"
+                    "sourceUri": "https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/4.image.builder/customize.sh",
+                    "destination": "/tmp/customize.sh"
                   },
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript)]"
+                    "sourceUri": "https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/4.image.builder/onTerminate.sh",
+                    "destination": "/tmp/onTerminate.sh"
                   },
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat {0} | tr -d \r | {1} /bin/bash', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')), createObject('adminUsername', parameters('adminUsername')), createObject('adminPassword', parameters('adminPassword')))))))]"
+                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')), createObject('adminUsername', parameters('adminUsername')), createObject('adminPassword', parameters('adminPassword')))))))]"
                     ]
                   }
                 ]
@@ -345,16 +275,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             "GetCustomizeCommandsWindows": {
               "parameters": [
                 {
-                  "name": "imageScriptContainer",
-                  "type": "string"
-                },
-                {
                   "name": "imageTemplate",
                   "type": "object"
-                },
-                {
-                  "name": "scriptFilePath",
-                  "type": "string"
                 },
                 {
                   "name": "renderManager",
@@ -375,20 +297,23 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.customizeScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript)]"
+                    "sourceUri": "https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/4.image.builder/customize.ps1",
+                    "destination": "C:\\Users\\Public\\Downloads\\customize.ps1"
                   },
                   {
                     "type": "File",
-                    "sourceUri": "[concat(parameters('imageScriptContainer'), parameters('imageTemplate').image.terminateScript)]",
-                    "destination": "[concat(parameters('scriptFilePath'), parameters('imageTemplate').image.terminateScript)]"
+                    "sourceUri": "https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/4.image.builder/onTerminate.ps1",
+                    "destination": "C:\\Users\\Public\\Downloads\\onTerminate.ps1"
                   },
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[format('{0} {1}', concat(parameters('scriptFilePath'), parameters('imageTemplate').image.customizeScript), concat('-buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')))))))]"
+                      "[concat('C:\\Users\\Public\\Downloads\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager'))))))]"
                     ],
                     "runElevated": "[if(and(equals(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
+                  },
+                  {
+                    "type": "WindowsRestart"
                   }
                 ]
               }
@@ -421,7 +346,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathWindows'), parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageScriptContainer'), parameters('imageTemplates')[copyIndex()], variables('localDownloadPathLinux'), parameters('renderManager'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword')))]",
+            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('renderManager'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword')))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {
@@ -448,11 +373,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     }
   TEMPLATE
   depends_on = [
-    azurerm_shared_image.definitions,
-    azurerm_storage_blob.customize_script_linux,
-    azurerm_storage_blob.customize_script_windows,
-    azurerm_storage_blob.terminate_script_linux,
-    azurerm_storage_blob.terminate_script_windows
+    azurerm_shared_image.definitions
   ]
 }
 

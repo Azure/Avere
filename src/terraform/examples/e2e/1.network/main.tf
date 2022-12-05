@@ -182,6 +182,14 @@ variable "expressRouteGateway" {
   )
 }
 
+variable "monitor" {
+  type = object(
+    {
+      enablePrivateLink = bool
+    }
+  )
+}
+
 data "azurerm_key_vault" "render" {
   name                = module.global.keyVaultName
   resource_group_name = module.global.resourceGroupName
@@ -197,13 +205,19 @@ data "azurerm_storage_account" "render" {
   resource_group_name = module.global.resourceGroupName
 }
 
+data "azurerm_log_analytics_workspace" "render" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = module.global.resourceGroupName
+}
+
 locals {
-  computeNetwork = var.computeNetwork.regionName == "" ? merge(var.computeNetwork,
+  computeNetwork = var.computeNetwork.regionName != "" ? var.computeNetwork : merge(var.computeNetwork,
     { regionName = module.global.regionName }
-  ) : var.computeNetwork
-  storageNetwork = var.storageNetwork.regionName == "" ? merge(var.storageNetwork,
+  )
+  storageNetwork = var.storageNetwork.regionName != "" ? var.storageNetwork : merge(var.storageNetwork,
     { regionName = module.global.regionName }
-  ) : var.storageNetwork
+  )
   computeNetworkSubnets = [
     for virtualNetworkSubnet in local.computeNetwork.subnets : merge(virtualNetworkSubnet,
       { virtualNetworkName = local.computeNetwork.name }
@@ -222,17 +236,22 @@ locals {
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for virtualNetworkSubnet in virtualNetwork.subnets : merge(virtualNetworkSubnet,
-        { regionName         = virtualNetwork.regionName },
-        { virtualNetworkName = virtualNetwork.name }
+        { virtualNetworkName = virtualNetwork.name },
+        { regionName         = virtualNetwork.regionName }
       )
     ]
   ])
+  virtualNetworksSubnetsSecurity = [
+    for virtualNetworksSubnet in local.virtualNetworksSubnets : virtualNetworksSubnet if virtualNetworksSubnet.name != "GatewaySubnet" && virtualNetworksSubnet.name != "AzureBastionSubnet" && virtualNetworksSubnet.serviceDelegation == ""
+  ]
   virtualGatewayNetworks = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for virtualNetworkSubnet in virtualNetwork.subnets : virtualNetwork if virtualNetworkSubnet.name == "GatewaySubnet"
     ]
   ])
-  virtualGatewayNetworkNames = [for virtualGatewayNetwork in local.virtualGatewayNetworks : virtualGatewayNetwork.name]
+  virtualGatewayNetworkNames = [
+    for virtualGatewayNetwork in local.virtualGatewayNetworks : virtualGatewayNetwork.name
+  ]
   virtualGatewayActiveActive = var.networkGateway.type == "Vpn" && var.vpnGateway.enableActiveActive
 }
 
@@ -283,7 +302,7 @@ resource "azurerm_subnet" "network" {
 
 resource "azurerm_network_security_group" "network" {
   for_each = {
-    for virtualNetworksSubnet in local.virtualNetworksSubnets : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet if virtualNetworksSubnet.name != "GatewaySubnet" && virtualNetworksSubnet.name != "AzureBastionSubnet" && virtualNetworksSubnet.serviceDelegation == ""
+    for virtualNetworksSubnet in local.virtualNetworksSubnetsSecurity : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet
   }
   name                = "${each.value.virtualNetworkName}.${each.value.name}"
   resource_group_name = azurerm_resource_group.network.name
@@ -381,7 +400,7 @@ resource "azurerm_network_security_group" "network" {
 
 resource "azurerm_subnet_network_security_group_association" "network" {
   for_each = {
-    for virtualNetworksSubnet in local.virtualNetworksSubnets : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet if virtualNetworksSubnet.name != "GatewaySubnet" && virtualNetworksSubnet.name != "AzureBastionSubnet" && virtualNetworksSubnet.serviceDelegation == ""
+    for virtualNetworksSubnet in local.virtualNetworksSubnetsSecurity : "${virtualNetworksSubnet.virtualNetworkName}.${virtualNetworksSubnet.name}" => virtualNetworksSubnet
   }
   subnet_id                 = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
   network_security_group_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/networkSecurityGroups/${each.value.virtualNetworkName}.${each.value.name}"
@@ -966,6 +985,109 @@ resource "azurerm_virtual_network_gateway_connection" "express_route" {
   express_route_circuit_id     = var.expressRouteGateway.connection.circuitId
   express_route_gateway_bypass = var.expressRouteGateway.connection.enableFastPath
   authorization_key            = var.expressRouteGateway.connection.authorizationKey
+}
+
+######################################################################
+# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
+######################################################################
+
+resource "azurerm_private_dns_zone" "monitor" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.monitor.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "monitor_opinsights_oms" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.oms.opinsights.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "monitor_opinsights_ods" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.ods.opinsights.azure.com"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone" "monitor_automation" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "privatelink.agentsvc.azure-automation.net"
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "monitor" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "${local.computeNetwork.name}.monitor"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.monitor[0].name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}"
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "monitor_opinsights_oms" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "${local.computeNetwork.name}.monitor.opinsights.oms"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.monitor_opinsights_oms[0].name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}"
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "monitor_opinsights_ods" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "${local.computeNetwork.name}.monitor.opinsights.ods"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.monitor_opinsights_ods[0].name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}"
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "monitor_automation" {
+  count                 = var.monitor.enablePrivateLink ? 1 : 0
+  name                  = "${local.computeNetwork.name}.monitor.automation"
+  resource_group_name   = azurerm_resource_group.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.monitor_automation[0].name
+  virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}"
+}
+
+resource "azurerm_private_endpoint" "monitor" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = "${data.azurerm_log_analytics_workspace.render[0].name}.monitor"
+  resource_group_name = azurerm_resource_group.network.name
+  location            = azurerm_resource_group.network.location
+  subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.monitor[0].virtual_network_id}/subnets/${local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage].name}"
+  private_service_connection {
+    name                           = data.azurerm_log_analytics_workspace.render[0].name
+    private_connection_resource_id = data.azurerm_log_analytics_workspace.render[0].id
+    is_manual_connection           = false
+    subresource_names = [
+      "azuremonitor"
+    ]
+  }
+  private_dns_zone_group {
+    name = data.azurerm_log_analytics_workspace.render[0].name
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.monitor[0].id,
+      azurerm_private_dns_zone.monitor_opinsights_oms[0].id,
+      azurerm_private_dns_zone.monitor_opinsights_ods[0].id,
+      azurerm_private_dns_zone.monitor_automation[0].id,
+      azurerm_private_dns_zone.storage_blob.id
+    ]
+  }
+  depends_on = [
+    azurerm_private_endpoint.storage_file
+  ]
+}
+
+resource "azurerm_monitor_private_link_scope" "monitor" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = azurerm_resource_group.network.name
+}
+
+resource "azurerm_monitor_private_link_scoped_service" "monitor" {
+  count               = var.monitor.enablePrivateLink ? 1 : 0
+  name                = module.global.monitorWorkspaceName
+  resource_group_name = azurerm_resource_group.network.name
+  linked_resource_id  = data.azurerm_log_analytics_workspace.render[0].id
+  scope_name          = azurerm_monitor_private_link_scope.monitor[0].name
 }
 
 output "resourceGroupName" {

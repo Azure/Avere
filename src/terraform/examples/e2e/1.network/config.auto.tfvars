@@ -184,3 +184,11 @@ expressRouteGateway = {
     enableFastPath   = false # https://learn.microsoft.com/azure/expressroute/about-fastpath
   }
 }
+
+######################################################################
+# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
+######################################################################
+
+monitor = {
+  enablePrivateLink = false # https://learn.microsoft.com/azure/azure-monitor/logs/private-link-security
+}

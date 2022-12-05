@@ -50,10 +50,8 @@ imageTemplates = [
   {
     name = "LnxScheduler"
     image = {
-      definitionName  = "Linux"
-      customizeScript = "customize.sh"
-      terminateScript = "onTerminate.sh"
-      inputVersion    = "Latest"
+      definitionName = "Linux"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Scheduler"
@@ -68,10 +66,8 @@ imageTemplates = [
   {
     name = "LnxFarm1"
     image = {
-      definitionName  = "Linux"
-      customizeScript = "customize.sh"
-      terminateScript = "onTerminate.sh"
-      inputVersion    = "Latest"
+      definitionName = "Linux"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Farm"
@@ -89,10 +85,8 @@ imageTemplates = [
   {
     name = "LnxFarm2"
     image = {
-      definitionName  = "Linux"
-      customizeScript = "customize.sh"
-      terminateScript = "onTerminate.sh"
-      inputVersion    = "Latest"
+      definitionName = "Linux"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Farm"
@@ -112,10 +106,8 @@ imageTemplates = [
   {
     name = "LnxArtist1"
     image = {
-      definitionName  = "Linux"
-      customizeScript = "customize.sh"
-      terminateScript = "onTerminate.sh"
-      inputVersion    = "Latest"
+      definitionName = "Linux"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
@@ -133,10 +125,8 @@ imageTemplates = [
   {
     name = "LnxArtist2"
     image = {
-      definitionName  = "Linux"
-      customizeScript = "customize.sh"
-      terminateScript = "onTerminate.sh"
-      inputVersion    = "Latest"
+      definitionName = "Linux"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
@@ -156,10 +146,8 @@ imageTemplates = [
   {
     name = "WinScheduler"
     image = {
-      definitionName  = "WinScheduler"
-      customizeScript = "customize.ps1"
-      terminateScript = "onTerminate.ps1"
-      inputVersion    = "Latest"
+      definitionName = "WinScheduler"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Scheduler"
@@ -174,10 +162,8 @@ imageTemplates = [
   {
     name = "WinFarm1"
     image = {
-      definitionName  = "WinFarm"
-      customizeScript = "customize.ps1"
-      terminateScript = "onTerminate.ps1"
-      inputVersion    = "Latest"
+      definitionName = "WinFarm"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Farm"
@@ -195,10 +181,8 @@ imageTemplates = [
   {
     name = "WinFarm2"
     image = {
-      definitionName  = "WinFarm"
-      customizeScript = "customize.ps1"
-      terminateScript = "onTerminate.ps1"
-      inputVersion    = "Latest"
+      definitionName = "WinFarm"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Farm"
@@ -218,10 +202,8 @@ imageTemplates = [
   {
     name = "WinArtist1"
     image = {
-      definitionName  = "WinArtist"
-      customizeScript = "customize.ps1"
-      terminateScript = "onTerminate.ps1"
-      inputVersion    = "Latest"
+      definitionName = "WinArtist"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
@@ -239,10 +221,8 @@ imageTemplates = [
   {
     name = "WinArtist2"
     image = {
-      definitionName  = "WinArtist"
-      customizeScript = "customize.ps1"
-      terminateScript = "onTerminate.ps1"
-      inputVersion    = "Latest"
+      definitionName = "WinArtist"
+      inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
