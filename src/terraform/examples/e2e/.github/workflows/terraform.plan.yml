@@ -9,14 +9,14 @@ on:
         description: 'Solution Module'
         type: choice
         options:
-        - 1.security
-        - 2.network
-        - 3.storage
-        - 4.storage.cache
-        - 5.compute.image
-        - 6.compute.scheduler
-        - 7.compute.farm
-        - 8.compute.workstation
+        - 0.global
+        - 1.network
+        - 2.storage
+        - 3.storage.cache
+        - 4.image.builder
+        - 5.render.manager
+        - 6.render.farm
+        - 7.artist.workstation
         required: true
       logLevel:
         description: 'Log Level'
@@ -50,7 +50,7 @@ jobs:
     steps:
       - uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.3.2
+          terraform_version: 1.3.6
 
       - uses: actions/checkout@v3
         with:
