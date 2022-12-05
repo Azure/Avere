@@ -358,11 +358,11 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
 }
 
 if ($machineType -eq "Farm") {
-  if (Test-Path -Path "C:\Windows\Temp\onTerminate.ps1") {
+  if (Test-Path -Path "$binDirectory\onTerminate.ps1") {
     Write-Host "Customize (Start): CycleCloud Event Handler"
     New-Item -ItemType Directory -Path "C:\cycle\jetpack\scripts" -Force
-    Copy-Item -Path "C:\Windows\Temp\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onPreempt.ps1"
-    Copy-Item -Path "C:\Windows\Temp\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onTerminate.ps1"
+    Copy-Item -Path "$binDirectory\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onPreempt.ps1"
+    Copy-Item -Path "$binDirectory\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onTerminate.ps1"
     Write-Host "Customize (End): CycleCloud Event Handler"
   }
   Write-Host "Customize (Start): Privacy Experience"
@@ -378,6 +378,6 @@ if ($machineType -eq "Workstation") {
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "pcopi-agent.output.txt" -RedirectStandardError "pcoip-agent.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "pcoip-agent.output.txt" -RedirectStandardError "pcoip-agent.error.txt"
   Write-Host "Customize (End): Teradici PCoIP"
 }

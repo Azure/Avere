@@ -1,11 +1,14 @@
 $ErrorActionPreference = "Stop"
 
+$binDirectory = "C:\Users\Public\Downloads"
+Set-Location -Path $binDirectory
+
 %{ if teradiciLicenseKey != "" }
   $agentFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"
-  Start-Process -FilePath "PowerShell.exe" -ArgumentList "-ExecutionPolicy Unrestricted -File ""$agentFile"" -RegistrationCode ${teradiciLicenseKey}" -Wait -RedirectStandardOutput "$agentFile.output.txt" -RedirectStandardError "$agentFile.error.txt"
+  Start-Process -FilePath "PowerShell.exe" -ArgumentList "-ExecutionPolicy Unrestricted -File ""$agentFile"" -RegistrationCode ${teradiciLicenseKey}" -Wait -RedirectStandardOutput "pcoip-agent.output.txt" -RedirectStandardError "pcoip-agent.error.txt"
 %{ endif }
 
-$mountFile = "C:\Windows\Temp\mounts.bat"
+$mountFile = "$binDirectory\mounts.bat"
 New-Item -ItemType File -Path $mountFile
 %{ for fsMount in fileSystemMountsStorage }
   Add-Content -Path $mountFile -Value "${fsMount}"

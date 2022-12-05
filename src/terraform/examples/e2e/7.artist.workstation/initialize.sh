@@ -1,5 +1,8 @@
 #!/bin/bash -ex
 
+binDirectory="/usr/local/bin"
+cd $binDirectory
+
 source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
 
 %{ if teradiciLicenseKey != "" }

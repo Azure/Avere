@@ -1,6 +1,9 @@
 $ErrorActionPreference = "Stop"
 
-$databaseFile = "C:\Windows\Temp\database.ps1"
+$binDirectory = "C:\Users\Public\Downloads"
+Set-Location -Path $binDirectory
+
+$databaseFile = "$binDirectory\database.ps1"
 New-Item -ItemType File -Path $databaseFile
 Add-Content -Path $databaseFile -Value '$serviceName = "Deadline10DatabaseService"'
 Add-Content -Path $databaseFile -Value '$serviceStatus = (Get-Service -Name $serviceName).Status'
@@ -33,7 +36,7 @@ if ("${autoScale.enable}" -ne "true") {
   Disable-ScheduledTask -TaskName $taskName
 }
 
-$mountFile = "C:\Windows\Temp\mounts.bat"
+$mountFile = "$binDirectory\mounts.bat"
 New-Item -ItemType File -Path $mountFile
 %{ for fsMount in fileSystemMountsStorage }
   Add-Content -Path $mountFile -Value "${fsMount}"
