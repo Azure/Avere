@@ -103,7 +103,7 @@ cffi==1.15.1
 chardet==3.0.4
 charset-normalizer==2.1.1
 colorama==0.4.5
-cryptography==38.0.1
+cryptography==38.0.3
 Deprecated==1.2.13
 distro==1.7.0
 fabric==2.7.1
