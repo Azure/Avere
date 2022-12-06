@@ -9,7 +9,7 @@ The following *core principles* are implemented throughout the AAA solution depl
 * Any custom or 3rd-party software (such as a render manager, render engines, etc) in a [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
 * Clean separation of AAA module deployment configuration files (*config.auto.tfvars*) and code template files (*main.tf*) via [Terraform](https://www.terraform.io).
 
-| **Module Name** | **Module Description** | **Module Required for<br>Burst Render Only?** | **Module Required for<br>All Cloud Solution?<br>(Compute & Storage)** |
+| **Module Name** | **Module Description** | **Module Required for<br>Burst Render Only?** | **Module Required for<br>All Azure Solution?<br>(Compute & Storage)** |
 | - | - | - | - |
 | [0 Global](#0-global) | Defines global configuration settings and deploys core framework security services. | Yes | Yes |
 | [1 Network](#1-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) and [Bastion](https://learn.microsoft.com/azure/bastion/bastion-overview) with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
