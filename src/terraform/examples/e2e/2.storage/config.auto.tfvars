@@ -41,7 +41,10 @@ storageAccounts = [
         name     = "show"
         tier     = "Premium"
         sizeGiB  = 5120
-        protocol = "NFS"
+        protocol = "SMB"
+        sampleFiles = [
+          "blender"
+        ]
       }
     ]
   }

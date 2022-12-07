@@ -55,10 +55,11 @@ variable "storageAccounts" {
       ))
       fileShares = list(object(
         {
-          name     = string
-          tier     = string
-          sizeGiB  = number
-          protocol = string
+          name        = string
+          tier        = string
+          sizeGiB     = number
+          protocol    = string
+          sampleFiles = list(string)
         }
       ))
     }
@@ -306,6 +307,20 @@ locals {
       }
     ] if storageAccount.enableSampleDataLoad
   ])
+  fileShareFiles = flatten([
+    for storageAccount in var.storageAccounts : [
+      for fileShare in storageAccount.fileShares : [
+        for localPath in fileShare.sampleFiles : [
+          for file in fileset(fileShare.name, "/${localPath}/**") : {
+            name               = file
+            directoryPath      = dirname(file)
+            shareName          = fileShare.name
+            storageAccountName = storageAccount.name
+          }
+        ]
+      ]
+    ] if storageAccount.enableSampleDataLoad
+  ])
   netAppVolumes = flatten([
     for capacityPool in var.netAppAccount.capacityPools : [
       for volume in capacityPool.volumes : merge(volume,
@@ -402,16 +417,17 @@ resource "azurerm_storage_account" "storage" {
   for_each = {
     for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
   }
-  name                      = each.value.name
-  resource_group_name       = azurerm_resource_group.storage.name
-  location                  = azurerm_resource_group.storage.location
-  account_kind              = each.value.type
-  account_tier              = each.value.tier
-  account_replication_type  = each.value.redundancy
-  enable_https_traffic_only = each.value.enableHttpsOnly
-  is_hns_enabled            = each.value.enableBlobNfsV3
-  nfsv3_enabled             = each.value.enableBlobNfsV3
-  large_file_share_enabled  = each.value.enableLargeFileShare ? true : null
+  name                            = each.value.name
+  resource_group_name             = azurerm_resource_group.storage.name
+  location                        = azurerm_resource_group.storage.location
+  account_kind                    = each.value.type
+  account_tier                    = each.value.tier
+  account_replication_type        = each.value.redundancy
+  enable_https_traffic_only       = each.value.enableHttpsOnly
+  is_hns_enabled                  = each.value.enableBlobNfsV3
+  nfsv3_enabled                   = each.value.enableBlobNfsV3
+  large_file_share_enabled        = each.value.enableLargeFileShare ? true : null
+  allow_nested_items_to_be_public = false
   network_rules {
     default_action = "Deny"
     virtual_network_subnet_ids = [
@@ -470,6 +486,19 @@ resource "azurerm_storage_share" "shares" {
   quota                = each.value.size
   depends_on = [
     time_sleep.storage_data
+  ]
+}
+
+resource "azurerm_storage_share_file" "files" {
+  for_each = {
+    for fileShareFile in local.fileShareFiles : "${fileShareFile.storageAccountName}.${fileShareFile.name}" => fileShareFile
+  }
+  name             = basename(each.value.name)
+  path             = each.value.directoryPath
+  source           = "${path.cwd}/${each.value.shareName}/${each.value.name}"
+  storage_share_id = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.storageAccountName}/fileServices/default/shares/${each.value.shareName}"
+  depends_on = [
+    azurerm_storage_share.shares
   ]
 }
 

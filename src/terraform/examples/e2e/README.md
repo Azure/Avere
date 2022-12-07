@@ -4,16 +4,16 @@ Azure Artist Anywhere (AAA) is a *modular and customizable [infrastructure-as-co
 
 https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4
 
-The following *core principles* are implemented throughout the AAA solution deployment framework.
+The following *core principles* are implemented throughout the Azure Artist Anywhere (AAA) solution deployment framework.
 * Defense-in-depth layered security model across [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview), [Private Link](https://learn.microsoft.com/azure/private-link/private-link-overview) / [Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview), [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview), etc.
 * Any custom or 3rd-party software (such as a render manager, render engines, etc) in a [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported.
 * Clean separation of AAA module deployment configuration files (*config.auto.tfvars*) and code template files (*main.tf*) via [Terraform](https://www.terraform.io).
 
 | **Module Name** | **Module Description** | **Module Required for<br>Burst Render Only?** | **Module Required for<br>All Azure Solution?<br>(Compute & Storage)** |
 | - | - | - | - |
-| [0 Global](#0-global) | Defines global configuration settings and deploys core framework security services. | Yes | Yes |
+| [0 Global](#0-global) | Defines global config (e.g., Azure region, render manager) and deploys core security services. | Yes | Yes |
 | [1 Network](#1-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) and [Bastion](https://learn.microsoft.com/azure/bastion/bastion-overview) with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
-| [2 Storage](#2-storage) | Deploys [Blob (NFS)](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) and/or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage services. | No | Yes |
+| [2 Storage](#2-storage) | Deploys [Blob (NFS)](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support) / [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction) (with data option), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage services. | No | Yes |
 | [3 Storage Cache](#3-storage-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable storage file caching. | Yes | Maybe, depends on your<br>render scale requirements |
 | [4 Image Builder](#4-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are custom built via the managed [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.render.farm/config.auto.tfvars#L10) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.render.farm/config.auto.tfvars#L10) |
 | [5 Render Manager](#5-render-manager) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for job scheduling with optional [CycleCloud](https://learn.microsoft.com/azure/cyclecloud/overview) integration / orchestration. | No, continue to use your current render manager | No, continue to use your current render manager |
@@ -78,6 +78,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 1. Run `cd ~/e2e/2.storage` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
+   * Optionally set the `enableSampleDataLoad` config value to true to enable upload of sample files to be renderd into Azure Blob and/or File storage
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
