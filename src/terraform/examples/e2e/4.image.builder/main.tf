@@ -48,6 +48,15 @@ variable "imageGallery" {
   )
 }
 
+variable "containerRegistry" {
+  type = object(
+    {
+      name = string
+      sku  = string
+    }
+  )
+}
+
 variable "imageTemplates" {
   type = list(object(
     {
@@ -77,6 +86,7 @@ variable "computeNetwork" {
   type = object(
     {
       name              = string
+      subnetName        = string
       resourceGroupName = string
     }
   )
@@ -121,6 +131,12 @@ data "azurerm_virtual_network" "compute" {
   resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
+data "azurerm_subnet" "farm" {
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
+  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.compute.name
+}
+
 locals {
   stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
 }
@@ -142,6 +158,10 @@ resource "azurerm_role_assignment" "image" {
   scope                = azurerm_resource_group.image.id
 }
 
+###############################################################################################
+# Compute Gallery (https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) #
+###############################################################################################
+
 resource "azurerm_shared_image_gallery" "gallery" {
   name                = var.imageGallery.name
   resource_group_name = azurerm_resource_group.image.name
@@ -162,6 +182,61 @@ resource "azurerm_shared_image" "definitions" {
     sku       = var.imageGallery.imageDefinitions[count.index].sku
   }
 }
+
+#####################################################################################################
+# Container Registry (https://learn.microsoft.com/zure/container-registry/container-registry-intro) #
+#####################################################################################################
+
+resource "azurerm_private_dns_zone" "registry" {
+  name                = "privatelink.azurecr.io"
+  resource_group_name = azurerm_resource_group.image.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "registry" {
+  name                  = "${azurerm_container_registry.registry.name}.registry"
+  resource_group_name   = azurerm_resource_group.image.name
+  private_dns_zone_name = azurerm_private_dns_zone.registry.name
+  virtual_network_id    = data.azurerm_virtual_network.compute.id
+}
+
+resource "azurerm_private_endpoint" "farm" {
+  name                = "${azurerm_container_registry.registry.name}.registry"
+  resource_group_name = azurerm_resource_group.image.name
+  location            = azurerm_resource_group.image.location
+  subnet_id           = data.azurerm_subnet.farm.id
+  private_service_connection {
+    name                           = azurerm_container_registry.registry.name
+    private_connection_resource_id = azurerm_container_registry.registry.id
+    is_manual_connection           = false
+    subresource_names = [
+      "registry"
+    ]
+  }
+  private_dns_zone_group {
+    name = azurerm_container_registry.registry.name
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.registry.id
+    ]
+  }
+}
+
+resource "azurerm_container_registry" "registry" {
+  name                          = var.containerRegistry.name
+  resource_group_name           = azurerm_resource_group.image.name
+  location                      = azurerm_resource_group.image.location
+  sku                           = var.containerRegistry.sku
+  public_network_access_enabled = false
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.render.id
+    ]
+  }
+}
+
+#############################################################################################
+# Image Builder (https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) #
+#############################################################################################
 
 resource "azurerm_resource_group_template_deployment" "image_builder" {
   name                = "ImageBuilder"

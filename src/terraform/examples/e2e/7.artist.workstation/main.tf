@@ -191,9 +191,6 @@ resource "azurerm_linux_virtual_machine" "workstation" {
       data.azurerm_user_assigned_identity.render.id
     ]
   }
-  boot_diagnostics {
-    storage_account_uri = null
-  }
   dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
     content {
@@ -272,9 +269,6 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     identity_ids = [
       data.azurerm_user_assigned_identity.render.id
     ]
-  }
-  boot_diagnostics {
-    storage_account_uri = null
   }
   depends_on = [
     azurerm_network_interface.workstation

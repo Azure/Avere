@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>3.34.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~>0.9.1"
+    }
   }
 }
 
@@ -211,9 +215,19 @@ resource "azurerm_storage_account" "storage" {
   }
 }
 
+resource "time_sleep" "storage_data" {
+  create_duration = "30s"
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
+}
+
 resource "azurerm_storage_container" "container" {
   name                 = module.global.storageContainerName
   storage_account_name = azurerm_storage_account.storage.name
+  depends_on = [
+    time_sleep.storage_data
+  ]
 }
 
 ######################################################################

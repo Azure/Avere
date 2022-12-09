@@ -446,7 +446,7 @@ resource "azurerm_virtual_network_peering" "network_peering_down" {
 # Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
 ############################################################################
 
-resource "azurerm_private_dns_zone" "network" {
+resource "azurerm_private_dns_zone" "render" {
   name                = var.privateDns.zoneName
   resource_group_name = azurerm_resource_group.network.name
 }
@@ -457,7 +457,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   }
   name                  = each.value.name
   resource_group_name   = azurerm_resource_group.network.name
-  private_dns_zone_name = azurerm_private_dns_zone.network.name
+  private_dns_zone_name = azurerm_private_dns_zone.render.name
   virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}"
   registration_enabled  = var.privateDns.enableAutoRegistration
   depends_on = [
@@ -512,7 +512,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "storage_file" {
 }
 
 resource "azurerm_private_endpoint" "key_vault" {
-  name                = "${data.azurerm_storage_account.render.name}.vault"
+  name                = "${data.azurerm_key_vault.render.name}.vault"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
   subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.key_vault.virtual_network_id}/subnets/${local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage].name}"

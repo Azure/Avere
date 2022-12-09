@@ -5,7 +5,7 @@ resourceGroupName = "ArtistAnywhere.Image"
 ###############################################################################################
 
 imageGallery = {
-  name = "Gallery"
+  name = "azrender"
   imageDefinitions = [
     {
       name       = "Linux"
@@ -40,6 +40,15 @@ imageGallery = {
       sku        = "Win11-22H2-Pro"
     }
   ]
+}
+
+#####################################################################################################
+# Container Registry (https://learn.microsoft.com/zure/container-registry/container-registry-intro) #
+#####################################################################################################
+
+containerRegistry = {
+  name = "azrender"
+  sku  = "Premium"
 }
 
 #############################################################################################
@@ -247,5 +256,6 @@ imageTemplates = [
 
 computeNetwork = {
   name              = ""
+  subnetName        = ""
   resourceGroupName = ""
 }

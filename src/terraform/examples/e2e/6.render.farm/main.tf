@@ -105,30 +105,34 @@ variable "virtualMachineScaleSets" {
   ))
 }
 
-variable "kubernetesClusters" {
-  type = list(object(
+variable "kubernetes" {
+  type = object(
     {
-      name = string
-      pool = object(
+      fleet = object(
         {
-          name = string
+          name      = string
+          dnsPrefix = string
         }
       )
-      machine = object(
+      clusters = list(object(
         {
-          size = string
+          name      = string
+          dnsPrefix = string
+          defaultPool = object(
+            {
+              name = string
+              machine = object(
+                {
+                  size = string
+                  count = number
+                }
+              )
+            }
+          )
         }
-      )
+      ))
     }
-  ))
-}
-
-variable "kubernetesFleets" {
-  type = list(object(
-    {
-      name = string
-    }
-  ))
+  )
 }
 
 variable "computeNetwork" {
@@ -192,14 +196,13 @@ data "azurerm_subnet" "farm" {
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
-locals {
-  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+data "azurerm_private_dns_zone" "render" {
+  name                = data.terraform_remote_state.network.outputs.privateDns.zoneName
+  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
-resource "azurerm_role_assignment" "farm" {
-  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = azurerm_resource_group.farm.id
+locals {
+  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
 }
 
 resource "azurerm_resource_group" "farm" {
@@ -251,9 +254,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     identity_ids = [
       data.azurerm_user_assigned_identity.render.id
     ]
-  }
-  boot_diagnostics {
-    storage_account_uri = null
   }
   dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -348,9 +348,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       data.azurerm_user_assigned_identity.render.id
     ]
   }
-  boot_diagnostics {
-    storage_account_uri = null
-  }
   dynamic extension {
     for_each = each.value.customExtension.enable ? [1] : []
     content {
@@ -393,34 +390,80 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   }
 }
 
-################################################################################
-# Kubernetes Clusters (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
-################################################################################
+#######################################################################
+# Kubernetes (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
+#######################################################################
+
+resource "azurerm_private_dns_zone" "farm" {
+  count               = var.kubernetes.fleet.name != "" ? 1 : 0
+  name                = "privatelink.${lower(module.global.regionName)}.azmk8s.io"
+  resource_group_name = azurerm_resource_group.farm.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "farm" {
+  count                 = var.kubernetes.fleet.name != "" ? 1 : 0
+  name                  = "${data.azurerm_virtual_network.compute.name}.farm"
+  resource_group_name   = azurerm_resource_group.farm.name
+  private_dns_zone_name = azurerm_private_dns_zone.farm[0].name
+  virtual_network_id    = data.azurerm_virtual_network.compute.id
+}
+
+resource "azurerm_private_endpoint" "farm" {
+  for_each = {
+    for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if var.kubernetes.fleet.name != ""
+  }
+  name                = "aks.${each.value.name}"
+  resource_group_name = azurerm_resource_group.farm.name
+  location            = azurerm_resource_group.farm.location
+  subnet_id           = data.azurerm_subnet.farm.id
+  private_service_connection {
+    name                           = each.value.name
+    private_connection_resource_id = "${azurerm_resource_group.farm.id}/providers/Microsoft.ContainerService/managedClusters/${each.value.name}"
+    is_manual_connection           = false
+    subresource_names = [
+      "management"
+    ]
+  }
+  private_dns_zone_group {
+    name = each.value.name
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.farm[0].id
+    ]
+  }
+}
+
+resource "azurerm_kubernetes_fleet_manager" "farm" {
+  count               = var.kubernetes.fleet.name != "" ? 1 : 0
+  name                = var.kubernetes.fleet.name
+  resource_group_name = azurerm_resource_group.farm.name
+  location            = azurerm_resource_group.farm.location
+  hub_profile {
+    dns_prefix = var.kubernetes.fleet.dnsPrefix
+  }
+}
 
 # resource "azurerm_kubernetes_cluster" "farm" {
 #   for_each = {
-#     for kubernetesCluster in var.kubernetesClusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
+#     for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
 #   }
-#   name                = each.value.name
-#   resource_group_name = azurerm_resource_group.farm.name
-#   location            = azurerm_resource_group.farm.location
+#   name                       = each.value.name
+#   resource_group_name        = azurerm_resource_group.farm.name
+#   location                   = azurerm_resource_group.farm.location
+#   dns_prefix_private_cluster = "studio"
+#   #dns_prefix_private_cluster = each.value.dnsPrefix != "" ? each.value.dnsPrefix : local.stateExistsNetwork ? data.terraform_remote_state.network.outputs.privateDns.zoneName : ""
+#   private_dns_zone_id        = data.azurerm_private_dns_zone.render.id
+#   private_cluster_enabled    = true
+#   identity {
+#     type = "UserAssigned"
+#     identity_ids = [
+#       data.azurerm_user_assigned_identity.render.id
+#     ]
+#   }
 #   default_node_pool {
-#     name    = each.value.pool.name
-#     vm_size = each.value.machine.size
+#     name       = each.value.defaultPool.name
+#     vm_size    = each.value.defaultPool.machine.size
+#     node_count = each.value.defaultPool.machine.count
 #   }
-# }
-
-###################################################################################
-# Kubernetes Fleets (https://learn.microsoft.com/azure/kubernetes-fleet/overview) #
-###################################################################################
-
-# resource "azurerm_kubernetes_fleet_manager" "farm" {
-#   for_each = {
-#     for kubernetesFleet in var.kubernetesFleets : kubernetesFleet.name => kubernetesFleet if kubernetesFleet.name != ""
-#   }
-#   name                = each.value.name
-#   resource_group_name = azurerm_resource_group.farm.name
-#   location            = azurerm_resource_group.farm.location
 # }
 
 output "resourceGroupName" {

@@ -121,31 +121,40 @@ virtualMachineScaleSets = [
   }
 ]
 
-################################################################################
-# Kubernetes Clusters (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
-################################################################################
+#######################################################################
+# Kubernetes (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
+#######################################################################
 
-kubernetesClusters = [
-  {
-    name = ""
-    pool = {
-      name = "default"
-    }
-    machine = {
-      size = "Standard_HB120rs_v2"
-    }
+kubernetes = {
+  fleet = { # https://learn.microsoft.com/azure/kubernetes-fleet/overview
+    name      = ""
+    dnsPrefix = ""
   }
-]
-
-###################################################################################
-# Kubernetes Fleets (https://learn.microsoft.com/azure/kubernetes-fleet/overview) #
-###################################################################################
-
-kubernetesFleets = [
-  {
-    name = ""
-  }
-]
+  clusters = [
+    {
+      name      = "cluster1"
+      dnsPrefix = ""
+      defaultPool = {
+        name = "default"
+        machine = {
+          size  = "Standard_HB120rs_v2"
+          count = 3
+        }
+      }
+    },
+    {
+      name      = "cluster2"
+      dnsPrefix = ""
+      defaultPool = {
+        name = "default"
+        machine = {
+          size  = "Standard_HB120rs_v2"
+          count = 3
+        }
+      }
+    }
+  ]
+}
 
 #######################################################################
 # Optional resource dependency configuration for existing deployments #
