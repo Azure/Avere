@@ -98,7 +98,7 @@ azure-synapse-artifacts==0.13.0
 azure-synapse-managedprivateendpoints==0.3.0
 azure-synapse-spark==0.2.0
 bcrypt==4.0.0
-certifi==2022.6.15.1
+certifi==2022.12.7
 cffi==1.15.1
 chardet==3.0.4
 charset-normalizer==2.1.1
