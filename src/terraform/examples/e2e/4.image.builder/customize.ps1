@@ -59,8 +59,15 @@ if ($gpuPlatform -contains "GRID") {
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-grid.output.txt" -RedirectStandardError "nvidia-grid.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-gpu-grid.output.txt" -RedirectStandardError "nvidia-gpu-grid.error.txt"
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
+} else if ($gpuPlatform -contains "AMD") {
+  Write-Host "Customize (Start): AMD GPU"
+  $installFile = "amd-gpu.exe"
+  $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  # Start-Process -FilePath .\$installFile -ArgumentList "/quiet /norestart" -Wait -RedirectStandardOutput "amd-gpu.output.txt" -RedirectStandardError "amd-gpu.error.txt"
+  Write-Host "Customize (End): AMD GPU"
 }
 
 if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
@@ -114,6 +121,8 @@ if ($machineType -eq "Scheduler") {
 switch ($renderManager) {
   "RoyalRender" {
     $schedulerVersion = "8.4.03"
+    $schedulerRootDirectory = "C:\RoyalRender"
+    $schedulerClientBinPath = "$schedulerRootDirectory\bin\win64"
   }
   "Deadline" {
     $schedulerVersion = "10.2.0.9"
@@ -153,27 +162,23 @@ switch ($renderManager) {
     Write-Host "Customize (End): Royal Render Download"
 
     Write-Host "Customize (Start): Royal Render Installer"
-    $rootDirectory = "RoyalRender"
+    $logFileName = "royal-render"
     $installFile = "rrSetup_win.exe"
     $installDirectory = "RoyalRender__${schedulerVersion}__installer"
-    New-Item -ItemType Directory -Path $rootDirectory
-    Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot $rootDirectory" -Wait -RedirectStandardOutput "$rootDirectory.output.txt" -RedirectStandardError "$rootDirectory.error.txt"
+    New-Item -ItemType Directory -Path $schedulerRootDirectory
+    Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot $schedulerRootDirectory" -Wait -RedirectStandardOutput "$logFileName.output.txt" -RedirectStandardError "$logFileName.error.txt"
     Write-Host "Customize (End): Royal Render Installer"
 
-    Set-Location -Path $rootDirectory
-    [System.Environment]::SetEnvironmentVariable("RR_ROOT", $pwd.Path)
+    $installFile = "win__rrWorkstation_installer.bat"
     if ($machineType -eq "Scheduler") {
       Write-Host "Customize (Start): Royal Render Server"
-      # $installFile = "win__rrServerconsole.bat"
-      # Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "rr-server.output.txt" -RedirectStandardError "rr-server.error.txt"
-
+      Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-serviceServer" -Wait -RedirectStandardOutput "$logFileName-server.output.txt" -RedirectStandardError "$logFileName-server.error.txt"
       Write-Host "Customize (End): Royal Render Server"
     }
 
     Write-Host "Customize (Start): Royal Render Client"
-
+    Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-service" -Wait -RedirectStandardOutput "$logFileName-client.output.txt" -RedirectStandardError "$logFileName-client.error.txt"
     Write-Host "Customize (End): Royal Render Client"
-    Set-Location -Path $binDirectory
   }
   "Deadline" {
     Write-Host "Customize (Start): Deadline Download"

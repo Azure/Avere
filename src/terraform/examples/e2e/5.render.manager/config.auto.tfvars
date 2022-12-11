@@ -7,7 +7,7 @@ resourceGroupName = "ArtistAnywhere.Scheduler"
 virtualMachines = [
   {
     name        = "LnxScheduler"
-    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/0.0.0"
+    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/0.0.0"
     machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Linux"
@@ -56,7 +56,7 @@ virtualMachines = [
   },
   {
     name        = "" # "WinScheduler"
-    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinScheduler/versions/0.0.0"
+    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinScheduler/versions/0.0.0"
     machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
     operatingSystem = {
       type = "Windows"

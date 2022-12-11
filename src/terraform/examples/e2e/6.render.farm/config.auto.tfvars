@@ -7,10 +7,10 @@ resourceGroupName = "ArtistAnywhere.Farm"
 virtualMachineScaleSets = [
   {
     name    = "LnxFarm"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/Linux/versions/1.0.0"
+    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
-      count = 10
+      count = 2
     }
     operatingSystem = {
       type = "Linux"
@@ -64,10 +64,10 @@ virtualMachineScaleSets = [
   },
   {
     name    = "" # "WinFarm"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/Gallery/images/WinFarm/versions/1.0.0"
+    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinFarm/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
-      count = 10
+      count = 2
     }
     operatingSystem = {
       type = "Windows"
@@ -138,7 +138,7 @@ kubernetes = {
         name = "default"
         machine = {
           size  = "Standard_HB120rs_v2"
-          count = 3
+          count = 2
         }
       }
     },
@@ -149,7 +149,7 @@ kubernetes = {
         name = "default"
         machine = {
           size  = "Standard_HB120rs_v2"
-          count = 3
+          count = 2
         }
       }
     }

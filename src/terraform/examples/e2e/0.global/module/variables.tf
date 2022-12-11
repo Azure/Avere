@@ -7,7 +7,7 @@ variable "regionName" {
 }
 
 variable "renderManager" {
-  default = "Deadline" # RoyalRender (https://royalrender.de/) or Deadline
+  default = "Deadline" # RoyalRender or Deadline
 }
 
 variable "resourceGroupName" {

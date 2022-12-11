@@ -371,8 +371,22 @@ resource "azurerm_network_security_group" "network" {
   dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []
     content {
-      name                       = "AllowOutPCoIP[TCP]"
+      name                       = "AllowOutHTTP"
       priority                   = 2000
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_address_prefix      = "*"
+      source_port_range          = "*"
+      destination_address_prefix = "Internet"
+      destination_port_range     = "80"
+    }
+  }
+  dynamic security_rule {
+    for_each = each.value.name == "Workstation" ? [1] : []
+    content {
+      name                       = "AllowOutPCoIP[TCP]"
+      priority                   = 2100
       direction                  = "Outbound"
       access                     = "Allow"
       protocol                   = "Tcp"
@@ -386,7 +400,7 @@ resource "azurerm_network_security_group" "network" {
     for_each = each.value.name == "Workstation" ? [1] : []
     content {
       name                       = "AllowOutPCoIP[UDP]"
-      priority                   = 2100
+      priority                   = 2200
       direction                  = "Outbound"
       access                     = "Allow"
       protocol                   = "Udp"

@@ -49,7 +49,7 @@ if [[ $gpuPlatform == *GRID* ]]; then
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent --dkms 1> "nvidia-grid.output.txt" 2> "nvidia-grid.error.txt"
+  ./$installFile --silent --dkms 1> "nvidia-gpu-grid.output.txt" 2> "nvidia-gpu-grid.error.txt"
   echo "Customize (End): NVIDIA GPU (GRID)"
 fi
 
@@ -149,6 +149,8 @@ fi
 case $renderManager in
   "RoyalRender")
     schedulerVersion="8.4.03"
+    schedulerRootDirectory="/RoyalRender"
+    schedulerClientBinPath="$schedulerRootDirectory/bin/lx64"
     ;;
   "Deadline")
     schedulerVersion="10.2.0.9"
@@ -190,28 +192,24 @@ case $renderManager in
     yum -y install fontconfig
     yum -y install libXrender
     yum -y install libXext
-    rootDirectory="RoyalRender"
+    logFileName="royal-render"
     installFile="rrSetup_linux"
     installDirectory="RoyalRender__${schedulerVersion}__installer"
     chmod +x ./$installDirectory/$installFile
-    mkdir $rootDirectory
-    ./$installDirectory/$installFile -console -rrRoot $rootDirectory 1> "$rootDirectory.output.txt" 2> "$rootDirectory.error.txt"
+    mkdir $schedulerRootDirectory
+    ./$installDirectory/$installFile -console -rrRoot $schedulerRootDirectory 1> "$logFileName.output.txt" 2> "$logFileName.error.txt"
     echo "Customize (End): Royal Render Installer"
 
-    cd $rootDirectory
-    export RR_ROOT=$(pwd)
+    installFile="lx__rrWorkstation_installer.sh"
     if [ $machineType == "Scheduler" ]; then
       echo "Customize (Start): Royal Render Server"
-      # installFile="lx__rrServerconsole.sh"
-      # ./$installFile 1> "rr-server.output.txt" 2> "rr-server.error.txt"
-
+      $schedulerRootDirectory/$installFile -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
       echo "Customize (End): Royal Render Server"
     fi
 
     echo "Customize (Start): Royal Render Client"
-
+    $schedulerRootDirectory/$installFile -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
     echo "Customize (End): Royal Render Client"
-    cd $binDirectory
     ;;
   "Deadline")
     echo "Customize (Start): Deadline Download"
