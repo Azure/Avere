@@ -61,7 +61,7 @@ if ($gpuPlatform -contains "GRID") {
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-gpu-grid.output.txt" -RedirectStandardError "nvidia-gpu-grid.error.txt"
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
-} else if ($gpuPlatform -contains "AMD") {
+} elseif ($gpuPlatform -contains "AMD") {
   Write-Host "Customize (Start): AMD GPU"
   $installFile = "amd-gpu.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"

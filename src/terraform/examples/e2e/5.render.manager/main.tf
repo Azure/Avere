@@ -233,7 +233,9 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   admin_password                  = data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   custom_data = base64encode(
-    templatefile(each.value.customExtension.parameters.autoScale.fileName, each.value.customExtension.parameters)
+    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters,
+      { renderManager = module.global.renderManager }
+    ))
   )
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -326,7 +328,9 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   admin_username      = each.value.adminLogin.userName
   admin_password      = data.azurerm_key_vault_secret.admin_password.value
   custom_data = base64encode(
-    templatefile(each.value.customExtension.parameters.autoScale.fileName, each.value.customExtension.parameters)
+    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters,
+      { renderManager = module.global.renderManager }
+    ))
   )
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"

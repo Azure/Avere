@@ -36,7 +36,7 @@ virtualMachines = [
         ]
         autoScale = {
           enable                   = false
-          fileName                 = "scale.sh"
+          fileName                 = "scale.auto.sh"
           scaleSetName             = "LnxFarm"
           resourceGroupName        = "ArtistAnywhere.Farm"
           detectionIntervalSeconds = 60
@@ -85,7 +85,7 @@ virtualMachines = [
         ]
         autoScale = {
           enable                   = false
-          fileName                 = "scale.ps1"
+          fileName                 = "scale.auto.ps1"
           scaleSetName             = "WinFarm"
           resourceGroupName        = "ArtistAnywhere.Farm"
           detectionIntervalSeconds = 60

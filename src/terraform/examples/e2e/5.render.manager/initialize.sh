@@ -5,37 +5,60 @@ cd $binDirectory
 
 source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
 
+if [ ${renderManager} == "RoyalRender" ]; then
+  servicePath="/etc/systemd/system/scheduler.service"
+  echo "[Unit]" > $servicePath
+  echo "Description=Render Job Scheduler Service" >> $servicePath
+  echo "" >> $servicePath
+  echo "[Service]" >> $servicePath
+  echo "Environment=renderManager=${renderManager}" >> $servicePath
+  echo "ExecStart=/RoyalRender/bin/lx64/lx__rrServerconsole" >> $servicePath
+  echo "" >> $servicePath
+  timerPath="/etc/systemd/system/scheduler.timer"
+  echo "[Unit]" > $timerPath
+  echo "Description=Render Job Scheduler Timer" >> $timerPath
+  echo "" >> $timerPath
+  echo "[Timer]" >> $timerPath
+  echo "OnBootSec=10" >> $timerPath
+  echo "AccuracySec=1us" >> $timerPath
+  echo "" >> $timerPath
+  echo "[Install]" >> $timerPath
+  echo "WantedBy=timers.target" >> $timerPath
+  systemctl --now enable scheduler.timer
+fi
+
 customDataInputFile="/var/lib/waagent/ovf-env.xml"
-customDataOutputFile="/var/lib/waagent/scale.sh"
+customDataOutputFile="/var/lib/waagent/scale.auto.sh"
 customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInputFile)
 echo $customData | base64 -d > $customDataOutputFile
 
-scaleServicePath="/etc/systemd/system/scale.service"
-echo "[Unit]" > $scaleServicePath
-echo "Description=Render Farm Scaler Service" >> $scaleServicePath
-echo "" >> $scaleServicePath
-echo "[Service]" >> $scaleServicePath
-echo "Environment=PATH=$schedulerPath:$PATH" >> $scaleServicePath
-echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $scaleServicePath
-echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $scaleServicePath
-echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $scaleServicePath
-echo "Environment=workerIdleDeleteSeconds=${autoScale.workerIdleDeleteSeconds}" >> $scaleServicePath
-echo "ExecStart=/bin/bash $customDataOutputFile" >> $scaleServicePath
-echo "" >> $scaleServicePath
-scaleTimerPath="/etc/systemd/system/scale.timer"
-echo "[Unit]" > $scaleTimerPath
-echo "Description=Render Farm Scaler Timer" >> $scaleTimerPath
-echo "" >> $scaleTimerPath
-echo "[Timer]" >> $scaleTimerPath
-echo "OnBootSec=10" >> $scaleTimerPath
-echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $scaleTimerPath
-echo "AccuracySec=1us" >> $scaleTimerPath
-echo "" >> $scaleTimerPath
-echo "[Install]" >> $scaleTimerPath
-echo "WantedBy=timers.target" >> $scaleTimerPath
+servicePath="/etc/systemd/system/scale.auto.service"
+echo "[Unit]" > $servicePath
+echo "Description=Render Farm Auto Scale Service" >> $servicePath
+echo "" >> $servicePath
+echo "[Service]" >> $servicePath
+# echo "Environment=PATH=$schedulerPath:$PATH" >> $servicePath
+echo "Environment=renderManager=${renderManager}" >> $servicePath
+echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
+echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
+echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $servicePath
+echo "Environment=workerIdleDeleteSeconds=${autoScale.workerIdleDeleteSeconds}" >> $servicePath
+echo "ExecStart=/bin/bash $customDataOutputFile" >> $servicePath
+echo "" >> $servicePath
+timerPath="/etc/systemd/system/scale.auto.timer"
+echo "[Unit]" > $timerPath
+echo "Description=Render Farm Auto Scale Timer" >> $timerPath
+echo "" >> $timerPath
+echo "[Timer]" >> $timerPath
+echo "OnBootSec=10" >> $timerPath
+echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $timerPath
+echo "AccuracySec=1us" >> $timerPath
+echo "" >> $timerPath
+echo "[Install]" >> $timerPath
+echo "WantedBy=timers.target" >> $timerPath
 
 if [ ${autoScale.enable} == true ]; then
-  systemctl --now enable scale.timer
+  systemctl --now enable scale.auto.timer
 fi
 
 %{ for fsMount in fileSystemMountsStorage }

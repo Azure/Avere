@@ -10,8 +10,9 @@ echo "[Unit]" > $servicePath
 echo "Description=Scheduled Event Handler Service" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
-echo "Environment=PATH=$schedulerPath:$PATH" >> $servicePath
-echo "ExecStart=/bin/bash /tmp/terminate.sh" >> $servicePath
+# echo "Environment=PATH=$schedulerPath:$PATH" >> $servicePath
+echo "Environment=renderManager=${renderManager}" >> $servicePath
+echo "ExecStart=/bin/bash /tmp/onTerminate.sh" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/terminate.timer"
 echo "[Unit]" > $timerPath
