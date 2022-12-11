@@ -205,10 +205,11 @@ case $renderManager in
       echo "Customize (Start): Royal Render Server"
       $schedulerRootDirectory/$installFile -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
       echo "Customize (End): Royal Render Server"
+    else
+      echo "Customize (Start): Royal Render Client"
+      $schedulerRootDirectory/$installFile -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
+      echo "Customize (End): Royal Render Client"
     fi
-    echo "Customize (Start): Royal Render Client"
-    $schedulerRootDirectory/$installFile -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
-    echo "Customize (End): Royal Render Client"
 
     echo "Customize (Start): Royal Render Auto Start"
     installFile="bin/rrAutostartservice"

@@ -174,10 +174,11 @@ switch ($renderManager) {
       Write-Host "Customize (Start): Royal Render Server"
       Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-serviceServer" -Wait -RedirectStandardOutput "$logFileName-server.output.txt" -RedirectStandardError "$logFileName-server.error.txt"
       Write-Host "Customize (End): Royal Render Server"
+    } else {
+      Write-Host "Customize (Start): Royal Render Client"
+      Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-service" -Wait -RedirectStandardOutput "$logFileName-client.output.txt" -RedirectStandardError "$logFileName-client.error.txt"
+      Write-Host "Customize (End): Royal Render Client"
     }
-    Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-service" -Wait -RedirectStandardOutput "$logFileName-client.output.txt" -RedirectStandardError "$logFileName-client.error.txt"
-    Write-Host "Customize (End): Royal Render Client"
 
     Write-Host "Customize (Start): Royal Render Auto Start"
     $installFile = "bin\rrAutostartservice"
