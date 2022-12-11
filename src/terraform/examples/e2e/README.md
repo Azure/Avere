@@ -221,11 +221,9 @@ To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure 
 
 ## 9 Render
 
-Now that deployment of the AAA solution framework is complete, this section provides render job submission examples via the general-purpose **Deadline** [SubmitCommandLineJob](https://docs.thinkboxsoftware.com/products/deadline/10.1/1_User%20Manual/manual/command-line-arguments-jobs.html#submitcommandlinejob) API.
+Now that deployment of the AAA solution framework is complete, this final section provides render job submission examples for multiple render engines (Blender, PBRT) via multiple render managers (Royal Render, Deadline).
 
 ### 9.1 [Blender](https://www.blender.org)
-
-For example, the following sample **Blender** output images were rendering in Azure via the **Deadline** job submission commands below.
 
 #### Scanlands
 
@@ -233,14 +231,28 @@ For example, the following sample **Blender** output images were rendering in Az
   <img src=".github/images/scanlands.png" alt="Scanlands" width="1024" />
 </p>
 
-#### Linux Render Farm
+### 9.1.1 [Royal Render](https://royalrender.de) Linux Render Farm
+
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+TBD
+
+### 9.1.2 [Deadline](https://www.awsthinkbox.com/deadline) Linux Render Farm
+
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Scanlands -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.3/splash.blend --render-output /mnt/show/write/blender/3.3/splash####.png --render-frame 1"
 </code></p>
 
-#### Windows Render Farm
+### 9.1.3 [Royal Render](https://royalrender.de) Windows Render Farm
+
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+TBD
+
+### 9.1.4 [Deadline](https://www.awsthinkbox.com/deadline) Windows Render Farm
+
 *The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
@@ -249,16 +261,8 @@ deadlinecommand -SubmitCommandLineJob -name Scanlands -executable blender.exe -a
 
 ### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org)
 
-For example, the following sample **PBRT** output image was rendering in Azure via the **Deadline** job submission command below.
-
-#### Moana Island
-
-<p align="center">
-  <img src=".github/images/moana-island.png" alt="Moana Island" width="1024" />
-</p>
-
 ######
-Unlike the Blender splash screen data that is included in the AAA GitHub repository within the Storage module, the following PBRT Moana Island data must be downloaded, decompressed and uploaded into your storage system *before* the following job command is submitted.
+Unlike the Blender splash screen sample data that is optionally uploaded via the [2 Storage](#2-storage) module configuration, the following PBRT Moana Island data is significantly larger and must be downloaded, decompressed and uploaded into your storage system *before* render job submission.
 
 * **[Moana Island Base Data (44.8 GiB Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/moana/island-basepackage-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
 
@@ -266,8 +270,21 @@ Unlike the Blender splash screen data that is included in the AAA GitHub reposit
 
 * **[Moana Island PBRT v4 Data (5.5 GiB Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/moana/island-pbrtV4-v2.0.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
 
-#### Linux Render Farm
-*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
+#### Moana Island
+
+<p align="center">
+  <img src=".github/images/moana-island.png" alt="Moana Island" width="1024" />
+</p>
+
+### 9.2.1 [Royal Render](https://royalrender.de) Linux Render Farm
+
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+TBD
+
+### 9.2.2 [Deadline](https://www.awsthinkbox.com/deadline) Linux Render Farm
+
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -arguments "--outfile /mnt/show/write/pbrt/moana/island-v3.png /mnt/show/read/pbrt/moana/island/pbrt/island.pbrt"
@@ -277,8 +294,15 @@ deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -a
 deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -arguments "--outfile /mnt/show/write/pbrt/moana/island-v4.png /mnt/show/read/pbrt/moana/island/pbrt-v4/island.pbrt"
 </code></p>
 
-#### Windows Render Farm
-*The following job commands can be submitted from a **Linux** or **Windows** artist workstation.*
+### 9.2.3 [Royal Render](https://royalrender.de) Windows Render Farm
+
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
+
+TBD
+
+### 9.2.4 [Deadline](https://www.awsthinkbox.com/deadline) Windows Render Farm
+
+*The following job command can be submitted from a **Linux** or **Windows** artist workstation.*
 
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt"

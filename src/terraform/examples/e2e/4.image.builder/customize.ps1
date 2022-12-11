@@ -181,7 +181,7 @@ switch ($renderManager) {
     }
 
     Write-Host "Customize (Start): Royal Render Auto Start"
-    $installFile = "bin\rrAutostartservice"
+    $installFile = "bin\win64\rrAutostartservice"
     Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-install" -Wait -RedirectStandardOutput "$logFileName-starter.output.txt" -RedirectStandardError "$logFileName-starter.error.txt"
     Write-Host "Customize (End): Royal Render Auto Start"
   }

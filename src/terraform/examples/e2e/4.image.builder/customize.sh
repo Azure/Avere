@@ -212,7 +212,7 @@ case $renderManager in
     fi
 
     echo "Customize (Start): Royal Render Auto Start"
-    installFile="bin/rrAutostartservice"
+    installFile="bin/lx64/rrAutostartservice"
     $schedulerRootDirectory/$installFile -install 1> "$logFileName-starter.output.txt" 2> "$logFileName-starter.error.txt"
     echo "Customize (End): Royal Render Auto Start"
     ;;
