@@ -121,7 +121,7 @@ if ($machineType -eq "Scheduler") {
 switch ($renderManager) {
   "RoyalRender" {
     $schedulerVersion = "8.4.03"
-    $schedulerRootDirectory = "C:\RoyalRender"
+    $schedulerRootDirectory = "\RoyalRender"
     $schedulerClientBinPath = "$schedulerRootDirectory\bin\win64"
   }
   "Deadline" {
@@ -175,10 +175,14 @@ switch ($renderManager) {
       Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-serviceServer" -Wait -RedirectStandardOutput "$logFileName-server.output.txt" -RedirectStandardError "$logFileName-server.error.txt"
       Write-Host "Customize (End): Royal Render Server"
     }
-
     Write-Host "Customize (Start): Royal Render Client"
     Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-service" -Wait -RedirectStandardOutput "$logFileName-client.output.txt" -RedirectStandardError "$logFileName-client.error.txt"
     Write-Host "Customize (End): Royal Render Client"
+
+    Write-Host "Customize (Start): Royal Render Auto Start"
+    $installFile = "bin\rrAutostartservice"
+    Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-install" -Wait -RedirectStandardOutput "$logFileName-starter.output.txt" -RedirectStandardError "$logFileName-starter.error.txt"
+    Write-Host "Customize (End): Royal Render Auto Start"
   }
   "Deadline" {
     Write-Host "Customize (Start): Deadline Download"

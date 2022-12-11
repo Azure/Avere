@@ -5,28 +5,6 @@ cd $binDirectory
 
 source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
 
-if [ ${renderManager} == "RoyalRender" ]; then
-  servicePath="/etc/systemd/system/scheduler.service"
-  echo "[Unit]" > $servicePath
-  echo "Description=Render Job Scheduler Service" >> $servicePath
-  echo "" >> $servicePath
-  echo "[Service]" >> $servicePath
-  echo "Environment=renderManager=${renderManager}" >> $servicePath
-  echo "ExecStart=/RoyalRender/bin/lx64/lx__rrServerconsole" >> $servicePath
-  echo "" >> $servicePath
-  timerPath="/etc/systemd/system/scheduler.timer"
-  echo "[Unit]" > $timerPath
-  echo "Description=Render Job Scheduler Timer" >> $timerPath
-  echo "" >> $timerPath
-  echo "[Timer]" >> $timerPath
-  echo "OnBootSec=10" >> $timerPath
-  echo "AccuracySec=1us" >> $timerPath
-  echo "" >> $timerPath
-  echo "[Install]" >> $timerPath
-  echo "WantedBy=timers.target" >> $timerPath
-  systemctl --now enable scheduler.timer
-fi
-
 customDataInputFile="/var/lib/waagent/ovf-env.xml"
 customDataOutputFile="/var/lib/waagent/scale.auto.sh"
 customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInputFile)
