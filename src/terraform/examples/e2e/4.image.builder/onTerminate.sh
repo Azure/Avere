@@ -3,11 +3,6 @@
 cycleCloudEnable=false
 case $renderManager in
   "RoyalRender")
-    if [ $cycleCloudEnable == true ]; then
-      :
-    else
-      :
-    fi
     ;;
   "Deadline")
     if [ $cycleCloudEnable == true ]; then

@@ -73,7 +73,28 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxFarm1"
+    name = "LnxFarmGPU"
+    image = {
+      definitionName = "Linux"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "Farm"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 480
+      timeoutMinutes = 240
+      outputVersion  = "1.1.0"
+      renderEngines  = [
+        "Blender",
+        "PBRT",
+        "Unity",
+        "Unreal"
+      ]
+    }
+  },
+  {
+    name = "LnxFarmCPU"
     image = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -92,28 +113,7 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxFarm2"
-    image = {
-      definitionName = "Linux"
-      inputVersion   = "Latest"
-    }
-    build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = []                    # GRID, AMD, CUDA and/or CUDA.OptiX
-      osDiskSizeGB   = 480
-      timeoutMinutes = 240
-      outputVersion  = "1.1.0"
-      renderEngines  = [
-        "Blender",
-        "PBRT",
-        "Unity",
-        "Unreal"
-      ]
-    }
-  },
-  {
-    name = "LnxArtist1"
+    name = "LnxArtist"
     image = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -125,25 +125,6 @@ imageTemplates = [
       osDiskSizeGB   = 512
       timeoutMinutes = 240
       outputVersion  = "2.0.0"
-      renderEngines  = [
-        "Blender",
-        "PBRT"
-      ]
-    }
-  },
-  {
-    name = "LnxArtist2"
-    image = {
-      definitionName = "Linux"
-      inputVersion   = "Latest"
-    }
-    build = {
-      machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
-      osDiskSizeGB   = 512
-      timeoutMinutes = 240
-      outputVersion  = "2.1.0"
       renderEngines  = [
         "Blender",
         "PBRT",
@@ -169,7 +150,28 @@ imageTemplates = [
     }
   },
   {
-    name = "WinFarm1"
+    name = "WinFarmGPU"
+    image = {
+      definitionName = "WinFarm"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "Farm"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
+      osDiskSizeGB   = 480
+      timeoutMinutes = 420
+      outputVersion  = "1.1.0"
+      renderEngines  = [
+        "Blender",
+        "PBRT",
+        "Unity",
+        "Unreal"
+      ]
+    }
+  },
+  {
+    name = "WinFarmCPU"
     image = {
       definitionName = "WinFarm"
       inputVersion   = "Latest"
@@ -188,28 +190,7 @@ imageTemplates = [
     }
   },
   {
-    name = "WinFarm2"
-    image = {
-      definitionName = "WinFarm"
-      inputVersion   = "Latest"
-    }
-    build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = []                    # GRID, AMD, CUDA and/or CUDA.OptiX
-      osDiskSizeGB   = 480
-      timeoutMinutes = 420
-      outputVersion  = "1.1.0"
-      renderEngines  = [
-        "Blender",
-        "PBRT",
-        "Unity",
-        "Unreal"
-      ]
-    }
-  },
-  {
-    name = "WinArtist1"
+    name = "WinArtist"
     image = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"
@@ -221,25 +202,6 @@ imageTemplates = [
       osDiskSizeGB   = 512
       timeoutMinutes = 420
       outputVersion  = "2.0.0"
-      renderEngines  = [
-        "Blender",
-        "PBRT"
-      ]
-    }
-  },
-  {
-    name = "WinArtist2"
-    image = {
-      definitionName = "WinArtist"
-      inputVersion   = "Latest"
-    }
-    build = {
-      machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
-      osDiskSizeGB   = 512
-      timeoutMinutes = 420
-      outputVersion  = "2.1.0"
       renderEngines  = [
         "Blender",
         "PBRT",

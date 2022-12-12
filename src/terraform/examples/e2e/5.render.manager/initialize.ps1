@@ -7,7 +7,7 @@ $customDataInputFile = "C:\AzureData\CustomData.bin"
 $customDataOutputFile = "C:\AzureData\scale.auto.ps1"
 $fileStream = New-Object System.IO.FileStream($customDataInputFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
 $streamReader = New-Object System.IO.StreamReader($fileStream)
-Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutputFile
+Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutputFile -Force
 
 $taskName = "AAA Render Farm Auto Scale"
 $taskStart = Get-Date
@@ -24,7 +24,7 @@ if ("${autoScale.enable}" -ne "true") {
 }
 
 $fsMountsFile = "$binDirectory\fs-mounts.bat"
-New-Item -ItemType File -Path $fsMountsFile
+New-Item -ItemType File -Path $fsMountsFile -Force
 %{ for fsMount in fileSystemMountsStorage }
   Add-Content -Path $fsMountsFile -Value "${fsMount}"
 %{ endfor }

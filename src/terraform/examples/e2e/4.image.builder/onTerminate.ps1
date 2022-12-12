@@ -7,9 +7,6 @@ $ErrorActionPreference = "Stop"
 $cycleCloudEnable = $false
 switch ($renderManager) {
   "RoyalRender" {
-    if ($cycleCloudEnable) {
-    } else {
-    }
   }
   "Deadline" {
     if ($cycleCloudEnable) {
