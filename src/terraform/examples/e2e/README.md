@@ -22,7 +22,7 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 | [8 GitOps](#8-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
 | [9 Render](#9-render) | Sample render farm job submission from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
-For example, the following sample output images were rendering in Azure via the AAA solution deployment framework.
+For example, the following sample images were rendering in Azure via the Azure Artist Anywhere (AAA) solution deployment framework.
 
 <p align="center">
   <img src=".github/images/blender-splash-3.4.png" alt="Blender Splash" width="1024" />
