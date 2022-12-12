@@ -254,11 +254,11 @@ esac
 
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
-  yum -y install libXi
+  yum -y install libxkbcommon
   yum -y install libXxf86vm
   yum -y install libXfixes
   yum -y install libXrender
-  yum -y install libGL
+  yum -y install libXi
   versionInfo="3.4.0"
   installFile="blender-$versionInfo-linux-x64.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
