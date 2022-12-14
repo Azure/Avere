@@ -46,20 +46,17 @@ variable "storageAccounts" {
       enableHttpsOnly      = bool
       enableBlobNfsV3      = bool
       enableLargeFileShare = bool
-      enableSampleDataLoad = bool
       blobContainers = list(object(
         {
-          name        = string
-          sampleFiles = list(string)
+          name = string
         }
       ))
       fileShares = list(object(
         {
-          name        = string
-          tier        = string
-          sizeGiB     = number
-          protocol    = string
-          sampleFiles = list(string)
+          name     = string
+          tier     = string
+          sizeGiB  = number
+          protocol = string
         }
       ))
     }
@@ -270,31 +267,7 @@ locals {
         name               = blobContainer.name
         storageAccountName = storageAccount.name
       }
-    ] if storageAccount.enableSampleDataLoad
-  ])
-  blobRootFiles = flatten([
-    for storageAccount in var.storageAccounts : [
-      for blobContainer in storageAccount.blobContainers : [
-        for blob in fileset(blobContainer.name, "*") : {
-          name               = blob
-          containerName      = blobContainer.name
-          storageAccountName = storageAccount.name
-        }
-      ]
-    ] if storageAccount.enableSampleDataLoad
-  ])
-  blobDirectoryFiles = flatten([
-    for storageAccount in var.storageAccounts : [
-      for blobContainer in storageAccount.blobContainers : [
-        for localPath in blobContainer.sampleFiles : [
-          for blob in fileset(blobContainer.name, "/${localPath}/**") : {
-            name               = blob
-            containerName      = blobContainer.name
-            storageAccountName = storageAccount.name
-          }
-        ]
-      ]
-    ] if storageAccount.enableSampleDataLoad
+    ]
   ])
   fileShares = flatten([
     for storageAccount in var.storageAccounts : [
@@ -305,21 +278,7 @@ locals {
         accessProtocol     = fileShare.protocol
         storageAccountName = storageAccount.name
       }
-    ] if storageAccount.enableSampleDataLoad
-  ])
-  fileShareFiles = flatten([
-    for storageAccount in var.storageAccounts : [
-      for fileShare in storageAccount.fileShares : [
-        for localPath in fileShare.sampleFiles : [
-          for file in fileset(fileShare.name, "/${localPath}/**") : {
-            name               = file
-            directoryPath      = dirname(file)
-            shareName          = fileShare.name
-            storageAccountName = storageAccount.name
-          }
-        ]
-      ]
-    ] if storageAccount.enableSampleDataLoad
+    ]
   ])
   netAppVolumes = flatten([
     for capacityPool in var.netAppAccount.capacityPools : [
@@ -434,15 +393,15 @@ resource "azurerm_storage_account" "storage" {
       for serviceEndpointSubnet in local.serviceEndpointSubnets :
         "${data.azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${serviceEndpointSubnet.virtualNetworkName}/subnets/${serviceEndpointSubnet.name}"
     ]
-    ip_rules = each.value.enableSampleDataLoad ? [
+    ip_rules = [
       jsondecode(data.http.current.response_body).ip
-    ] : []
+    ]
   }
 }
 
 resource "time_sleep" "storage_data" {
   for_each = {
-    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enableSampleDataLoad
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
   }
   create_duration = "30s"
   depends_on = [
@@ -461,20 +420,6 @@ resource "azurerm_storage_container" "containers" {
   ]
 }
 
-resource "azurerm_storage_blob" "blobs" {
-  for_each = {
-    for blob in setunion(local.blobRootFiles, local.blobDirectoryFiles) : "${blob.storageAccountName}.${blob.name}" => blob
-  }
-  name                   = each.value.name
-  storage_account_name   = each.value.storageAccountName
-  storage_container_name = each.value.containerName
-  source                 = "${path.cwd}/${each.value.containerName}/${each.value.name}"
-  type                   = "Block"
-  depends_on = [
-    azurerm_storage_container.containers
-  ]
-}
-
 resource "azurerm_storage_share" "shares" {
   for_each = {
     for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare
@@ -486,19 +431,6 @@ resource "azurerm_storage_share" "shares" {
   quota                = each.value.size
   depends_on = [
     time_sleep.storage_data
-  ]
-}
-
-resource "azurerm_storage_share_file" "files" {
-  for_each = {
-    for fileShareFile in local.fileShareFiles : "${fileShareFile.storageAccountName}.${fileShareFile.name}" => fileShareFile
-  }
-  name             = basename(each.value.name)
-  path             = each.value.directoryPath
-  source           = "${path.cwd}/${each.value.shareName}/${each.value.name}"
-  storage_share_id = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.storageAccountName}/fileServices/default/shares/${each.value.shareName}"
-  depends_on = [
-    azurerm_storage_share.shares
   ]
 }
 

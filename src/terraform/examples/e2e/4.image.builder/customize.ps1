@@ -66,7 +66,8 @@ if ($gpuPlatform -contains "GRID") {
   $installFile = "amd-gpu.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  # Start-Process -FilePath .\$installFile -ArgumentList "/quiet /norestart" -Wait -RedirectStandardOutput "amd-gpu.output.txt" -RedirectStandardError "amd-gpu.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait
+  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install" -Wait -RedirectStandardOutput "amd-gpu.output.txt" -RedirectStandardError "amd-gpu.error.txt"
   Write-Host "Customize (End): AMD GPU"
 }
 

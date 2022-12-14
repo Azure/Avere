@@ -13,7 +13,7 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 | - | - | - | - |
 | [0 Global](#0-global) | Defines global config (e.g., Azure region, render manager) and deploys core security services. | Yes | Yes |
 | [1 Network](#1-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) and [Bastion](https://learn.microsoft.com/azure/bastion/bastion-overview) with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) hybrid networking services. | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not deployed. Otherwise, No |
-| [2 Storage](#2-storage) | Deploys [Blob (NFS)](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support) / [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction) (with data option), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage services. | No | Yes |
+| [2 Storage](#2-storage) | Deploys [Blob (NFS)](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction), [Qumulo](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/qumulo1584033880660.qumulo-saas) and/or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) storage services. | No | Yes |
 | [3 Storage Cache](#3-storage-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) for highly-available and scalable storage file caching. | Yes | Maybe, depends on your<br>render scale requirements |
 | [4 Image Builder](#4-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) images that are custom built via the managed [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.render.farm/config.auto.tfvars#L10) | No, specify your custom *imageId* reference [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.render.farm/config.auto.tfvars#L10) |
 | [5 Render Manager](#5-render-manager) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for render farm job scheduling with your custom render image. | No, continue to use your current render manager | No, continue to use your current render manager |
@@ -22,7 +22,7 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 | [8 GitOps](#8-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via [GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
 | [9 Render](#9-render) | Sample render farm job submission from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
-For example, the following sample images were rendering in Azure via the Azure Artist Anywhere (AAA) solution deployment framework.
+For example, the following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via the Azure Artist Anywhere (AAA) solution deployment framework.
 
 <p align="center">
   <img src=".github/images/blender-splash-3.4.png" alt="Blender Splash" width="1024" />
@@ -76,7 +76,6 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 
 1. Run `cd ~/e2e/2.storage` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
-   * Optionally set the `enableSampleDataLoad` config value to true to enable upload of sample files to be renderd into Azure Blob and/or File storage
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
@@ -238,7 +237,7 @@ TBD
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -y -noaudio /mnt/show/read/blender/3.4/splash.blend --render-output /mnt/show/write/blender/3.4/splash#### --render-frame 1"
+deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -a -y -noaudio /mnt/show/read/blender/3.4/splash.blend --render-output /mnt/show/write/blender/3.4/splash####"
 </code></p>
 
 #### 9.1.3 [Royal Render](https://royalrender.de) Render Farm (*Windows*)
@@ -252,7 +251,7 @@ TBD
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -y -noaudio R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash#### --render-frame 1"
+deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -a -y -noaudio R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash####"
 </code></p>
 
 ### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)

@@ -13,13 +13,9 @@ storageAccounts = [
     enableHttpsOnly      = true               # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
     enableBlobNfsV3      = true               # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    enableSampleDataLoad = false
     blobContainers = [                        # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
         name = "show"
-        sampleFiles = [
-          "blender"
-        ]
       }
     ]
     fileShares = [                            # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
@@ -33,7 +29,6 @@ storageAccounts = [
     enableHttpsOnly      = true          # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
     enableBlobNfsV3      = false         # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = true          # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    enableSampleDataLoad = false
     blobContainers = [                   # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
     ]
     fileShares = [                       # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
@@ -42,9 +37,6 @@ storageAccounts = [
         tier     = "Premium"
         sizeGiB  = 5120
         protocol = "SMB"
-        sampleFiles = [
-          "blender"
-        ]
       }
     ]
   }
