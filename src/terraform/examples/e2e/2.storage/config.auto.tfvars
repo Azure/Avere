@@ -15,7 +15,12 @@ storageAccounts = [
     enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
     blobContainers = [                        # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
-        name = "show"
+        name = "data"
+        dataSource = {
+          accountName   = ""
+          accountKey    = ""
+          containerName = ""
+        }
       }
     ]
     fileShares = [                            # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
@@ -33,10 +38,15 @@ storageAccounts = [
     ]
     fileShares = [                       # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
-        name     = "show"
+        name     = "data"
         tier     = "Premium"
         sizeGiB  = 5120
         protocol = "SMB"
+        dataSource = {
+          accountName = ""
+          accountKey  = ""
+          shareName   = ""
+        }
       }
     ]
   }
@@ -55,10 +65,10 @@ netAppAccount = {
       serviceLevel = "Standard"
       volumes = [
         {
-          name         = "Show"
+          name         = "Data"
           sizeGiB      = 4096
           serviceLevel = "Standard"
-          mountPath    = "show"
+          mountPath    = "data"
           protocols = [
             "NFSv3"
           ]

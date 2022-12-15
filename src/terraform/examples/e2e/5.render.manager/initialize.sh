@@ -127,16 +127,16 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "CloudInit = '''#!/bin/bash -ex" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "mkdir -p /mnt/scheduler" >> $clusterTemplateFile
-  echo "mkdir -p /mnt/show/write" >> $clusterTemplateFile
-  echo "mkdir -p /mnt/show/read" >> $clusterTemplateFile
+  echo "mkdir -p /mnt/data/write" >> $clusterTemplateFile
+  echo "mkdir -p /mnt/data/read" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "echo 'scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
-  echo "echo 'azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
-  echo "echo 'cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "echo 'azrender1.blob.core.windows.net:/azrender1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "echo 'cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "mount -a" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  echo "chmod 777 /mnt/show/write" >> $clusterTemplateFile
+  echo "chmod 777 /mnt/data/write" >> $clusterTemplateFile
   echo "'''" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[[configuration]]]" >> $clusterTemplateFile

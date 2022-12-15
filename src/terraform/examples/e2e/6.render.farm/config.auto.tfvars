@@ -33,10 +33,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMountsStorage = [
-          "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+          "azrender1.blob.core.windows.net:/azrender1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
         ]
         fileSystemMountsStorageCache = [
-          "cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsRoyalRender = [
         ]
@@ -44,7 +44,7 @@ virtualMachineScaleSets = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         fileSystemPermissions = [
-          "chmod 777 /mnt/show/write"
+          "chmod 777 /mnt/data/write"
         ]
       }
     }
@@ -90,10 +90,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         fileSystemMountsStorage = [
-          "azrender1.blob.core.windows.net:/azrender1/show /mnt/show/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
+          "azrender1.blob.core.windows.net:/azrender1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
         ]
         fileSystemMountsStorageCache = [
-          # "cache.artist.studio:/mnt/show /mnt/show/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          # "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsRoyalRender = [
         ]
@@ -101,7 +101,7 @@ virtualMachineScaleSets = [
           "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
         ]
         fileSystemPermissions = [
-          "chmod 777 /mnt/show/write"
+          "chmod 777 /mnt/data/write"
         ]
       }
     }
@@ -147,10 +147,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMountsStorage = [
-          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:"
+          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\data W:"
         ]
         fileSystemMountsStorageCache = [
-          # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\show R:"
+          # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
         fileSystemMountsRoyalRender = [
         ]
@@ -204,10 +204,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMountsStorage = [
-          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\show W:"
+          "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\data W:"
         ]
         fileSystemMountsStorageCache = [
-          # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\show R:"
+          # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
         fileSystemMountsRoyalRender = [
         ]

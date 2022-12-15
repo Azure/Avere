@@ -237,7 +237,7 @@ TBD
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -a -y -noaudio /mnt/show/read/blender/3.4/splash.blend --render-output /mnt/show/write/blender/3.4/splash####"
+deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -a -y -noaudio /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash####"
 </code></p>
 
 #### 9.1.3 [Royal Render](https://royalrender.de) Render Farm (*Windows*)
@@ -280,11 +280,11 @@ TBD
 *The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -arguments "--outfile /mnt/show/write/pbrt/moana/island-v3.png /mnt/show/read/pbrt/moana/island/pbrt/island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt"
 </code></p>
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -arguments "--outfile /mnt/show/write/pbrt/moana/island-v4.png /mnt/show/read/pbrt/moana/island/pbrt-v4/island.pbrt"
+deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"
 </code></p>
 
 #### 9.2.3 [Royal Render](https://royalrender.de) Render Farm (*Windows*)

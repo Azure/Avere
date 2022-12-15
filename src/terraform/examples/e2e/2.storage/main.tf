@@ -49,6 +49,13 @@ variable "storageAccounts" {
       blobContainers = list(object(
         {
           name = string
+          dataSource = object(
+            {
+              accountName   = string
+              accountKey    = string
+              containerName = string
+            }
+          )
         }
       ))
       fileShares = list(object(
@@ -57,6 +64,13 @@ variable "storageAccounts" {
           tier     = string
           sizeGiB  = number
           protocol = string
+          dataSource = object(
+            {
+              accountName = string
+              accountKey  = string
+              shareName   = string
+            }
+          )
         }
       ))
     }
@@ -265,6 +279,7 @@ locals {
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
         name               = blobContainer.name
+        dataSource         = blobContainer.dataSource
         storageAccountName = storageAccount.name
       }
     ]
@@ -276,6 +291,7 @@ locals {
         tier               = fileShare.tier
         size               = fileShare.sizeGiB
         accessProtocol     = fileShare.protocol
+        dataSource         = fileShare.dataSource
         storageAccountName = storageAccount.name
       }
     ]
@@ -415,6 +431,9 @@ resource "azurerm_storage_container" "containers" {
   }
   name                 = each.value.name
   storage_account_name = each.value.storageAccountName
+  provisioner "local-exec" {
+    command = each.value.dataSource.accountName == "" ? "az storage container show --account-name ${each.value.storageAccountName} --name ${each.value.name}" : "az storage copy --source-account-name ${each.value.dataSource.accountName} --source-account-key ${each.value.dataSource.accountKey} --source-container ${each.value.dataSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name}"
+  }
   depends_on = [
     time_sleep.storage_data
   ]
@@ -429,6 +448,9 @@ resource "azurerm_storage_share" "shares" {
   storage_account_name = each.value.storageAccountName
   enabled_protocol     = each.value.accessProtocol
   quota                = each.value.size
+  provisioner "local-exec" {
+    command = each.value.dataSource.accountName == "" ? "az storage share show --account-name ${each.value.storageAccountName} --name ${each.value.name}" : "az storage copy --source-account-name ${each.value.dataSource.accountName} --source-account-key ${each.value.dataSource.accountKey} --source-container ${each.value.dataSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-share ${each.value.name}"
+  }
   depends_on = [
     time_sleep.storage_data
   ]

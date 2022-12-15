@@ -83,12 +83,12 @@ storageTargetsNfs = [
 storageTargetsNfsBlob = [
   {
     name       = "" # "RenderFarm"
-    clientPath = "/mnt/show"
+    clientPath = "/mnt/data"
     usageModel = "WRITE_AROUND" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
     storage = {
       resourceGroupName = "ArtistAnywhere.Storage"
       accountName       = "azrender1"
-      containerName     = "show"
+      containerName     = "data"
     }
   }
 ]
