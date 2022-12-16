@@ -126,7 +126,10 @@ if __name__ == "__main__":
     MARKETPLACE_ZIP                                   = "marketplace.zip"
 
     # zipfile format is not compatible with Azure Marketplace so break out to powershell
-    subprocess.call(["C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe", "-Command", "Compress-Archive -Path %s, %s -Force -DestinationPath %s" % (ARM_OUTPUT_TEMPLATE, MARKETPLACE_UI_DEFINITION, MARKETPLACE_ZIP)])
+    try:
+        subprocess.call(["C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe", "-Command", "Compress-Archive -Path %s, %s -Force -DestinationPath %s" % (ARM_OUTPUT_TEMPLATE, MARKETPLACE_UI_DEFINITION, MARKETPLACE_ZIP)])
+    except FileNotFoundError:
+        subprocess.call(["pwsh", "-Command", "Compress-Archive -Path %s, %s -Force -DestinationPath %s" % (ARM_OUTPUT_TEMPLATE, MARKETPLACE_UI_DEFINITION, MARKETPLACE_ZIP)])
     #    zipf = zipfile.ZipFile(MARKETPLACE_ZIP, 'w', zipfile.ZIP_DEFLATED)
     #    zipf.write(ARM_OUTPUT_TEMPLATE)
     #    zipf.write(MARKETPLACE_UI_DEFINITION)

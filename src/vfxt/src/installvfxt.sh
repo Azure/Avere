@@ -179,18 +179,21 @@ function apt_get_install() {
 }
 
 function config_linux() {
-    #hostname=`hostname -s`
-    #sudo sed -ie "s/127.0.0.1 localhost/127.0.0.1 localhost ${hostname}/" /etc/hosts
     export DEBIAN_FRONTEND=noninteractive
     apt_get_update
-    apt_get_install 20 10 180 curl dirmngr python-pip nfs-common build-essential python-dev python-setuptools
-    # this is no longer need because it is not longer there (mar 2019 ubuntu)
-    # retrycmd_if_failure 12 5 apt remove --purge -y python-keyring
+    apt_get_install 20 10 180 curl dirmngr python3-pip nfs-common build-essential python-dev python-setuptools
+
+    # install azure-cli outside of python_requirements.txt b/c there's a mismatch between the required 'azure-mgmt-authorization'
+    # (0.61.0) for azure-cli==2.43.0 and the required version for vfxt.py (3.0.0);
+    # just install azure-cli with vfxt once this github issue is resolved: https://github.com/Azure/azure-cli/issues/23372
+
+    retrycmd_if_failure 12 5 pip install --upgrade pip azure-cli==2.43.0
     retrycmd_if_failure 12 5 pip install --requirement /opt/avere/python_requirements.txt
 }
 
 function install_vfxt() {
-    retrycmd_if_failure 12 5 pip install --no-deps vFXT
+    # install directly from the repo
+    retrycmd_if_failure 12 5 pip install --no-deps git+https://github.com/Azure/AvereSDK.git
 }
 
 function install_vfxt_py_docs() {
