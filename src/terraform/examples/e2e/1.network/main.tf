@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.34.0"
+      version = "~>3.36.0"
     }
   }
   backend "azurerm" {
@@ -30,10 +30,10 @@ variable "resourceGroupName" {
 variable "computeNetwork" {
   type = object(
     {
-      name               = string
-      regionName         = string
-      addressSpace       = list(string)
-      dnsServerAddresses = list(string)
+      name           = string
+      regionName     = string
+      addressSpace   = list(string)
+      dnsIpAddresses = list(string)
       subnets = list(object(
         {
           name              = string
@@ -57,10 +57,10 @@ variable "computeNetwork" {
 variable "storageNetwork" {
   type = object(
     {
-      name               = string
-      regionName         = string
-      addressSpace       = list(string)
-      dnsServerAddresses = list(string)
+      name           = string
+      regionName     = string
+      addressSpace   = list(string)
+      dnsIpAddresses = list(string)
       subnets = list(object(
         {
           name              = string
@@ -191,23 +191,23 @@ variable "monitor" {
 }
 
 data "azurerm_key_vault" "render" {
-  name                = module.global.keyVaultName
+  name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "gateway_connection" {
-  name         = module.global.keyVaultSecretNameGatewayConnection
+  name         = module.global.keyVault.secretName.gatewayConnection
   key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_storage_account" "render" {
-  name                = module.global.storageAccountName
+  name                = module.global.rootStorage.accountName
   resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_log_analytics_workspace" "render" {
   count               = var.monitor.enablePrivateLink ? 1 : 0
-  name                = module.global.monitorWorkspaceName
+  name                = module.global.monitorWorkspace.name
   resource_group_name = module.global.resourceGroupName
 }
 
@@ -272,7 +272,7 @@ resource "azurerm_virtual_network" "network" {
   resource_group_name = azurerm_resource_group.network.name
   location            = each.value.regionName
   address_space       = each.value.addressSpace
-  dns_servers         = each.value.dnsServerAddresses
+  dns_servers         = each.value.dnsIpAddresses
 }
 
 resource "azurerm_subnet" "network" {
@@ -351,7 +351,11 @@ resource "azurerm_network_security_group" "network" {
       source_address_prefix      = "Internet"
       source_port_range          = "*"
       destination_address_prefix = "*"
-      destination_port_ranges     = ["443","4172","60433"]
+      destination_port_ranges = [
+        "443",
+        "4172",
+        "60433"
+      ]
     }
   }
   dynamic security_rule {
@@ -643,7 +647,10 @@ resource "azurerm_network_security_group" "bastion" {
     source_address_prefix      = "VirtualNetwork"
     source_port_range          = "*"
     destination_address_prefix = "VirtualNetwork"
-    destination_port_ranges    = ["8080","5701"]
+    destination_port_ranges = [
+      "8080",
+      "5701"
+    ]
   }
   security_rule {
     name                       = "AllowInLoadBalancer"
@@ -665,7 +672,10 @@ resource "azurerm_network_security_group" "bastion" {
     source_address_prefix      = "*"
     source_port_range          = "*"
     destination_address_prefix = "VirtualNetwork"
-    destination_port_ranges    = ["22","3389"]
+    destination_port_ranges = [
+      "22",
+      "3389"
+    ]
   }
   security_rule {
     name                       = "AllowOutAzureCloud"
@@ -687,7 +697,10 @@ resource "azurerm_network_security_group" "bastion" {
     source_address_prefix      = "VirtualNetwork"
     source_port_range          = "*"
     destination_address_prefix = "VirtualNetwork"
-    destination_port_ranges    = ["8080","5701"]
+    destination_port_ranges = [
+      "8080",
+      "5701"
+    ]
   }
   security_rule {
     name                       = "AllowOutBastionSession"
@@ -1092,13 +1105,13 @@ resource "azurerm_private_endpoint" "monitor" {
 
 resource "azurerm_monitor_private_link_scope" "monitor" {
   count               = var.monitor.enablePrivateLink ? 1 : 0
-  name                = module.global.monitorWorkspaceName
+  name                = module.global.monitorWorkspace.name
   resource_group_name = azurerm_resource_group.network.name
 }
 
 resource "azurerm_monitor_private_link_scoped_service" "monitor" {
   count               = var.monitor.enablePrivateLink ? 1 : 0
-  name                = module.global.monitorWorkspaceName
+  name                = module.global.monitorWorkspace.name
   resource_group_name = azurerm_resource_group.network.name
   linked_resource_id  = data.azurerm_log_analytics_workspace.render[0].id
   scope_name          = azurerm_monitor_private_link_scope.monitor[0].name

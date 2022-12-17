@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.34.0"
+      version = "~>3.36.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -36,16 +36,6 @@ provider "azurerm" {
 
 module "global" {
   source = "./module"
-}
-
-variable "storage" {
-  type = object(
-    {
-      accountType        = string
-      accountRedundancy  = string
-      accountPerformance = string
-    }
-  )
 }
 
 variable "keyVault" {
@@ -93,33 +83,42 @@ variable "keyVault" {
   )
 }
 
+variable "rootStorage" {
+  type = object(
+    {
+      accountType        = string
+      accountRedundancy  = string
+      accountPerformance = string
+    }
+  )
+}
+
 variable "monitorWorkspace" {
   type = object(
     {
-      name          = string
       sku           = string
       retentionDays = number
     }
   )
 }
 
-data "http" "current" {
+data "http" "client_address" {
   url = "https://api.ipify.org?format=json"
 }
 
-data "azurerm_client_config" "current" {}
+data "azurerm_client_config" "provider" {}
 
 resource "azurerm_resource_group" "render" {
   name     = module.global.resourceGroupName
   location = module.global.regionName
 }
 
-###########################################################################################################################
-# User Assigned Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview) #
-###########################################################################################################################
+#####################################################################################################################
+# Managed Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview) #
+#####################################################################################################################
 
 resource "azurerm_user_assigned_identity" "render" {
-  name                = module.global.managedIdentityName
+  name                = module.global.managedIdentity.name
   resource_group_name = azurerm_resource_group.render.name
   location            = azurerm_resource_group.render.location
 }
@@ -129,10 +128,10 @@ resource "azurerm_user_assigned_identity" "render" {
 ############################################################################
 
 resource "azurerm_key_vault" "render" {
-  name                            = module.global.keyVaultName
+  name                            = module.global.keyVault.name
   resource_group_name             = azurerm_resource_group.render.name
   location                        = azurerm_resource_group.render.location
-  tenant_id                       = data.azurerm_client_config.current.tenant_id
+  tenant_id                       = data.azurerm_client_config.provider.tenant_id
   sku_name                        = var.keyVault.type
   purge_protection_enabled        = var.keyVault.enablePurgeProtection
   soft_delete_retention_days      = var.keyVault.softDeleteRetentionDays
@@ -144,7 +143,7 @@ resource "azurerm_key_vault" "render" {
     bypass         = "None"
     default_action = "Deny"
     ip_rules = [
-      jsondecode(data.http.current.response_body).ip
+      jsondecode(data.http.client_address.response_body).ip
     ]
   }
 }
@@ -201,16 +200,17 @@ resource "azurerm_key_vault_certificate" "certificates" {
 #######################################################
 
 resource "azurerm_storage_account" "storage" {
-  name                     = module.global.storageAccountName
-  resource_group_name      = azurerm_resource_group.render.name
-  location                 = azurerm_resource_group.render.location
-  account_kind             = var.storage.accountType
-  account_replication_type = var.storage.accountRedundancy
-  account_tier             = var.storage.accountPerformance
+  name                            = module.global.rootStorage.accountName
+  resource_group_name             = azurerm_resource_group.render.name
+  location                        = azurerm_resource_group.render.location
+  account_kind                    = var.rootStorage.accountType
+  account_replication_type        = var.rootStorage.accountRedundancy
+  account_tier                    = var.rootStorage.accountPerformance
+  allow_nested_items_to_be_public = false
   network_rules {
     default_action = "Deny"
     ip_rules = [
-      jsondecode(data.http.current.response_body).ip
+      jsondecode(data.http.client_address.response_body).ip
     ]
   }
 }
@@ -223,7 +223,7 @@ resource "time_sleep" "storage_data" {
 }
 
 resource "azurerm_storage_container" "container" {
-  name                 = module.global.storageContainerName
+  name                 = module.global.rootStorage.containerName
   storage_account_name = azurerm_storage_account.storage.name
   depends_on = [
     time_sleep.storage_data
@@ -235,7 +235,7 @@ resource "azurerm_storage_container" "container" {
 ######################################################################
 
 resource "azurerm_log_analytics_workspace" "monitor" {
-  name                       = var.monitorWorkspace.name
+  name                       = module.global.monitorWorkspace.name
   resource_group_name        = azurerm_resource_group.render.name
   location                   = azurerm_resource_group.render.location
   sku                        = var.monitorWorkspace.sku
@@ -246,20 +246,4 @@ resource "azurerm_log_analytics_workspace" "monitor" {
 
 output "resourceGroupName" {
   value = module.global.resourceGroupName
-}
-
-output "storage" {
-  value = merge(var.storage,
-    { name = module.global.storageAccountName }
-  )
-}
-
-output "keyVault" {
-  value = merge(var.keyVault,
-    { name = module.global.keyVaultName }
-  )
-}
-
-output "monitorWorkspace" {
-  value = var.monitorWorkspace
 }

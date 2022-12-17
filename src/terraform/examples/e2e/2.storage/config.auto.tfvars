@@ -1,4 +1,4 @@
-resourceGroupName = "ArtistAnywhere.Storage"
+resourceGroupName = "ArtistAnywhere.Storage" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 ###################################################################################
 # Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction) #
@@ -43,9 +43,9 @@ storageAccounts = [
         sizeGiB  = 5120
         protocol = "SMB"
         dataSource = {
-          accountName = ""
-          accountKey  = ""
-          shareName   = ""
+          accountName   = ""
+          accountKey    = ""
+          containerName = ""
         }
       }
     ]
@@ -105,6 +105,9 @@ hammerspace = {
       size       = "Standard_E32s_v5"
       count      = 1 # Set to 2 (or more) to enable high availability
     }
+    network = {
+      enableAcceleratedNetworking = true
+    }
     osDisk = {
       sizeGB      = 128
       storageType = "Premium_LRS"
@@ -116,17 +119,20 @@ hammerspace = {
       cachingType = "None"
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
-    enableAcceleratedNetworking = true
   }
   data = {
     machine = {
       namePrefix = "DSX"
       size       = "Standard_HB120rs_v2"
       count      = 2
+    }
+    network = {
+      enableAcceleratedNetworking = true
     }
     osDisk = {
       sizeGB      = 128
@@ -141,18 +147,18 @@ hammerspace = {
       enableRaid0 = false
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
-    enableAcceleratedNetworking = true
   }
   enableProximityPlacement   = false
   enableMarketplaceAgreement = true
 }
 
 #######################################################################
-# Optional resource dependency configuration for existing deployments #
+# Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
 storageNetwork = {
@@ -167,4 +173,21 @@ storageNetwork = {
       virtualNetworkName = ""
     }
   ]
+}
+
+managedIdentity = {
+  name              = ""
+  resourceGroupName = ""
+}
+
+keyVault = {
+  name                 = ""
+  resourceGroupName    = ""
+  keyNameAdminUsername = ""
+  keyNameAdminPassword = ""
+}
+
+monitorWorkspace = {
+  name              = ""
+  resourceGroupName = ""
 }

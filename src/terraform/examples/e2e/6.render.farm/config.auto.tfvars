@@ -1,4 +1,4 @@
-resourceGroupName = "ArtistAnywhere.Farm"
+resourceGroupName = "ArtistAnywhere.Farm" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 ######################################################################################################
 # Virtual Machine Scale Sets (https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) #
@@ -12,6 +12,9 @@ virtualMachineScaleSets = [
       size  = "Standard_NV36ads_A10_v5"
       count = 2
     }
+    network = {
+      enableAcceleratedNetworking = true
+    }
     operatingSystem = {
       type = "Linux"
       disk = {
@@ -24,7 +27,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -60,7 +64,6 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
     }
-    enableAcceleratedNetworking = true
   },
   {
     name    = "" # "LnxFarmCPU"
@@ -68,6 +71,9 @@ virtualMachineScaleSets = [
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 2
+    }
+    network = {
+      enableAcceleratedNetworking = true
     }
     operatingSystem = {
       type = "Linux"
@@ -81,7 +87,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -117,7 +124,6 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
     }
-    enableAcceleratedNetworking = true
   },
   {
     name    = "" # "WinFarmGPU"
@@ -126,6 +132,9 @@ virtualMachineScaleSets = [
       size  = "Standard_NV36ads_A10_v5"
       count = 2
     }
+    network = {
+      enableAcceleratedNetworking = true
+    }
     operatingSystem = {
       type = "Windows"
       disk = {
@@ -138,7 +147,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -174,7 +184,6 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
     }
-    enableAcceleratedNetworking = true
   },
   {
     name    = "" # "WinFarmCPU"
@@ -183,6 +192,9 @@ virtualMachineScaleSets = [
       size  = "Standard_HB120rs_v2"
       count = 2
     }
+    network = {
+      enableAcceleratedNetworking = true
+    }
     operatingSystem = {
       type = "Windows"
       disk = {
@@ -195,7 +207,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -231,7 +244,6 @@ virtualMachineScaleSets = [
       enable       = true
       timeoutDelay = "PT5M"
     }
-    enableAcceleratedNetworking = true
   }
 ]
 
@@ -271,11 +283,28 @@ kubernetes = {
 }
 
 #######################################################################
-# Optional resource dependency configuration for existing deployments #
+# Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
 computeNetwork = {
   name              = ""
   subnetName        = ""
+  resourceGroupName = ""
+}
+
+managedIdentity = {
+  name              = ""
+  resourceGroupName = ""
+}
+
+keyVault = {
+  name                 = ""
+  resourceGroupName    = ""
+  keyNameAdminUsername = ""
+  keyNameAdminPassword = ""
+}
+
+monitorWorkspace = {
+  name              = ""
   resourceGroupName = ""
 }

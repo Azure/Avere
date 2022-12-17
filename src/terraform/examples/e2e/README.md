@@ -25,29 +25,30 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 For example, the following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via the Azure Artist Anywhere (AAA) solution deployment framework.
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.4.png" alt="Blender Splash" width="1024" />
+  <img src=".github/images/blender-splash-3.4.png" width="1024" />
 </p>
 
 <p align="center">
-  <img src=".github/images/moana-island.png" alt="Moana Island" width="1024" />
+  <img src=".github/images/moana-island.png" width="1024" />
 </p>
 
-## Deployment Prerequisites
+## Installation Prerequisites
 
-To manage deployment of the AAA solution from your local workstation, the following prerequisite setup steps are required. As an alternative deployment management approach, [GitOps](#8-gitops) enablement is also provided.
-1. Make sure the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your path environment variable.
-1. Make sure the [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) is installed locally and accessible in your path environment variable.
+The following local installation prerequisites are required for the AAA solution deployment framework.<br>
+As an alternative deployment management approach option, sample [GitOps](#8-gitops) enablement is also provided.
+1. Make sure the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your PATH environment variable.
+1. Make sure the [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) is installed locally and accessible in your PATH environment variable.
 1. Download the AAA end-to-end (e2e) solution source files via the following GitHub download link.
    * https://downgit.github.io/#/home?url=https://github.com/Azure/Avere/tree/main/src/terraform/examples/e2e
-   * Unzip the downloaded `e2e.zip` file to your local home directory (`~/`).<br>Note that all local source file references below are relative to `~/e2e/`
+   * Unzip the downloaded `e2e.zip` file to your user home directory (`~/`).<br>Note that all local source file references below are relative to `~/e2e/`
 1. Run `az account show` to ensure your current Azure subscription session context is set as expected. Verify the `id` property.<br>To change your current Azure subscription session context, run `az account set --subscription <subscriptionId>`
 
 ## 0 Global
 
-*Before deploying the Global module*, the following built-in [Azure Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview) role *is required for the current user* to enable creation of Azure Key Vault secrets, certificates and keys.
-* *Key Vault Administartor* (https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator)
+*Before deploying the Global module*, the following built-in [Azure Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview) role *is required for the current user*.<br>
+For Azure RBAC role assignment instructions, refer to either the Azure [portal](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-portal), [CLI](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-cli) or [PowerShell](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-powershell) role assignment documents as needed.
 
-For Azure role assignment instructions, refer to either the Azure [portal](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-portal), [CLI](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-cli) or [PowerShell](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-powershell) documents.
+* *Key Vault Administartor* (https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator)
 
 ### Deployment Steps
 
@@ -57,7 +58,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Review and edit the config values in `config.auto.tfvars` for your deployment
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 1. Use the [Azure portal to update your Key Vault secret values](https://learn.microsoft.com/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminUsername`, `AdminPassword`)
 
 ## 1 Network
@@ -68,7 +69,7 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
 ## 2 Storage
 
@@ -78,13 +79,22 @@ For Azure role assignment instructions, refer to either the Azure [portal](https
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
 ## 3 Storage Cache
 
-*If you intend to deploy the Avere vFXT cache instead of HPC Cache, the [Terraform Avere provider](https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere) must be downloaded to your local workstation via the following commands before the cache is deployed.*
+### Deployment Steps
 
-### Linux / Bash
+1. Run `cd ~/e2e/3.storage.cache` in a local shell (Bash or PowerShell)
+1. Review and edit the config values in `config.auto.tfvars` for your deployment.
+1. For [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) deployment only (i.e., the following steps do *not* apply to [HPC Cache](https://learn.microsoft.com/en-us/azure/hpc-cache/hpc-cache-overview) deployment),
+   * Make sure you have at least 96 cores (32 cores x 3 nodes) quota available for [Esv3](https://learn.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
+   * Download the latest [Terraform Avere provider](https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere) module via the following [Linux / Bash](#terraform-avere-provider-linux) or [Windows / PowerShell](#terraform-avere-provider-windows) commands.
+1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
+
+#### Terraform Avere Provider Linux
 
 <p><code>
 latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)
@@ -105,7 +115,7 @@ curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl
 chmod 755 $localDirectory/terraform-provider-avere_$latestVersion
 </code></p>
 
-### Windows / PowerShell
+#### Terraform Avere Provider Windows
 
 <p><code>
 $latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest -UseBasicParsing | ConvertFrom-Json).tag_name
@@ -123,16 +133,6 @@ New-Item -ItemType Directory -Path $localDirectory -Force
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $localDirectory -ChildPath "terraform-provider-avere_$latestVersion.exe"))
 </code></p>
 
-### Deployment Steps
-
-1. Run `cd ~/e2e/3.storage.cache` in a local shell (Bash or PowerShell)
-1. Review and edit the config values in `config.auto.tfvars` for your deployment.
-1. For [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) deployment only,
-   * Make sure you have at least 96 cores (32 cores x 3 nodes) quota available for [Esv3](https://learn.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
-1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
-
 ## 4 Image Builder
 
 ### Deployment Steps
@@ -142,7 +142,7 @@ New-Item -ItemType Directory -Path $localDirectory -Force
     * Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 1. After image template deployment, use the Azure portal or [Image Builder CLI](https://learn.microsoft.com/cli/azure/image/builder#az-image-builder-run) to start image build runs
 
 ## 5 Render Manager
@@ -155,7 +155,7 @@ New-Item -ItemType Directory -Path $localDirectory -Force
    * Make sure the **imageId** config references the correct custom image in your Azure subscription.
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
 ## 6 Render Farm
 
@@ -170,7 +170,7 @@ New-Item -ItemType Directory -Path $localDirectory -Force
    * Make sure the **fileSystemPermissions** config has the appropriate value for your environment.
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
 ## 7 Artist Workstation
 
@@ -184,7 +184,7 @@ New-Item -ItemType Directory -Path $localDirectory -Force
        * If your config has cache mounts, make sure [3 Storage Cache](#3-storage-cache) is deployed and *running* before deploying this module.
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review and confirm the displayed Terraform deployment plan to add, change and/or destroy Azure resources
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
 ## 8 GitOps
 
@@ -223,57 +223,48 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 ### 9.1 [Blender](https://www.blender.org) [Splash Screen (3.4)](https://www.blender.org/download/demo-files/#splash)
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.4.png" alt="Blender Splash" width="1024" />
+  <img src=".github/images/blender-splash-3.4.png" width="1024" />
 </p>
 
 #### 9.1.1 [Royal Render](https://royalrender.de) Render Farm (*Linux*)
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-TBD
+TBD (rrSubmitter)
 
 #### 9.1.2 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Linux*)
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -a -y -noaudio /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash####"
+deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"
 </code></p>
 
 #### 9.1.3 [Royal Render](https://royalrender.de) Render Farm (*Windows*)
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-TBD
+TBD (rrSubmitter)
 
 #### 9.1.4 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Windows*)
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 <p><code>
-deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "-b -a -y -noaudio R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash####"
+deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1"
 </code></p>
 
 ### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
 
-######
-Unlike the Blender splash screen sample data optionally uploaded via the [2 Storage](#2-storage) module configuration, the following PBRT Moana Island data is significantly larger and must be downloaded, decompressed and uploaded into your storage system *before* render job submission.
-
-* **[Moana Island Base Data (44.8 GiB Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/moana/island-basepackage-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
-
-* **[Moana Island PBRT v3 Data (6.3 GiB Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/moana/island-pbrt-v1.1.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
-
-* **[Moana Island PBRT v4 Data (5.5 GiB Compressed)](https://azrender.blob.core.windows.net/bin/PBRT/moana/island-pbrtV4-v2.0.tgz?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D)**
-
 <p align="center">
-  <img src=".github/images/moana-island.png" alt="Moana Island" width="1024" />
+  <img src=".github/images/moana-island.png" width="1024" />
 </p>
 
 #### 9.2.1 [Royal Render](https://royalrender.de) Render Farm (*Linux*)
 
 *The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-TBD
+TBD (rrSubmitter)
 
 #### 9.2.2 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Linux*)
 
@@ -291,7 +282,7 @@ deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -a
 
 *The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-TBD
+TBD (rrSubmitter)
 
 #### 9.2.4 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Windows*)
 
@@ -304,5 +295,33 @@ deadlinecommand -SubmitCommandLineJob -name Moana-Island-v3 -executable pbrt3 -a
 <p><code>
 deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"
 </code></p>
+
+## 10 Appendix
+
+The following splash screens from previous Blender versions were rendered in Azure using the Azure Artist Anywhere (AAA) solution deployment framework.
+
+### 10.1 Blender 3.0 Splash Screen
+
+<p align="center">
+  <img src=".github/images/blender-splash-3.0.png" width="1024" />
+</p>
+
+### 10.2 Blender 3.1 Splash Screen
+
+<p align="center">
+  <img src=".github/images/blender-splash-3.1.jpg" width="1024" />
+</p>
+
+### 10.3 Blender 3.2 Splash Screen
+
+<p align="center">
+  <img src=".github/images/blender-splash-3.2.png" width="1024" />
+</p>
+
+### 10.4 Blender 3.3 Splash Screen
+
+<p align="center">
+  <img src=".github/images/blender-splash-3.3.png" width="1024" />
+</p>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

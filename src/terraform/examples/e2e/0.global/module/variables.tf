@@ -6,96 +6,78 @@ variable "regionName" {
   default = "WestUS2" # Set default Azure region name (az account list-locations --query [].name)
 }
 
+variable "resourceGroupName" {
+  default = "ArtistAnywhere" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
+}
+
 variable "renderManager" {
   default = "Deadline" # RoyalRender or Deadline
 }
 
-variable "resourceGroupName" {
-  default = "ArtistAnywhere" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
-}
-variable "storageAccountName" {
-  default = "azrender0" # Set to a globally unique name (lowercase alphanumeric)
-}
-variable "storageContainerName" {
-  default = "terraform"
+# Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction)
+variable "rootStorage" {
+  default = {
+    accountName   = "azrender0" # Set to a globally unique name (lowercase alphanumeric)
+    containerName = "terraform"
+  }
 }
 
 # Managed Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview)
-variable "managedIdentityName" {
-  default = "azrender" # Alphanumeric, underscores and hyphens are allowed
+variable "managedIdentity" {
+  default = {
+    name = "azrender" # Alphanumeric, underscores and hyphens are allowed
+  }
 }
 
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview)
-variable "keyVaultName" {
-  default = "azrender" # Set to a globally unique name (alphanumeric, hyphens)
+variable "keyVault" {
+  default = {
+    name = "azrender" # Set to a globally unique name (alphanumeric, hyphens)
+    secretName = {
+      gatewayConnection = "GatewayConnection"
+      adminUsername     = "AdminUsername"
+      adminPassword     = "AdminPassword"
+    }
+    keyName = {
+      cacheEncryption   = "CacheEncryption"
+      computeEncryption = "ComputeEncryption"
+    }
+    certificateName = {
+    }
+  }
 }
 
-# KeyVault secret names
-variable "keyVaultSecretNameGatewayConnection" {
-  default = "GatewayConnection"
-}
-variable "keyVaultSecretNameAdminUsername" {
-  default = "AdminUsername"
-}
-variable "keyVaultSecretNameAdminPassword" {
-  default = "AdminPassword"
-}
-
-# KeyVault key names
-variable "keyVaultKeyNameCacheEncryption" {
-  default = "CacheEncryption"
-}
-variable "keyVaultKeyNameComputeEncryption" {
-  default = "ComputeEncryption"
-}
-
-variable "monitorWorkspaceName" {
-  default = "azrender"
+# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview)
+variable "monitorWorkspace" {
+  default = {
+    name = "azrender"
+  }
 }
 
 output "regionName" {
   value = var.regionName
 }
 
+output "resourceGroupName" {
+  value = var.resourceGroupName
+}
+
 output "renderManager" {
   value = var.renderManager
 }
 
-output "resourceGroupName" {
-  value = var.resourceGroupName
-}
-output "storageAccountName" {
-  value = var.storageAccountName
-}
-output "storageContainerName" {
-  value = var.storageContainerName
+output "rootStorage" {
+  value = var.rootStorage
 }
 
-output "managedIdentityName" {
-  value = var.managedIdentityName
+output "managedIdentity" {
+  value = var.managedIdentity
 }
 
-output "keyVaultName" {
-  value = var.keyVaultName
+output "keyVault" {
+  value = var.keyVault
 }
 
-output "keyVaultSecretNameGatewayConnection" {
-  value = var.keyVaultSecretNameGatewayConnection
-}
-output "keyVaultSecretNameAdminUsername" {
-  value = var.keyVaultSecretNameAdminUsername
-}
-output "keyVaultSecretNameAdminPassword" {
-  value = var.keyVaultSecretNameAdminPassword
-}
-
-output "keyVaultKeyNameCacheEncryption" {
-  value = var.keyVaultKeyNameCacheEncryption
-}
-output "keyVaultKeyNameComputeEncryption" {
-  value = var.keyVaultKeyNameComputeEncryption
-}
-
-output "monitorWorkspaceName" {
-  value = var.monitorWorkspaceName
+output "monitorWorkspace" {
+  value = var.monitorWorkspace
 }

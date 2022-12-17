@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.34.0"
+      version = "~>3.36.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -42,6 +42,11 @@ variable "virtualMachines" {
       name        = string
       imageId     = string
       machineSize = string
+      network = object(
+        {
+          enableAcceleratedNetworking = bool
+        }
+      )
       operatingSystem = object(
         {
           type = string
@@ -56,6 +61,7 @@ variable "virtualMachines" {
       adminLogin = object(
         {
           userName            = string
+          userPassword        = string
           sshPublicKey        = string
           disablePasswordAuth = bool
         }
@@ -96,7 +102,6 @@ variable "virtualMachines" {
           enable = bool
         }
       )
-      enableAcceleratedNetworking = bool
     }
   ))
 }
@@ -122,39 +127,68 @@ variable "computeGallery" {
   )
 }
 
-data "azurerm_client_config" "current" {}
+variable "managedIdentity" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
+variable "keyVault" {
+  type = object(
+    {
+      name                 = string
+      resourceGroupName    = string
+      keyNameAdminUsername = string
+      keyNameAdminPassword = string
+    }
+  )
+}
+
+variable "monitorWorkspace" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
+data "azurerm_client_config" "provider" {}
 
 data "azurerm_user_assigned_identity" "render" {
-  name                = module.global.managedIdentityName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
+  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
-  name                = module.global.keyVaultName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
+  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  name         = module.global.keyVaultSecretNameAdminUsername
+  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
   key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = module.global.keyVaultSecretNameAdminPassword
+  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
   key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  name                = module.global.monitorWorkspaceName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.monitorWorkspace.name != "" ? var.monitorWorkspace.name : module.global.monitorWorkspace.name
+  resource_group_name = var.monitorWorkspace.resourceGroupName != "" ? var.monitorWorkspace.resourceGroupName : module.global.resourceGroupName
 }
 
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.storageAccountName
-    container_name       = module.global.storageContainerName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName
     key                  = "1.network"
   }
 }
@@ -163,8 +197,8 @@ data "terraform_remote_state" "image" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.storageAccountName
-    container_name       = module.global.storageContainerName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName
     key                  = "4.image.builder"
   }
 }
@@ -190,7 +224,7 @@ locals {
   stateExistsImage       = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
   imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : try(data.terraform_remote_state.image.outputs.imageGallery.name, "")
   imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : try(data.terraform_remote_state.image.outputs.resourceGroupName, "")
-  imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
+  imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
   schedulerMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
   ]
@@ -217,7 +251,7 @@ resource "azurerm_network_interface" "scheduler" {
     subnet_id                     = data.azurerm_subnet.farm.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = each.value.enableAcceleratedNetworking
+  enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
@@ -229,8 +263,8 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   location                        = azurerm_resource_group.scheduler.location
   source_image_id                 = each.value.imageId
   size                            = each.value.machineSize
-  admin_username                  = each.value.adminLogin.userName
-  admin_password                  = data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
+  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   custom_data = base64encode(
     templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters,
@@ -275,8 +309,8 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { tenantId                 = data.azurerm_client_config.current.tenant_id },
-        { subscriptionId           = data.azurerm_client_config.current.subscription_id },
+        { tenantId                 = data.azurerm_client_config.provider.tenant_id },
+        { subscriptionId           = data.azurerm_client_config.provider.subscription_id },
         { regionName               = module.global.regionName },
         { renderManager            = module.global.renderManager },
         { networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name },
@@ -325,8 +359,8 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   location            = azurerm_resource_group.scheduler.location
   source_image_id     = each.value.imageId
   size                = each.value.machineSize
-  admin_username      = each.value.adminLogin.userName
-  admin_password      = data.azurerm_key_vault_secret.admin_password.value
+  admin_username      = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
+  admin_password      = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
   custom_data = base64encode(
     templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters,
       { renderManager = module.global.renderManager }
@@ -413,7 +447,7 @@ resource "azurerm_role_assignment" "cycle_cloud" {
   }
   role_definition_name = "Contributor"
   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}"
 }
 
 output "resourceGroupName" {

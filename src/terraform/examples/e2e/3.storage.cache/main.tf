@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.34.0"
+      version = "~>3.36.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -47,6 +47,12 @@ variable "hpcCache" {
       size       = number
       mtuSize    = number
       ntpHost    = string
+      dns = object(
+        {
+          ipAddresses  = list(string)
+          searchDomain = string
+        }
+      )
       encryption = object(
         {
           enable    = bool
@@ -60,22 +66,15 @@ variable "hpcCache" {
 variable "vfxtCache" {
   type = object(
     {
-      localTimezone = string
       cluster = object(
         {
           nodeSize       = number
           nodeCount      = number
           adminUsername  = string
+          adminPassword  = string
           sshPublicKey   = string
           imageId        = string
           customSettings = list(string)
-        }
-      )
-      controller = object(
-        {
-          adminUsername = string
-          sshPublicKey  = string
-          imageId       = string
         }
       )
       support = object(
@@ -86,6 +85,7 @@ variable "vfxtCache" {
           rollingTraceFlag = string
         }
       )
+      localTimezone              = string
       enableMarketplaceAgreement = bool
     }
   )
@@ -139,9 +139,9 @@ variable "storageTargetsNfsBlob" {
 variable "computeNetwork" {
   type = object(
     {
-      name               = string
-      subnetName         = string
-      resourceGroupName  = string
+      name              = string
+      subnetName        = string
+      resourceGroupName = string
       privateDns = object(
         {
           zoneName               = string
@@ -152,20 +152,51 @@ variable "computeNetwork" {
   )
 }
 
-data "azurerm_client_config" "current" {}
+variable "managedIdentity" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
+variable "keyVault" {
+  type = object(
+    {
+      name                   = string
+      resourceGroupName      = string
+      keyNameAdminUsername   = string
+      keyNameAdminPassword   = string
+      keyNameCacheEncryption = string
+    }
+  )
+}
+
+data "azurerm_client_config" "provider" {}
 
 data "azurerm_user_assigned_identity" "render" {
-  name                = module.global.managedIdentityName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
+  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
-  name                = module.global.keyVaultName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
+  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
+}
+
+data "azurerm_key_vault_secret" "admin_username" {
+  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
+  key_vault_id = data.azurerm_key_vault.render.id
+}
+
+data "azurerm_key_vault_secret" "admin_password" {
+  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_key_vault_key" "cache_encryption" {
-  name         = module.global.keyVaultKeyNameCacheEncryption
+  name         = var.keyVault.keyNameCacheEncryption != "" ? var.keyVault.keyNameCacheEncryption : module.global.keyVault.keyName.cacheEncryption
   key_vault_id = data.azurerm_key_vault.render.id
 }
 
@@ -173,8 +204,8 @@ data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.storageAccountName
-    container_name       = module.global.storageContainerName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName
     key                  = "1.network"
   }
 }
@@ -230,7 +261,7 @@ resource "azurerm_role_assignment" "storage_account" {
   }
   role_definition_name = "Storage Account Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   principal_id         = data.azuread_service_principal.hpc_cache.object_id
-  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
+  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
 }
 
 resource "azurerm_role_assignment" "storage_blob_data" {
@@ -239,7 +270,7 @@ resource "azurerm_role_assignment" "storage_blob_data" {
   }
   role_definition_name = "Storage Blob Data Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   principal_id         = data.azuread_service_principal.hpc_cache.object_id
-  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
+  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
 }
 
 resource "azurerm_hpc_cache" "cache" {
@@ -251,12 +282,22 @@ resource "azurerm_hpc_cache" "cache" {
   sku_name            = var.hpcCache.throughput
   cache_size_in_gb    = var.hpcCache.size
   mtu                 = var.hpcCache.mtuSize
-  ntp_server          = var.hpcCache.ntpHost
-  identity {
-    type = "UserAssigned"
-    identity_ids = [
-      data.azurerm_user_assigned_identity.render.id
-    ]
+  ntp_server          = var.hpcCache.ntpHost != "" ? var.hpcCache.ntpHost : null
+  dynamic "dns" {
+    for_each = length(var.hpcCache.dns.ipAddresses) > 0 || var.hpcCache.dns.searchDomain != "" ? [1] : []
+    content {
+      servers       = var.hpcCache.dns.ipAddresses
+      search_domain = var.hpcCache.dns.searchDomain != "" ? var.hpcCache.dns.searchDomain : null
+    }
+  }
+  dynamic "identity" {
+    for_each = try(data.azurerm_user_assigned_identity.render.id, "") != "" ? [1] : []
+    content {
+      type = "UserAssigned"
+      identity_ids = [
+        data.azurerm_user_assigned_identity.render.id
+      ]
+    }
   }
   key_vault_key_id                           = var.hpcCache.encryption.enable ? data.azurerm_key_vault_key.cache_encryption.id : null
   automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enable ? var.hpcCache.encryption.rotateKey : null
@@ -292,7 +333,7 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.cache.name
   cache_name           = azurerm_hpc_cache.cache[0].name
-  storage_container_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
+  storage_container_id = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
   usage_model          = each.value.usageModel
   namespace_path       = each.value.clientPath
 }
@@ -300,11 +341,6 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
 #################################################################################
 # Avere vFXT (https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
 #################################################################################
-
-data "azurerm_key_vault_secret" "admin_password" {
-  name         = module.global.keyVaultSecretNameAdminPassword
-  key_vault_id = data.azurerm_key_vault.render.id
-}
 
 resource "azurerm_role_assignment" "identity" {
   role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
@@ -343,15 +379,14 @@ module "vfxt_controller" {
   create_resource_group             = false
   resource_group_name               = var.resourceGroupName
   location                          = module.global.regionName
-  admin_username                    = var.vfxtCache.controller.adminUsername
-  admin_password                    = data.azurerm_key_vault_secret.admin_password.value
-  ssh_key_data                      = var.vfxtCache.controller.sshPublicKey != "" ? var.vfxtCache.controller.sshPublicKey : null
+  admin_username                    = var.vfxtCache.cluster.adminUsername != "" ? var.vfxtCache.cluster.adminUsername : data.azurerm_key_vault_secret.admin_username.value
+  admin_password                    = var.vfxtCache.cluster.adminPassword != "" ? var.vfxtCache.cluster.adminPassword : data.azurerm_key_vault_secret.admin_password.value
+  ssh_key_data                      = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   virtual_network_name              = data.azurerm_virtual_network.compute.name
   virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
   static_ip_address                 = local.vfxtControllerAddress
   user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.render.id
-  image_id                          = var.vfxtCache.controller.imageId
   depends_on = [
     azurerm_resource_group.cache,
     azurerm_role_assignment.identity,

@@ -1,4 +1,4 @@
-resourceGroupName = "ArtistAnywhere.Workstation"
+resourceGroupName = "ArtistAnywhere.Workstation" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
@@ -9,6 +9,9 @@ virtualMachines = [
     name        = "LnxArtist"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/2.0.0"
     machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+    network = {
+      enableAcceleratedNetworking = true
+    }
     operatingSystem = {
       type = "Linux"
       disk = {
@@ -17,7 +20,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -41,12 +45,14 @@ virtualMachines = [
     monitorExtension = {
       enable = false
     }
-    enableAcceleratedNetworking = true
   },
   {
     name        = "WinArtist"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinArtist/versions/2.0.0"
     machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+    network = {
+      enableAcceleratedNetworking = true
+    }
     operatingSystem = {
       type = "Windows"
       disk = {
@@ -55,7 +61,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -79,16 +86,32 @@ virtualMachines = [
     monitorExtension = {
       enable = false
     }
-    enableAcceleratedNetworking = true
   }
 ]
 
 #######################################################################
-# Optional resource dependency configuration for existing deployments #
+# Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
 computeNetwork = {
   name              = ""
   subnetName        = ""
+  resourceGroupName = ""
+}
+
+managedIdentity = {
+  name              = ""
+  resourceGroupName = ""
+}
+
+keyVault = {
+  name                 = ""
+  resourceGroupName    = ""
+  keyNameAdminUsername = ""
+  keyNameAdminPassword = ""
+}
+
+monitorWorkspace = {
+  name              = ""
   resourceGroupName = ""
 }

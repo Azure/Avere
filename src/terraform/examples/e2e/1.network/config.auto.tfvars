@@ -1,49 +1,74 @@
-resourceGroupName = "ArtistAnywhere.Network"
+resourceGroupName = "ArtistAnywhere.Network" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 #################################################################################################
 # Virtual Network (https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) #
 #################################################################################################
 
 computeNetwork = {
-  name               = "Render"
-  regionName         = "" # Optional region override
-  addressSpace       = ["10.1.0.0/16"]
-  dnsServerAddresses = []
+  name       = "Render"
+  regionName = "" # Optional region override
+  addressSpace = [
+    "10.1.0.0/16"
+  ]
+  dnsIpAddresses = [
+  ]
   subnets = [
     {
-      name              = "Farm"
-      addressSpace      = ["10.1.0.0/17"]
-      serviceEndpoints  = ["Microsoft.Storage"]
+      name = "Farm"
+      addressSpace = [
+        "10.1.0.0/17"
+      ]
+      serviceEndpoints = [
+        "Microsoft.Storage"
+      ]
       serviceDelegation = ""
     },
     {
-      name              = "Workstation"
-      addressSpace      = ["10.1.128.0/18"]
-      serviceEndpoints  = ["Microsoft.Storage"]
+      name = "Workstation"
+      addressSpace = [
+        "10.1.128.0/18"
+      ]
+      serviceEndpoints = [
+        "Microsoft.Storage"
+      ]
       serviceDelegation = ""
     },
     {
-      name              = "Storage"
-      addressSpace      = ["10.1.192.0/24"]
-      serviceEndpoints  = ["Microsoft.Storage"]
+      name = "Storage"
+      addressSpace = [
+        "10.1.192.0/24"
+      ]
+      serviceEndpoints = [
+        "Microsoft.Storage"
+      ]
       serviceDelegation = ""
     },
     {
-      name              = "Cache"
-      addressSpace      = ["10.1.193.0/24"]
-      serviceEndpoints  = ["Microsoft.Storage"]
+      name = "Cache"
+      addressSpace = [
+        "10.1.193.0/24"
+      ]
+      serviceEndpoints = [
+        "Microsoft.Storage"
+      ]
       serviceDelegation = ""
     },
     {
-      name              = "GatewaySubnet"
-      addressSpace      = ["10.1.255.0/26"]
-      serviceEndpoints  = []
+      name = "GatewaySubnet"
+      addressSpace = [
+        "10.1.255.0/26"
+      ]
+      serviceEndpoints = [
+      ]
       serviceDelegation = ""
     },
     {
-      name              = "AzureBastionSubnet"
-      addressSpace      = ["10.1.255.64/26"]
-      serviceEndpoints  = []
+      name = "AzureBastionSubnet"
+      addressSpace = [
+        "10.1.255.64/26"
+      ]
+      serviceEndpoints = [
+      ]
       serviceDelegation = ""
     }
   ]
@@ -56,27 +81,41 @@ computeNetwork = {
 }
 
 storageNetwork = {
-  name               = "" # Set to "" to skip storage network deployment
-  regionName         = "" # Optional region override
-  addressSpace       = ["10.0.0.0/16"]
-  dnsServerAddresses = []
+  name       = "" # Set to "" to skip storage network deployment
+  regionName = "" # Optional region override
+  addressSpace = [
+    "10.0.0.0/16"
+  ]
+  dnsIpAddresses = [
+  ]
   subnets = [
     {
-      name              = "Primary"
-      addressSpace      = ["10.0.0.0/24"]
-      serviceEndpoints  = ["Microsoft.Storage"]
+      name = "Primary"
+      addressSpace = [
+        "10.0.0.0/24"
+      ]
+      serviceEndpoints = [
+        "Microsoft.Storage"
+      ]
       serviceDelegation = ""
     },
     {
-      name              = "Secondary"
-      addressSpace      = ["10.0.1.0/24"]
-      serviceEndpoints  = ["Microsoft.Storage"]
+      name = "Secondary"
+      addressSpace = [
+        "10.0.1.0/24"
+      ]
+      serviceEndpoints = [
+        "Microsoft.Storage"
+      ]
       serviceDelegation = ""
     # },
     # {
-    #   name              = "NetAppFiles"
-    #   addressSpace      = ["10.0.2.0/24"]
-    #   serviceEndpoints  = []
+    #   name = "NetAppFiles"
+    #   addressSpace = [
+    #     "10.0.2.0/24"
+    #   ]
+    #   serviceEndpoints = [
+    #   ]
     #   serviceDelegation = "Microsoft.Netapp/volumes"
     }
   ]
@@ -150,9 +189,10 @@ vpnGateway = {
   enableBgp          = false
   enableActiveActive = false
   pointToSiteClient = {
-    addressSpace    = []
     certificateName = ""
     certificateData = ""
+    addressSpace = [
+    ]
   }
 }
 
@@ -161,9 +201,10 @@ vpnGateway = {
 ##########################################################################################################################
 
 vpnGatewayLocal = {
-  fqdn         = "" # Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
-  address      = "" # or set the public IP address. Do NOT set both "fqdn" and "address" parameters
-  addressSpace = []
+  fqdn    = "" # Set the fully-qualified domain name (FQDN) of your on-premises VPN gateway device
+  address = "" # or set the public IP address. Do NOT set both "fqdn" and "address" parameters
+  addressSpace = [
+  ]
   bgp = {
     enable         = false
     asn            = 0

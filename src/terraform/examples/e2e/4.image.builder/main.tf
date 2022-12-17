@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.34.0"
+      version = "~>3.36.0"
     }
   }
   backend "azurerm" {
@@ -92,23 +92,43 @@ variable "computeNetwork" {
   )
 }
 
+variable "managedIdentity" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
+variable "keyVault" {
+  type = object(
+    {
+      name                   = string
+      resourceGroupName      = string
+      keyNameAdminUsername   = string
+      keyNameAdminPassword   = string
+    }
+  )
+}
+
 data "azurerm_user_assigned_identity" "render" {
-  name                = module.global.managedIdentityName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
+  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
-  name                = module.global.keyVaultName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
+  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  name         = module.global.keyVaultSecretNameAdminUsername
+  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
   key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = module.global.keyVaultSecretNameAdminPassword
+  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
   key_vault_id = data.azurerm_key_vault.render.id
 }
 
@@ -116,8 +136,8 @@ data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.storageAccountName
-    container_name       = module.global.storageContainerName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName
     key                  = "1.network"
   }
 }
@@ -247,7 +267,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       value = module.global.renderManager
     }
     "managedIdentityName" = {
-      value = module.global.managedIdentityName
+      value = module.global.managedIdentity.name
     }
     "managedIdentityResourceGroupName" = {
       value = module.global.resourceGroupName

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.34.0"
+      version = "~>3.36.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -66,9 +66,9 @@ variable "storageAccounts" {
           protocol = string
           dataSource = object(
             {
-              accountName = string
-              accountKey  = string
-              shareName   = string
+              accountName   = string
+              accountKey    = string
+              containerName = string
             }
           )
         }
@@ -125,6 +125,11 @@ variable "hammerspace" {
               count      = number
             }
           )
+          network = object(
+            {
+              enableAcceleratedNetworking = bool
+            }
+          )
           osDisk = object(
             {
               sizeGB      = number
@@ -142,6 +147,7 @@ variable "hammerspace" {
           adminLogin = object(
             {
               userName            = string
+              userPassword        = string
               sshPublicKey        = string
               disablePasswordAuth = bool
             }
@@ -155,6 +161,11 @@ variable "hammerspace" {
               namePrefix = string
               size       = string
               count      = number
+            }
+          )
+          network = object(
+            {
+              enableAcceleratedNetworking = bool
             }
           )
           osDisk = object(
@@ -176,6 +187,7 @@ variable "hammerspace" {
           adminLogin = object(
             {
               userName            = string
+              userPassword        = string
               sshPublicKey        = string
               disablePasswordAuth = bool
             }
@@ -206,26 +218,70 @@ variable "storageNetwork" {
   )
 }
 
-data "http" "current" {
+variable "managedIdentity" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
+variable "keyVault" {
+  type = object(
+    {
+      name                 = string
+      resourceGroupName    = string
+      keyNameAdminUsername = string
+      keyNameAdminPassword = string
+    }
+  )
+}
+
+variable "monitorWorkspace" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
+data "http" "client_address" {
   url = "https://api.ipify.org?format=json"
 }
 
+data "azurerm_user_assigned_identity" "render" {
+  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
+  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
+}
+
 data "azurerm_key_vault" "render" {
-  name                = module.global.keyVaultName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
+  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
+}
+
+data "azurerm_key_vault_secret" "admin_username" {
+  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = module.global.keyVaultSecretNameAdminPassword
+  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
   key_vault_id = data.azurerm_key_vault.render.id
+}
+
+data "azurerm_log_analytics_workspace" "monitor" {
+  name                = var.monitorWorkspace.name != "" ? var.monitorWorkspace.name : module.global.monitorWorkspace.name
+  resource_group_name = var.monitorWorkspace.resourceGroupName != "" ? var.monitorWorkspace.resourceGroupName : module.global.resourceGroupName
 }
 
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.storageAccountName
-    container_name       = module.global.storageContainerName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName
     key                  = "1.network"
   }
 }
@@ -410,7 +466,7 @@ resource "azurerm_storage_account" "storage" {
         "${data.azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${serviceEndpointSubnet.virtualNetworkName}/subnets/${serviceEndpointSubnet.name}"
     ]
     ip_rules = [
-      jsondecode(data.http.current.response_body).ip
+      jsondecode(data.http.client_address.response_body).ip
     ]
   }
 }
@@ -463,7 +519,7 @@ resource "azurerm_storage_share" "shares" {
 resource "azurerm_resource_group" "netapp_files" {
   count    = var.netAppAccount.name != "" ? 1 : 0
   name     = "${var.resourceGroupName}.NetAppFiles"
-  location = data.azurerm_virtual_network.storage[0].location
+  location = azurerm_resource_group.storage.location
 }
 
 resource "azurerm_netapp_account" "storage" {
@@ -525,7 +581,7 @@ resource "azurerm_netapp_volume" "storage" {
 resource "azurerm_resource_group" "hammerspace" {
   count    = var.hammerspace.namePrefix != "" ? 1 : 0
   name     = "${var.resourceGroupName}.Hammerspace"
-  location = data.azurerm_virtual_network.storage[0].location
+  location = azurerm_resource_group.storage.location
 }
 
 resource "azurerm_proximity_placement_group" "storage" {
@@ -563,7 +619,7 @@ resource "azurerm_network_interface" "storage_primary" {
     subnet_id                     = try(data.azurerm_subnet.storage_primary[0].id, data.azurerm_subnet.compute_storage.id)
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = each.value.enableAcceleratedNetworking
+  enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
 }
 
 resource "azurerm_network_interface" "storage_secondary" {
@@ -578,7 +634,7 @@ resource "azurerm_network_interface" "storage_secondary" {
     subnet_id                     = try(data.azurerm_subnet.storage_secondary[0].id, data.azurerm_subnet.compute_storage.id)
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = each.value.enableAcceleratedNetworking
+  enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
 }
 
 resource "azurerm_managed_disk" "storage" {
@@ -608,8 +664,8 @@ resource "azurerm_linux_virtual_machine" "storage_metadata" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = each.value.adminLogin.userName
-  admin_password                  = data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
+  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   availability_set_id             = azurerm_availability_set.storage_metadata[0].id
   proximity_placement_group_id    = var.hammerspace.enableProximityPlacement ? azurerm_proximity_placement_group.storage[0].id : null
@@ -656,8 +712,8 @@ resource "azurerm_linux_virtual_machine" "storage_data" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = each.value.adminLogin.userName
-  admin_password                  = data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
+  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   availability_set_id             = azurerm_availability_set.storage_data[0].id
   proximity_placement_group_id    = var.hammerspace.enableProximityPlacement ? azurerm_proximity_placement_group.storage[0].id : null

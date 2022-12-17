@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.34.0"
+      version = "~>3.36.0"
     }
   }
   backend "azurerm" {
@@ -38,6 +38,11 @@ variable "virtualMachines" {
       name        = string
       imageId     = string
       machineSize = string
+      network = object(
+        {
+          enableAcceleratedNetworking = bool
+        }
+      )
       operatingSystem = object(
         {
           type = string
@@ -52,6 +57,7 @@ variable "virtualMachines" {
       adminLogin = object(
         {
           userName            = string
+          userPassword        = string
           sshPublicKey        = string
           disablePasswordAuth = bool
         }
@@ -76,7 +82,6 @@ variable "virtualMachines" {
           enable = bool
         }
       )
-      enableAcceleratedNetworking = bool
     }
   ))
 }
@@ -91,32 +96,66 @@ variable "computeNetwork" {
   )
 }
 
+variable "managedIdentity" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
+variable "keyVault" {
+  type = object(
+    {
+      name                 = string
+      resourceGroupName    = string
+      keyNameAdminUsername = string
+      keyNameAdminPassword = string
+    }
+  )
+}
+
+variable "monitorWorkspace" {
+  type = object(
+    {
+      name              = string
+      resourceGroupName = string
+    }
+  )
+}
+
 data "azurerm_user_assigned_identity" "render" {
-  name                = module.global.managedIdentityName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
+  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
-  name                = module.global.keyVaultName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
+  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
+}
+
+data "azurerm_key_vault_secret" "admin_username" {
+  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
+  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = module.global.keyVaultSecretNameAdminPassword
+  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
   key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  name                = module.global.monitorWorkspaceName
-  resource_group_name = module.global.resourceGroupName
+  name                = var.monitorWorkspace.name != "" ? var.monitorWorkspace.name : module.global.monitorWorkspace.name
+  resource_group_name = var.monitorWorkspace.resourceGroupName != "" ? var.monitorWorkspace.resourceGroupName : module.global.resourceGroupName
 }
 
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.storageAccountName
-    container_name       = module.global.storageContainerName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName
     key                  = "1.network"
   }
 }
@@ -125,8 +164,8 @@ data "terraform_remote_state" "image" {
   backend = "azurerm"
   config = {
     resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.storageAccountName
-    container_name       = module.global.storageContainerName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName
     key                  = "4.image.builder"
   }
 }
@@ -163,7 +202,7 @@ resource "azurerm_network_interface" "workstation" {
     subnet_id                     = data.azurerm_subnet.workstation.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = each.value.enableAcceleratedNetworking
+  enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
 }
 
 resource "azurerm_linux_virtual_machine" "workstation" {
@@ -175,8 +214,8 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   location                        = azurerm_resource_group.workstation.location
   source_image_id                 = each.value.imageId
   size                            = each.value.machineSize
-  admin_username                  = each.value.adminLogin.userName
-  admin_password                  = data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
+  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -255,8 +294,8 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   location            = azurerm_resource_group.workstation.location
   source_image_id     = each.value.imageId
   size                = each.value.machineSize
-  admin_username      = each.value.adminLogin.userName
-  admin_password      = data.azurerm_key_vault_secret.admin_password.value
+  admin_username      = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
+  admin_password      = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]

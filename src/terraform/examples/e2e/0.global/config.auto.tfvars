@@ -1,7 +1,9 @@
-// ********************************************************************************************************************************************************
-// PREREQUISITE: The Azure "Key Vault Administrator" Role-Based Access Control (RBAC) role is required for the current user BEFORE deploying this module. *
-//               https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator                                       *
-// ********************************************************************************************************************************************************
+// ****************************************************************************************************************************************************
+// PREREQUISITE: Azure "Key Vault Administrator" Role-Based Access Control (RBAC) role is required for the current user BEFORE deploying this module. *
+//               https://learn.microsoft.com/azure/role-based-access-control/overview                                                                 *
+//               https://learn.microsoft.com/azure/role-based-access-control/role-assignments-portal                                                  *
+//               https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator                                   *
+// ****************************************************************************************************************************************************
 
 ############################################################################
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
@@ -13,7 +15,7 @@ keyVault = {
   enableForDiskEncryption     = false
   enableForTemplateDeployment = false
   enablePurgeProtection       = false
-  softDeleteRetentionDays = 90
+  softDeleteRetentionDays     = 90
   secrets = [
     {
       name  = "GatewayConnection"
@@ -64,7 +66,7 @@ keyVault = {
 # Storage (https://learn.microsoft.com/azure/storage) #
 #######################################################
 
-storage = {
+rootStorage = {
   accountType        = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
   accountRedundancy  = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
   accountPerformance = "Standard"  # https://learn.microsoft.com/azure/storage/blobs/storage-blob-performance-tiers
@@ -75,7 +77,6 @@ storage = {
 ######################################################################
 
 monitorWorkspace = {
-  name          = "azrender"
   sku           = "PerGB2018"
   retentionDays = 90
 }

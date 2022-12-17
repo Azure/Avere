@@ -1,4 +1,4 @@
-resourceGroupName = "ArtistAnywhere.Scheduler"
+resourceGroupName = "ArtistAnywhere.Scheduler" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
@@ -9,6 +9,9 @@ virtualMachines = [
     name        = "LnxScheduler"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/0.0.0"
     machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+    network = {
+      enableAcceleratedNetworking = true
+    }
     operatingSystem = {
       type = "Linux"
       disk = {
@@ -17,7 +20,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -52,12 +56,14 @@ virtualMachines = [
     monitorExtension = {
       enable = false
     }
-    enableAcceleratedNetworking = true
   },
   {
     name        = "" # "WinScheduler"
     imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinScheduler/versions/0.0.0"
     machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+    network = {
+      enableAcceleratedNetworking = true
+    }
     operatingSystem = {
       type = "Windows"
       disk = {
@@ -66,7 +72,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
+      userName            = ""
+      userPassword        = ""
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -101,12 +108,11 @@ virtualMachines = [
     monitorExtension = {
       enable = false
     }
-    enableAcceleratedNetworking = true
   }
 ]
 
 #######################################################################
-# Optional resource dependency configuration for existing deployments #
+# Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
 computeNetwork = {
@@ -120,4 +126,21 @@ computeGallery = { # Only applies if customExtension.cycleCloud.enable = true
   name                  = ""
   resourceGroupName     = ""
   imageVersionIdDefault = ""
+}
+
+managedIdentity = {
+  name              = ""
+  resourceGroupName = ""
+}
+
+keyVault = {
+  name                 = ""
+  resourceGroupName    = ""
+  keyNameAdminUsername = ""
+  keyNameAdminPassword = ""
+}
+
+monitorWorkspace = {
+  name              = ""
+  resourceGroupName = ""
 }

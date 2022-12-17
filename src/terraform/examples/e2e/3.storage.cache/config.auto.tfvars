@@ -1,4 +1,4 @@
-resourceGroupName = "ArtistAnywhere.Cache"
+resourceGroupName = "ArtistAnywhere.Cache" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 cacheName = "cache" # Set to a uniquely identifiable cache name
 
@@ -18,7 +18,12 @@ hpcCache = {
   throughput = "Standard_L4_5G"
   size       = 21623
   mtuSize    = 1500
-  ntpHost    = "time.windows.com"
+  ntpHost    = ""
+  dns = {
+    ipAddresses = [ # Maximum of 3 IP addresses
+    ]
+    searchDomain = ""
+  }
   encryption = {
     enable    = false
     rotateKey = false
@@ -30,19 +35,15 @@ hpcCache = {
 #################################################################################
 
 vfxtCache = {
-  localTimezone = "UTC"
   cluster = {
-    nodeSize       = 1024 # Set to either 1024 GB (1 TB) or 4096 GB (4 TB) nodes
-    nodeCount      = 3    # Set to a minimum of 3 nodes up to a maximum of 16 nodes
-    adminUsername  = "azadmin"
-    sshPublicKey   = ""
-    imageId        = ""
-    customSettings = []
-  }
-  controller = {
-    adminUsername = "azadmin"
+    nodeSize      = 1024 # Set to either 1024 GB (1 TB) or 4096 GB (4 TB) nodes
+    nodeCount     = 3    # Set to a minimum of 3 nodes up to a maximum of 16 nodes
+    adminUsername = ""
+    adminPassword = ""
     sshPublicKey  = ""
     imageId       = ""
+    customSettings = [
+    ]
   }
   support = {                    # https://privacy.microsoft.com/privacystatement
     companyName      = ""        # https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name
@@ -50,6 +51,7 @@ vfxtCache = {
     enableProactive  = "Support" # https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#enable_secure_proactive_support
     rollingTraceFlag = "0xe4001" # https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#rolling_trace_flag
   }
+  localTimezone              = "UTC"
   enableMarketplaceAgreement = true
 }
 
@@ -94,7 +96,7 @@ storageTargetsNfsBlob = [
 ]
 
 #######################################################################
-# Optional resource dependency configuration for existing deployments #
+# Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
 computeNetwork = {
@@ -105,4 +107,17 @@ computeNetwork = {
     zoneName               = ""
     enableAutoRegistration = true
   }
+}
+
+managedIdentity = {
+  name              = ""
+  resourceGroupName = ""
+}
+
+keyVault = {
+  name                   = ""
+  resourceGroupName      = ""
+  keyNameAdminUsername   = ""
+  keyNameAdminPassword   = ""
+  keyNameCacheEncryption = ""
 }

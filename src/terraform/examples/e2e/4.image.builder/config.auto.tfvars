@@ -1,4 +1,4 @@
-resourceGroupName = "ArtistAnywhere.Image"
+resourceGroupName = "ArtistAnywhere.Image" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 ###############################################################################################
 # Compute Gallery (https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) #
@@ -63,13 +63,15 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Scheduler"
-      machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = []                # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Scheduler"
+      machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
+      ]
       osDiskSizeGB   = 0
       timeoutMinutes = 120
       outputVersion  = "0.0.0"
-      renderEngines  = []
+      renderEngines = [
+      ]
     }
   },
   {
@@ -79,13 +81,15 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Farm"
+      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
+        "GRID"
+      ]
       osDiskSizeGB   = 480
       timeoutMinutes = 240
       outputVersion  = "1.1.0"
-      renderEngines  = [
+      renderEngines = [
         "Blender",
         "PBRT",
         "Unity",
@@ -100,13 +104,14 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = []                    # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Farm"
+      machineSize = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
+      ]
       osDiskSizeGB   = 480
       timeoutMinutes = 240
       outputVersion  = "1.0.0"
-      renderEngines  = [
+      renderEngines = [
         "Blender",
         "PBRT"
       ]
@@ -119,13 +124,15 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Workstation"
+      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
+        "GRID"
+      ]
       osDiskSizeGB   = 512
       timeoutMinutes = 240
       outputVersion  = "2.0.0"
-      renderEngines  = [
+      renderEngines = [
         "Blender",
         "PBRT",
         "Unity",
@@ -140,13 +147,15 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Scheduler"
-      machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = []                # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Scheduler"
+      machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
+      ]
       osDiskSizeGB   = 0
       timeoutMinutes = 180
       outputVersion  = "0.0.0"
-      renderEngines  = []
+      renderEngines = [
+      ]
     }
   },
   {
@@ -156,13 +165,15 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Farm"
+      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
+        "GRID"
+      ]
       osDiskSizeGB   = 480
       timeoutMinutes = 420
       outputVersion  = "1.1.0"
-      renderEngines  = [
+      renderEngines = [
         "Blender",
         "PBRT",
         "Unity",
@@ -177,13 +188,14 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = []                    # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Farm"
+      machineSize = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
+      ]
       osDiskSizeGB   = 480
       timeoutMinutes = 420
       outputVersion  = "1.0.0"
-      renderEngines  = [
+      renderEngines = [
         "Blender",
         "PBRT"
       ]
@@ -196,13 +208,15 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform    = ["GRID"]                  # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineType = "Workstation"
+      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
+        "GRID"
+      ]
       osDiskSizeGB   = 512
       timeoutMinutes = 420
       outputVersion  = "2.0.0"
-      renderEngines  = [
+      renderEngines = [
         "Blender",
         "PBRT",
         "Unity",
@@ -213,11 +227,23 @@ imageTemplates = [
 ]
 
 #######################################################################
-# Optional resource dependency configuration for existing deployments #
+# Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
 computeNetwork = {
   name              = ""
   subnetName        = ""
   resourceGroupName = ""
+}
+
+managedIdentity = {
+  name              = ""
+  resourceGroupName = ""
+}
+
+keyVault = {
+  name                 = ""
+  resourceGroupName    = ""
+  keyNameAdminUsername = ""
+  keyNameAdminPassword = ""
 }
