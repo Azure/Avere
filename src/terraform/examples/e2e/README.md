@@ -298,7 +298,7 @@ deadlinecommand -SubmitCommandLineJob -name Moana-Island-v4 -executable pbrt4 -a
 
 ## 10 Appendix
 
-The following splash screens from previous Blender versions were rendered in Azure using the Azure Artist Anywhere (AAA) solution deployment framework.
+The following splash screens from previous Blender versions were rendered in Azure using the AAA solution deployment framework.
 
 ### 10.1 Blender 3.0 Splash Screen
 

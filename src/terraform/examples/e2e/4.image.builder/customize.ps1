@@ -139,20 +139,6 @@ switch ($renderManager) {
 }
 $binPaths += ";$schedulerClientBinPath"
 
-$rendererPathBlender = "C:\Program Files\Blender Foundation\Blender3"
-$rendererPathPBRT3 = "C:\Program Files\PBRT\v3"
-$rendererPathPBRT4 = "C:\Program Files\PBRT\v4"
-$rendererPathUnreal = "C:\Program Files\Epic Games\Unreal5"
-$rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
-
-if ($renderEngines -contains "Blender") {
-  $binPaths += ";$rendererPathBlender"
-}
-if ($renderEngines -contains "Unreal") {
-  $binPaths += ";$rendererPathUnreal"
-}
-setx PATH "$env:PATH$binPaths" /m
-
 switch ($renderManager) {
   "RoyalRender" {
     Write-Host "Customize (Start): Royal Render Download"
@@ -239,6 +225,18 @@ switch ($renderManager) {
   }
 }
 
+$rendererPathBlender = "C:\Program Files\Blender Foundation\Blender"
+$rendererPathPBRT = "C:\Program Files\PBRT"
+$rendererPathUnreal = "C:\Program Files\Epic Games\Unreal"
+
+if ($renderEngines -contains "Blender") {
+  $binPaths += ";$rendererPathBlender"
+}
+if ($renderEngines -contains "Unreal") {
+  $binPaths += ";$rendererPathUnreal"
+}
+setx PATH "$env:PATH$binPaths" /m
+
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
   $versionInfo = "3.4.0"
@@ -250,23 +248,25 @@ if ($renderEngines -contains "Blender") {
 }
 
 if ($renderEngines -contains "PBRT") {
-  Write-Host "Customize (Start): PBRT v3"
+  Write-Host "Customize (Start): PBRT 3"
   $versionInfo = "v3"
+  $rendererPathPBRTv3 = "$rendererPathPBRT\$versionInfo"
   Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
-  New-Item -ItemType Directory -Path "$rendererPathPBRT3" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT3\Release\pbrt.exe" -Path "C:\Windows\pbrt3"
-  Write-Host "Customize (End): PBRT v3"
+  New-Item -ItemType Directory -Path "$rendererPathPBRTv3" -Force
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv3\Release\pbrt.exe" -Path "C:\Windows\pbrt3"
+  Write-Host "Customize (End): PBRT 3"
 
-  Write-Host "Customize (Start): PBRT v4"
+  Write-Host "Customize (Start): PBRT 4"
   $versionInfo = "v4"
+  $rendererPathPBRTv4 = "$rendererPathPBRT\$versionInfo"
   Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
-  New-Item -ItemType Directory -Path "$rendererPathPBRT4" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRT4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRT4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRT4\Release\pbrt.exe" -Path "C:\Windows\pbrt4"
-  Write-Host "Customize (End): PBRT v4"
+  New-Item -ItemType Directory -Path "$rendererPathPBRTv4" -Force
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "C:\Windows\pbrt4"
+  Write-Host "Customize (End): PBRT 4"
 }
 
 if ($renderEngines -contains "PBRT.Moana") {
@@ -347,6 +347,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
     Write-Host "Customize (End): Unreal Project Files"
 
     Write-Host "Customize (Start): Unreal Editor"
+    $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
     netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell

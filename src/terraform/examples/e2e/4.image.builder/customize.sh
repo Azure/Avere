@@ -166,19 +166,6 @@ case $renderManager in
 esac
 binPaths="$binPaths:$schedulerClientBinPath"
 
-rendererPathBlender="/usr/local/blender3"
-rendererPathPBRT3="/usr/local/pbrt/v3"
-rendererPathPBRT4="/usr/local/pbrt/v4"
-rendererPathUnreal="/usr/local/unreal5"
-
-if [[ $renderEngines == *Blender* ]]; then
-  binPaths="$binPaths:$rendererPathBlender"
-fi
-if [[ $renderEngines == *Unreal* ]]; then
-  binPaths="$binPaths:$rendererPathUnreal"
-fi
-echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
-
 case $renderManager in
   "RoyalRender")
     echo "Customize (Start): Royal Render Download"
@@ -252,8 +239,20 @@ case $renderManager in
     ;;
 esac
 
+rendererPathBlender="/usr/local/blender"
+rendererPathPBRT="/usr/local/pbrt"
+rendererPathUnreal="/usr/local/unreal"
+
 if [[ $renderEngines == *Blender* ]]; then
-  echo "Customize (Start): Blender"
+  binPaths="$binPaths:$rendererPathBlender"
+fi
+if [[ $renderEngines == *Unreal* ]]; then
+  binPaths="$binPaths:$rendererPathUnreal"
+fi
+echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
+
+if [[ $renderEngines == *Blender* ]]; then
+  echo "Customize (Start): Blender 3.4"
   yum -y install libxkbcommon
   yum -y install libXxf86vm
   yum -y install libXfixes
@@ -261,37 +260,61 @@ if [[ $renderEngines == *Blender* ]]; then
   yum -y install libXi
   yum -y install libGL
   versionInfo="3.4.0"
-  installFile="blender-$versionInfo-linux-x64.tar.xz"
+  versionType="linux-x64"
+  installFile="blender-$versionInfo-$versionType.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   tar -xJf $installFile
-  mv blender-$versionInfo-linux-x64 $rendererPathBlender
-  echo "Customize (End): Blender"
+  cd blender-$versionInfo-$versionType
+  installDirectory="$rendererPathBlender/$versionInfo"
+  mkdir -p $installDirectory
+  mv * $installDirectory
+  cd $binDirectory
+  ln -s $installDirectory/blender $rendererPathBlender/blender3.4
+  echo "Customize (End): Blender 3.4"
+
+  echo "Customize (Start): Blender 3.5"
+  yum -y install libSM
+  versionInfo="3.5.0"
+  versionType="alpha+master.8709a51fa907-linux.x86_64-release"
+  installFile="blender-$versionInfo-$versionType.tar.xz"
+  downloadUrl="$storageContainerUrl/Blender/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  tar -xJf $installFile
+  cd blender-$versionInfo-$versionType
+  installDirectory="$rendererPathBlender/$versionInfo"
+  mkdir -p $installDirectory
+  mv * $installDirectory
+  cd $binDirectory
+  ln -s $installDirectory/blender $rendererPathBlender/blender3.5
+  echo "Customize (End): Blender 3.5"
 fi
 
 if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT v3"
+  echo "Customize (Start): PBRT 3"
   versionInfo="v3"
+  rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
-  mkdir -p $rendererPathPBRT3
-  $binPathCMake/cmake -B $rendererPathPBRT3 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
-  make -j -C $rendererPathPBRT3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
-  ln -s $rendererPathPBRT3/pbrt /usr/bin/pbrt3
-  echo "Customize (End): PBRT v3"
+  mkdir -p $rendererPathPBRTv3
+  $binPathCMake/cmake -B $rendererPathPBRTv3 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
+  make -j -C $rendererPathPBRTv3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
+  ln -s $rendererPathPBRTv3/pbrt /usr/bin/pbrt3
+  echo "Customize (End): PBRT 3"
 
-  echo "Customize (Start): PBRT v4"
+  echo "Customize (Start): PBRT 4"
   yum -y install mesa-libGL-devel
   yum -y install libXrandr-devel
   yum -y install libXinerama-devel
   yum -y install libXcursor-devel
   yum -y install libXi-devel
   versionInfo="v4"
+  rendererPathPBRTv4="$rendererPathPBRT/$versionInfo"
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
-  mkdir -p $rendererPathPBRT4
-  $binPathCMake/cmake -B $rendererPathPBRT4 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
-  make -j -C $rendererPathPBRT4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
-  ln -s $rendererPathPBRT4/pbrt /usr/bin/pbrt4
-  echo "Customize (End): PBRT v4"
+  mkdir -p $rendererPathPBRTv4
+  $binPathCMake/cmake -B $rendererPathPBRTv4 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
+  make -j -C $rendererPathPBRTv4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
+  ln -s $rendererPathPBRTv4/pbrt /usr/bin/pbrt4
+  echo "Customize (End): PBRT 4"
 fi
 
 if [[ $renderEngines == *PBRT.Moana* ]]; then
