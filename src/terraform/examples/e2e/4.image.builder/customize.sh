@@ -8,7 +8,7 @@ storageContainerUrl="https://azrender.blob.core.windows.net/bin"
 storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
 
 echo "Customize (Start): Image Build Platform"
-sed -i "s/SELINUX=enforcing/SELINUX=permissive/" /etc/sysconfig/selinux
+sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/sysconfig/selinux
 yum -y install epel-release
 yum -y install gcc gcc-c++
 yum -y install nfs-utils
@@ -150,7 +150,7 @@ fi
 case $renderManager in
   "RoyalRender")
     schedulerVersion="8.4.03"
-    schedulerRootDirectory="/RoyalRender"
+    schedulerRootDirectory="/usr/local/RoyalRender"
     schedulerClientBinPath="$schedulerRootDirectory/bin/lx64"
     ;;
   "Deadline")
