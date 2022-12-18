@@ -179,6 +179,7 @@ case $renderManager in
     yum -y install fontconfig
     yum -y install libXrender
     yum -y install libXext
+    yum -y install csh
     logFileName="royal-render"
     installFile="rrSetup_linux"
     installDirectory="RoyalRender__${schedulerVersion}__installer"
