@@ -191,18 +191,18 @@ case $renderManager in
     installFile="lx__rrWorkstation_installer.sh"
     if [ $machineType == "Scheduler" ]; then
       echo "Customize (Start): Royal Render Server"
-      $schedulerRootDirectory/$installFile -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
+      $schedulerRootDirectory/$installFile -rrUser root -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
       echo "Customize (End): Royal Render Server"
     else
       echo "Customize (Start): Royal Render Client"
-      $schedulerRootDirectory/$installFile -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
+      $schedulerRootDirectory/$installFile -rrUser root -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
       echo "Customize (End): Royal Render Client"
     fi
 
-    echo "Customize (Start): Royal Render Auto Start"
+    echo "Customize (Start): Royal Render Service"
     installFile="bin/lx64/rrAutostartservice"
-    $schedulerRootDirectory/$installFile -install 1> "$logFileName-starter.output.txt" 2> "$logFileName-starter.error.txt"
-    echo "Customize (End): Royal Render Auto Start"
+    $schedulerRootDirectory/$installFile -install 1> "$logFileName-service.output.txt" 2> "$logFileName-service.error.txt"
+    echo "Customize (End): Royal Render Service"
     ;;
   "Deadline")
     echo "Customize (Start): Deadline Download"
