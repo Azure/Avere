@@ -13,7 +13,7 @@ imageGallery = {
       generation = "V2"
       publisher  = "OpenLogic"
       offer      = "CentOS"
-      sku        = "8_5-Gen2"
+      sku        = "7_9-Gen2"
     },
     {
       name       = "WinScheduler"
