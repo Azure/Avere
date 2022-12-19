@@ -189,14 +189,16 @@ case $renderManager in
     ./$installDirectory/$installFile -console -rrRoot $schedulerRootDirectory 1> "$logFileName.output.txt" 2> "$logFileName.error.txt"
     echo "Customize (End): Royal Render Installer"
 
+    serviceUser="rrService"
+    useradd $serviceUser
     installFile="lx__rrWorkstation_installer.sh"
     if [ $machineType == "Scheduler" ]; then
       echo "Customize (Start): Royal Render Server"
-      $schedulerRootDirectory/$installFile -rrUser root -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
+      $schedulerRootDirectory/$installFile -rrUser $serviceUser -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
       echo "Customize (End): Royal Render Server"
     else
       echo "Customize (Start): Royal Render Client"
-      $schedulerRootDirectory/$installFile -rrUser root -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
+      $schedulerRootDirectory/$installFile -rrUser $serviceUser -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
       echo "Customize (End): Royal Render Client"
     fi
 
