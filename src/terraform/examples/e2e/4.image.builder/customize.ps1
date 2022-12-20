@@ -105,14 +105,9 @@ if ($machineType -eq "Scheduler") {
   Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
   Write-Host "Customize (End): Azure CLI"
 
-  if ($renderManager -eq "Deadline") {
-    Write-Host "Customize (Start): NFS Server"
-    Install-WindowsFeature -Name "FS-NFS-Service"
-    Write-Host "Customize (End): NFS Server"
-    Write-Host "Customize (Start): NFS Client"
-    Install-WindowsFeature -Name "NFS-Client"
-    Write-Host "Customize (End): NFS Client"
-  }
+  Write-Host "Customize (Start): NFS Server"
+  Install-WindowsFeature -Name "FS-NFS-Service"
+  Write-Host "Customize (End): NFS Server"
 } else {
   Write-Host "Customize (Start): NFS Client"
   Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" -Wait -RedirectStandardOutput "nfs-client.output.txt" -RedirectStandardError "nfs-client.error.txt"
@@ -121,9 +116,10 @@ if ($machineType -eq "Scheduler") {
 
 if ($renderManager -like "*RoyalRender*") {
   $schedulerVersion = "8.4.03"
-  $schedulerRootDirectory = "\RoyalRender"
-  $schedulerClientBinPath = "$schedulerRootDirectory\bin\win64"
-  $binPaths += ";$schedulerClientBinPath"
+  $schedulerRootPath = "C:\RoyalRender"
+  $schedulerLocalMount = "S:\"
+  $schedulerBinPath = "$schedulerRootPath\bin\win64"
+  $binPaths += ";$schedulerBinPath"
 
   Write-Host "Customize (Start): Royal Render Download"
   $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
@@ -136,38 +132,36 @@ if ($renderManager -like "*RoyalRender*") {
   $logFileName = "royal-render"
   $installFile = "rrSetup_win.exe"
   $installDirectory = "RoyalRender__${schedulerVersion}__installer"
-  New-Item -ItemType Directory -Path $schedulerRootDirectory
-  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot $schedulerRootDirectory" -Wait -RedirectStandardOutput "$logFileName.output.txt" -RedirectStandardError "$logFileName.error.txt"
+  New-Item -ItemType Directory -Path $schedulerRootPath
+  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot $($schedulerRootPath.TrimStart("C:"))" -Wait -RedirectStandardOutput "$logFileName.output.txt" -RedirectStandardError "$logFileName.error.txt"
   Write-Host "Customize (End): Royal Render Installer"
 
+  $serviceUser = "LocalSystem"
   $installFile = "win__rrWorkstation_installer.bat"
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Royal Render Server"
-    Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-serviceServer" -Wait -RedirectStandardOutput "$logFileName-server.output.txt" -RedirectStandardError "$logFileName-server.error.txt"
+    Start-Process -FilePath $schedulerRootPath\$installFile -ArgumentList "--rrUser $serviceUser -serviceServer" -Wait -RedirectStandardOutput "$logFileName-server.output.txt" -RedirectStandardError "$logFileName-server.error.txt"
+    New-Service -Name "RoyalRender" -DisplayName "Royal Render" -BinaryPathName "$schedulerRootPath\bin\win64\rrServerconsole.exe" -StartupType Automatic
+    New-NfsShare -Name "RoyalRender" -Path $schedulerRootPath -Permission ReadWrite
     Write-Host "Customize (End): Royal Render Server"
   } else {
     Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-service" -Wait -RedirectStandardOutput "$logFileName-client.output.txt" -RedirectStandardError "$logFileName-client.error.txt"
+    Start-Process -FilePath $schedulerRootPath\$installFile -ArgumentList "--rrUser $serviceUser -service" -Wait -RedirectStandardOutput "$logFileName-client.output.txt" -RedirectStandardError "$logFileName-client.error.txt"
+    New-Service -Name "RoyalRender" -DisplayName "Royal Render" -BinaryPathName "$schedulerRootPath\bin\win64\rrClientconsole.exe" -StartupType Automatic
     Write-Host "Customize (End): Royal Render Client"
   }
-
-  Write-Host "Customize (Start): Royal Render Service"
-  $installFile = "bin\win64\rrAutostartservice"
-  Start-Process -FilePath $schedulerRootDirectory\$installFile -ArgumentList "-install" -Wait -RedirectStandardOutput "$logFileName-service.output.txt" -RedirectStandardError "$logFileName-service.error.txt"
-  Write-Host "Customize (End): Royal Render Service"
 }
 
 if ($renderManager -like "*Deadline*") {
-  $schedulerVersion = "10.2.0.9"
-  $schedulerClientPath = "C:\DeadlineClient"
+  $schedulerVersion = "10.2.0.10"
+  $schedulerRootPath = "C:\Deadline"
   $schedulerDatabaseHost = $(hostname)
   $schedulerDatabasePath = "C:\DeadlineDatabase"
-  $schedulerRepositoryPath = "C:\DeadlineRepository"
+  $schedulerLocalMount = "T:\"
   $schedulerCertificateFile = "Deadline10Client.pfx"
-  $schedulerRepositoryLocalMount = "S:\"
-  $schedulerRepositoryCertificate = "$schedulerRepositoryLocalMount$schedulerCertificateFile"
-  $schedulerClientBinPath = "$schedulerClientPath\bin"
-  $binPaths += ";$schedulerClientBinPath"
+  $schedulerCertificate = "$schedulerLocalMount$schedulerCertificateFile"
+  $schedulerBinPath = "$schedulerRootPath\bin"
+  $binPaths += ";$schedulerBinPath"
 
   Write-Host "Customize (Start): Deadline Download"
   $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
@@ -178,14 +172,14 @@ if ($renderManager -like "*Deadline*") {
 
   Set-Location -Path "Deadline*"
   if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Deadline Repository"
+    Write-Host "Customize (Start): Deadline Server"
     netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerRepositoryPath" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
+    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerRootPath" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
     Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.txt
-    Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRepositoryPath\$schedulerCertificateFile
-    New-NfsShare -Name "DeadlineRepository" -Path $schedulerRepositoryPath -Permission ReadWrite
-    Write-Host "Customize (End): Deadline Repository"
+    Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerRootPath\$schedulerCertificateFile
+    New-NfsShare -Name "Deadline" -Path $schedulerRootPath -Permission ReadWrite
+    Write-Host "Customize (End): Deadline Server"
   }
 
   Write-Host "Customize (Start): Deadline Client"
@@ -193,7 +187,7 @@ if ($renderManager -like "*Deadline*") {
   netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerClientBinPath\deadlinemonitor.exe"
   netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerClientBinPath\deadlinelauncher.exe"
   $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-  $installArgs = "--mode unattended --prefix $schedulerClientPath"
+  $installArgs = "--mode unattended --prefix $schedulerRootPath"
   if ($machineType -eq "Scheduler") {
     $installArgs = "$installArgs --slavestartup false --launcherservice false"
   } else {
@@ -206,7 +200,7 @@ if ($renderManager -like "*Deadline*") {
   }
   Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
   Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-client.txt
-  Start-Process -FilePath "$schedulerClientBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerRepositoryLocalMount $schedulerRepositoryCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.txt" -RedirectStandardError "deadline-change-repository.error.txt"
+  Start-Process -FilePath "$schedulerClientBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerLocalMount $schedulerCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.txt" -RedirectStandardError "deadline-change-repository.error.txt"
   Set-Location -Path $binDirectory
   Write-Host "Customize (End): Deadline Client"
 
