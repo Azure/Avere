@@ -251,7 +251,7 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     ./$installFile $installArgs
     mv /tmp/*_installer.log ./deadline-log-client.txt
-    $schedulerClientBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerLocalMount $schedulerCertificate ""
+    $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerLocalMount $schedulerCertificate ""
     echo "Customize (End): Deadline Client"
   fi
 fi
@@ -276,7 +276,7 @@ if [[ $renderEngines == *Blender* ]]; then
   yum -y install libXrender
   yum -y install libXi
   yum -y install libGL
-  versionInfo="3.4.0"
+  versionInfo="3.4.1"
   versionType="linux-x64"
   installFile="blender-$versionInfo-$versionType.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
