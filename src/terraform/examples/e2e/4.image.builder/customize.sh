@@ -147,9 +147,9 @@ fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
   schedulerVersion="8.4.03"
-  schedulerRootPath="/RoyalRender"
-  schedulerLocalMount="/mnt/rr"
-  schedulerBinPath="$schedulerRootPath/bin/lx64"
+  schedulerInstallRoot="/RoyalRender"
+  schedulerClientMount="/mnt/rr"
+  schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"
 
   echo "Customize (Start): Royal Render Download"
@@ -168,15 +168,18 @@ if [[ $renderManager == *RoyalRender* ]]; then
   installFile="rrSetup_linux"
   installDirectory="RoyalRender__${schedulerVersion}__installer"
   chmod +x ./$installDirectory/$installFile
-  mkdir $schedulerRootPath
-  ./$installDirectory/$installFile -console -rrRoot $schedulerRootPath 1> "$logFileName.output.txt" 2> "$logFileName.error.txt"
+  if [ $machineType != "Scheduler" ]; then
+    schedulerInstallRoot=$schedulerClientMount
+  fi
+  mkdir $schedulerInstallRoot
+  ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$logFileName.output.txt" 2> "$logFileName.error.txt"
   echo "Customize (End): Royal Render Installer"
 
   serviceUser="root"
   installFile="lx__rrWorkstation_installer.sh"
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Royal Render Server"
-    $schedulerRootPath/$installFile -rrUser $serviceUser -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
+    $schedulerInstallRoot/$installFile -rrUser $serviceUser -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
     servicePath="/etc/systemd/system/rrServer.service"
     echo "[Unit]" > $servicePath
     echo "Description=Royal Render Service" >> $servicePath
@@ -184,18 +187,18 @@ if [[ $renderManager == *RoyalRender* ]]; then
     echo "" >> $servicePath
     echo "[Service]" >> $servicePath
     echo "User=$serviceUser" >> $servicePath
-    echo "WorkingDirectory=$schedulerRootPath/bin/lx64/" >> $servicePath
-    echo "ExecStart=$schedulerRootPath/bin/lx64/rrServerconsole" >> $servicePath
+    echo "WorkingDirectory=$schedulerBinPath" >> $servicePath
+    echo "ExecStart=$schedulerBinPath/rrServerconsole" >> $servicePath
     echo "" >> $servicePath
     echo "[Install]" >> $servicePath
     echo "WantedBy=multi-user.target" >> $servicePath
     systemctl enable rrServer
-    echo "$schedulerRootPath *(rw,no_root_squash)" >> /etc/exports
+    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Royal Render Server"
   else
     echo "Customize (Start): Royal Render Client"
-    $schedulerRootPath/$installFile -rrUser $serviceUser -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
+    $schedulerInstallRoot/$installFile -rrUser $serviceUser -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
     servicePath="/etc/systemd/system/rrClient.service"
     echo "[Unit]" > $servicePath
     echo "Description=Royal Render Service" >> $servicePath
@@ -203,8 +206,8 @@ if [[ $renderManager == *RoyalRender* ]]; then
     echo "" >> $servicePath
     echo "[Service]" >> $servicePath
     echo "User=$serviceUser" >> $servicePath
-    echo "WorkingDirectory=$schedulerRootPath/bin/lx64/" >> $servicePath
-    echo "ExecStart=$schedulerRootPath/bin/lx64/rrClientconsole" >> $servicePath
+    echo "WorkingDirectory=$schedulerBinPath" >> $servicePath
+    echo "ExecStart=$schedulerBinPath/rrClientconsole" >> $servicePath
     echo "" >> $servicePath
     echo "[Install]" >> $servicePath
     echo "WantedBy=multi-user.target" >> $servicePath
@@ -215,13 +218,13 @@ fi
 
 if [[ $renderManager == *Deadline* ]]; then
   schedulerVersion="10.2.0.10"
-  schedulerRootPath="/Deadline"
+  schedulerInstallRoot="/Deadline"
+  schedulerClientMount="/mnt/deadline"
   schedulerDatabaseHost=$(hostname)
   schedulerDatabasePath="/DeadlineDatabase"
-  schedulerLocalMount="/mnt/deadline"
   schedulerCertificateFile="Deadline10Client.pfx"
-  schedulerCertificate="$schedulerLocalMount/$schedulerCertificateFile"
-  schedulerBinPath="$schedulerRootPath/bin"
+  schedulerCertificate="$schedulerClientMount/$schedulerCertificateFile"
+  schedulerBinPath="$schedulerInstallRoot/bin"
   binPaths="$binPaths:$schedulerBinPath"
 
   echo "Customize (Start): Deadline Download"
@@ -234,17 +237,17 @@ if [[ $renderManager == *Deadline* ]]; then
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerRootPath
+    ./$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
     mv /tmp/*_installer.log ./deadline-log-repository.txt
-    cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerRootPath/$schedulerCertificateFile
-    chmod +r $schedulerRootPath/$schedulerCertificateFile
-    echo "$schedulerRootPath *(rw,no_root_squash)" >> /etc/exports
+    cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerInstallRoot/$schedulerCertificateFile
+    chmod +r $schedulerInstallRoot/$schedulerCertificateFile
+    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Deadline Server"
   else
     echo "Customize (Start): Deadline Client"
     installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-    installArgs="--mode unattended --prefix $schedulerRootPath"
+    installArgs="--mode unattended --prefix $schedulerInstallRoot"
     if [ $machineType == "Scheduler" ]; then
       installArgs="$installArgs --slavestartup false --launcherdaemon false"
     else
@@ -253,7 +256,7 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     ./$installFile $installArgs
     mv /tmp/*_installer.log ./deadline-log-client.txt
-    $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerLocalMount $schedulerCertificate ""
+    $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerClientMount $schedulerCertificate ""
     echo "Customize (End): Deadline Client"
   fi
 fi
