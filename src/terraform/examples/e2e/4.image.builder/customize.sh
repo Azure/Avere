@@ -208,6 +208,15 @@ if [[ $renderManager == *RoyalRender* ]]; then
     echo "" >> $servicePath
     echo "[Install]" >> $servicePath
     echo "WantedBy=multi-user.target" >> $servicePath
+    timerPath="/etc/systemd/system/rrClient.timer"
+    echo "[Unit]" > $timerPath
+    echo "Description=Royal Render Timer" >> $timerPath
+    echo "" >> $timerPath
+    echo "[Timer]" >> $timerPath
+    echo "OnBootSec=30" >> $timerPath
+    echo "" >> $timerPath
+    echo "[Install]" >> $timerPath
+    echo "WantedBy=timers.targer" >> $timerPath
     systemctl enable rrClient
     echo "Customize (End): Royal Render Client"
   fi
