@@ -147,8 +147,7 @@ fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
   schedulerVersion="8.4.03"
-  schedulerInstallRoot="/RoyalRender"
-  schedulerClientMount="/mnt/rr"
+  schedulerInstallRoot="/mnt/rr"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"
 
@@ -168,9 +167,6 @@ if [[ $renderManager == *RoyalRender* ]]; then
   installFile="rrSetup_linux"
   installDirectory="RoyalRender__${schedulerVersion}__installer"
   chmod +x ./$installDirectory/$installFile
-  if [ $machineType != "Scheduler" ]; then
-    schedulerInstallRoot=$schedulerClientMount
-  fi
   mkdir $schedulerInstallRoot
   ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$logFileName.output.txt" 2> "$logFileName.error.txt"
   echo "Customize (End): Royal Render Installer"
