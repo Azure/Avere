@@ -202,7 +202,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
     servicePath="/etc/systemd/system/rrClient.service"
     echo "[Unit]" > $servicePath
     echo "Description=Royal Render Service" >> $servicePath
-    echo "After=network-online.target" >> $servicePath
+    echo "After=network-online.target mnt-rr.mount" >> $servicePath
     echo "" >> $servicePath
     echo "[Service]" >> $servicePath
     echo "User=$serviceUser" >> $servicePath
