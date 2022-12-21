@@ -199,6 +199,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
     echo "[Unit]" > $servicePath
     echo "Description=Royal Render Service" >> $servicePath
     echo "After=network-online.target mnt-rr.mount" >> $servicePath
+    echo "Requires=mnt-rr.mount" >> $servicePath
     echo "" >> $servicePath
     echo "[Service]" >> $servicePath
     echo "User=$serviceUser" >> $servicePath
