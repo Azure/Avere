@@ -115,9 +115,9 @@ if ($machineType -eq "Scheduler") {
 }
 
 if ($renderManager -like "*RoyalRender*") {
-  $schedulerVersion = "8.4.03"
-  $schedulerInstallRoot = "C:\RoyalRender"
-  $schedulerClientMount = "S:\"
+  $schedulerVersion = "8.4.04"
+  $schedulerInstallRoot = "\RoyalRender"
+  # $schedulerClientMount = "S:\"
   $schedulerBinPath = "$schedulerInstallRoot\bin\win64"
   $binPaths += ";$schedulerBinPath"
 
@@ -133,7 +133,11 @@ if ($renderManager -like "*RoyalRender*") {
   $installFile = "rrSetup_win.exe"
   $installDirectory = "RoyalRender__${schedulerVersion}__installer"
   New-Item -ItemType Directory -Path $schedulerInstallRoot
-  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot $($schedulerInstallRoot.TrimStart("C:"))" -Wait -RedirectStandardOutput "$logFileName.output.txt" -RedirectStandardError "$logFileName.error.txt"
+
+  New-SmbShare -Name "RoyalRender" -Path C:$schedulerInstallRoot -FullAccess "ANONYMOUS LOGON","Everyone"
+  #Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "127.0.0.1 WinScheduler"
+
+  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$logFileName.output.txt" -RedirectStandardError "$logFileName.error.txt"
   Write-Host "Customize (End): Royal Render Installer"
 
   $serviceUser = "LocalSystem"
@@ -141,15 +145,18 @@ if ($renderManager -like "*RoyalRender*") {
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Royal Render Server"
     Start-Process -FilePath $schedulerInstallRoot\$installFile -ArgumentList "--rrUser $serviceUser -serviceServer" -Wait -RedirectStandardOutput "$logFileName-server.output.txt" -RedirectStandardError "$logFileName-server.error.txt"
-    New-Service -Name "RoyalRender" -DisplayName "Royal Render" -BinaryPathName "$schedulerBinPath\rrServerconsole.exe" -StartupType Automatic
-    New-NfsShare -Name "RoyalRender" -Path $schedulerInstallRoot -Permission ReadWrite
+    #New-NfsShare -Name "RoyalRender" -Path $schedulerInstallRoot -Permission ReadWrite
     Write-Host "Customize (End): Royal Render Server"
   } else {
     Write-Host "Customize (Start): Royal Render Client"
     Start-Process -FilePath $schedulerInstallRoot\$installFile -ArgumentList "--rrUser $serviceUser -service" -Wait -RedirectStandardOutput "$logFileName-client.output.txt" -RedirectStandardError "$logFileName-client.error.txt"
-    New-Service -Name "RoyalRender" -DisplayName "Royal Render" -BinaryPathName "$schedulerBinPath\rrClientconsole.exe" -StartupType Automatic
     Write-Host "Customize (End): Royal Render Client"
   }
+
+  Write-Host "Customize (Start): Royal Render Service"
+  $installFile = "bin\win64\rrAutostartservice"
+  Start-Process -FilePath $schedulerInstallRoot\$installFile -ArgumentList "-install" -Wait -RedirectStandardOutput "$logFileName-service.output.txt" -RedirectStandardError "$logFileName-service.error.txt"
+  Write-Host "Customize (End): Royal Render Service"
 }
 
 if ($renderManager -like "*Deadline*") {

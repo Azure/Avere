@@ -146,7 +146,7 @@ if [ $machineType == "Scheduler" ]; then
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="8.4.03"
+  schedulerVersion="8.4.04"
   schedulerInstallRoot="/mnt/rr"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"
@@ -198,8 +198,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
     servicePath="/etc/systemd/system/rrClient.service"
     echo "[Unit]" > $servicePath
     echo "Description=Royal Render Service" >> $servicePath
-    echo "After=network-online.target mnt-rr.mount" >> $servicePath
-    echo "Requires=mnt-rr.mount" >> $servicePath
+    echo "After=network-online.target" >> $servicePath
     echo "" >> $servicePath
     echo "[Service]" >> $servicePath
     echo "User=$serviceUser" >> $servicePath
