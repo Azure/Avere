@@ -190,9 +190,9 @@ if ($renderManager -like "*Deadline*") {
   }
 
   Write-Host "Customize (Start): Deadline Client"
-  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerClientBinPath\deadlineworker.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerClientBinPath\deadlinemonitor.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerClientBinPath\deadlinelauncher.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerBinPath\deadlineworker.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerBinPath\deadlinemonitor.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerBinPath\deadlinelauncher.exe"
   $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
   $installArgs = "--mode unattended --prefix $schedulerInstallRoot"
   if ($machineType -eq "Scheduler") {
@@ -207,7 +207,7 @@ if ($renderManager -like "*Deadline*") {
   }
   Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
   Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-client.txt
-  Start-Process -FilePath "$schedulerClientBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientMount $schedulerCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.txt" -RedirectStandardError "deadline-change-repository.error.txt"
+  Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientMount $schedulerCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.txt" -RedirectStandardError "deadline-change-repository.error.txt"
   Set-Location -Path $binDirectory
   Write-Host "Customize (End): Deadline Client"
 
@@ -215,8 +215,8 @@ if ($renderManager -like "*Deadline*") {
   $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
   $scriptShell = New-Object -ComObject WScript.Shell
   $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-  $shortcut.WorkingDirectory = $schedulerClientBinPath
-  $shortcut.TargetPath = "$schedulerClientBinPath\deadlinemonitor.exe"
+  $shortcut.WorkingDirectory = $schedulerBinPath
+  $shortcut.TargetPath = "$schedulerBinPath\deadlinemonitor.exe"
   $shortcut.Save()
   Write-Host "Customize (End): Deadline Monitor Shortcut"
 }
