@@ -81,7 +81,7 @@ variable "virtualMachineScaleSets" {
             {
               fileSystemMountsStorage      = list(string)
               fileSystemMountsStorageCache = list(string)
-              fileSystemMountsRoyalRender  = list(string)
+              fileSystemMountsQube         = list(string)
               fileSystemMountsDeadline     = list(string)
               fileSystemPermissions        = list(string)
             }
@@ -102,8 +102,9 @@ variable "virtualMachineScaleSets" {
       )
       terminationNotification = object(
         {
-          enable       = bool
-          timeoutDelay = string
+          enable                   = bool
+          timeoutDelay             = string
+          detectionIntervalSeconds = number
         }
       )
     }
@@ -312,7 +313,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "script": "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager = module.global.renderManager }
+            { renderManager                                   = module.global.renderManager },
+            { terminationNotificationDetectionIntervalSeconds = each.value.terminationNotification.detectionIntervalSeconds }
           ))
         )}"
       })
@@ -398,7 +400,8 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager = module.global.renderManager }
+            { renderManager                                   = module.global.renderManager },
+            { terminationNotificationDetectionIntervalSeconds = each.value.terminationNotification.detectionIntervalSeconds }
           )), "UTF-16LE"
         )}"
       })

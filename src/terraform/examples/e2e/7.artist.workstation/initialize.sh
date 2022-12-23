@@ -19,18 +19,14 @@ source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
   mkdir -p $fsMountPoint
   echo "${fsMount}" >> /etc/fstab
 %{ endfor }
-%{ if renderManager == "RoyalRender" }
-  %{ for fsMount in fileSystemMountsRoyalRender }
-    fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-    mkdir -p $fsMountPoint
-    echo "${fsMount}" >> /etc/fstab
-  %{ endfor }
-%{ endif }
-%{ if renderManager == "Deadline" }
-  %{ for fsMount in fileSystemMountsDeadline }
-    fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-    mkdir -p $fsMountPoint
-    echo "${fsMount}" >> /etc/fstab
-  %{ endfor }
-%{ endif }
+%{ for fsMount in fileSystemMountsQube }
+  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+  mkdir -p $fsMountPoint
+  echo "${fsMount}" >> /etc/fstab
+%{ endfor }
+%{ for fsMount in fileSystemMountsDeadline }
+  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
+  mkdir -p $fsMountPoint
+  echo "${fsMount}" >> /etc/fstab
+%{ endfor }
 mount -a

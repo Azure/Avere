@@ -42,12 +42,14 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
-        fileSystemMountsRoyalRender = [
+        fileSystemMountsQube = [
+          "scheduler.artist.studio:/Qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
+          "scheduler.artist.studio:/Deadline /mnt/deadline nfs defaults 0 0"
         ]
         fileSystemPermissions = [
+          "chmod 777 /mnt/data/read",
           "chmod 777 /mnt/data/write"
         ]
       }
@@ -61,8 +63,9 @@ virtualMachineScaleSets = [
       machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable       = true
-      timeoutDelay = "PT5M"
+      enable                   = true
+      timeoutDelay             = "PT5M"
+      detectionIntervalSeconds = 5
     }
   },
   {
@@ -100,14 +103,16 @@ virtualMachineScaleSets = [
           "azrender1.blob.core.windows.net:/azrender1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
         ]
         fileSystemMountsStorageCache = [
-          # "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
-        fileSystemMountsRoyalRender = [
+        fileSystemMountsQube = [
+          "scheduler.artist.studio:/Qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
+          "scheduler.artist.studio:/Deadline /mnt/deadline nfs defaults 0 0"
         ]
         fileSystemPermissions = [
+          "chmod 777 /mnt/data/read",
           "chmod 777 /mnt/data/write"
         ]
       }
@@ -160,14 +165,16 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\data W:"
         ]
         fileSystemMountsStorageCache = [
-          # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+          "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
-        fileSystemMountsRoyalRender = [
+        fileSystemMountsQube = [
+          "mount -o anon \\\\scheduler.artist.studio\\Qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:"
+          "mount -o anon \\\\scheduler.artist.studio\\Deadline T:"
         ]
         fileSystemPermissions = [
+          "icacls R: /grant Everyone:F",
           "icacls W: /grant Everyone:F"
         ]
       }
@@ -220,14 +227,16 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\data W:"
         ]
         fileSystemMountsStorageCache = [
-          # "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+          "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
-        fileSystemMountsRoyalRender = [
+        fileSystemMountsQube = [
+          "mount -o anon \\\\scheduler.artist.studio\\Qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:"
+          "mount -o anon \\\\scheduler.artist.studio\\Deadline T:"
         ]
         fileSystemPermissions = [
+          "icacls R: /grant Everyone:F",
           "icacls W: /grant Everyone:F"
         ]
       }

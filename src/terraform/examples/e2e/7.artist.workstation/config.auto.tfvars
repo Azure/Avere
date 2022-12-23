@@ -34,10 +34,11 @@ virtualMachines = [
         ]
         fileSystemMountsStorageCache = [
         ]
-        fileSystemMountsRoyalRender = [
+        fileSystemMountsQube = [
+          "scheduler.artist.studio:/Qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
+          "scheduler.artist.studio:/Deadline /mnt/deadline nfs defaults 0 0"
         ]
         teradiciLicenseKey = ""
       }
@@ -75,10 +76,11 @@ virtualMachines = [
         ]
         fileSystemMountsStorageCache = [
         ]
-        fileSystemMountsRoyalRender = [
+        fileSystemMountsQube = [
+          "mount -o anon \\\\scheduler.artist.studio\\Qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:"
+          "mount -o anon \\\\scheduler.artist.studio\\Deadline T:"
         ]
         teradiciLicenseKey = ""
       }

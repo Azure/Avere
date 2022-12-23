@@ -72,10 +72,6 @@ variable "virtualMachines" {
           fileName = string
           parameters = object(
             {
-              fileSystemMountsStorage      = list(string)
-              fileSystemMountsStorageCache = list(string)
-              fileSystemMountsRoyalRender  = list(string)
-              fileSystemMountsDeadline     = list(string)
               autoScale = object(
                 {
                   enable                   = bool

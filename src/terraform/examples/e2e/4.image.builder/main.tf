@@ -72,9 +72,9 @@ variable "imageTemplates" {
           machineType    = string
           machineSize    = string
           gpuPlatform    = list(string)
-          osDiskSizeGB   = number
-          timeoutMinutes = number
           outputVersion  = string
+          timeoutMinutes = number
+          osDiskSizeGB   = number
           renderEngines  = list(string)
         }
       )
@@ -405,7 +405,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                     "inline": [
                       "[concat('C:\\Users\\Public\\Downloads\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager'))))))]"
                     ],
-                    "runElevated": "[if(and(equals(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
+                    "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   },
                   {
                     "type": "WindowsRestart"

@@ -10,12 +10,12 @@ customDataOutputFile="/var/lib/waagent/scale.auto.sh"
 customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInputFile)
 echo $customData | base64 -d > $customDataOutputFile
 
-servicePath="/etc/systemd/system/scale.auto.service"
+servicePath="/etc/systemd/system/computeAutoScaler.service"
 echo "[Unit]" > $servicePath
-echo "Description=Render Farm Auto Scale Service" >> $servicePath
+echo "Description=Compute Auto Scaler Service" >> $servicePath
+echo "After=network-online.target" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
-# echo "Environment=PATH=$schedulerPath:$PATH" >> $servicePath
 echo "Environment=renderManager=${renderManager}" >> $servicePath
 echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
 echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
@@ -23,12 +23,11 @@ echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" 
 echo "Environment=workerIdleDeleteSeconds=${autoScale.workerIdleDeleteSeconds}" >> $servicePath
 echo "ExecStart=/bin/bash $customDataOutputFile" >> $servicePath
 echo "" >> $servicePath
-timerPath="/etc/systemd/system/scale.auto.timer"
+timerPath="/etc/systemd/system/computeAutoScaler.timer"
 echo "[Unit]" > $timerPath
-echo "Description=Render Farm Auto Scale Timer" >> $timerPath
+echo "Description=Compute Auto Scaler Timer" >> $timerPath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
-echo "OnBootSec=10" >> $timerPath
 echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $timerPath
 echo "AccuracySec=1us" >> $timerPath
 echo "" >> $timerPath
@@ -36,34 +35,8 @@ echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
 
 if [ ${autoScale.enable} == true ]; then
-  systemctl --now enable scale.auto.timer
+  systemctl --now enable computeAutoScaler
 fi
-
-%{ for fsMount in fileSystemMountsStorage }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
-%{ for fsMount in fileSystemMountsStorageCache }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
-%{ if renderManager == "RoyalRender" }
-  %{ for fsMount in fileSystemMountsRoyalRender }
-    fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-    mkdir -p $fsMountPoint
-    echo "${fsMount}" >> /etc/fstab
-  %{ endfor }
-%{ endif }
-%{ if renderManager == "Deadline" }
-  %{ for fsMount in fileSystemMountsDeadline }
-    fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-    mkdir -p $fsMountPoint
-    echo "${fsMount}" >> /etc/fstab
-  %{ endfor }
-%{ endif }
-mount -a
 
 if [ ${cycleCloud.enable} == true ]; then
   az login --identity
@@ -126,16 +99,21 @@ if [ ${cycleCloud.enable} == true ]; then
   echo 'EnableTerminateNotification = true' >> $clusterTemplateFile
   echo "CloudInit = '''#!/bin/bash -ex" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  echo "mkdir -p /mnt/scheduler" >> $clusterTemplateFile
+  %{ if length(regexall("Qube", renderManager)) > 0 }
+    echo "mkdir -p /mnt/qube" >> $clusterTemplateFile
+    echo "echo 'scheduler.artist.studio:/Qube /mnt/qube nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  %{ endif }
+  %{ if length(regexall("Deadline", renderManager)) > 0 }
+    echo "mkdir -p /mnt/deadline" >> $clusterTemplateFile
+    echo "echo 'scheduler.artist.studio:/Deadline /mnt/deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  %{ endif }
   echo "mkdir -p /mnt/data/write" >> $clusterTemplateFile
-  echo "mkdir -p /mnt/data/read" >> $clusterTemplateFile
-  echo "" >> $clusterTemplateFile
-  echo "echo 'scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
   echo "echo 'azrender1.blob.core.windows.net:/azrender1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "mkdir -p /mnt/data/read" >> $clusterTemplateFile
   echo "echo 'cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "mount -a" >> $clusterTemplateFile
-  echo "" >> $clusterTemplateFile
+  echo "chmod 777 /mnt/data/read" >> $clusterTemplateFile
   echo "chmod 777 /mnt/data/write" >> $clusterTemplateFile
   echo "'''" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile

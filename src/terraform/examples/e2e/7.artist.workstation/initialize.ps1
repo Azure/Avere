@@ -16,16 +16,12 @@ New-Item -ItemType File -Path $fsMountsFile
 %{ for fsMount in fileSystemMountsStorageCache }
   Add-Content -Path $fsMountsFile -Value "${fsMount}"
 %{ endfor }
-%{ if renderManager == "RoyalRender" }
-  %{ for fsMount in fileSystemMountsRoyalRender }
-    Add-Content -Path $fsMountsFile -Value "${fsMount}"
-  %{ endfor }
-%{ endif }
-%{ if renderManager == "Deadline" }
-  %{ for fsMount in fileSystemMountsDeadline }
-    Add-Content -Path $fsMountsFile -Value "${fsMount}"
-  %{ endfor }
-%{ endif }
+%{ for fsMount in fileSystemMountsQube }
+  Add-Content -Path $fsMountsFile -Value "${fsMount}"
+%{ endfor }
+%{ for fsMount in fileSystemMountsDeadline }
+  Add-Content -Path $fsMountsFile -Value "${fsMount}"
+%{ endfor }
 
 $fsMountsFileSize = (Get-Item -Path $fsMountsFile).Length
 if ($fsMountsFileSize -gt 0) {

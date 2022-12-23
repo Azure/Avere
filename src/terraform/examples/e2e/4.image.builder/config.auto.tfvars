@@ -67,9 +67,9 @@ imageTemplates = [
       machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      osDiskSizeGB   = 0
-      timeoutMinutes = 120
       outputVersion  = "0.0.0"
+      timeoutMinutes = 120
+      osDiskSizeGB   = 0
       renderEngines = [
       ]
     }
@@ -86,9 +86,9 @@ imageTemplates = [
       gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
         "GRID"
       ]
-      osDiskSizeGB   = 480
-      timeoutMinutes = 240
       outputVersion  = "1.1.0"
+      timeoutMinutes = 240
+      osDiskSizeGB   = 480
       renderEngines = [
         "Blender",
         "PBRT",
@@ -108,9 +108,9 @@ imageTemplates = [
       machineSize = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      osDiskSizeGB   = 480
-      timeoutMinutes = 240
       outputVersion  = "1.0.0"
+      timeoutMinutes = 240
+      osDiskSizeGB   = 480
       renderEngines = [
         "Blender",
         "PBRT"
@@ -129,9 +129,9 @@ imageTemplates = [
       gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
         "GRID"
       ]
-      osDiskSizeGB   = 512
-      timeoutMinutes = 240
       outputVersion  = "2.0.0"
+      timeoutMinutes = 240
+      osDiskSizeGB   = 512
       renderEngines = [
         "Blender",
         "PBRT",
@@ -151,9 +151,9 @@ imageTemplates = [
       machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      osDiskSizeGB   = 0
-      timeoutMinutes = 180
       outputVersion  = "0.0.0"
+      timeoutMinutes = 180
+      osDiskSizeGB   = 0
       renderEngines = [
       ]
     }
@@ -170,9 +170,9 @@ imageTemplates = [
       gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
         "GRID"
       ]
-      osDiskSizeGB   = 480
-      timeoutMinutes = 420
       outputVersion  = "1.1.0"
+      timeoutMinutes = 420
+      osDiskSizeGB   = 480
       renderEngines = [
         "Blender",
         "PBRT",
@@ -192,9 +192,9 @@ imageTemplates = [
       machineSize = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      osDiskSizeGB   = 480
-      timeoutMinutes = 420
       outputVersion  = "1.0.0"
+      timeoutMinutes = 420
+      osDiskSizeGB   = 480
       renderEngines = [
         "Blender",
         "PBRT"
@@ -213,9 +213,9 @@ imageTemplates = [
       gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
         "GRID"
       ]
-      osDiskSizeGB   = 512
-      timeoutMinutes = 420
       outputVersion  = "2.0.0"
+      timeoutMinutes = 420
+      osDiskSizeGB   = 512
       renderEngines = [
         "Blender",
         "PBRT",

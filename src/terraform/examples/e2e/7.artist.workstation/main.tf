@@ -70,7 +70,7 @@ variable "virtualMachines" {
             {
               fileSystemMountsStorage      = list(string)
               fileSystemMountsStorageCache = list(string)
-              fileSystemMountsRoyalRender  = list(string)
+              fileSystemMountsQube         = list(string)
               fileSystemMountsDeadline     = list(string)
               teradiciLicenseKey           = string
             }

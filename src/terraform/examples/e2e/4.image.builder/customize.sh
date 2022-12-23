@@ -12,6 +12,7 @@ sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/sysconfig/selinux
 yum -y install epel-release
 yum -y install gcc gcc-c++
 yum -y install nfs-utils
+yum -y install python3
 # yum -y install unzip
 # yum -y install cmake
 yum -y install git
@@ -145,79 +146,38 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
-if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="8.4.04"
-  schedulerInstallRoot="/mnt/rr"
-  schedulerBinPath="$schedulerInstallRoot/bin/lx64"
+if [[ $renderManager == *Qube* ]]; then
+  schedulerVersion="7.5-2"
+  schedulerInstallRoot="/Qube"
+  #schedulerClientMount="/mnt/qube"
+  schedulerBinPath="$schedulerInstallRoot/bin"
   binPaths="$binPaths:$schedulerBinPath"
 
-  echo "Customize (Start): Royal Render Download"
-  installFile="RoyalRender__${schedulerVersion}__installer.zip"
-  downloadUrl="$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
+  echo "Customize (Start): Qube Core"
+  installType="qube-core"
+  installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
+  downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  unzip -q $installFile
-  echo "Customize (End): Royal Render Download"
+  rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
+  echo "Customize (End): Qube Core"
 
-  echo "Customize (Start): Royal Render Installer"
-  yum -y install fontconfig
-  yum -y install libXrender
-  yum -y install libXext
-  yum -y install csh
-  logFileName="royal-render"
-  installFile="rrSetup_linux"
-  installDirectory="RoyalRender__${schedulerVersion}__installer"
-  chmod +x ./$installDirectory/$installFile
-  mkdir $schedulerInstallRoot
-  ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$logFileName.output.txt" 2> "$logFileName.error.txt"
-  echo "Customize (End): Royal Render Installer"
-
-  serviceUser="root"
-  installFile="lx__rrWorkstation_installer.sh"
+  yum -y install xinetd
   if [ $machineType == "Scheduler" ]; then
-    echo "Customize (Start): Royal Render Server"
-    $schedulerInstallRoot/$installFile -rrUser $serviceUser -serviceServer 1> "$logFileName-server.output.txt" 2> "$logFileName-server.error.txt"
-    servicePath="/etc/systemd/system/rrServer.service"
-    echo "[Unit]" > $servicePath
-    echo "Description=Royal Render Service" >> $servicePath
-    echo "After=network-online.target" >> $servicePath
-    echo "" >> $servicePath
-    echo "[Service]" >> $servicePath
-    echo "User=$serviceUser" >> $servicePath
-    echo "WorkingDirectory=$schedulerBinPath" >> $servicePath
-    echo "ExecStart=$schedulerBinPath/rrServerconsole" >> $servicePath
-    echo "" >> $servicePath
-    echo "[Install]" >> $servicePath
-    echo "WantedBy=multi-user.target" >> $servicePath
-    systemctl enable rrServer
-    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
-    exportfs -a
-    echo "Customize (End): Royal Render Server"
+    echo "Customize (Start): Qube Supervisor"
+    installType="qube-supervisor"
+    installFile="$installType-${schedulerVersion}a.CENTOS_7.8.x86_64.rpm"
+    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
+    echo "Customize (End): Qube Supervisor"
   else
-    echo "Customize (Start): Royal Render Client"
-    $schedulerInstallRoot/$installFile -rrUser $serviceUser -service 1> "$logFileName-client.output.txt" 2> "$logFileName-client.error.txt"
-    servicePath="/etc/systemd/system/rrClient.service"
-    echo "[Unit]" > $servicePath
-    echo "Description=Royal Render Service" >> $servicePath
-    echo "After=network-online.target" >> $servicePath
-    echo "" >> $servicePath
-    echo "[Service]" >> $servicePath
-    echo "User=$serviceUser" >> $servicePath
-    echo "WorkingDirectory=$schedulerBinPath" >> $servicePath
-    echo "ExecStart=$schedulerBinPath/rrClientconsole" >> $servicePath
-    echo "" >> $servicePath
-    echo "[Install]" >> $servicePath
-    echo "WantedBy=multi-user.target" >> $servicePath
-    timerPath="/etc/systemd/system/rrClient.timer"
-    echo "[Unit]" > $timerPath
-    echo "Description=Royal Render Timer" >> $timerPath
-    echo "" >> $timerPath
-    echo "[Timer]" >> $timerPath
-    echo "OnBootSec=30" >> $timerPath
-    echo "" >> $timerPath
-    echo "[Install]" >> $timerPath
-    echo "WantedBy=timers.targer" >> $timerPath
-    systemctl enable rrClient
-    echo "Customize (End): Royal Render Client"
+    echo "Customize (Start): Qube Worker"
+    installType="qube-worker"
+    installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
+    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
+    echo "Customize (End): Qube Worker"
   fi
 fi
 

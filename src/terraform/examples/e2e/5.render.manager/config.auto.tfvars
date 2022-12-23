@@ -29,15 +29,6 @@ virtualMachines = [
       enable   = true
       fileName = "initialize.sh"
       parameters = {
-        fileSystemMountsStorage = [
-        ]
-        fileSystemMountsStorageCache = [
-        ]
-        fileSystemMountsRoyalRender = [
-        ]
-        fileSystemMountsDeadline = [
-          "scheduler.artist.studio:/DeadlineRepository /mnt/scheduler nfs defaults 0 0"
-        ]
         autoScale = {
           enable                   = false
           fileName                 = "scale.auto.sh"
@@ -81,15 +72,6 @@ virtualMachines = [
       enable   = true
       fileName = "initialize.ps1"
       parameters = {
-        fileSystemMountsStorage = [
-        ]
-        fileSystemMountsStorageCache = [
-        ]
-        fileSystemMountsRoyalRender = [
-        ]
-        fileSystemMountsDeadline = [
-          "mount -o anon \\\\scheduler.artist.studio\\DeadlineRepository S:"
-        ]
         autoScale = {
           enable                   = false
           fileName                 = "scale.auto.ps1"
