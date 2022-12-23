@@ -17,6 +17,14 @@ $partitionSize = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
 Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
 Write-Host "Customize (End): Resize OS Disk"
 
+Write-Host "Customize (Start): Python"
+$versionInfo = "3.8.10"
+$installFile = "python-$versionInfo-amd64.exe"
+$downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait
+Write-Host "Customize (End): Python"
+
 Write-Host "Customize (Start): Git"
 $versionInfo = "2.38.1"
 $installFile = "Git-$versionInfo-64-bit.exe"
@@ -105,9 +113,11 @@ if ($machineType -eq "Scheduler") {
   Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
   Write-Host "Customize (End): Azure CLI"
 
-  Write-Host "Customize (Start): NFS Server"
-  Install-WindowsFeature -Name "FS-NFS-Service"
-  Write-Host "Customize (End): NFS Server"
+  if ($renderManager -like "*Deadline*") {
+    Write-Host "Customize (Start): NFS Server"
+    Install-WindowsFeature -Name "FS-NFS-Service"
+    Write-Host "Customize (End): NFS Server"
+  }
 } else {
   Write-Host "Customize (Start): NFS Client"
   Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" -Wait -RedirectStandardOutput "nfs-client.output.txt" -RedirectStandardError "nfs-client.error.txt"
@@ -126,7 +136,7 @@ if ($renderManager -like "*Qube*") {
   $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
   $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
   Write-Host "Customize (End): Qube Core"
 
   if ($machineType -eq "Scheduler") {
@@ -135,7 +145,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
     Write-Host "Customize (End): Qube Supervisor"
   } else {
     Write-Host "Customize (Start): Qube Worker"
@@ -143,8 +153,23 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
     Write-Host "Customize (End): Qube Worker"
+
+    Write-Host "Customize (Start): Qube Client"
+    $installType = "qube-client"
+    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
+    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $shortcut.WorkingDirectory = $schedulerInstallRoot
+    $shortcut.TargetPath = "$schedulerInstallRoot\QubeUI.bat"
+    $shortcut.IconLocation = "$schedulerInstallRoot\lib\install\qube_icon.ico"
+    $shortcut.Save()
+    Write-Host "Customize (End): Qube Client"
   }
 }
 
@@ -172,7 +197,6 @@ if ($renderManager -like "*Deadline*") {
     netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
     Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
-    #Start-Process -FilePath "sc.exe" -ArgumentList "config Deadline10DatabaseService start= delayed-auto" -Wait -RedirectStandardOutput "deadline-database.output.txt" -RedirectStandardError "deadline-database.error.txt"
     Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.txt
     Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallRoot\$schedulerCertificateFile
     New-NfsShare -Name "Deadline" -Path $schedulerInstallRoot -Permission ReadWrite
@@ -211,9 +235,9 @@ if ($renderManager -like "*Deadline*") {
   }
 }
 
-$rendererPathBlender = "C:\Program Files\Blender Foundation\Blender"
+$rendererPathBlender = "C:\Program Files\Blender"
 $rendererPathPBRT = "C:\Program Files\PBRT"
-$rendererPathUnreal = "C:\Program Files\Epic Games\Unreal"
+$rendererPathUnreal = "C:\Program Files\Unreal"
 
 if ($renderEngines -contains "Blender") {
   $binPaths += ";$rendererPathBlender"
@@ -224,13 +248,15 @@ if ($renderEngines -contains "Unreal") {
 setx PATH "$env:PATH$binPaths" /m
 
 if ($renderEngines -contains "Blender") {
-  Write-Host "Customize (Start): Blender"
+  Write-Host "Customize (Start): Blender 3.4"
   $versionInfo = "3.4.1"
+  $installRoot = "$rendererPathBlender\$versionInfo"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" /quiet /norestart') -Wait -RedirectStandardOutput "blender.output.txt" -RedirectStandardError "blender.error.txt"
-  Write-Host "Customize (End): Blender"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "blender.output.txt" -RedirectStandardError "blender.error.txt"
+  New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3.4"
+  Write-Host "Customize (End): Blender 3.4"
 }
 
 if ($renderEngines -contains "PBRT") {

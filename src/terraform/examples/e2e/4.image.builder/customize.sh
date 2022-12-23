@@ -96,9 +96,11 @@ if [ $machineType == "Scheduler" ]; then
   yum -y install azure-cli 1> "az-cli.output.txt" 2> "az-cli.error.txt"
   echo "Customize (End): Azure CLI"
 
-  echo "Customize (Start): NFS Server"
-  systemctl --now enable nfs-server
-  echo "Customize (End): NFS Server"
+  if [[ $renderManager == *Deadline* ]]; then
+    echo "Customize (Start): NFS Server"
+    systemctl --now enable nfs-server
+    echo "Customize (End): NFS Server"
+  fi
 
   echo "Customize (Start): CycleCloud"
   cycleCloudPath="/usr/local/cyclecloud"
@@ -148,7 +150,7 @@ fi
 
 if [[ $renderManager == *Qube* ]]; then
   schedulerVersion="7.5-2"
-  schedulerInstallRoot="/Qube"
+  schedulerInstallRoot="/"
   #schedulerClientMount="/mnt/qube"
   schedulerBinPath="$schedulerInstallRoot/bin"
   binPaths="$binPaths:$schedulerBinPath"
@@ -158,7 +160,7 @@ if [[ $renderManager == *Qube* ]]; then
   installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
   downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
+  rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
   echo "Customize (End): Qube Core"
 
   yum -y install xinetd
@@ -168,7 +170,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-${schedulerVersion}a.CENTOS_7.8.x86_64.rpm"
     downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
+    rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Supervisor"
   else
     echo "Customize (Start): Qube Worker"
@@ -176,17 +178,25 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
     downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
+    rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Worker"
+
+    echo "Customize (Start): Qube Client"
+    installType="qube-client"
+    installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
+    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
+    echo "Customize (End): Qube Client"
   fi
 fi
 
 if [[ $renderManager == *Deadline* ]]; then
   schedulerVersion="10.2.0.10"
-  schedulerInstallRoot="/Deadline"
+  schedulerInstallRoot="/deadline"
   schedulerClientMount="/mnt/deadline"
   schedulerDatabaseHost=$(hostname)
-  schedulerDatabasePath="/DeadlineDatabase"
+  schedulerDatabasePath="/deadlineDatabase"
   schedulerCertificateFile="Deadline10Client.pfx"
   schedulerCertificate="$schedulerClientMount/$schedulerCertificateFile"
   schedulerBinPath="$schedulerInstallRoot/bin"

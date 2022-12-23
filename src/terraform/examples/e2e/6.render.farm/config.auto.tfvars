@@ -43,10 +43,10 @@ virtualMachineScaleSets = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsQube = [
-          "scheduler.artist.studio:/Qube /mnt/qube nfs defaults 0 0"
+          "render.artist.studio:/qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "scheduler.artist.studio:/Deadline /mnt/deadline nfs defaults 0 0"
+          "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
         ]
         fileSystemPermissions = [
           "chmod 777 /mnt/data/read",
@@ -106,10 +106,10 @@ virtualMachineScaleSets = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsQube = [
-          "scheduler.artist.studio:/Qube /mnt/qube nfs defaults 0 0"
+          "render.artist.studio:/qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "scheduler.artist.studio:/Deadline /mnt/deadline nfs defaults 0 0"
+          "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
         ]
         fileSystemPermissions = [
           "chmod 777 /mnt/data/read",
@@ -168,10 +168,10 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
         fileSystemMountsQube = [
-          "mount -o anon \\\\scheduler.artist.studio\\Qube S:"
+          "mount -o anon \\\\render.artist.studio\\qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\scheduler.artist.studio\\Deadline T:"
+          "mount -o anon \\\\render.artist.studio\\deadline T:"
         ]
         fileSystemPermissions = [
           "icacls R: /grant Everyone:F",
@@ -230,10 +230,10 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
         fileSystemMountsQube = [
-          "mount -o anon \\\\scheduler.artist.studio\\Qube S:"
+          "mount -o anon \\\\render.artist.studio\\qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\scheduler.artist.studio\\Deadline T:"
+          "mount -o anon \\\\render.artist.studio\\deadline T:"
         ]
         fileSystemPermissions = [
           "icacls R: /grant Everyone:F",

@@ -102,6 +102,15 @@ variable "virtualMachines" {
   ))
 }
 
+variable "privateDns" {
+  type = object(
+    {
+      aRecordName = string
+      ttlSeconds  = number
+    }
+  )
+}
+
 variable "computeNetwork" {
   type = object(
     {
@@ -423,11 +432,11 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   ]
 }
 
-resource "azurerm_private_dns_a_record" "scheduler" {
-  name                = "scheduler"
+resource "azurerm_private_dns_a_record" "render" {
+  name                = var.privateDns.aRecordName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
-  ttl                 = 300
+  ttl                 = var.privateDns.ttlSeconds
   records = [
     azurerm_network_interface.scheduler[local.schedulerMachineNames[0]].private_ip_address
   ]
@@ -455,5 +464,5 @@ output "virtualMachines" {
 }
 
 output "privateDnsRecord" {
-  value = azurerm_private_dns_a_record.scheduler
+  value = azurerm_private_dns_a_record.render
 }

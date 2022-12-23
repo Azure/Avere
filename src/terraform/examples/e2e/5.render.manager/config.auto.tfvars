@@ -93,6 +93,15 @@ virtualMachines = [
   }
 ]
 
+############################################################################
+# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
+############################################################################
+
+privateDns = {
+  aRecordName = "render"
+  ttlSeconds  = 300
+}
+
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################

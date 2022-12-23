@@ -101,11 +101,11 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "" >> $clusterTemplateFile
   %{ if length(regexall("Qube", renderManager)) > 0 }
     echo "mkdir -p /mnt/qube" >> $clusterTemplateFile
-    echo "echo 'scheduler.artist.studio:/Qube /mnt/qube nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+    echo "echo 'render.artist.studio:/qube /mnt/qube nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
   %{ endif }
   %{ if length(regexall("Deadline", renderManager)) > 0 }
     echo "mkdir -p /mnt/deadline" >> $clusterTemplateFile
-    echo "echo 'scheduler.artist.studio:/Deadline /mnt/deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+    echo "echo 'render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
   %{ endif }
   echo "mkdir -p /mnt/data/write" >> $clusterTemplateFile
   echo "echo 'azrender1.blob.core.windows.net:/azrender1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
