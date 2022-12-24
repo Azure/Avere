@@ -43,7 +43,6 @@ virtualMachineScaleSets = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsQube = [
-          "render.artist.studio:/qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
           "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
@@ -106,7 +105,6 @@ virtualMachineScaleSets = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsQube = [
-          "render.artist.studio:/qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
           "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
@@ -168,10 +166,9 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
         fileSystemMountsQube = [
-          "mount -o anon \\\\render.artist.studio\\qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.artist.studio\\deadline T:"
+          "mount -o anon \\\\render.artist.studio\\deadline S:"
         ]
         fileSystemPermissions = [
           "icacls R: /grant Everyone:F",
@@ -230,10 +227,9 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
         fileSystemMountsQube = [
-          "mount -o anon \\\\render.artist.studio\\qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.artist.studio\\deadline T:"
+          "mount -o anon \\\\render.artist.studio\\deadline S:"
         ]
         fileSystemPermissions = [
           "icacls R: /grant Everyone:F",

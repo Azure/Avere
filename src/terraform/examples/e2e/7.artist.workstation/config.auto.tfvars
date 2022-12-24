@@ -35,7 +35,6 @@ virtualMachines = [
         fileSystemMountsStorageCache = [
         ]
         fileSystemMountsQube = [
-          "render.artist.studio:/qube /mnt/qube nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
           "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
@@ -77,10 +76,9 @@ virtualMachines = [
         fileSystemMountsStorageCache = [
         ]
         fileSystemMountsQube = [
-          "mount -o anon \\\\render.artist.studio\\qube S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.artist.studio\\deadline T:"
+          "mount -o anon \\\\render.artist.studio\\deadline S:"
         ]
         teradiciLicenseKey = ""
       }

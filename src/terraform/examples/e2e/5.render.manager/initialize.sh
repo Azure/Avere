@@ -99,10 +99,6 @@ if [ ${cycleCloud.enable} == true ]; then
   echo 'EnableTerminateNotification = true' >> $clusterTemplateFile
   echo "CloudInit = '''#!/bin/bash -ex" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
-  %{ if length(regexall("Qube", renderManager)) > 0 }
-    echo "mkdir -p /mnt/qube" >> $clusterTemplateFile
-    echo "echo 'render.artist.studio:/qube /mnt/qube nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
-  %{ endif }
   %{ if length(regexall("Deadline", renderManager)) > 0 }
     echo "mkdir -p /mnt/deadline" >> $clusterTemplateFile
     echo "echo 'render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile

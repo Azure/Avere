@@ -187,6 +187,8 @@ if [[ $renderManager == *Qube* ]]; then
     curl -o $installFile -L $downloadUrl
     rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Client"
+
+    sed -i "s/#qb_supervisor =/qb_supervisor = LnxScheduler/" /etc/qb.conf
   fi
 fi
 

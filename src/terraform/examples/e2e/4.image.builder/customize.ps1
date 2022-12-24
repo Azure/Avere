@@ -126,7 +126,7 @@ if ($machineType -eq "Scheduler") {
 
 if ($renderManager -like "*Qube*") {
   $schedulerVersion = "7.5-2"
-  $schedulerInstallRoot = "C:\Program Files\PFX\Qube"
+  $schedulerInstallRoot = "C:\Program Files\pfx\qube"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
   $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
 
@@ -166,11 +166,16 @@ if ($renderManager -like "*Qube*") {
     $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = $schedulerInstallRoot
-    $shortcut.TargetPath = "$schedulerInstallRoot\QubeUI.bat"
+    $shortcut.WorkingDirectory = "$schedulerInstallRoot\QubeUI"
+    $shortcut.TargetPath = "$schedulerInstallRoot\QubeUI\QubeUI.bat"
     $shortcut.IconLocation = "$schedulerInstallRoot\lib\install\qube_icon.ico"
     $shortcut.Save()
     Write-Host "Customize (End): Qube Client"
+
+    $scriptFilePath = "C:\ProgramData\Pfx\Qube\qb.conf"
+    $scriptFileText = Get-Content -Path $scriptFilePath
+    $scriptFileText = $scriptFileText.Replace("#qb_supervisor =", "qb_supervisor = WinScheduler")
+    Set-Content -Path $scriptFilePath -Value $scriptFileText
   }
 }
 
