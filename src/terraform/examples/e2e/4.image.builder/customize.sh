@@ -152,8 +152,8 @@ if [[ $renderManager == *Qube* ]]; then
   schedulerVersion="7.5-2"
   schedulerInstallRoot="/"
   #schedulerClientMount="/mnt/qube"
-  schedulerBinPath="$schedulerInstallRoot/bin"
-  binPaths="$binPaths:$schedulerBinPath"
+  schedulerBinPath="/qube/bin"
+  binPaths="$binPaths:$schedulerBinPath:/qube/sbin"
 
   echo "Customize (Start): Qube Core"
   installType="qube-core"

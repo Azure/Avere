@@ -22,7 +22,7 @@ $versionInfo = "3.8.10"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait
+Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait -RedirectStandardOutput "python.output.txt" -RedirectStandardError "python.error.txt"
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
@@ -129,7 +129,7 @@ if ($renderManager -like "*Qube*") {
   $schedulerInstallRoot = "C:\Qube"
   # $schedulerClientMount = "S:\"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
-  $binPaths += ";$schedulerBinPath"
+  $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
 
   Write-Host "Customize (Start): Qube Core"
   $installType = "qube-core"
@@ -146,6 +146,8 @@ if ($renderManager -like "*Qube*") {
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    $installFile = "utils\supe_postinstall.bat"
+    Start-Process -FilePath $schedulerInstallRoot\$installFile -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
     Write-Host "Customize (End): Qube Supervisor"
   } else {
     Write-Host "Customize (Start): Qube Worker"
