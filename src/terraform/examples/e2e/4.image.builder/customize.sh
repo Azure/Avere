@@ -86,13 +86,13 @@ fi
 
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
-  azRepoPath="/etc/yum.repos.d/azure-cli.repo"
-  echo "[azure-cli]" > $azRepoPath
-  echo "name=Azure CLI" >> $azRepoPath
-  echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $azRepoPath
-  echo "enabled=1" >> $azRepoPath
-  echo "gpgcheck=1" >> $azRepoPath
-  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $azRepoPath
+  repoPath="/etc/yum.repos.d/azure-cli.repo"
+  echo "[azure-cli]" > $repoPath
+  echo "name=Azure CLI" >> $repoPath
+  echo "baseurl=https://packages.microsoft.com/yumrepos/azure-cli" >> $repoPath
+  echo "enabled=1" >> $repoPath
+  echo "gpgcheck=1" >> $repoPath
+  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoPath
   yum -y install azure-cli 1> "az-cli.output.txt" 2> "az-cli.error.txt"
   echo "Customize (End): Azure CLI"
 
@@ -104,16 +104,15 @@ if [ $machineType == "Scheduler" ]; then
 
   echo "Customize (Start): CycleCloud"
   cycleCloudPath="/usr/local/cyclecloud"
-  cycleCloudRepoPath="/etc/yum.repos.d/cyclecloud.repo"
-  echo "[cyclecloud]" > $cycleCloudRepoPath
-  echo "name=CycleCloud" >> $cycleCloudRepoPath
-  echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $cycleCloudRepoPath
-  echo "gpgcheck=1" >> $cycleCloudRepoPath
-  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $cycleCloudRepoPath
+  repoPath="/etc/yum.repos.d/cyclecloud.repo"
+  echo "[cyclecloud]" > $repoPath
+  echo "name=CycleCloud" >> $repoPath
+  echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $repoPath
+  echo "gpgcheck=1" >> $repoPath
+  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoPath
   yum -y install java-1.8.0-openjdk
   JAVA_HOME=/bin/java
   yum -y install cyclecloud8
-  binPaths="$binPaths:$cycleCloudPath/bin"
   cd /opt/cycle_server
   unzip -q ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir $cycleCloudPath
@@ -145,11 +144,13 @@ if [ $machineType == "Scheduler" ]; then
   echo "}" >> $cycleCloudInitFile
   echo "]" >> $cycleCloudInitFile
   mv $cycleCloudInitFile /opt/cycle_server/config/data/
+  binPaths="$binPaths:$cycleCloudPath/bin"
   echo "Customize (End): CycleCloud"
 fi
 
 if [[ $renderManager == *Qube* ]]; then
   schedulerVersion="7.5-2"
+  schedulerConfigFile="/etc/qb.conf"
   schedulerInstallRoot="/usr/local/pfx/qube"
   schedulerBinPath="$schedulerInstallRoot/bin"
   binPaths="$binPaths:$schedulerBinPath:$schedulerInstallRoot/sbin"
@@ -188,7 +189,7 @@ if [[ $renderManager == *Qube* ]]; then
     rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Client"
 
-    sed -i "s/#qb_supervisor =/qb_supervisor = LnxScheduler/" /etc/qb.conf
+    sed -i "s/#qb_supervisor =/qb_supervisor = render.artist.studio/" $schedulerConfigFile
   fi
 fi
 
@@ -336,14 +337,14 @@ fi
 
 if [[ $renderEngines == *Unity* ]]; then
   echo "Customize (Start): Unity Hub"
-  unityRepoPath="/etc/yum.repos.d/unityhub.repo"
-  echo "[unityhub]" > $unityRepoPath
-  echo "name=Unity Hub" >> $unityRepoPath
-  echo "baseurl=https://hub.unity3d.com/linux/repos/rpm/stable" >> $unityRepoPath
-  echo "enabled=1" >> $unityRepoPath
-  echo "gpgcheck=1" >> $unityRepoPath
-  echo "gpgkey=https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" >> $unityRepoPath
-  echo "repo_gpgcheck=1" >> $unityRepoPath
+  repoPath="/etc/yum.repos.d/unityhub.repo"
+  echo "[unityhub]" > $repoPath
+  echo "name=Unity Hub" >> $repoPath
+  echo "baseurl=https://hub.unity3d.com/linux/repos/rpm/stable" >> $repoPath
+  echo "enabled=1" >> $repoPath
+  echo "gpgcheck=1" >> $repoPath
+  echo "gpgkey=https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" >> $repoPath
+  echo "repo_gpgcheck=1" >> $repoPath
   yum -y install unityhub
   echo "Customize (End): Unity Hub"
 fi

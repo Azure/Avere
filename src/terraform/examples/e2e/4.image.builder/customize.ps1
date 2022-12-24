@@ -110,7 +110,7 @@ if ($machineType -eq "Scheduler") {
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installFile /quiet /norestart" -Wait -RedirectStandardOutput "az-cli.output.txt" -RedirectStandardError "az-cli.error.txt"
+  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log az-cli.txt" -Wait
   Write-Host "Customize (End): Azure CLI"
 
   if ($renderManager -like "*Deadline*") {
@@ -126,6 +126,7 @@ if ($machineType -eq "Scheduler") {
 
 if ($renderManager -like "*Qube*") {
   $schedulerVersion = "7.5-2"
+  $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
   $schedulerInstallRoot = "C:\Program Files\pfx\qube"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
   $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
@@ -135,7 +136,7 @@ if ($renderManager -like "*Qube*") {
   $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
   $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
   Write-Host "Customize (End): Qube Core"
 
   if ($machineType -eq "Scheduler") {
@@ -144,9 +145,9 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
     $installFile = "utils\supe_postinstall.bat"
-    Start-Process -FilePath $schedulerInstallRoot\$installFile -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
+    Start-Process -FilePath "$schedulerInstallRoot\$installFile" -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
     Write-Host "Customize (End): Qube Supervisor"
   } else {
     Write-Host "Customize (Start): Qube Worker"
@@ -154,7 +155,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
     Write-Host "Customize (End): Qube Worker"
 
     Write-Host "Customize (Start): Qube Client"
@@ -162,7 +163,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
     $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
@@ -172,10 +173,9 @@ if ($renderManager -like "*Qube*") {
     $shortcut.Save()
     Write-Host "Customize (End): Qube Client"
 
-    $scriptFilePath = "C:\ProgramData\Pfx\Qube\qb.conf"
-    $scriptFileText = Get-Content -Path $scriptFilePath
-    $scriptFileText = $scriptFileText.Replace("#qb_supervisor =", "qb_supervisor = WinScheduler")
-    Set-Content -Path $scriptFilePath -Value $scriptFileText
+    $configFileText = Get-Content -Path $schedulerConfigFile
+    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = render.artist.studio")
+    Set-Content -Path $schedulerConfigFile -Value $configFileText
   }
 }
 
@@ -200,10 +200,9 @@ if ($renderManager -like "*Deadline*") {
   Set-Location -Path "Deadline*"
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Deadline Server"
-    netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
+    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=27100
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
     Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
-    Start-Process -FilePath "sc.exe" -ArgumentList "config Deadline10DatabaseService start= delayed-auto" -Wait -RedirectStandardOutput "deadline-database.output.txt" -RedirectStandardError "deadline-database.error.txt"
     Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.txt
     Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallRoot\$schedulerCertificateFile
     New-NfsShare -Name "Deadline" -Path $schedulerInstallRoot -Permission ReadWrite
@@ -261,7 +260,7 @@ if ($renderEngines -contains "Blender") {
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "blender.output.txt" -RedirectStandardError "blender.error.txt"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" /quiet /norestart /log blender.txt') -Wait
   New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3.4"
   Write-Host "Customize (End): Blender 3.4"
 }
