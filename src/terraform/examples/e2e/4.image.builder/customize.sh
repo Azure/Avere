@@ -150,17 +150,16 @@ fi
 
 if [[ $renderManager == *Qube* ]]; then
   schedulerVersion="7.5-2"
-  schedulerInstallRoot="/"
-  #schedulerClientMount="/mnt/qube"
-  schedulerBinPath="/qube/bin"
-  binPaths="$binPaths:$schedulerBinPath:/qube/sbin"
+  schedulerInstallRoot="/usr/local/pfx/qube"
+  schedulerBinPath="$schedulerInstallRoot/bin"
+  binPaths="$binPaths:$schedulerBinPath:$schedulerInstallRoot/sbin"
 
   echo "Customize (Start): Qube Core"
   installType="qube-core"
   installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
   downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
+  rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
   echo "Customize (End): Qube Core"
 
   yum -y install xinetd
@@ -170,7 +169,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-${schedulerVersion}a.CENTOS_7.8.x86_64.rpm"
     downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
+    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Supervisor"
   else
     echo "Customize (Start): Qube Worker"
@@ -178,7 +177,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
     downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
+    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Worker"
 
     echo "Customize (Start): Qube Client"
@@ -186,7 +185,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
     downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm --prefix $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
+    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Client"
   fi
 fi

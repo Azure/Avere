@@ -22,7 +22,7 @@ $versionInfo = "3.8.10"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath $installFile -ArgumentList "/quiet" -Wait -RedirectStandardOutput "python.output.txt" -RedirectStandardError "python.error.txt"
+Start-Process -FilePath .\$installFile -ArgumentList "/quiet" -Wait -RedirectStandardOutput "python.output.txt" -RedirectStandardError "python.error.txt"
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
@@ -126,8 +126,7 @@ if ($machineType -eq "Scheduler") {
 
 if ($renderManager -like "*Qube*") {
   $schedulerVersion = "7.5-2"
-  $schedulerInstallRoot = "C:\Qube"
-  # $schedulerClientMount = "S:\"
+  $schedulerInstallRoot = "C:\Program Files\PFX\Qube"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
   $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
 
@@ -136,7 +135,7 @@ if ($renderManager -like "*Qube*") {
   $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
   $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
   Write-Host "Customize (End): Qube Core"
 
   if ($machineType -eq "Scheduler") {
@@ -145,7 +144,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
     $installFile = "utils\supe_postinstall.bat"
     Start-Process -FilePath $schedulerInstallRoot\$installFile -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
     Write-Host "Customize (End): Qube Supervisor"
@@ -155,7 +154,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
     Write-Host "Customize (End): Qube Worker"
 
     Write-Host "Customize (Start): Qube Client"
@@ -163,7 +162,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALLDIR="' + $schedulerInstallRoot + '" /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+    Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart') -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
@@ -178,7 +177,7 @@ if ($renderManager -like "*Qube*") {
 if ($renderManager -like "*Deadline*") {
   $schedulerVersion = "10.2.0.10"
   $schedulerInstallRoot = "C:\Deadline"
-  $schedulerClientMount = "T:\"
+  $schedulerClientMount = "S:\"
   $schedulerDatabaseHost = $(hostname)
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"
@@ -199,6 +198,7 @@ if ($renderManager -like "*Deadline*") {
     netsh advfirewall firewall add rule name="Allow Mongo Database" dir=in action=allow protocol=TCP localport=27100
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
     Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
+    Start-Process -FilePath "sc.exe" -ArgumentList "config Deadline10DatabaseService start= delayed-auto" -Wait -RedirectStandardOutput "deadline-database.output.txt" -RedirectStandardError "deadline-database.error.txt"
     Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.txt
     Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallRoot\$schedulerCertificateFile
     New-NfsShare -Name "Deadline" -Path $schedulerInstallRoot -Permission ReadWrite
