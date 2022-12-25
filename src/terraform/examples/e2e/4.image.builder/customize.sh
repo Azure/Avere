@@ -190,6 +190,7 @@ if [[ $renderManager == *Qube* ]]; then
     echo "Customize (End): Qube Client"
 
     sed -i "s/#qb_supervisor =/qb_supervisor = render.artist.studio/" $schedulerConfigFile
+    sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
   fi
 fi
 

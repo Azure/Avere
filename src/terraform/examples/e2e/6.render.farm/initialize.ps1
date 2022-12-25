@@ -3,6 +3,12 @@ $ErrorActionPreference = "Stop"
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
+$functionsFile = "$binDirectory\functions.ps1"
+$functionsCode = "${ filebase64("../0.global/functions.ps1") }"
+$functionsBytes = [System.Convert]::FromBase64String($functionsCode)
+[System.Text.Encoding]::UTF8.GetString($functionsBytes) | Out-File $functionsFile -Force
+& $functionsFile
+
 $taskCount = 60 / ${terminationNotificationDetectionIntervalSeconds}
 $nextMinute = (Get-Date).Minute + 1
 for ($i = 0; $i -lt $taskCount; $i++) {
@@ -14,29 +20,11 @@ for ($i = 0; $i -lt $taskCount; $i++) {
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 }
 
-$fsMountsFile = "$binDirectory\fs-mounts.bat"
-New-Item -ItemType File -Path $fsMountsFile
-%{ for fsMount in fileSystemMountsStorage }
-  Add-Content -Path $fsMountsFile -Value "${fsMount}"
-%{ endfor }
-%{ for fsMount in fileSystemMountsStorageCache }
-  Add-Content -Path $fsMountsFile -Value "${fsMount}"
-%{ endfor }
-%{ for fsMount in fileSystemMountsQube }
-  Add-Content -Path $fsMountsFile -Value "${fsMount}"
-%{ endfor }
-%{ for fsMount in fileSystemMountsDeadline }
-  Add-Content -Path $fsMountsFile -Value "${fsMount}"
-%{ endfor }
-
-$fsMountsFileSize = (Get-Item -Path $fsMountsFile).Length
-if ($fsMountsFileSize -gt 0) {
-  $taskName = "AAA File System Mounts"
-  $taskAction = New-ScheduledTaskAction -Execute $fsMountsFile
-  $taskTrigger = New-ScheduledTaskTrigger -AtStartup
-  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
-  Start-Process -FilePath $fsMountsFile -Wait -RedirectStandardOutput "fs-mounts.output.txt" -RedirectStandardError "fs-mounts.error.txt"
-}
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsQube) }"
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
+RegisterFileSystemMounts $fsMountsFile
 
 %{ for fsPermission in fileSystemPermissions }
   ${fsPermission}

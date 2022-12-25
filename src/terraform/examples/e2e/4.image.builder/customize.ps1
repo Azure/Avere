@@ -99,7 +99,7 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v11.8""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA GPU (OptiX)"
@@ -146,8 +146,7 @@ if ($renderManager -like "*Qube*") {
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
-    $installFile = "utils\supe_postinstall.bat"
-    Start-Process -FilePath "$schedulerInstallRoot\$installFile" -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
+    Start-Process -FilePath "$schedulerInstallRoot\utils\supe_postinstall.bat" -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
     Write-Host "Customize (End): Qube Supervisor"
   } else {
     Write-Host "Customize (Start): Qube Worker"
@@ -175,6 +174,7 @@ if ($renderManager -like "*Qube*") {
 
     $configFileText = Get-Content -Path $schedulerConfigFile
     $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = render.artist.studio")
+    $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
     Set-Content -Path $schedulerConfigFile -Value $configFileText
   }
 }

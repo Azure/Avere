@@ -6,7 +6,7 @@ resourceGroupName = "ArtistAnywhere.Farm" # Alphanumeric, underscores, hyphens, 
 
 virtualMachineScaleSets = [
   {
-    name    = "LnxFarmGPU"
+    name    = "LnxFarmG"
     imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/1.1.0"
     machine = {
       size  = "Standard_NV36ads_A10_v5"
@@ -68,7 +68,7 @@ virtualMachineScaleSets = [
     }
   },
   {
-    name    = "" # "LnxFarmCPU"
+    name    = "" # "LnxFarmC"
     imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
@@ -124,12 +124,13 @@ virtualMachineScaleSets = [
       machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable       = true
-      timeoutDelay = "PT5M"
+      enable                   = true
+      timeoutDelay             = "PT5M"
+      detectionIntervalSeconds = 5
     }
   },
   {
-    name    = "" # "WinFarmGPU"
+    name    = "" # "WinFarmG"
     imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinFarm/versions/1.1.0"
     machine = {
       size  = "Standard_NV36ads_A10_v5"
@@ -185,12 +186,13 @@ virtualMachineScaleSets = [
       machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable       = true
-      timeoutDelay = "PT5M"
+      enable                   = true
+      timeoutDelay             = "PT5M"
+      detectionIntervalSeconds = 5
     }
   },
   {
-    name    = "" # "WinFarmCPU"
+    name    = "" # "WinFarmC"
     imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinFarm/versions/1.0.0"
     machine = {
       size  = "Standard_HB120rs_v2"
@@ -246,8 +248,9 @@ virtualMachineScaleSets = [
       machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable       = true
-      timeoutDelay = "PT5M"
+      enable                   = true
+      timeoutDelay             = "PT5M"
+      detectionIntervalSeconds = 5
     }
   }
 ]

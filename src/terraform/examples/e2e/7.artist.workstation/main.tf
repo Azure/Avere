@@ -255,7 +255,8 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager = module.global.renderManager }
+        { renderManager             = module.global.renderManager },
+        { fileSystemMountsDelimiter = ";" }
       ))
     )}"
   })
@@ -327,7 +328,8 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
   settings = jsonencode({
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager = module.global.renderManager }
+        { renderManager             = module.global.renderManager },
+        { fileSystemMountsDelimiter = ";" }
       )), "UTF-16LE"
     )}"
   })

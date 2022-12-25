@@ -3,30 +3,19 @@
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
+source /etc/profile.d/aaa.sh
+
+functionsFile="$binDirectory/functions.sh"
+functionsCode="${ filebase64("../0.global/functions.sh") }"
+echo $functionsCode | base64 --decode > $functionsFile
+source $functionsFile
 
 %{ if teradiciLicenseKey != "" }
   pcoip-register-host --registration-code=${teradiciLicenseKey}
 %{ endif }
 
-%{ for fsMount in fileSystemMountsStorage }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
-%{ for fsMount in fileSystemMountsStorageCache }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
-%{ for fsMount in fileSystemMountsQube }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
-%{ for fsMount in fileSystemMountsDeadline }
-  fsMountPoint=$(cut -d ' ' -f 2 <<< "${fsMount}")
-  mkdir -p $fsMountPoint
-  echo "${fsMount}" >> /etc/fstab
-%{ endfor }
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsQube) }"
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
 mount -a

@@ -3,7 +3,7 @@
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-source /etc/profile.d/aaa.sh # https://github.com/Azure/WALinuxAgent/issues/1561
+source /etc/profile.d/aaa.sh
 
 customDataInputFile="/var/lib/waagent/ovf-env.xml"
 customDataOutputFile="/var/lib/waagent/scale.auto.sh"

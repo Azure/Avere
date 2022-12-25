@@ -314,6 +314,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
         "script": "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
             { renderManager                                   = module.global.renderManager },
+            { fileSystemMountsDelimiter                       = ";" },
             { terminationNotificationDetectionIntervalSeconds = each.value.terminationNotification.detectionIntervalSeconds }
           ))
         )}"
@@ -401,6 +402,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
         "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
             { renderManager                                   = module.global.renderManager },
+            { fileSystemMountsDelimiter                       = ";" },
             { terminationNotificationDetectionIntervalSeconds = each.value.terminationNotification.detectionIntervalSeconds }
           )), "UTF-16LE"
         )}"
