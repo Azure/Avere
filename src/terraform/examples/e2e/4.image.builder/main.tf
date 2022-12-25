@@ -393,22 +393,22 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "File",
                     "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/customize.ps1",
-                    "destination": "C:\Users\Public\Downloads\customize.ps1"
+                    "destination": "C:\\Users\\Public\\Downloads\\customize.ps1"
                   },
                   {
                     "type": "File",
                     "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/onTerminate.ps1",
-                    "destination": "C:\Users\Public\Downloads\onTerminate.ps1"
+                    "destination": "C:\\Users\\Public\\Downloads\\onTerminate.ps1"
                   },
                   {
                     "type": "File",
                     "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/deprovision.ps1",
-                    "destination": "C:\DeprovisioningScript.ps1"
+                    "destination": "C:\\DeprovisioningScript.ps1"
                   },
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[concat('C:\Users\Public\Downloads\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager'))))))]"
+                      "[concat('C:\\Users\\Public\\Downloads\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   },
