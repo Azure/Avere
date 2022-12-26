@@ -22,7 +22,7 @@ $versionInfo = "3.8.10"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath .\$installFile -ArgumentList "/quiet /log python.txt" -Wait
+Start-Process -FilePath .\$installFile -ArgumentList "/quiet /log python.txt InstallAllUsers=1 PrependPath=1" -Wait
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
