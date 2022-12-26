@@ -10,6 +10,16 @@ functionsCode="${ filebase64("../0.global/functions.sh") }"
 echo $functionsCode | base64 --decode > $functionsFile
 source $functionsFile
 
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsQube) }"
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
+mount -a
+
+%{ for fsPermission in fileSystemPermissions }
+  ${fsPermission}
+%{ endfor }
+
 servicePath="/etc/systemd/system/scheduledEventHandler.service"
 echo "[Unit]" > $servicePath
 echo "Description=Scheduled Event Handler Service" >> $servicePath
@@ -30,13 +40,3 @@ echo "" >> $timerPath
 echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
 systemctl --now enable scheduledEventHandler
-
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsQube) }"
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
-mount -a
-
-%{ for fsPermission in fileSystemPermissions }
-  ${fsPermission}
-%{ endfor }

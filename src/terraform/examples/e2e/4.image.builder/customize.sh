@@ -246,6 +246,9 @@ rendererPathUnreal="/usr/local/unreal"
 if [[ $renderEngines == *Blender* ]]; then
   binPaths="$binPaths:$rendererPathBlender"
 fi
+if [[ $renderEngines == *PBRT* ]]; then
+  binPaths="$binPaths:$rendererPathPBRT"
+fi
 if [[ $renderEngines == *Unreal* ]]; then
   binPaths="$binPaths:$rendererPathUnreal"
 fi
@@ -270,13 +273,13 @@ if [[ $renderEngines == *Blender* ]]; then
   mkdir -p $installDirectory
   mv * $installDirectory
   cd $binDirectory
-  ln -s $installDirectory/blender $rendererPathBlender/blender3.4
+  ln -s $installDirectory/blender $rendererPathBlender/blender3-4
   echo "Customize (End): Blender 3.4"
 
   echo "Customize (Start): Blender 3.5"
   yum -y install libSM
   versionInfo="3.5.0"
-  versionType="alpha+master.8709a51fa907-linux.x86_64-release"
+  versionType="alpha+master.09ba00974f8f-linux.x86_64-release"
   installFile="blender-$versionInfo-$versionType.tar.xz"
   downloadUrl="$storageContainerUrl/Blender/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
@@ -286,7 +289,7 @@ if [[ $renderEngines == *Blender* ]]; then
   mkdir -p $installDirectory
   mv * $installDirectory
   cd $binDirectory
-  ln -s $installDirectory/blender $rendererPathBlender/blender3.5
+  ln -s $installDirectory/blender $rendererPathBlender/blender3-5
   echo "Customize (End): Blender 3.5"
 fi
 
@@ -298,7 +301,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   mkdir -p $rendererPathPBRTv3
   $binPathCMake/cmake -B $rendererPathPBRTv3 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
   make -j -C $rendererPathPBRTv3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
-  ln -s $rendererPathPBRTv3/pbrt /usr/bin/pbrt3
+  ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
   echo "Customize (End): PBRT 3"
 
   echo "Customize (Start): PBRT 4"
@@ -313,27 +316,8 @@ if [[ $renderEngines == *PBRT* ]]; then
   mkdir -p $rendererPathPBRTv4
   $binPathCMake/cmake -B $rendererPathPBRTv4 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
   make -j -C $rendererPathPBRTv4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
-  ln -s $rendererPathPBRTv4/pbrt /usr/bin/pbrt4
+  ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
   echo "Customize (End): PBRT 4"
-fi
-
-if [[ $renderEngines == *PBRT.Moana* ]]; then
-  echo "Customize (Start): PBRT Data (Moana Island)"
-  dataDirectory="moana"
-  mkdir $dataDirectory
-  installFile="island-basepackage-v1.1.tgz"
-  downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile -C $dataDirectory
-  installFile="island-pbrt-v1.1.tgz"
-  downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile -C $dataDirectory
-  installFile="island-pbrtV4-v2.0.tgz"
-  downloadUrl="$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile -C $dataDirectory
-  echo "Customize (End): PBRT Data (Moana Island)"
 fi
 
 if [[ $renderEngines == *Unity* ]]; then

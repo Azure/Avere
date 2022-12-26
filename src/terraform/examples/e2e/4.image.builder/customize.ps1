@@ -81,8 +81,8 @@ if ($gpuPlatform -contains "GRID") {
 
 if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
-  $versionInfo = "11.8.0"
-  $installFile = "cuda_${versionInfo}_522.06_windows.exe"
+  $versionInfo = "12.0.0"
+  $installFile = "cuda_${versionInfo}_527.41_windows.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-cuda.output.txt" -RedirectStandardError "nvidia-cuda.error.txt"
@@ -96,10 +96,11 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "/s /n" -Wait -RedirectStandardOutput "nvidia-optix.output.txt" -RedirectStandardError "nvidia-optix.error.txt"
+  $versionInfo = "v12.0"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA GPU (OptiX)"
@@ -141,6 +142,8 @@ if ($renderManager -like "*Qube*") {
 
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Qube Supervisor"
+    netsh advfirewall set allprofiles state off
+    #netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
     $installType = "qube-supervisor"
     $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
@@ -248,6 +251,9 @@ $rendererPathUnreal = "C:\Program Files\Unreal"
 if ($renderEngines -contains "Blender") {
   $binPaths += ";$rendererPathBlender"
 }
+if ($renderEngines -contains "PBRT") {
+  $binPaths += ";$rendererPathPBRT"
+}
 if ($renderEngines -contains "Unreal") {
   $binPaths += ";$rendererPathUnreal"
 }
@@ -261,8 +267,20 @@ if ($renderEngines -contains "Blender") {
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" /quiet /norestart /log blender.txt') -Wait
-  New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3.4"
+  New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3-4"
   Write-Host "Customize (End): Blender 3.4"
+
+  Write-Host "Customize (Start): Blender 3.5"
+  $versionInfo = "3.5.0"
+  $versionType = "alpha+master.09ba00974f8f-windows.amd64-release"
+  $installRoot = "$rendererPathBlender\$versionInfo"
+  $installFile = "blender-$versionInfo-$versionType.zip"
+  $downloadUrl = "$storageContainerUrl/Blender/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile -DestinationPath $installRoot
+  $installDirectory = $installFile.Replace(".zip", "")
+  New-Item -ItemType SymbolicLink -Target "$installRoot\$installDirectory\blender.exe" -Path "$rendererPathBlender\blender3-5"
+  Write-Host "Customize (End): Blender 3.5"
 }
 
 if ($renderEngines -contains "PBRT") {
@@ -273,7 +291,7 @@ if ($renderEngines -contains "PBRT") {
   New-Item -ItemType Directory -Path "$rendererPathPBRTv3" -Force
   Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv3\Release\pbrt.exe" -Path "C:\Windows\pbrt3"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv3\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt3"
   Write-Host "Customize (End): PBRT 3"
 
   Write-Host "Customize (Start): PBRT 4"
@@ -283,27 +301,8 @@ if ($renderEngines -contains "PBRT") {
   New-Item -ItemType Directory -Path "$rendererPathPBRTv4" -Force
   Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "C:\Windows\pbrt4"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt4"
   Write-Host "Customize (End): PBRT 4"
-}
-
-if ($renderEngines -contains "PBRT.Moana") {
-  Write-Host "Customize (Start): PBRT Data (Moana Island)"
-  $dataDirectory = "moana"
-  New-Item -ItemType Directory -Path $dataDirectory
-  $installFile = "island-basepackage-v1.1.tgz"
-  $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  tar -xzf $installFile -C $dataDirectory
-  $installFile = "island-pbrt-v1.1.tgz"
-  $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  tar -xzf $installFile -C $dataDirectory
-  $installFile = "island-pbrtV4-v2.0.tgz"
-  $downloadUrl = "$storageContainerUrl/PBRT/$dataDirectory/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  tar -xzf $installFile -C $dataDirectory
-  Write-Host "Customize (End): PBRT Data (Moana Island)"
 }
 
 if ($renderEngines -contains "Unity") {
@@ -388,13 +387,6 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
 }
 
 if ($machineType -eq "Farm") {
-  if (Test-Path -Path "$binDirectory\onTerminate.ps1") {
-    Write-Host "Customize (Start): CycleCloud Event Handler"
-    New-Item -ItemType Directory -Path "C:\cycle\jetpack\scripts" -Force
-    Copy-Item -Path "$binDirectory\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onPreempt.ps1"
-    Copy-Item -Path "$binDirectory\onTerminate.ps1" -Destination "C:\cycle\jetpack\scripts\onTerminate.ps1"
-    Write-Host "Customize (End): CycleCloud Event Handler"
-  }
   Write-Host "Customize (Start): Privacy Experience"
   $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
   New-Item -ItemType Directory -Path $registryKeyPath -Force

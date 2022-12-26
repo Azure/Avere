@@ -7,7 +7,17 @@ $functionsFile = "$binDirectory\functions.ps1"
 $functionsCode = "${ filebase64("../0.global/functions.ps1") }"
 $functionsBytes = [System.Convert]::FromBase64String($functionsCode)
 [System.Text.Encoding]::UTF8.GetString($functionsBytes) | Out-File $functionsFile -Force
-& $functionsFile
+. $functionsFile
+
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsQube) }"
+$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
+RegisterFileSystemMounts $fsMountsFile
+
+%{ for fsPermission in fileSystemPermissions }
+  ${fsPermission}
+%{ endfor }
 
 $taskCount = 60 / ${terminationNotificationDetectionIntervalSeconds}
 $nextMinute = (Get-Date).Minute + 1
@@ -19,13 +29,3 @@ for ($i = 0; $i -lt $taskCount; $i++) {
   $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
 }
-
-$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
-$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
-$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsQube) }"
-$fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
-RegisterFileSystemMounts $fsMountsFile
-
-%{ for fsPermission in fileSystemPermissions }
-  ${fsPermission}
-%{ endfor }

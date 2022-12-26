@@ -1,9 +1,6 @@
 function AddFileSystemMounts ($binDirectory, $fsMountsDelimiter, $fsMounts) {
-  Write-Host $binDirectory
-  Write-Host $fsMountsDelimiter
-  Write-Host $fsMounts
   $fsMountsFile = "$binDirectory\fs-mounts.bat"
-  if (!Test-Path -Path $fsMountsFile) {
+  if (!(Test-Path -PathType Leaf -Path $fsMountsFile)) {
     New-Item -ItemType File -Path $fsMountsFile
   }
   foreach ($fsMount in $fsMounts.Split($fsMountsDelimiter)) {
