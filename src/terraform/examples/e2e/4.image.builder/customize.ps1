@@ -18,7 +18,7 @@ Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
 Write-Host "Customize (End): Resize OS Disk"
 
 Write-Host "Customize (Start): Python"
-$versionInfo = "3.8.10"
+$versionInfo = "3.7.9"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
