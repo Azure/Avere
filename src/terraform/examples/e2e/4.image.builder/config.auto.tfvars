@@ -90,10 +90,10 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 480
       renderEngines = [
-        "Blender",
         "PBRT",
-        "Unity",
-        "Unreal"
+        "Blender",
+        # "Unreal",
+        # "Unity"
       ]
     }
   },
@@ -112,8 +112,8 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 480
       renderEngines = [
-        "Blender",
-        "PBRT"
+        "PBRT",
+        "Blender"
       ]
     }
   },
@@ -133,10 +133,10 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 512
       renderEngines = [
-        "Blender",
         "PBRT",
-        "Unity",
-        "Unreal.PixelStream"
+        "Blender",
+        # "Unreal.PixelStream",
+        # "Unity"
       ]
     }
   },
@@ -174,10 +174,10 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 480
       renderEngines = [
-        "Blender",
         "PBRT",
-        "Unity",
-        "Unreal"
+        "Blender",
+        # "Unreal",
+        # "Unity"
       ]
     }
   },
@@ -196,8 +196,8 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 480
       renderEngines = [
-        "Blender",
-        "PBRT"
+        "PBRT",
+        "Blender"
       ]
     }
   },
@@ -217,10 +217,10 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 512
       renderEngines = [
-        "Blender",
         "PBRT",
-        "Unity",
-        "Unreal.PixelStream"
+        "Blender",
+        # "Unreal.PixelStream",
+        # "Unity"
       ]
     }
   }

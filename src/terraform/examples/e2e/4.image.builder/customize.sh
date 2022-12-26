@@ -239,20 +239,47 @@ if [[ $renderManager == *Deadline* ]]; then
   fi
 fi
 
-rendererPathBlender="/usr/local/blender"
 rendererPathPBRT="/usr/local/pbrt"
+rendererPathBlender="/usr/local/blender"
 rendererPathUnreal="/usr/local/unreal"
 
-if [[ $renderEngines == *Blender* ]]; then
-  binPaths="$binPaths:$rendererPathBlender"
-fi
 if [[ $renderEngines == *PBRT* ]]; then
   binPaths="$binPaths:$rendererPathPBRT"
+fi
+if [[ $renderEngines == *Blender* ]]; then
+  binPaths="$binPaths:$rendererPathBlender"
 fi
 if [[ $renderEngines == *Unreal* ]]; then
   binPaths="$binPaths:$rendererPathUnreal"
 fi
 echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
+
+if [[ $renderEngines == *PBRT* ]]; then
+  echo "Customize (Start): PBRT 3"
+  versionInfo="v3"
+  rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
+  mkdir -p $rendererPathPBRTv3
+  $binPathCMake/cmake -B $rendererPathPBRTv3 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
+  make -j -C $rendererPathPBRTv3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
+  ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
+  echo "Customize (End): PBRT 3"
+
+  echo "Customize (Start): PBRT 4"
+  yum -y install mesa-libGL-devel
+  yum -y install libXrandr-devel
+  yum -y install libXinerama-devel
+  yum -y install libXcursor-devel
+  yum -y install libXi-devel
+  versionInfo="v4"
+  rendererPathPBRTv4="$rendererPathPBRT/$versionInfo"
+  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
+  mkdir -p $rendererPathPBRTv4
+  $binPathCMake/cmake -B $rendererPathPBRTv4 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
+  make -j -C $rendererPathPBRTv4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
+  ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
+  echo "Customize (End): PBRT 4"
+fi
 
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender 3.4"
@@ -293,47 +320,6 @@ if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (End): Blender 3.5"
 fi
 
-if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT 3"
-  versionInfo="v3"
-  rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
-  mkdir -p $rendererPathPBRTv3
-  $binPathCMake/cmake -B $rendererPathPBRTv3 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
-  make -j -C $rendererPathPBRTv3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
-  ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
-  echo "Customize (End): PBRT 3"
-
-  echo "Customize (Start): PBRT 4"
-  yum -y install mesa-libGL-devel
-  yum -y install libXrandr-devel
-  yum -y install libXinerama-devel
-  yum -y install libXcursor-devel
-  yum -y install libXi-devel
-  versionInfo="v4"
-  rendererPathPBRTv4="$rendererPathPBRT/$versionInfo"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
-  mkdir -p $rendererPathPBRTv4
-  $binPathCMake/cmake -B $rendererPathPBRTv4 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
-  make -j -C $rendererPathPBRTv4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
-  ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
-  echo "Customize (End): PBRT 4"
-fi
-
-if [[ $renderEngines == *Unity* ]]; then
-  echo "Customize (Start): Unity Hub"
-  repoPath="/etc/yum.repos.d/unityhub.repo"
-  echo "[unityhub]" > $repoPath
-  echo "name=Unity Hub" >> $repoPath
-  echo "baseurl=https://hub.unity3d.com/linux/repos/rpm/stable" >> $repoPath
-  echo "enabled=1" >> $repoPath
-  echo "gpgcheck=1" >> $repoPath
-  echo "gpgkey=https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" >> $repoPath
-  echo "repo_gpgcheck=1" >> $repoPath
-  yum -y install unityhub
-  echo "Customize (End): Unity Hub"
-fi
-
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
   echo "Customize (Start): Unreal Engine"
   yum -y install libicu
@@ -365,6 +351,20 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
     ./$installFile 1> "unreal-stream-matchmaker.output.txt" 2> "unreal-stream-matchmaker.error.txt"
     echo "Customize (End): Unreal Pixel Streaming"
   fi
+fi
+
+if [[ $renderEngines == *Unity* ]]; then
+  echo "Customize (Start): Unity Hub"
+  repoPath="/etc/yum.repos.d/unityhub.repo"
+  echo "[unityhub]" > $repoPath
+  echo "name=Unity Hub" >> $repoPath
+  echo "baseurl=https://hub.unity3d.com/linux/repos/rpm/stable" >> $repoPath
+  echo "enabled=1" >> $repoPath
+  echo "gpgcheck=1" >> $repoPath
+  echo "gpgkey=https://hub.unity3d.com/linux/repos/rpm/stable/repodata/repomd.xml.key" >> $repoPath
+  echo "repo_gpgcheck=1" >> $repoPath
+  yum -y install unityhub
+  echo "Customize (End): Unity Hub"
 fi
 
 if [ $machineType == "Farm" ]; then

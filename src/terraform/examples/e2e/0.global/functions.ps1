@@ -4,7 +4,10 @@ function AddFileSystemMounts ($binDirectory, $fsMountsDelimiter, $fsMounts) {
     New-Item -ItemType File -Path $fsMountsFile
   }
   foreach ($fsMount in $fsMounts.Split($fsMountsDelimiter)) {
-    Add-Content -Path $fsMountsFile -Value $fsMount
+    $fsMountsFileText = Get-Content -Path $fsMountsFile
+    if ($fsMountsFileText -inotmatch $fsMount) {
+      Add-Content -Path $fsMountsFile -Value $fsMount
+    }
   }
   return $fsMountsFile
 }

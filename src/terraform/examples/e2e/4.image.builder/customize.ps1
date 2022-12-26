@@ -22,7 +22,7 @@ $versionInfo = "3.8.10"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath .\$installFile -ArgumentList "/quiet" -Wait -RedirectStandardOutput "python.output.txt" -RedirectStandardError "python.error.txt"
+Start-Process -FilePath .\$installFile -ArgumentList "/quiet /log python.txt" -Wait
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
@@ -30,7 +30,7 @@ $versionInfo = "2.38.1"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath .\$installFile -ArgumentList "/silent /norestart" -Wait -RedirectStandardOutput "git.output.txt" -RedirectStandardError "git.error.txt"
+Start-Process -FilePath .\$installFile -ArgumentList "/silent /norestart /log=git.txt" -Wait
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
@@ -142,8 +142,7 @@ if ($renderManager -like "*Qube*") {
 
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Qube Supervisor"
-    netsh advfirewall set allprofiles state off
-    #netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
+    # netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
     $installType = "qube-supervisor"
     $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
@@ -244,44 +243,20 @@ if ($renderManager -like "*Deadline*") {
   }
 }
 
-$rendererPathBlender = "C:\Program Files\Blender"
 $rendererPathPBRT = "C:\Program Files\PBRT"
+$rendererPathBlender = "C:\Program Files\Blender"
 $rendererPathUnreal = "C:\Program Files\Unreal"
 
-if ($renderEngines -contains "Blender") {
-  $binPaths += ";$rendererPathBlender"
-}
 if ($renderEngines -contains "PBRT") {
   $binPaths += ";$rendererPathPBRT"
+}
+if ($renderEngines -contains "Blender") {
+  $binPaths += ";$rendererPathBlender"
 }
 if ($renderEngines -contains "Unreal") {
   $binPaths += ";$rendererPathUnreal"
 }
 setx PATH "$env:PATH$binPaths" /m
-
-if ($renderEngines -contains "Blender") {
-  Write-Host "Customize (Start): Blender 3.4"
-  $versionInfo = "3.4.1"
-  $installRoot = "$rendererPathBlender\$versionInfo"
-  $installFile = "blender-$versionInfo-windows-x64.msi"
-  $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" /quiet /norestart /log blender.txt') -Wait
-  New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3-4"
-  Write-Host "Customize (End): Blender 3.4"
-
-  Write-Host "Customize (Start): Blender 3.5"
-  $versionInfo = "3.5.0"
-  $versionType = "alpha+master.09ba00974f8f-windows.amd64-release"
-  $installRoot = "$rendererPathBlender\$versionInfo"
-  $installFile = "blender-$versionInfo-$versionType.zip"
-  $downloadUrl = "$storageContainerUrl/Blender/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile -DestinationPath $installRoot
-  $installDirectory = $installFile.Replace(".zip", "")
-  New-Item -ItemType SymbolicLink -Target "$installRoot\$installDirectory\blender.exe" -Path "$rendererPathBlender\blender3-5"
-  Write-Host "Customize (End): Blender 3.5"
-}
 
 if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (Start): PBRT 3"
@@ -305,13 +280,28 @@ if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (End): PBRT 4"
 }
 
-if ($renderEngines -contains "Unity") {
-  Write-Host "Customize (Start): Unity Hub"
-  $installFile = "UnityHubSetup.exe"
-  $downloadUrl = "https://public-cdn.cloud.unity3d.com/hub/prod/$installFile"
+if ($renderEngines -contains "Blender") {
+  Write-Host "Customize (Start): Blender 3.4"
+  $versionInfo = "3.4.1"
+  $installRoot = "$rendererPathBlender\$versionInfo"
+  $installFile = "blender-$versionInfo-windows-x64.msi"
+  $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "unity-hub.output.txt" -RedirectStandardError "unity-hub.error.txt"
-  Write-Host "Customize (End): Unity Hub"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" /quiet /norestart /log blender.txt') -Wait
+  New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3-4"
+  Write-Host "Customize (End): Blender 3.4"
+
+  Write-Host "Customize (Start): Blender 3.5"
+  $versionInfo = "3.5.0"
+  $versionType = "alpha+master.09ba00974f8f-windows.amd64-release"
+  $installRoot = "$rendererPathBlender\$versionInfo"
+  $installFile = "blender-$versionInfo-$versionType.zip"
+  $downloadUrl = "$storageContainerUrl/Blender/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile -DestinationPath $installRoot
+  $installDirectory = $installFile.Replace(".zip", "")
+  New-Item -ItemType SymbolicLink -Target "$installRoot\$installDirectory\blender.exe" -Path "$rendererPathBlender\blender3-5"
+  Write-Host "Customize (End): Blender 3.5"
 }
 
 if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
@@ -384,6 +374,15 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
     Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
     Write-Host "Customize (End): Unreal Pixel Streaming"
   }
+}
+
+if ($renderEngines -contains "Unity") {
+  Write-Host "Customize (Start): Unity Hub"
+  $installFile = "UnityHubSetup.exe"
+  $downloadUrl = "https://public-cdn.cloud.unity3d.com/hub/prod/$installFile"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "unity-hub.output.txt" -RedirectStandardError "unity-hub.error.txt"
+  Write-Host "Customize (End): Unity Hub"
 }
 
 if ($machineType -eq "Farm") {
