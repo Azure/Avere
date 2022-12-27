@@ -96,42 +96,20 @@ For Azure RBAC role assignment instructions, refer to either the Azure [portal](
 
 #### Terraform Avere Provider Linux
 
-<p><code>
-latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)
-</code></p>
-<p><code>
-downloadUrl=https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere
-</code></p>
-<p><code>
-localDirectory=~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/${latestVersion:1}/linux_amd64
-</code></p>
-<p><code>
-mkdir -p $localDirectory
-</code></p>
-<p><code>
-curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl
-</code></p>
-<p><code>
-chmod 755 $localDirectory/terraform-provider-avere_$latestVersion
-</code></p>
+```latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)```
+```downloadUrl=https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere```
+```localDirectory=~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/${latestVersion:1}/linux_amd64```
+```mkdir -p $localDirectory```
+```curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl```
+```chmod 755 $localDirectory/terraform-provider-avere_$latestVersion```
 
 #### Terraform Avere Provider Windows
 
-<p><code>
-$latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest -UseBasicParsing | ConvertFrom-Json).tag_name
-</code></p>
-<p><code>
-$downloadUrl = "https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere.exe"
-</code></p>
-<p><code>
-$localDirectory = "$Env:AppData\terraform.d\plugins\registry.terraform.io\hashicorp\avere\$($latestVersion.Substring(1))\windows_amd64"
-</code></p>
-<p><code>
-New-Item -ItemType Directory -Path $localDirectory -Force
-</code></p>
-<p><code>
-(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $localDirectory -ChildPath "terraform-provider-avere_$latestVersion.exe"))
-</code></p>
+```$latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest -UseBasicParsing | ConvertFrom-Json).tag_name```
+```$downloadUrl = "https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere.exe"```
+```$localDirectory = "$Env:AppData\terraform.d\plugins\registry.terraform.io\hashicorp\avere\$($latestVersion.Substring(1))\windows_amd64"```
+```New-Item -ItemType Directory -Path $localDirectory -Force```
+```(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $localDirectory -ChildPath "terraform-provider-avere_$latestVersion.exe"))```
 
 ## 4 Image Builder
 
@@ -203,18 +181,10 @@ To enable GitHub Actions to manage resource deployment within your Azure subscri
 
 To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure CLI command can be used.
 
-<p><code>
-&nbsp;&nbsp;&nbsp;$servicePrincipalName  = "Azure Artist Anywhere"
-</code></p>
-<p><code>
-&nbsp;&nbsp;&nbsp;$servicePrincipalRole  = "Contributor"
-</code></p>
-<p><code>
-&nbsp;&nbsp;&nbsp;$servicePrincipalScope = "/subscriptions/&lt;SUBSCRIPTION_ID&gt;"
-</code></p>
-<p><code>
-&nbsp;&nbsp;&nbsp;az ad sp create-for-rbac --name $servicePrincipalName --role $servicePrincipalRole --scope $servicePrincipalScope
-</code></p>
+```$servicePrincipalName  = "Azure Artist Anywhere"```
+```$servicePrincipalRole  = "Contributor"```
+```$servicePrincipalScope = "/subscriptions/&lt;SUBSCRIPTION_ID&gt;"```
+```az ad sp create-for-rbac --name $servicePrincipalName --role $servicePrincipalRole --scope $servicePrincipalScope```
 
 ## 9 Render
 
@@ -230,33 +200,25 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-qbsub --name blender-splash blender3-4 --background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1
-</code></p>
+```qbsub --name blender-splash blender3-4 --background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1```
 
 #### 9.1.2 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Linux*)
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender3-4 -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"
-</code></p>
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender3-4 -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
 
 #### 9.1.3 [Qube](https://www.pipelinefx.com) Render Farm (*Windows*)
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-qbsub --name blender-splash blender3-4 --background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1
-</code></p>
+```qbsub --name blender-splash blender3-4 --background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1```
 
 #### 9.1.4 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Windows*)
 
 *The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender3-4 -arguments "--background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1"
-</code></p>
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender3-4 -arguments "--background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1"```
 
 ### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
 
@@ -268,49 +230,33 @@ deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender3-
 
 *The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-qbsub --name moana-island-v3 pbrt3 --outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt
-</code></p>
+```qbsub --name moana-island-v3 pbrt3 --outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt```
 
-<p><code>
-qbsub --name moana-island-v4 pbrt4 --outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt
-</code></p>
+```qbsub --name moana-island-v4 pbrt4 --outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt```
 
 #### 9.2.2 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Linux*)
 
 *The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt"
-</code></p>
+```deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt"```
 
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"
-</code></p>
+```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
 #### 9.2.3 [Qube](https://www.pipelinefx.com) Render Farm (*Windows*)
 
 *The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-qbsub --name moana-island-v3 pbrt3 --outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt
-</code></p>
+```qbsub --name moana-island-v3 pbrt3 --outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt```
 
-<p><code>
-qbsub --name moana-island-v4 pbrt4 --outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt
-</code></p>
+```qbsub --name moana-island-v4 pbrt4 --outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt```
 
 #### 9.2.4 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Windows*)
 
 *The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt"
-</code></p>
+```deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt"```
 
-<p><code>
-deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"
-</code></p>
+```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"```
 
 ## 10 Appendix
 
