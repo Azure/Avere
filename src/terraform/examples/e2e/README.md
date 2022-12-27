@@ -97,18 +97,27 @@ For Azure RBAC role assignment instructions, refer to either the Azure [portal](
 #### Terraform Avere Provider Linux
 
 ```latestVersion=$(curl -s https://api.github.com/repos/Azure/Avere/releases/latest | jq -r .tag_name)```
+
 ```downloadUrl=https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere```
+
 ```localDirectory=~/.terraform.d/plugins/registry.terraform.io/hashicorp/avere/${latestVersion:1}/linux_amd64```
+
 ```mkdir -p $localDirectory```
+
 ```curl -o $localDirectory/terraform-provider-avere_$latestVersion -L $downloadUrl```
+
 ```chmod 755 $localDirectory/terraform-provider-avere_$latestVersion```
 
 #### Terraform Avere Provider Windows
 
 ```$latestVersion = (Invoke-WebRequest -Uri https://api.github.com/repos/Azure/Avere/releases/latest -UseBasicParsing | ConvertFrom-Json).tag_name```
+
 ```$downloadUrl = "https://github.com/Azure/Avere/releases/download/$latestVersion/terraform-provider-avere.exe"```
+
 ```$localDirectory = "$Env:AppData\terraform.d\plugins\registry.terraform.io\hashicorp\avere\$($latestVersion.Substring(1))\windows_amd64"```
+
 ```New-Item -ItemType Directory -Path $localDirectory -Force```
+
 ```(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $localDirectory -ChildPath "terraform-provider-avere_$latestVersion.exe"))```
 
 ## 4 Image Builder
@@ -182,8 +191,11 @@ To enable GitHub Actions to manage resource deployment within your Azure subscri
 To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure CLI command can be used.
 
 ```$servicePrincipalName  = "Azure Artist Anywhere"```
+
 ```$servicePrincipalRole  = "Contributor"```
+
 ```$servicePrincipalScope = "/subscriptions/&lt;SUBSCRIPTION_ID&gt;"```
+
 ```az ad sp create-for-rbac --name $servicePrincipalName --role $servicePrincipalRole --scope $servicePrincipalScope```
 
 ## 9 Render
