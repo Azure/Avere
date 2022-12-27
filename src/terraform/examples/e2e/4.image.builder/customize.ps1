@@ -148,7 +148,7 @@ if ($renderManager -like "*Qube*") {
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
-    $binPaths += ";C:\Program Files\pfx\psql\bin"
+    $binPaths += ";C:\Program Files\pfx\pgsql\bin"
     Write-Host "Customize (End): Qube Supervisor"
   } else {
     Write-Host "Customize (Start): Qube Worker"
