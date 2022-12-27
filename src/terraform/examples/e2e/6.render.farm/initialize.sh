@@ -22,7 +22,7 @@ mount -a
 
 servicePath="/etc/systemd/system/scheduledEventHandler.service"
 echo "[Unit]" > $servicePath
-echo "Description=Scheduled Event Handler Service" >> $servicePath
+echo "Description=AAA Scheduled Event Handler Service" >> $servicePath
 echo "After=network-online.target" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
@@ -31,7 +31,7 @@ echo "ExecStart=/bin/bash /tmp/onTerminate.sh" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/scheduledEventHandler.timer"
 echo "[Unit]" > $timerPath
-echo "Description=Scheduled Event Handler Timer" >> $timerPath
+echo "Description=AAA Scheduled Event Handler Timer" >> $timerPath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
 echo "OnUnitActiveSec=${terminationNotificationDetectionIntervalSeconds}" >> $timerPath

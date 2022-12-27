@@ -12,7 +12,7 @@ echo $customData | base64 -d > $customDataOutputFile
 
 servicePath="/etc/systemd/system/computeAutoScaler.service"
 echo "[Unit]" > $servicePath
-echo "Description=Compute Auto Scaler Service" >> $servicePath
+echo "Description=AAA Compute Auto Scaler Service" >> $servicePath
 echo "After=network-online.target" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
@@ -25,7 +25,7 @@ echo "ExecStart=/bin/bash $customDataOutputFile" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/computeAutoScaler.timer"
 echo "[Unit]" > $timerPath
-echo "Description=Compute Auto Scaler Timer" >> $timerPath
+echo "Description=AAA Compute Auto Scaler Timer" >> $timerPath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
 echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $timerPath
