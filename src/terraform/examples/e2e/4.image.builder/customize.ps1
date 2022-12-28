@@ -145,6 +145,7 @@ if ($renderManager -like "*Qube*") {
     netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
     netsh advfirewall firewall add rule name="Allow Qube Supervisor (TCP)" dir=in action=allow protocol=TCP localport=50001,50002
     netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor Proxy" dir=in action=allow protocol=TCP localport=50555,50556
     $installType = "qube-supervisor"
     $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
@@ -152,8 +153,19 @@ if ($renderManager -like "*Qube*") {
     Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
     $binPaths += ";C:\Program Files\pfx\pgsql\bin"
     Write-Host "Customize (End): Qube Supervisor"
+
+    Write-Host "Customize (Start): Qube Data Relay Agent (DRA)"
+    netsh advfirewall firewall add rule name="Allow Qube Data Relay Agent (DRA)" dir=in action=allow protocol=TCP localport=5001
+    $installType = "qube-dra"
+    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
+    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
+    Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
   } else {
     Write-Host "Customize (Start): Qube Worker"
+    netsh advfirewall firewall add rule name="Allow Qube Worker (TCP)" dir=in action=allow protocol=TCP localport=50011
+    netsh advfirewall firewall add rule name="Allow Qube Worker (UDP)" dir=in action=allow protocol=UDP localport=50011
     $installType = "qube-worker"
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"

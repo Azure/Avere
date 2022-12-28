@@ -172,6 +172,14 @@ if [[ $renderManager == *Qube* ]]; then
     curl -o $installFile -L $downloadUrl
     rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
     echo "Customize (End): Qube Supervisor"
+
+    echo "Customize (Start): Qube Data Relay Agent (DRA)"
+    installType="qube-dra"
+    installFile="$installType-$schedulerVersion.CENTOS_7.8.x86_64.rpm"
+    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm 1> "$installType.output.txt" 2> "$installType.error.txt"
+    echo "Customize (End): Qube Data Relay Agent (DRA)"
   else
     echo "Customize (Start): Qube Worker"
     installType="qube-worker"

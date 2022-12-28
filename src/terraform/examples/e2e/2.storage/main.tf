@@ -929,9 +929,9 @@ resource "azurerm_resource_group_template_deployment" "admin" {
   TEMPLATE
 }
 
-##########################################################################################################
-# Qumulo (https://azuremarketplace.microsoft.com/en-us/marketplace/apps/qumulo1584033880660.qumulo-saas) #
-##########################################################################################################
+####################################################################################################
+# Qumulo (https://azuremarketplace.microsoft.com/marketplace/apps/qumulo1584033880660.qumulo-saas) #
+####################################################################################################
 
 resource "azurerm_resource_group" "qumulo" {
   count    = var.qumulo.name != "" ? 1 : 0
