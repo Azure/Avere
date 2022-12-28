@@ -190,9 +190,9 @@ To enable GitHub Actions to manage resource deployment within your Azure subscri
 
 To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure CLI command can be used.
 
-```$servicePrincipalName  = "Azure Artist Anywhere"```
+```$servicePrincipalName = "Azure Artist Anywhere"```
 
-```$servicePrincipalRole  = "Contributor"```
+```$servicePrincipalRole = "Contributor"```
 
 ```$servicePrincipalScope = "/subscriptions/&lt;SUBSCRIPTION_ID&gt;"```
 

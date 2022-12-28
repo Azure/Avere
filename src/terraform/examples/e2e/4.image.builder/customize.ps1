@@ -142,7 +142,9 @@ if ($renderManager -like "*Qube*") {
 
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Qube Supervisor"
-    # netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
+    netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor (TCP)" dir=in action=allow protocol=TCP localport=50001,50002
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
     $installType = "qube-supervisor"
     $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
