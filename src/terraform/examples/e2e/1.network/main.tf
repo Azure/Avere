@@ -341,6 +341,20 @@ resource "azurerm_network_security_group" "network" {
     destination_port_range     = "*"
   }
   dynamic security_rule {
+    for_each = each.value.name == "Farm" ? [1] : []
+    content {
+      name                       = "AllowOutHTTPS"
+      priority                   = 3200
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_address_prefix      = "*"
+      source_port_range          = "*"
+      destination_address_prefix = "Internet"
+      destination_port_range     = "443"
+    }
+  }
+  dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []
     content {
       name                       = "AllowInPCoIP[TCP]"

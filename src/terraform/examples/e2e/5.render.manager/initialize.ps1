@@ -8,6 +8,18 @@ if ("${renderManager}" -like "*Qube*") {
   Start-Process -FilePath "C:\Program Files\pfx\qube\utils\supe_postinstall.bat" -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
 }
 
+if ("${qubeLicense.userName}" -ne "") {
+  $configFilePath = "C:\ProgramData\pfx\qube\dra.conf"
+  if (!(Test-Path -PathType Leaf -Path $configFilePath)) {
+    Copy-Item -Path "C:\Program Files\pfx\qube\dra\dra.conf.default" -Destination $configFilePath
+  }
+  $configFileText = Get-Content -Path $configFilePath
+  $configFileText = $configFileText.Replace("#mls_user =", "mls_user = ${qubeLicense.userName}")
+  $configFileText = $configFileText.Replace("#mls_password =", "mls_password = ${qubeLicense.userPassword}")
+  Set-Content -Path $configFilePath -Value $configFileText
+  Restart-Service -Name "qubedra"
+}
+
 $customDataInputFile = "C:\AzureData\CustomData.bin"
 $customDataOutputFile = "C:\AzureData\scale.auto.ps1"
 $fileStream = New-Object System.IO.FileStream($customDataInputFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)

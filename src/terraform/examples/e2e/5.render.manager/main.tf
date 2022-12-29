@@ -72,6 +72,12 @@ variable "virtualMachines" {
           fileName = string
           parameters = object(
             {
+              qubeLicense = object(
+                {
+                  userName     = string
+                  userPassword = string
+                }
+              )
               autoScale = object(
                 {
                   enable                   = bool

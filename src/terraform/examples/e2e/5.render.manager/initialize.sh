@@ -5,6 +5,13 @@ cd $binDirectory
 
 source /etc/profile.d/aaa.sh
 
+if ["${qubeLicense.userName}" != "" ]; then
+  configFilePath="/etc/qube/dra.conf"
+  sed -i "s/# mls_user =/mls_user = ${qubeLicense.userName}/" $configFilePath
+  sed -i "s/# mls_password =/mls_password = ${qubeLicense.userPassword}/" $configFilePath
+  systemctl restart dra.service
+fi
+
 customDataInputFile="/var/lib/waagent/ovf-env.xml"
 customDataOutputFile="/var/lib/waagent/scale.auto.sh"
 customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInputFile)
