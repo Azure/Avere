@@ -10,12 +10,24 @@ $ErrorActionPreference = "Stop"
 
 az login --identity
 
+$queuedTasks = 0
+
 if ($renderManager -like "*Qube*") {
-  $queuedTasks = 0
+  $qbDelimiter = ";"
+  $pendingJobs = qbjobs --pending --delimit $qbDelimiter --fields id,reason,timesubmit
+  foreach ($pendingJob in $pendingJobs) {
+    if (!$pendingJob.StartsWith("total") -and !$pendingJob.StartsWith("id")) {
+      $jobReason = $pendingJob.Split($qbDelimiter)[1]
+      if ($jobReason -eq "no available hosts to run job.") {
+        $jobTimeSubmit = $pendingJob.Split($qbDelimiter)[2]
+        Write-Host $jobTimeSubmit
+        $queuedTasks++
+      }
+    }
+  }
 }
 
 if ($renderManager -like "*Deadline*") {
-  $queuedTasks = 0
   $activeJobIds = deadlinecommand -GetJobIdsFilter Status=Active
   foreach ($jobId in $activeJobIds) {
     $jobDetails = deadlinecommand -GetJobDetails $jobId
@@ -31,12 +43,16 @@ if ($renderManager -like "*Deadline*") {
       }
     }
   }
+}
 
-  if ($queuedTasks -gt 0) { # Scale Up
-    $nodeCount = az vmss show --resource-group $resourceGroupName --name $scaleSetName --query "sku.capacity"
-    $nodeCount = [int] $nodeCount + $queuedTasks
-    az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $nodeCount
-  } else { # Scale Down
+if ($queuedTasks -gt 0) { # Scale Up
+  $nodeCount = az vmss show --resource-group $resourceGroupName --name $scaleSetName --query "sku.capacity"
+  $nodeCount = [int] $nodeCount + $queuedTasks
+  az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $nodeCount
+} else { # Scale Down
+  if ($renderManager -like "*Qube*") {
+  }
+  if ($renderManager -like "*Deadline*") {
     $workerNames = deadlinecommand -GetSlaveNames
     foreach ($workerName in $workerNames) {
       $worker = deadlinecommand -GetSlave $workerName | ConvertFrom-StringData

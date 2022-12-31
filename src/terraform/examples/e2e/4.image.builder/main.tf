@@ -166,12 +166,6 @@ resource "azurerm_resource_group" "image" {
   location = module.global.regionName
 }
 
-resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = data.azurerm_resource_group.network.id
-}
-
 resource "azurerm_role_assignment" "image" {
   role_definition_name = "Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
   principal_id         = data.azurerm_user_assigned_identity.render.principal_id

@@ -246,6 +246,12 @@ resource "azurerm_resource_group" "scheduler" {
   location = module.global.regionName
 }
 
+resource "azurerm_role_assignment" "scheduler" {
+  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}"
+}
+
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
 #########################################################################
@@ -446,19 +452,6 @@ resource "azurerm_private_dns_a_record" "render" {
   records = [
     azurerm_network_interface.scheduler[local.schedulerMachineNames[0]].private_ip_address
   ]
-}
-
-######################################################################
-# CycleCloud (https://learn.microsoft.com/azure/cyclecloud/overview) #
-######################################################################
-
-resource "azurerm_role_assignment" "cycle_cloud" {
-  for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.customExtension.parameters.cycleCloud.enable
-  }
-  role_definition_name = "Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}"
 }
 
 output "resourceGroupName" {
