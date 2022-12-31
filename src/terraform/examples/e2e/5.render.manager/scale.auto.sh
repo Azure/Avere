@@ -3,6 +3,7 @@
 az login --identity
 
 queuedTasks=0
+workerIdleDeleteSeconds=900
 
 if [[ $renderManager == *Qube* ]]; then
   qbDelimiter=";"
@@ -13,8 +14,12 @@ if [[ $renderManager == *Qube* ]]; then
       jobReason=$(cut -d $qbDelimiter -f 2 <<< "$pendingJob")
       if [[ $jobReason == "no available hosts to run job." ]]; then
         jobSubmitTime=$(cut -d $qbDelimiter -f 3 <<< "$pendingJob")
-        echo $jobSubmitTime
-        ((queuedTasks++))
+        jobWaitSecondsStart=$(date -u +%s --date="$jobSubmitTime")
+        jobWaitSecondsEnd=$(date -u +%s)
+        jobWaitSeconds=$(($jobWaitSecondsEnd - $jobWaitSecondsStart))
+        if [ $jobWaitSeconds -gt $jobWaitThresholdSeconds ]; then
+          ((queuedTasks++))
+        fi
       fi
     fi
   done < $jobFileName
@@ -64,7 +69,7 @@ else # Scale Down
         hostInstanceSecondsStart=$(date -u +%s --date="$hostInstanceStartTime")
         hostInstanceSecondsEnd=$(date -u +%s)
         hostInstanceSeconds=$(($hostInstanceSecondsEnd - $hostInstanceSecondsStart))
-        if [[ $hostLoad == 0* && $hostInstanceSeconds -gt $((15 * 60)) ]]; then
+        if [[ $hostLoad == 0* && $hostInstanceSeconds -gt $workerIdleDeleteSeconds ]]; then
           az vmss delete-instances --resource-group $resourceGroupName --name $scaleSetName --instance-ids $hostInstanceId
         fi
       fi

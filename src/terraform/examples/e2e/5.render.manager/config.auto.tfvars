@@ -38,9 +38,8 @@ virtualMachines = [
           fileName                 = "scale.auto.sh"
           scaleSetName             = "LnxFarmG"
           resourceGroupName        = "ArtistAnywhere.Farm"
-          detectionIntervalSeconds = 60
           jobWaitThresholdSeconds  = 300
-          workerIdleDeleteSeconds  = 3600
+          detectionIntervalSeconds = 60
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
           enable             = false
@@ -85,9 +84,8 @@ virtualMachines = [
           fileName                 = "scale.auto.ps1"
           scaleSetName             = "WinFarmG"
           resourceGroupName        = "ArtistAnywhere.Farm"
-          detectionIntervalSeconds = 60
           jobWaitThresholdSeconds  = 300
-          workerIdleDeleteSeconds  = 3600
+          detectionIntervalSeconds = 60
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
           enable             = false

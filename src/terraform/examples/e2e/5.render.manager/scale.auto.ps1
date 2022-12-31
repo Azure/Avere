@@ -2,8 +2,7 @@ param (
   [string] $renderManager,
   [string] $resourceGroupName,
   [string] $scaleSetName,
-  [int] $jobWaitThresholdSeconds,
-  [int] $workerIdleDeleteSeconds
+  [int] $jobWaitThresholdSeconds
 )
 
 $ErrorActionPreference = "Stop"
@@ -11,6 +10,7 @@ $ErrorActionPreference = "Stop"
 az login --identity
 
 $queuedTasks = 0
+$workerIdleDeleteSeconds = 900
 
 if ($renderManager -like "*Qube*") {
   $qbDelimiter = ";"
@@ -19,9 +19,12 @@ if ($renderManager -like "*Qube*") {
     if (!$pendingJob.StartsWith("total") -and !$pendingJob.StartsWith("id")) {
       $jobReason = $pendingJob.Split($qbDelimiter)[1]
       if ($jobReason -eq "no available hosts to run job.") {
-        $jobTimeSubmit = $pendingJob.Split($qbDelimiter)[2]
-        Write-Host $jobTimeSubmit
-        $queuedTasks++
+        $jobTimeSubmitStart = $pendingJob.Split($qbDelimiter)[2]
+        $jobTimeSubmitEnd = Get-Date -UFormat %s
+        $jobWaitSeconds = $jobTimeSubmitEnd - $jobTimeSubmitStart
+        if ($jobWaitSeconds -gt $jobWaitThresholdSeconds) {
+          $queuedTasks++
+        }
       }
     }
   }
@@ -51,6 +54,14 @@ if ($queuedTasks -gt 0) { # Scale Up
   az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $nodeCount
 } else { # Scale Down
   if ($renderManager -like "*Qube*") {
+    $qbDelimiter = ";"
+    $activeHosts = qbhosts --active --delimit $qbDelimiter
+    foreach ($activeHost in $activeHosts) {
+      if (!$activeHost.StartsWith("total") -and !$activeHost.StartsWith("name")) {
+        $hostName = $activeHost.Split($qbDelimiter)[0]
+        $hostInfo = qbhosts --long $hostName
+      }
+    }
   }
   if ($renderManager -like "*Deadline*") {
     $workerNames = deadlinecommand -GetSlaveNames

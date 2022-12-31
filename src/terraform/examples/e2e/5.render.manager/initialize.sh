@@ -27,7 +27,6 @@ echo "Environment=renderManager=${renderManager}" >> $servicePath
 echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
 echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
 echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $servicePath
-echo "Environment=workerIdleDeleteSeconds=${autoScale.workerIdleDeleteSeconds}" >> $servicePath
 echo "ExecStart=/bin/bash $customDataOutputFile" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/computeAutoScaler.timer"

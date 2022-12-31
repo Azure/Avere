@@ -84,9 +84,8 @@ variable "virtualMachines" {
                   fileName                 = string
                   scaleSetName             = string
                   resourceGroupName        = string
-                  detectionIntervalSeconds = number
                   jobWaitThresholdSeconds  = number
-                  workerIdleDeleteSeconds  = number
+                  detectionIntervalSeconds = number
                 }
               )
               cycleCloud = object(
