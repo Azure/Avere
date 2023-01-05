@@ -274,7 +274,7 @@
     "useExtension": true,
     "storageAccountType": "Standard_LRS",
     "storageAccountKind": "StorageV2",
-    "environmentVariables": "[concat(' SUBSCRIPTION_ID=', subscription().subscriptionId,' RESOURCE_GROUP=', resourceGroup().name, ' LOCATION=', variables('location'), ' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'), ' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'), ' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'), '\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'), ' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'), ' CACHE_SIZE=', variables('avereCacheSizeGB'), ' CLUSTER_NAME=', variables('avereClusterName'), ' INSTANCE_TYPE=', variables('avereInstanceType'), ' CONTROLLER_ADMIN_USER_NAME=', variables('controllerAdminUsername'),' ENABLE_CLOUD_TRACE_DEBUG=', variables('enableCloudTraceDebugging'),' BUILD_CONTROLLER=', variables('buildController'), ' DEBUG=\"', variables('additionalVFXTParameters'), '\" ', if(greater(length(parameters('nodeImageId')), 0), concat(' IMAGE_ID_VALUE=\"', parameters('nodeImageId'), '\"'), ''))]",
+    "environmentVariables": "[concat(' SUBSCRIPTION_ID=', subscription().subscriptionId,' RESOURCE_GROUP=', resourceGroup().name, ' LOCATION=', variables('location'), ' NETWORK_RESOURCE_GROUP=', variables('virtualNetworkResourceGroup'), ' NETWORK=', variables('virtualNetworkName'),' SUBNET=', variables('virtualNetworkSubnetName'), ' AVERE_CLUSTER_ROLE=\"', variables('avereClusterRole'), '\" CREATE_CLOUD_BACKED_CLUSTER=', variables('useAvereBackedStorageAccount'), ' STORAGE_ACCOUNT=', variables('avereBackedStorageAccountName'), ' CACHE_SIZE=', variables('avereCacheSizeGB'), ' CLUSTER_NAME=', variables('avereClusterName'), ' INSTANCE_TYPE=', variables('avereInstanceType'), ' CONTROLLER_ADMIN_USER_NAME=', variables('controllerAdminUsername'),' ENABLE_CLOUD_TRACE_DEBUG=', variables('enableCloudTraceDebugging'),' DEBUG=\"', variables('additionalVFXTParameters'), '\" ', if(greater(length(parameters('nodeImageId')), 0), concat(' IMAGE_ID_VALUE=\"', parameters('nodeImageId'), '\"'), ''))]",
     "sshKeyPath": "[concat('/home/',variables('controllerAdminUsername'),'/.ssh/authorized_keys')]",
     "controllerOSProfilePassword": {
       "computerName": "[variables('vmName')]",
@@ -319,14 +319,7 @@
     "controllerStorageProfile": {
       "imageReference": "[if(greater(length(parameters('controllerImageReferenceId')), 0), variables('controllerSupportImageReference'), variables('controllerMarketplaceImageReference'))]"
     },
-    "controllerStorageProfilePlan": {
-      "name": "avere-vfxt-controller",
-      "publisher": "microsoft-avere",
-      "product": "[parameters('controllerMarketplaceOffer')]"
-    },
-    "buildController": false,
-    "plan": "[if(or(variables('buildController'), greater(length(parameters('controllerImageReferenceId')), 0)), json('null'), variables('controllerStorageProfilePlan'))]",
-    "storageProfile": "[if(variables('buildController'),variables('ubuntuStorageProfile'),variables('controllerStorageProfile'))]",
+    "storageProfile": "[variables('controllerStorageProfile')]",
     "vsip": "VSERVER_IPS=",
     "mip": "MGMT_IP="
   },
@@ -475,7 +468,6 @@
       },
       "name": "[variables('vmName')]",
       "location": "[variables('location')]",
-      "plan": "[variables('plan')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],

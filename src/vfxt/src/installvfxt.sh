@@ -178,34 +178,6 @@ function apt_get_install() {
     echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
 }
 
-function config_linux() {
-    export DEBIAN_FRONTEND=noninteractive
-    apt_get_update
-    apt_get_install 20 10 180 curl dirmngr python3-pip nfs-common build-essential python-dev python-setuptools
-
-    # install azure-cli outside of python_requirements.txt b/c there's a mismatch between the required 'azure-mgmt-authorization'
-    # (0.61.0) for azure-cli==2.43.0 and the required version for vfxt.py (3.0.0);
-    # just install azure-cli with vfxt once this github issue is resolved: https://github.com/Azure/azure-cli/issues/23372
-
-    retrycmd_if_failure 12 5 pip install --upgrade pip azure-cli==2.43.0
-    retrycmd_if_failure 12 5 pip install --requirement /opt/avere/python_requirements.txt
-}
-
-function install_vfxt() {
-    # install directly from the repo
-    retrycmd_if_failure 12 5 pip install --no-deps git+https://github.com/Azure/AvereSDK.git
-}
-
-function install_vfxt_py_docs() {
-    pushd / &>/dev/null
-    curl --retry 5 --retry-delay 5 -o vfxtdistdoc.tgz https://averedistribution.blob.core.windows.net/public/vfxtdistdoc.tgz &>/dev/null || true
-    if [ -f vfxtdistdoc.tgz ]; then
-            tar --no-same-owner -xf vfxtdistdoc.tgz
-            rm -f vfxtdistdoc.tgz
-    fi
-    popd &>/dev/null
-}
-
 function main() {
     # ensure waagent upgrade does not interrupt this CSE
     retrycmd_if_failure 240 5 apt-mark hold walinuxagent
@@ -215,17 +187,6 @@ function main() {
 
     echo "wait azure home dir"
     wait_azure_home_dir
-
-    if [ "$BUILD_CONTROLLER" == "$ARM_TRUE" ]; then
-        echo "configure linux"
-        config_linux
-
-        echo "install_vfxt_py"
-        install_vfxt
-
-        echo "install_vfxt_docs"
-        install_vfxt_py_docs
-    fi
 
     echo "wait az login"
     wait_az_login_and_vnet
