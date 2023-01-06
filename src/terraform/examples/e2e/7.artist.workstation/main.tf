@@ -105,49 +105,33 @@ variable "managedIdentity" {
   )
 }
 
-variable "keyVault" {
-  type = object(
-    {
-      name                 = string
-      resourceGroupName    = string
-      keyNameAdminUsername = string
-      keyNameAdminPassword = string
-    }
-  )
-}
-
-variable "monitorWorkspace" {
-  type = object(
-    {
-      name              = string
-      resourceGroupName = string
-    }
-  )
-}
-
 data "azurerm_user_assigned_identity" "render" {
   name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
   resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
-  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
-  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
+  count               = module.global.keyVault.name != "" ? 1 : 0
+  name                = module.global.keyVault.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminUsername
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminPassword
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  name                = var.monitorWorkspace.name != "" ? var.monitorWorkspace.name : module.global.monitorWorkspace.name
-  resource_group_name = var.monitorWorkspace.resourceGroupName != "" ? var.monitorWorkspace.resourceGroupName : module.global.resourceGroupName
+  count               = module.global.monitorWorkspace.name != "" ? 1 : 0
+  name                = module.global.monitorWorkspace.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "terraform_remote_state" "network" {
@@ -214,8 +198,8 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   location                        = azurerm_resource_group.workstation.location
   source_image_id                 = each.value.imageId
   size                            = each.value.machineSize
-  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
-  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -267,7 +251,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitorWorkspace.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -276,10 +260,10 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
+    "workspaceId": data.azurerm_log_analytics_workspace.monitor[0].workspace_id
   })
   protected_settings = jsonencode({
-    "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+    "workspaceKey": data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
   })
   depends_on = [
     azurerm_linux_virtual_machine.workstation
@@ -295,8 +279,8 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   location            = azurerm_resource_group.workstation.location
   source_image_id     = each.value.imageId
   size                = each.value.machineSize
-  admin_username      = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
-  admin_password      = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
+  admin_username      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
@@ -340,7 +324,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitorWorkspace.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"
@@ -349,10 +333,10 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
+    "workspaceId": data.azurerm_log_analytics_workspace.monitor[0].workspace_id
   })
   protected_settings = jsonencode({
-    "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+    "workspaceKey": data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
   })
   depends_on = [
     azurerm_windows_virtual_machine.workstation

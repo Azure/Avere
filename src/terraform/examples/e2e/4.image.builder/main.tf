@@ -101,35 +101,9 @@ variable "managedIdentity" {
   )
 }
 
-variable "keyVault" {
-  type = object(
-    {
-      name                   = string
-      resourceGroupName      = string
-      keyNameAdminUsername   = string
-      keyNameAdminPassword   = string
-    }
-  )
-}
-
 data "azurerm_user_assigned_identity" "render" {
   name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
   resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
-}
-
-data "azurerm_key_vault" "render" {
-  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
-  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
-}
-
-data "azurerm_key_vault_secret" "admin_username" {
-  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render.id
-}
-
-data "azurerm_key_vault_secret" "admin_password" {
-  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render.id
 }
 
 data "terraform_remote_state" "network" {
@@ -272,12 +246,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     "imageTemplates" = {
       value = var.imageTemplates
     }
-    "keyVaultSecretAdminUsername" = {
-      value = data.azurerm_key_vault_secret.admin_username.value
-    }
-    "keyVaultSecretAdminPassword" = {
-      value = data.azurerm_key_vault_secret.admin_password.value
-    }
   })
   template_content = <<TEMPLATE
     {
@@ -298,12 +266,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         },
         "imageTemplates": {
           "type": "array"
-        },
-        "keyVaultSecretAdminUsername": {
-          "type": "string"
-        },
-        "keyVaultSecretAdminPassword": {
-          "type": "string"
         }
       },
       "variables": {
@@ -322,14 +284,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 },
                 {
                   "name": "renderManager",
-                  "type": "string"
-                },
-                {
-                  "name": "adminUsername",
-                  "type": "string"
-                },
-                {
-                  "name": "adminPassword",
                   "type": "string"
                 }
               ],
@@ -355,7 +309,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')), createObject('adminUsername', parameters('adminUsername')), createObject('adminPassword', parameters('adminPassword')))))))]"
+                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')))))))]"
                     ]
                   }
                 ]
@@ -435,7 +389,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('renderManager'), parameters('keyVaultSecretAdminUsername'), parameters('keyVaultSecretAdminPassword')))]",
+            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('renderManager')))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

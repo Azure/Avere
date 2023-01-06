@@ -45,6 +45,34 @@ if [ ${autoScale.enable} == true ]; then
 fi
 
 if [ ${cycleCloud.enable} == true ]; then
+  cycleCloudInitFile="cycle_initialize.json"
+  echo "[" > $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"cycleserver.installation.initial_user\"," >> $cycleCloudInitFile
+  echo "\"Value\": \"${adminUsername}\"" >> $cycleCloudInitFile
+  echo "}," >> $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"distribution_method\"," >> $cycleCloudInitFile
+  echo "\"Category\": \"system\"," >> $cycleCloudInitFile
+  echo "\"Status\": \"internal\"," >> $cycleCloudInitFile
+  echo "\"Value\": \"manual\"" >> $cycleCloudInitFile
+  echo "}," >> $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"cycleserver.installation.complete\"," >> $cycleCloudInitFile
+  echo "\"Value\": true" >> $cycleCloudInitFile
+  echo "}," >> $cycleCloudInitFile
+  echo "{" >> $cycleCloudInitFile
+  echo "\"AdType\": \"AuthenticatedUser\"," >> $cycleCloudInitFile
+  echo "\"Name\": \"${adminUsername}\"," >> $cycleCloudInitFile
+  echo "\"RawPassword\": \"${adminPassword}\"," >> $cycleCloudInitFile
+  echo "\"Superuser\": true" >> $cycleCloudInitFile
+  echo "}" >> $cycleCloudInitFile
+  echo "]" >> $cycleCloudInitFile
+  mv $cycleCloudInitFile /opt/cycle_server/config/data/
+
   az login --identity
   imageList="{"
   imageDefinitions=$(az sig image-definition list --resource-group ${imageResourceGroupName} --gallery-name ${imageGalleryName})

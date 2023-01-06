@@ -128,6 +128,7 @@ resource "azurerm_user_assigned_identity" "render" {
 ############################################################################
 
 resource "azurerm_key_vault" "render" {
+  count                           = module.global.keyVault.name != "" ? 1 : 0
   name                            = module.global.keyVault.name
   resource_group_name             = azurerm_resource_group.render.name
   location                        = azurerm_resource_group.render.location
@@ -150,30 +151,30 @@ resource "azurerm_key_vault" "render" {
 
 resource "azurerm_key_vault_secret" "secrets" {
   for_each = {
-    for secret in var.keyVault.secrets : secret.name => secret
+    for secret in var.keyVault.secrets : secret.name => secret if module.global.keyVault.name != ""
   }
   name         = each.value.name
   value        = each.value.value
-  key_vault_id = azurerm_key_vault.render.id
+  key_vault_id = azurerm_key_vault.render[0].id
 }
 
 resource "azurerm_key_vault_key" "keys" {
   for_each = {
-    for key in var.keyVault.keys : key.name => key
+    for key in var.keyVault.keys : key.name => key if module.global.keyVault.name != ""
   }
   name         = each.value.name
   key_type     = each.value.type
   key_size     = each.value.size
   key_opts     = each.value.operations
-  key_vault_id = azurerm_key_vault.render.id
+  key_vault_id = azurerm_key_vault.render[0].id
 }
 
 resource "azurerm_key_vault_certificate" "certificates" {
   for_each = {
-    for certificate in var.keyVault.certificates : certificate.name => certificate
+    for certificate in var.keyVault.certificates : certificate.name => certificate if module.global.keyVault.name != ""
   }
   name         = each.value.name
-  key_vault_id = azurerm_key_vault.render.id
+  key_vault_id = azurerm_key_vault.render[0].id
   certificate_policy {
     x509_certificate_properties {
       subject            = each.value.subject
@@ -235,6 +236,7 @@ resource "azurerm_storage_container" "container" {
 ######################################################################
 
 resource "azurerm_log_analytics_workspace" "monitor" {
+  count                      = module.global.monitorWorkspace.name != "" ? 1 : 0
   name                       = module.global.monitorWorkspace.name
   resource_group_name        = azurerm_resource_group.render.name
   location                   = azurerm_resource_group.render.location

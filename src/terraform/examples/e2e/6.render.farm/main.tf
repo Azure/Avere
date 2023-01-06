@@ -160,49 +160,33 @@ variable "managedIdentity" {
   )
 }
 
-variable "keyVault" {
-  type = object(
-    {
-      name                 = string
-      resourceGroupName    = string
-      keyNameAdminUsername = string
-      keyNameAdminPassword = string
-    }
-  )
-}
-
-variable "monitorWorkspace" {
-  type = object(
-    {
-      name              = string
-      resourceGroupName = string
-    }
-  )
-}
-
 data "azurerm_user_assigned_identity" "render" {
   name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
   resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
-  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
-  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
+  count               = module.global.keyVault.name != "" ? 1 : 0
+  name                = module.global.keyVault.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminUsername
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminPassword
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  name                = var.monitorWorkspace.name != "" ? var.monitorWorkspace.name : module.global.monitorWorkspace.name
-  resource_group_name = var.monitorWorkspace.resourceGroupName != "" ? var.monitorWorkspace.resourceGroupName : module.global.resourceGroupName
+  count               = module.global.monitorWorkspace.name != "" ? 1 : 0
+  name                = module.global.monitorWorkspace.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "terraform_remote_state" "network" {
@@ -260,8 +244,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   source_image_id                 = each.value.imageId
   sku                             = each.value.machine.size
   instances                       = each.value.machine.count
-  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
-  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   priority                        = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
@@ -322,7 +306,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic extension {
-    for_each = each.value.monitorExtension.enable ? [1] : []
+    for_each = each.value.monitorExtension.enable && module.global.monitorWorkspace.name != "" ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorLinuxAgent"
@@ -330,10 +314,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.21"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
+        "workspaceId": data.azurerm_log_analytics_workspace.monitor[0].workspace_id
       })
       protected_settings = jsonencode({
-        "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+        "workspaceKey": data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
       })
     }
   }
@@ -356,8 +340,8 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   source_image_id        = each.value.imageId
   sku                    = each.value.machine.size
   instances              = each.value.machine.count
-  admin_username         = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
-  admin_password         = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
+  admin_username         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   priority               = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
   max_bid_price          = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
@@ -410,7 +394,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic extension {
-    for_each = each.value.monitorExtension.enable ? [1] : []
+    for_each = each.value.monitorExtension.enable && module.global.monitorWorkspace.name != "" ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorWindowsAgent"
@@ -418,10 +402,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.7"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        "workspaceId": data.azurerm_log_analytics_workspace.monitor.workspace_id
+        "workspaceId": data.azurerm_log_analytics_workspace.monitor[0].workspace_id
       })
       protected_settings = jsonencode({
-        "workspaceKey": data.azurerm_log_analytics_workspace.monitor.primary_shared_key
+        "workspaceKey": data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
       })
     }
   }
@@ -438,43 +422,43 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
 # Kubernetes (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
 #######################################################################
 
-resource "azurerm_private_dns_zone" "farm" {
-  count               = var.kubernetes.fleet.name != "" ? 1 : 0
-  name                = "privatelink.${lower(module.global.regionName)}.azmk8s.io"
-  resource_group_name = azurerm_resource_group.farm.name
-}
+# resource "azurerm_private_dns_zone" "farm" {
+#   count               = var.kubernetes.fleet.name != "" ? 1 : 0
+#   name                = "privatelink.${lower(module.global.regionName)}.azmk8s.io"
+#   resource_group_name = azurerm_resource_group.farm.name
+# }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "farm" {
-  count                 = var.kubernetes.fleet.name != "" ? 1 : 0
-  name                  = "${data.azurerm_virtual_network.compute.name}.farm"
-  resource_group_name   = azurerm_resource_group.farm.name
-  private_dns_zone_name = azurerm_private_dns_zone.farm[0].name
-  virtual_network_id    = data.azurerm_virtual_network.compute.id
-}
+# resource "azurerm_private_dns_zone_virtual_network_link" "farm" {
+#   count                 = var.kubernetes.fleet.name != "" ? 1 : 0
+#   name                  = "${data.azurerm_virtual_network.compute.name}.farm"
+#   resource_group_name   = azurerm_resource_group.farm.name
+#   private_dns_zone_name = azurerm_private_dns_zone.farm[0].name
+#   virtual_network_id    = data.azurerm_virtual_network.compute.id
+# }
 
-resource "azurerm_private_endpoint" "farm" {
-  for_each = {
-    for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if var.kubernetes.fleet.name != ""
-  }
-  name                = "aks.${each.value.name}"
-  resource_group_name = azurerm_resource_group.farm.name
-  location            = azurerm_resource_group.farm.location
-  subnet_id           = data.azurerm_subnet.farm.id
-  private_service_connection {
-    name                           = each.value.name
-    private_connection_resource_id = "${azurerm_resource_group.farm.id}/providers/Microsoft.ContainerService/managedClusters/${each.value.name}"
-    is_manual_connection           = false
-    subresource_names = [
-      "management"
-    ]
-  }
-  private_dns_zone_group {
-    name = each.value.name
-    private_dns_zone_ids = [
-      azurerm_private_dns_zone.farm[0].id
-    ]
-  }
-}
+# resource "azurerm_private_endpoint" "farm" {
+#   for_each = {
+#     for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if var.kubernetes.fleet.name != ""
+#   }
+#   name                = "aks.${each.value.name}"
+#   resource_group_name = azurerm_resource_group.farm.name
+#   location            = azurerm_resource_group.farm.location
+#   subnet_id           = data.azurerm_subnet.farm.id
+#   private_service_connection {
+#     name                           = each.value.name
+#     private_connection_resource_id = "${azurerm_resource_group.farm.id}/providers/Microsoft.ContainerService/managedClusters/${each.value.name}"
+#     is_manual_connection           = false
+#     subresource_names = [
+#       "management"
+#     ]
+#   }
+#   private_dns_zone_group {
+#     name = each.value.name
+#     private_dns_zone_ids = [
+#       azurerm_private_dns_zone.farm[0].id
+#     ]
+#   }
+# }
 
 resource "azurerm_kubernetes_fleet_manager" "farm" {
   count               = var.kubernetes.fleet.name != "" ? 1 : 0
@@ -482,7 +466,7 @@ resource "azurerm_kubernetes_fleet_manager" "farm" {
   resource_group_name = azurerm_resource_group.farm.name
   location            = azurerm_resource_group.farm.location
   hub_profile {
-    dns_prefix = var.kubernetes.fleet.dnsPrefix
+    dns_prefix = var.kubernetes.fleet.dnsPrefix == "" ? var.kubernetes.fleet.name : var.kubernetes.fleet.dnsPrefix
   }
 }
 
@@ -516,4 +500,8 @@ output "resourceGroupName" {
 
 output "virtualMachineScaleSets" {
   value = var.virtualMachineScaleSets
+}
+
+output "kubernetes" {
+  value = var.kubernetes
 }

@@ -20,8 +20,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -61,8 +61,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -100,18 +100,6 @@ computeNetwork = {
 }
 
 managedIdentity = {
-  name              = ""
-  resourceGroupName = ""
-}
-
-keyVault = {
-  name                 = ""
-  resourceGroupName    = ""
-  keyNameAdminUsername = ""
-  keyNameAdminPassword = ""
-}
-
-monitorWorkspace = {
   name              = ""
   resourceGroupName = ""
 }

@@ -27,8 +27,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -89,8 +89,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -151,8 +151,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -213,8 +213,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -282,7 +282,7 @@ kubernetes = {
       defaultPool = {
         name = "default"
         machine = {
-          size  = "Standard_HB120rs_v2"
+          size  = "Standard_NV36ads_A10_v5"
           count = 2
         }
       }
@@ -301,18 +301,6 @@ computeNetwork = {
 }
 
 managedIdentity = {
-  name              = ""
-  resourceGroupName = ""
-}
-
-keyVault = {
-  name                 = ""
-  resourceGroupName    = ""
-  keyNameAdminUsername = ""
-  keyNameAdminPassword = ""
-}
-
-monitorWorkspace = {
   name              = ""
   resourceGroupName = ""
 }

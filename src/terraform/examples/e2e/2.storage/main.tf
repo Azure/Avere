@@ -239,26 +239,6 @@ variable "managedIdentity" {
   )
 }
 
-variable "keyVault" {
-  type = object(
-    {
-      name                 = string
-      resourceGroupName    = string
-      keyNameAdminUsername = string
-      keyNameAdminPassword = string
-    }
-  )
-}
-
-variable "monitorWorkspace" {
-  type = object(
-    {
-      name              = string
-      resourceGroupName = string
-    }
-  )
-}
-
 data "http" "client_address" {
   url = "https://api.ipify.org?format=json"
 }
@@ -269,23 +249,27 @@ data "azurerm_user_assigned_identity" "render" {
 }
 
 data "azurerm_key_vault" "render" {
-  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
-  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
+  count               = module.global.keyVault.name != "" ? 1 : 0
+  name                = module.global.keyVault.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminUsername
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminPassword
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  name                = var.monitorWorkspace.name != "" ? var.monitorWorkspace.name : module.global.monitorWorkspace.name
-  resource_group_name = var.monitorWorkspace.resourceGroupName != "" ? var.monitorWorkspace.resourceGroupName : module.global.resourceGroupName
+  count               = module.global.monitorWorkspace.name != "" ? 1 : 0
+  name                = module.global.monitorWorkspace.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "terraform_remote_state" "network" {
@@ -676,8 +660,8 @@ resource "azurerm_linux_virtual_machine" "storage_metadata" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
-  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   availability_set_id             = azurerm_availability_set.storage_metadata[0].id
   proximity_placement_group_id    = var.hammerspace.enableProximityPlacement ? azurerm_proximity_placement_group.storage[0].id : null
@@ -724,8 +708,8 @@ resource "azurerm_linux_virtual_machine" "storage_data" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = each.value.adminLogin.userName != "" ? each.value.adminLogin.userName : data.azurerm_key_vault_secret.admin_username.value
-  admin_password                  = each.value.adminLogin.userPassword != "" ? each.value.adminLogin.userPassword : data.azurerm_key_vault_secret.admin_password.value
+  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   availability_set_id             = azurerm_availability_set.storage_data[0].id
   proximity_placement_group_id    = var.hammerspace.enableProximityPlacement ? azurerm_proximity_placement_group.storage[0].id : null
@@ -801,7 +785,7 @@ resource "azurerm_virtual_machine_extension" "storage" {
     "script": "${base64encode(
       templatefile("initialize.sh", merge(
         { machineSize   = each.value.machine.size },
-        { adminPassword = data.azurerm_key_vault_secret.admin_password.value }
+        { adminPassword = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword }
       ))
     )}"
   })
@@ -862,71 +846,6 @@ resource "azurerm_lb_probe" "storage" {
   loadbalancer_id = azurerm_lb.storage[0].id
   protocol        = "Tcp"
   port            = 4505
-}
-
-resource "azurerm_resource_group_template_deployment" "admin" {
-  count               = var.hammerspace.namePrefix != "" ? 1 : 0
-  name                = "admin"
-  resource_group_name = azurerm_resource_group.hammerspace[0].name
-  deployment_mode     = "Incremental"
-  parameters_content  = jsonencode({
-    "namePrefix" = {
-      value = var.hammerspace.namePrefix
-    },
-    "adminPassword" = {
-      value = data.azurerm_key_vault_secret.admin_password.value
-    }
-  })
-  template_content = <<TEMPLATE
-    {
-      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-      "contentVersion": "1.0.0.0",
-      "parameters": {
-        "namePrefix": {
-          "type": "string"
-        },
-        "adminPassword": {
-          "type": "string"
-        }
-      },
-      "variables": {
-        "prefix": "[hsfunc.normalize(parameters('namePrefix'))]",
-        "adminUsername": "[concat('user', uniqueString(variables('prefix')))]",
-        "adminPassword": "[concat(uniqueString(variables('prefix')), 'Hh7!')]"
-      },
-      "functions": [
-        {
-          "namespace": "hsfunc",
-          "members": {
-            "normalize": {
-              "parameters": [
-                {
-                  "name": "ins",
-                  "type": "String"
-                }
-              ],
-              "output": {
-                "type": "String",
-                "value": "[replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(parameters('ins'), '!', ''), '@', ''), '#', ''), '$', ''), '%', ''), '^', ''), '&', ''), '*', ''), '(', ''), ')', ''), '_', ''), '+', ''), '=', ''), ':', ''), ';', ''), '?', ''), '/', ''), '.', ''), '>', ''), ',', ''), '<', '')]"
-              }
-            }
-          }
-        }
-      ],
-      "resources": [
-      ],
-      "outputs": {
-        "adminUsername": {
-          "type": "string",
-          "value": "[variables('adminUserName')]"
-        },
-        "adminPassword": {
-          "type": "string",
-          "value": "[variables('adminPassword')]"
-        }
-      }
-    }
-  TEMPLATE
 }
 
 ####################################################################################################

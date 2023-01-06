@@ -186,6 +186,7 @@ vpnGateway = {
   sku                = "VpnGw2"
   type               = "RouteBased"
   generation         = "Generation2"
+  sharedKey          = "GatewayConnection"
   enableBgp          = false
   enableActiveActive = false
   pointToSiteClient = {

@@ -136,6 +136,7 @@ variable "vpnGateway" {
       sku                = string
       type               = string
       generation         = string
+      sharedKey          = string
       enableBgp          = bool
       enableActiveActive = bool
       pointToSiteClient = object(
@@ -191,13 +192,15 @@ variable "monitor" {
 }
 
 data "azurerm_key_vault" "render" {
+  count               = module.global.keyVault.name != "" ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "gateway_connection" {
+  count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.gatewayConnection
-  key_vault_id = data.azurerm_key_vault.render.id
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_storage_account" "render" {
@@ -206,7 +209,7 @@ data "azurerm_storage_account" "render" {
 }
 
 data "azurerm_log_analytics_workspace" "render" {
-  count               = var.monitor.enablePrivateLink ? 1 : 0
+  count               = module.global.monitorWorkspace.name != "" && var.monitor.enablePrivateLink ? 1 : 0
   name                = module.global.monitorWorkspace.name
   resource_group_name = module.global.resourceGroupName
 }
@@ -544,20 +547,21 @@ resource "azurerm_private_dns_zone_virtual_network_link" "storage_file" {
 }
 
 resource "azurerm_private_endpoint" "key_vault" {
-  name                = "${data.azurerm_key_vault.render.name}.vault"
+  count               = module.global.keyVault.name != "" ? 1 : 0
+  name                = "${data.azurerm_key_vault.render[0].name}.vault"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
   subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.key_vault.virtual_network_id}/subnets/${local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage].name}"
   private_service_connection {
-    name                           = data.azurerm_key_vault.render.name
-    private_connection_resource_id = data.azurerm_key_vault.render.id
+    name                           = data.azurerm_key_vault.render[0].name
+    private_connection_resource_id = data.azurerm_key_vault.render[0].id
     is_manual_connection           = false
     subresource_names = [
       "vault"
     ]
   }
   private_dns_zone_group {
-    name = data.azurerm_key_vault.render.name
+    name = data.azurerm_key_vault.render[0].name
     private_dns_zone_ids = [
       azurerm_private_dns_zone.key_vault.id
     ]
@@ -940,7 +944,7 @@ resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_up" {
   type                            = "Vnet2Vnet"
   virtual_network_gateway_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index].name}"
   peer_virtual_network_gateway_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index + 1].name}"
-  shared_key                      = data.azurerm_key_vault_secret.gateway_connection.value
+  shared_key                      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
   depends_on = [
     azurerm_virtual_network_gateway.vpn
   ]
@@ -954,7 +958,7 @@ resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_down" {
   type                            = "Vnet2Vnet"
   virtual_network_gateway_id      = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index + 1].name}"
   peer_virtual_network_gateway_id = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index].name}"
-  shared_key                      = data.azurerm_key_vault_secret.gateway_connection.value
+  shared_key                      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
   depends_on = [
     azurerm_virtual_network_gateway.vpn
   ]
@@ -990,7 +994,7 @@ resource "azurerm_virtual_network_gateway_connection" "site_to_site" {
   type                       = "IPsec"
   virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[count.index].id
   local_network_gateway_id   = azurerm_local_network_gateway.vpn[count.index].id
-  shared_key                 = data.azurerm_key_vault_secret.gateway_connection.value
+  shared_key                 = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
   enable_bgp                 = var.vpnGatewayLocal.bgp.enable
 }
 

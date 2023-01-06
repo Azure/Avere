@@ -25,7 +25,7 @@ hpcCache = {
     searchDomain = ""
   }
   encryption = {
-    enable    = false
+    keyName   = ""
     rotateKey = false
   }
 }
@@ -38,8 +38,8 @@ vfxtCache = {
   cluster = {
     nodeSize      = 1024 # Set to either 1024 GB (1 TB) or 4096 GB (4 TB) nodes
     nodeCount     = 3    # Set to a minimum of 3 nodes up to a maximum of 16 nodes
-    adminUsername = ""
-    adminPassword = ""
+    adminUsername = "azadmin"
+    adminPassword = "P@ssword1234"
     sshPublicKey  = ""
     imageId       = ""
     customSettings = [
@@ -112,12 +112,4 @@ computeNetwork = {
 managedIdentity = {
   name              = ""
   resourceGroupName = ""
-}
-
-keyVault = {
-  name                   = ""
-  resourceGroupName      = ""
-  keyNameAdminUsername   = ""
-  keyNameAdminPassword   = ""
-  keyNameCacheEncryption = ""
 }

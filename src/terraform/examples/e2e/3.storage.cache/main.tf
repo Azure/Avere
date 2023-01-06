@@ -55,7 +55,7 @@ variable "hpcCache" {
       )
       encryption = object(
         {
-          enable    = bool
+          keyName   = string
           rotateKey = bool
         }
       )
@@ -161,18 +161,6 @@ variable "managedIdentity" {
   )
 }
 
-variable "keyVault" {
-  type = object(
-    {
-      name                   = string
-      resourceGroupName      = string
-      keyNameAdminUsername   = string
-      keyNameAdminPassword   = string
-      keyNameCacheEncryption = string
-    }
-  )
-}
-
 data "azurerm_client_config" "provider" {}
 
 data "azurerm_user_assigned_identity" "render" {
@@ -181,23 +169,27 @@ data "azurerm_user_assigned_identity" "render" {
 }
 
 data "azurerm_key_vault" "render" {
-  name                = var.keyVault.name != "" ? var.keyVault.name : module.global.keyVault.name
-  resource_group_name = var.keyVault.resourceGroupName != "" ? var.keyVault.resourceGroupName : module.global.resourceGroupName
+  count               = module.global.keyVault.name != "" ? 1 : 0
+  name                = module.global.keyVault.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  name         = var.keyVault.keyNameAdminUsername != "" ? var.keyVault.keyNameAdminUsername : module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminUsername
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  name         = var.keyVault.keyNameAdminPassword != "" ? var.keyVault.keyNameAdminPassword : module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminPassword
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "azurerm_key_vault_key" "cache_encryption" {
-  name         = var.keyVault.keyNameCacheEncryption != "" ? var.keyVault.keyNameCacheEncryption : module.global.keyVault.keyName.cacheEncryption
-  key_vault_id = data.azurerm_key_vault.render.id
+  count        = module.global.keyVault.name != "" && var.hpcCache.encryption.keyName != "" ? 1 : 0
+  name         = var.hpcCache.encryption.keyName != "" ? var.hpcCache.encryption.keyName : module.global.keyVault.keyName.cacheEncryption
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "terraform_remote_state" "network" {
@@ -299,8 +291,8 @@ resource "azurerm_hpc_cache" "cache" {
       ]
     }
   }
-  key_vault_key_id                           = var.hpcCache.encryption.enable ? data.azurerm_key_vault_key.cache_encryption.id : null
-  automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enable ? var.hpcCache.encryption.rotateKey : null
+  key_vault_key_id                           = var.hpcCache.encryption.keyName != "" ? data.azurerm_key_vault_key.cache_encryption[0].id : null
+  automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.keyName != "" ? var.hpcCache.encryption.rotateKey : null
   depends_on = [
     azurerm_role_assignment.storage_account,
     azurerm_role_assignment.storage_blob_data
@@ -379,8 +371,8 @@ module "vfxt_controller" {
   create_resource_group             = false
   resource_group_name               = var.resourceGroupName
   location                          = module.global.regionName
-  admin_username                    = var.vfxtCache.cluster.adminUsername != "" ? var.vfxtCache.cluster.adminUsername : data.azurerm_key_vault_secret.admin_username.value
-  admin_password                    = var.vfxtCache.cluster.adminPassword != "" ? var.vfxtCache.cluster.adminPassword : data.azurerm_key_vault_secret.admin_password.value
+  admin_username                    = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : var.vfxtCache.cluster.adminUsername
+  admin_password                    = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
   ssh_key_data                      = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   virtual_network_name              = data.azurerm_virtual_network.compute.name
   virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
@@ -409,8 +401,8 @@ resource "avere_vfxt" "cache" {
   azure_subnet_name               = data.azurerm_subnet.cache.name
   controller_address              = module.vfxt_controller[count.index].controller_address
   controller_admin_username       = module.vfxt_controller[count.index].controller_username
-  controller_admin_password       = data.azurerm_key_vault_secret.admin_password.value
-  vfxt_admin_password             = data.azurerm_key_vault_secret.admin_password.value
+  controller_admin_password       = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
+  vfxt_admin_password             = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
   vfxt_ssh_key_data               = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   support_uploads_company_name    = var.vfxtCache.support.companyName
   enable_support_uploads          = var.vfxtCache.support.enableLogUpload

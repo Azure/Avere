@@ -191,15 +191,3 @@ managedIdentity = {
   name              = ""
   resourceGroupName = ""
 }
-
-keyVault = {
-  name                 = ""
-  resourceGroupName    = ""
-  keyNameAdminUsername = ""
-  keyNameAdminPassword = ""
-}
-
-monitorWorkspace = {
-  name              = ""
-  resourceGroupName = ""
-}

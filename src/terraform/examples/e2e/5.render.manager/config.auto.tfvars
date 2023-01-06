@@ -20,8 +20,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -66,8 +66,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = ""
-      userPassword        = ""
+      userName            = "azadmin"
+      userPassword        = "P@ssword1234"
       sshPublicKey        = "" # "ssh-rsa ..."
       disablePasswordAuth = false
     }
@@ -126,18 +126,6 @@ computeGallery = { # Only applies if customExtension.cycleCloud.enable = true
 }
 
 managedIdentity = {
-  name              = ""
-  resourceGroupName = ""
-}
-
-keyVault = {
-  name                 = ""
-  resourceGroupName    = ""
-  keyNameAdminUsername = ""
-  keyNameAdminPassword = ""
-}
-
-monitorWorkspace = {
   name              = ""
   resourceGroupName = ""
 }

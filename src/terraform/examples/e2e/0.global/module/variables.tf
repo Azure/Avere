@@ -32,7 +32,7 @@ variable "managedIdentity" {
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview)
 variable "keyVault" {
   default = {
-    name = "azrender" # Set to a globally unique name (alphanumeric, hyphens)
+    name = "" # Set to a globally unique name (alphanumeric, hyphens)
     secretName = {
       gatewayConnection = "GatewayConnection"
       adminUsername     = "AdminUsername"
@@ -50,7 +50,7 @@ variable "keyVault" {
 # Monitor (https://learn.microsoft.com/azure/azure-monitor/overview)
 variable "monitorWorkspace" {
   default = {
-    name = "azrender"
+    name = ""
   }
 }
 

@@ -35,8 +35,6 @@ machineType=$(echo $buildConfig | jq -r .machineType)
 gpuPlatform=$(echo $buildConfig | jq -c .gpuPlatform)
 renderManager=$(echo $buildConfig | jq -r .renderManager)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
-adminUsername=$(echo $buildConfig | jq -r .adminUsername)
-adminPassword=$(echo $buildConfig | jq -r .adminPassword)
 echo "Machine Type: $machineType"
 echo "GPU Platform: $gpuPlatform"
 echo "Render Manager: $renderManager"
@@ -117,33 +115,6 @@ if [ $machineType == "Scheduler" ]; then
   unzip -q ./tools/cyclecloud-cli.zip
   ./cyclecloud-cli-installer/install.sh --installdir $cycleCloudPath
   cd $binDirectory
-  cycleCloudInitFile="cycle_initialize.json"
-  echo "[" > $cycleCloudInitFile
-  echo "{" >> $cycleCloudInitFile
-  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
-  echo "\"Name\": \"cycleserver.installation.initial_user\"," >> $cycleCloudInitFile
-  echo "\"Value\": \"$adminUsername\"" >> $cycleCloudInitFile
-  echo "}," >> $cycleCloudInitFile
-  echo "{" >> $cycleCloudInitFile
-  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
-  echo "\"Name\": \"distribution_method\"," >> $cycleCloudInitFile
-  echo "\"Category\": \"system\"," >> $cycleCloudInitFile
-  echo "\"Status\": \"internal\"," >> $cycleCloudInitFile
-  echo "\"Value\": \"manual\"" >> $cycleCloudInitFile
-  echo "}," >> $cycleCloudInitFile
-  echo "{" >> $cycleCloudInitFile
-  echo "\"AdType\": \"Application.Setting\"," >> $cycleCloudInitFile
-  echo "\"Name\": \"cycleserver.installation.complete\"," >> $cycleCloudInitFile
-  echo "\"Value\": true" >> $cycleCloudInitFile
-  echo "}," >> $cycleCloudInitFile
-  echo "{" >> $cycleCloudInitFile
-  echo "\"AdType\": \"AuthenticatedUser\"," >> $cycleCloudInitFile
-  echo "\"Name\": \"$adminUsername\"," >> $cycleCloudInitFile
-  echo "\"RawPassword\": \"$adminPassword\"," >> $cycleCloudInitFile
-  echo "\"Superuser\": true" >> $cycleCloudInitFile
-  echo "}" >> $cycleCloudInitFile
-  echo "]" >> $cycleCloudInitFile
-  mv $cycleCloudInitFile /opt/cycle_server/config/data/
   binPaths="$binPaths:$cycleCloudPath/bin"
   echo "Customize (End): CycleCloud"
 fi
