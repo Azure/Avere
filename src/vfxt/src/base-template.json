@@ -55,7 +55,7 @@
     },
     "controllerVMSize": {
       "type": "string",
-      "defaultValue": "Standard_A1_v2",
+      "defaultValue": "Standard_F2s_v2",
       "metadata": {
         "description": "Size of controller VM"
       }
