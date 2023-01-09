@@ -324,7 +324,6 @@
       "publisher": "microsoft-avere",
       "product": "[parameters('controllerMarketplaceOffer')]"
     },
-    "plan": "[if(greater(length(parameters('controllerImageReferenceId')), 0), json('null'), variables('controllerStorageProfilePlan'))]",
     "storageProfile": "[variables('ubuntuStorageProfile')]",
     "vsip": "VSERVER_IPS=",
     "mip": "MGMT_IP="
@@ -474,7 +473,6 @@
       },
       "name": "[variables('vmName')]",
       "location": "[variables('location')]",
-      "plan": "[variables('plan')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
