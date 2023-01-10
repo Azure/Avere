@@ -319,12 +319,7 @@
     "controllerStorageProfile": {
       "imageReference": "[if(greater(length(parameters('controllerImageReferenceId')), 0), variables('controllerSupportImageReference'), variables('controllerMarketplaceImageReference'))]"
     },
-    "controllerStorageProfilePlan": {
-      "name": "avere-vfxt-controller",
-      "publisher": "microsoft-avere",
-      "product": "[parameters('controllerMarketplaceOffer')]"
-    },
-    "storageProfile": "[variables('ubuntuStorageProfile')]",
+    "storageProfile": "[variables('controllerStorageProfile')]",
     "vsip": "VSERVER_IPS=",
     "mip": "MGMT_IP="
   },
