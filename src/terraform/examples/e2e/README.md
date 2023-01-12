@@ -37,7 +37,7 @@ For example, the following sample images were [rendered on Azure](https://user-i
 The following local installation prerequisites are required for the AAA solution deployment framework.<br>
 As an alternative deployment management approach option, sample [GitOps](#8-gitops) enablement is also provided.
 1. Make sure the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your PATH environment variable.
-1. Make sure the [Terraform CLI](https://learn.hashicorp.com/tutorials/terraform/install-cli) is installed locally and accessible in your PATH environment variable.
+1. Make sure the [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) is installed locally and accessible in your PATH environment variable.
 1. Download the AAA end-to-end (e2e) solution source files via the following GitHub download link.
    * https://downgit.github.io/#/home?url=https://github.com/Azure/Avere/tree/main/src/terraform/examples/e2e
    * Unzip the downloaded `e2e.zip` file to your user home directory (`~/`).<br>Note that all local source file references below are relative to `~/e2e/`
