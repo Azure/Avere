@@ -186,8 +186,3 @@ storageNetwork = {
     }
   ]
 }
-
-managedIdentity = {
-  name              = ""
-  resourceGroupName = ""
-}

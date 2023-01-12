@@ -137,20 +137,11 @@ variable "computeGallery" {
   )
 }
 
-variable "managedIdentity" {
-  type = object(
-    {
-      name              = string
-      resourceGroupName = string
-    }
-  )
-}
-
 data "azurerm_client_config" "provider" {}
 
 data "azurerm_user_assigned_identity" "render" {
-  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
-  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
+  name                = module.global.managedIdentity.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
@@ -214,8 +205,8 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
-  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
-  stateExistsImage       = try(length(data.terraform_remote_state.image.outputs) >= 0, false)
+  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsImage       = try(length(data.terraform_remote_state.image.outputs) > 0, false)
   imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : try(data.terraform_remote_state.image.outputs.imageGallery.name, "")
   imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : try(data.terraform_remote_state.image.outputs.resourceGroupName, "")
   imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"

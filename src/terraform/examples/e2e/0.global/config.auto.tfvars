@@ -1,10 +1,3 @@
-// ****************************************************************************************************************************************************
-// PREREQUISITE: Azure "Key Vault Administrator" Role-Based Access Control (RBAC) role is required for the current user BEFORE deploying this module. *
-//               https://learn.microsoft.com/azure/role-based-access-control/overview                                                                 *
-//               https://learn.microsoft.com/azure/role-based-access-control/role-assignments-portal                                                  *
-//               https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator                                   *
-// ****************************************************************************************************************************************************
-
 ############################################################################
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
 ############################################################################

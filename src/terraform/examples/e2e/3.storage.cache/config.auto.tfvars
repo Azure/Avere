@@ -100,16 +100,8 @@ storageTargetsNfsBlob = [
 #######################################################################
 
 computeNetwork = {
-  name              = ""
-  subnetName        = ""
-  resourceGroupName = ""
-  privateDns = {
-    zoneName               = ""
-    enableAutoRegistration = true
-  }
-}
-
-managedIdentity = {
-  name              = ""
-  resourceGroupName = ""
+  name               = ""
+  subnetName         = ""
+  resourceGroupName  = ""
+  privateDnsZoneName = ""
 }

@@ -45,11 +45,6 @@ As an alternative deployment management approach option, sample [GitOps](#8-gito
 
 ## 0 Global
 
-*Before deploying the Global module*, the following built-in [Azure Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview) role *is required for the current user*.<br>
-For Azure RBAC role assignment instructions, refer to either the Azure [portal](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-portal), [CLI](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-cli) or [PowerShell](https://learn.microsoft.com/azure/role-based-access-control/role-assignments-powershell) role assignment documents as needed.
-
-* *Key Vault Administartor* (https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator)
-
 ### Deployment Steps
 
 1. Run `cd ~/e2e/0.global` in a local shell (Bash or PowerShell)
@@ -59,7 +54,6 @@ For Azure RBAC role assignment instructions, refer to either the Azure [portal](
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
-1. Use the [Azure portal to update your Key Vault secret values](https://learn.microsoft.com/azure/key-vault/secrets/quick-create-portal) (`GatewayConnection`, `AdminUsername`, `AdminPassword`)
 
 ## 1 Network
 

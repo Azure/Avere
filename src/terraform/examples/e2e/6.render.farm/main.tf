@@ -151,18 +151,9 @@ variable "computeNetwork" {
   )
 }
 
-variable "managedIdentity" {
-  type = object(
-    {
-      name              = string
-      resourceGroupName = string
-    }
-  )
-}
-
 data "azurerm_user_assigned_identity" "render" {
-  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
-  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
+  name                = module.global.managedIdentity.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
@@ -226,7 +217,7 @@ data "azurerm_private_dns_zone" "render" {
 }
 
 locals {
-  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
 resource "azurerm_resource_group" "farm" {

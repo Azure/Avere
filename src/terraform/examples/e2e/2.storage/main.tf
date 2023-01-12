@@ -230,22 +230,13 @@ variable "storageNetwork" {
   )
 }
 
-variable "managedIdentity" {
-  type = object(
-    {
-      name              = string
-      resourceGroupName = string
-    }
-  )
-}
-
 data "http" "client_address" {
   url = "https://api.ipify.org?format=json"
 }
 
 data "azurerm_user_assigned_identity" "render" {
-  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
-  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
+  name                = module.global.managedIdentity.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
@@ -325,7 +316,7 @@ data "azurerm_subnet" "storage_netapp" {
 }
 
 locals {
-  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
+  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) > 0, false)
   serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [

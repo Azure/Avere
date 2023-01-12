@@ -124,8 +124,3 @@ computeGallery = { # Only applies if customExtension.cycleCloud.enable = true
   resourceGroupName     = ""
   imageVersionIdDefault = ""
 }
-
-managedIdentity = {
-  name              = ""
-  resourceGroupName = ""
-}

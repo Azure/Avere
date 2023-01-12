@@ -235,8 +235,3 @@ computeNetwork = {
   subnetName        = ""
   resourceGroupName = ""
 }
-
-managedIdentity = {
-  name              = ""
-  resourceGroupName = ""
-}

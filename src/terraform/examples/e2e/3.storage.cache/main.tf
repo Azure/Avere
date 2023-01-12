@@ -139,24 +139,10 @@ variable "storageTargetsNfsBlob" {
 variable "computeNetwork" {
   type = object(
     {
-      name              = string
-      subnetName        = string
-      resourceGroupName = string
-      privateDns = object(
-        {
-          zoneName               = string
-          enableAutoRegistration = bool
-        }
-      )
-    }
-  )
-}
-
-variable "managedIdentity" {
-  type = object(
-    {
-      name              = string
-      resourceGroupName = string
+      name               = string
+      subnetName         = string
+      resourceGroupName  = string
+      privateDnsZoneName = string
     }
   )
 }
@@ -164,8 +150,8 @@ variable "managedIdentity" {
 data "azurerm_client_config" "provider" {}
 
 data "azurerm_user_assigned_identity" "render" {
-  name                = var.managedIdentity.name != "" ? var.managedIdentity.name : module.global.managedIdentity.name
-  resource_group_name = var.managedIdentity.resourceGroupName != "" ? var.managedIdentity.resourceGroupName : module.global.resourceGroupName
+  name                = module.global.managedIdentity.name
+  resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault" "render" {
@@ -222,19 +208,19 @@ data "azurerm_subnet" "cache" {
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                = data.terraform_remote_state.network.outputs.privateDns.zoneName
+  name                = !local.stateExistsNetwork ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
   resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 data "azuread_service_principal" "hpc_cache" {
+  count        = var.hpcCache.enable ? 1 : 0
   display_name = "HPC Cache Resource Provider"
 }
 
 locals {
-  stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) >= 0, false)
-  deployPrivateDnsZone    = !local.stateExistsNetwork && var.computeNetwork.privateDns.zoneName != ""
-  vfxtControllerAddress   = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].addressSpace[0], 39)
-  vfxtVServerFirstAddress = !local.stateExistsNetwork ? "" : cidrhost(data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].addressSpace[0], 40)
+  stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  vfxtControllerAddress   = cidrhost(data.azurerm_subnet.cache.address_prefixes[0], 39)
+  vfxtVServerFirstAddress = cidrhost(data.azurerm_subnet.cache.address_prefixes[0], 40)
   vfxtVServerAddressCount = 12
 }
 
@@ -252,7 +238,7 @@ resource "azurerm_role_assignment" "storage_account" {
     for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
   }
   role_definition_name = "Storage Account Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
-  principal_id         = data.azuread_service_principal.hpc_cache.object_id
+  principal_id         = data.azuread_service_principal.hpc_cache[0].object_id
   scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
 }
 
@@ -261,7 +247,7 @@ resource "azurerm_role_assignment" "storage_blob_data" {
     for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
   }
   role_definition_name = "Storage Blob Data Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
-  principal_id         = data.azuread_service_principal.hpc_cache.object_id
+  principal_id         = data.azuread_service_principal.hpc_cache[0].object_id
   scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
 }
 
@@ -377,8 +363,8 @@ module "vfxt_controller" {
   virtual_network_name              = data.azurerm_virtual_network.compute.name
   virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
-  static_ip_address                 = local.vfxtControllerAddress
   user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.render.id
+  static_ip_address                 = local.vfxtControllerAddress
   depends_on = [
     azurerm_resource_group.cache,
     azurerm_role_assignment.identity,
@@ -444,25 +430,10 @@ resource "avere_vfxt" "cache" {
 # Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
 ############################################################################
 
-resource "azurerm_private_dns_zone" "network" {
-  count               = local.deployPrivateDnsZone ? 1 : 0
-  name                = var.computeNetwork.privateDns.zoneName
-  resource_group_name = azurerm_resource_group.cache.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "network" {
-  count                 = local.deployPrivateDnsZone ? 1 : 0
-  name                  = var.computeNetwork.name
-  resource_group_name   = azurerm_resource_group.cache.name
-  private_dns_zone_name = azurerm_private_dns_zone.network[0].name
-  virtual_network_id    = data.azurerm_virtual_network.compute.id
-  registration_enabled  = var.computeNetwork.privateDns.enableAutoRegistration
-}
-
 resource "azurerm_private_dns_a_record" "cache" {
   name                = "cache"
-  resource_group_name = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].resource_group_name : data.azurerm_private_dns_zone.network.resource_group_name
-  zone_name           = local.deployPrivateDnsZone ? azurerm_private_dns_zone.network[0].name : data.azurerm_private_dns_zone.network.name
+  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
+  zone_name           = data.azurerm_private_dns_zone.network.name
   records             = var.hpcCache.enable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
   ttl                 = 300
 }
