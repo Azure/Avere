@@ -174,7 +174,7 @@ if [[ $renderManager == *Qube* ]]; then
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="9.0.00"
+  schedulerVersion="9.0.01"
   schedulerInstallRoot="/mnt/rr"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"
@@ -207,13 +207,13 @@ if [[ $renderManager == *RoyalRender* ]]; then
   installFile="rrWorkstation_installer"
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Royal Render Server"
-    $schedulerBinPath/$installFile -serviceServer -rrUser $serviceUser 1> "$installType-server.output.txt" 2> "$installType-server.error.txt"
+    $schedulerBinPath/$installFile -serviceServer -allowShutdown -serviceLog rrService.txt -rrUser $serviceUser 1> "$installType-server.output.txt" 2> "$installType-server.error.txt"
     echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Royal Render Server"
   else
     echo "Customize (Start): Royal Render Client"
-    $schedulerBinPath/$installFile -service -rrUser $serviceUser 1> "$installType-client.output.txt" 2> "$installType-client.error.txt"
+    $schedulerBinPath/$installFile -service -allowShutdown -serviceLog rrService.txt -rrUser $serviceUser 1> "$installType-client.output.txt" 2> "$installType-client.error.txt"
     echo "Customize (End): Royal Render Client"
   fi
 
