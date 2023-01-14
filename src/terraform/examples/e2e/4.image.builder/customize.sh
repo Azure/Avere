@@ -194,6 +194,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
   yum -y install xcb-util-renderutil
   yum -y install libxkbcommon
   yum -y install libxkbcommon-x11
+  yum -y install qt5-qtbase
   yum -y install csh
   installType="royal-render"
   installFile="rrSetup_linux"
@@ -203,8 +204,9 @@ if [[ $renderManager == *RoyalRender* ]]; then
   ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
   echo "Customize (End): Royal Render Installer"
 
-  serviceUser="root"
+  serviceUser="rrService"
   installFile="rrWorkstation_installer"
+  useradd $serviceUser
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Royal Render Server"
     $schedulerBinPath/$installFile -serviceServer -allowShutdown -rrUser $serviceUser 1> "$installType-server.output.txt" 2> "$installType-server.error.txt"
