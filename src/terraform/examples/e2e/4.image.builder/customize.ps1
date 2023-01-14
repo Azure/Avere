@@ -196,7 +196,7 @@ if ($renderManager -like "*Qube*") {
 }
 
 if ($renderManager -like "*RoyalRender*") {
-  $schedulerVersion = "9.0.00"
+  $schedulerVersion = "9.0.01"
   $schedulerInstallRoot = "\RoyalRender"
   $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
   $binPaths += ";$schedulerBinPath"
@@ -211,7 +211,7 @@ if ($renderManager -like "*RoyalRender*") {
   Write-Host "Customize (Start): Royal Render Installer"
   $installType = "royal-render"
   $installFile = "rrSetup_win.exe"
-  $installDirectory = "RoyalRender__${schedulerVersion}__installer"
+  $installDirectory = "RoyalRender*"
   New-Item -ItemType Directory -Path $schedulerInstallRoot
   New-SmbShare -Name "RoyalRender" -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
   Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
