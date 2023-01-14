@@ -217,14 +217,16 @@ if ($renderManager -like "*RoyalRender*") {
   Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
   Write-Host "Customize (End): Royal Render Installer"
 
+  $serviceUser = "rrService"
   $installFile = "rrWorkstation_installer.exe"
+  New-LocalUser -Name $serviceUser -NoPassword
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Royal Render Server"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
     Write-Host "Customize (End): Royal Render Server"
   } else {
     Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
     Write-Host "Customize (End): Royal Render Client"
 
     Write-Host "Customize (Start): Royal Render Viewer"
