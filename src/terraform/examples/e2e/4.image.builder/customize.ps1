@@ -222,11 +222,11 @@ if ($renderManager -like "*RoyalRender*") {
   New-LocalUser -Name $serviceUser -NoPassword
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Royal Render Server"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -fwIn -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
     Write-Host "Customize (End): Royal Render Server"
   } else {
     Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -fwOut -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
     Write-Host "Customize (End): Royal Render Client"
 
     Write-Host "Customize (Start): Royal Render Viewer"
@@ -238,11 +238,6 @@ if ($renderManager -like "*RoyalRender*") {
     $shortcut.Save()
     Write-Host "Customize (End): Royal Render Viewer"
   }
-
-  Write-Host "Customize (Start): Royal Render Service"
-  $installFile = "rrAutostartservice.exe"
-  Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-install" -Wait -RedirectStandardOutput "$installType-service.output.txt" -RedirectStandardError "$installType-service.error.txt"
-  Write-Host "Customize (End): Royal Render Service"
 }
 
 if ($renderManager -like "*Deadline*") {

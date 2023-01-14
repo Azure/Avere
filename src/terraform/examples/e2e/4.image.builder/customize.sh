@@ -8,7 +8,7 @@ storageContainerUrl="https://azrender.blob.core.windows.net/bin"
 storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
 
 echo "Customize (Start): Image Build Platform"
-sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/sysconfig/selinux
+sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
 yum -y install epel-release
 yum -y install gcc gcc-c++
 yum -y install nfs-utils
@@ -175,7 +175,7 @@ fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
   schedulerVersion="9.0.01"
-  schedulerInstallRoot="/rr"
+  schedulerInstallRoot="/RoyalRender"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"
 
@@ -218,11 +218,6 @@ if [[ $renderManager == *RoyalRender* ]]; then
     $schedulerBinPath/$installFile -service -allowShutdown -rrUser $serviceUser 1> "$installType-client.output.txt" 2> "$installType-client.error.txt"
     echo "Customize (End): Royal Render Client"
   fi
-
-  echo "Customize (Start): Royal Render Service"
-  installFile="rrAutostartservice"
-  $schedulerBinPath/$installFile -install 1> "$installType-service.output.txt" 2> "$installType-service.error.txt"
-  echo "Customize (End): Royal Render Service"
 fi
 
 if [[ $renderManager == *Deadline* ]]; then
