@@ -31,11 +31,9 @@ $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
 $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutputFile -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
-Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
-
-while ($null -eq (Get-ScheduledTask $taskName -ErrorAction SilentlyContinue)) {
-  Start-Sleep -Seconds 1
+if ("${autoScale.enable}" -eq "true") {
+  $taskSettings = New-ScheduledTaskSettingsSet
+} else {
+  $taskSettings = New-ScheduledTaskSettingsSet -Disable
 }
-if ("${autoScale.enable}" -ne "true") {
-  Disable-ScheduledTask -TaskName $taskName
-}
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -User System -Force

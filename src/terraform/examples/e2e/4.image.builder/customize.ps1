@@ -125,6 +125,51 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
+if ($renderManager -like "*RoyalRender*") {
+  $schedulerVersion = "9.0.01"
+  $schedulerInstallRoot = "\RoyalRender"
+  $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
+  $binPaths += ";$schedulerBinPath"
+
+  Write-Host "Customize (Start): Royal Render Download"
+  $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
+  $downloadUrl = "$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Royal Render Download"
+
+  Write-Host "Customize (Start): Royal Render Installer"
+  $installType = "royal-render"
+  $installFile = "rrSetup_win.exe"
+  $installDirectory = "RoyalRender*"
+  New-Item -ItemType Directory -Path $schedulerInstallRoot
+  New-SmbShare -Name "RoyalRender" -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
+  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+  Write-Host "Customize (End): Royal Render Installer"
+
+  $serviceUser = "rrService"
+  $installFile = "rrWorkstation_installer.exe"
+  New-LocalUser -Name $serviceUser -NoPassword
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Royal Render Server"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -fwIn -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
+    Write-Host "Customize (End): Royal Render Server"
+  } else {
+    Write-Host "Customize (Start): Royal Render Client"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -fwOut -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
+    Write-Host "Customize (End): Royal Render Client"
+
+    Write-Host "Customize (Start): Royal Render Viewer"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $shortcut.WorkingDirectory = $schedulerBinPath
+    $shortcut.TargetPath = "$schedulerBinPath\rrViewer.exe"
+    $shortcut.Save()
+    Write-Host "Customize (End): Royal Render Viewer"
+  }
+}
+
 if ($renderManager -like "*Qube*") {
   $schedulerVersion = "7.5-2"
   $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
@@ -192,51 +237,6 @@ if ($renderManager -like "*Qube*") {
     $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = render.artist.studio")
     $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
     Set-Content -Path $schedulerConfigFile -Value $configFileText
-  }
-}
-
-if ($renderManager -like "*RoyalRender*") {
-  $schedulerVersion = "9.0.01"
-  $schedulerInstallRoot = "\RoyalRender"
-  $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
-  $binPaths += ";$schedulerBinPath"
-
-  Write-Host "Customize (Start): Royal Render Download"
-  $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
-  $downloadUrl = "$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Royal Render Download"
-
-  Write-Host "Customize (Start): Royal Render Installer"
-  $installType = "royal-render"
-  $installFile = "rrSetup_win.exe"
-  $installDirectory = "RoyalRender*"
-  New-Item -ItemType Directory -Path $schedulerInstallRoot
-  New-SmbShare -Name "RoyalRender" -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
-  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
-  Write-Host "Customize (End): Royal Render Installer"
-
-  $serviceUser = "rrService"
-  $installFile = "rrWorkstation_installer.exe"
-  New-LocalUser -Name $serviceUser -NoPassword
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Royal Render Server"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -fwIn -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
-    Write-Host "Customize (End): Royal Render Server"
-  } else {
-    Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -fwOut -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
-    Write-Host "Customize (End): Royal Render Client"
-
-    Write-Host "Customize (Start): Royal Render Viewer"
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = $schedulerBinPath
-    $shortcut.TargetPath = "$schedulerBinPath\rrViewer.exe"
-    $shortcut.Save()
-    Write-Host "Customize (End): Royal Render Viewer"
   }
 }
 

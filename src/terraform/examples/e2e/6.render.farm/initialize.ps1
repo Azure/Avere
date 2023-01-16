@@ -27,5 +27,5 @@ for ($i = 0; $i -lt $taskCount; $i++) {
   $taskStart = Get-Date -Minute $nextMinute -Second ($i * ${terminationNotificationDetectionIntervalSeconds})
   $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $binDirectory\onTerminate.ps1"
   $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
-  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
+  Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
 }

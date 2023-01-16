@@ -5,7 +5,7 @@ function AddFileSystemMounts ($binDirectory, $fsMountsDelimiter, $fsMounts) {
   }
   foreach ($fsMount in $fsMounts.Split($fsMountsDelimiter)) {
     $fsMountsFileText = Get-Content -Path $fsMountsFile
-    if ($fsMountsFileText -inotmatch $fsMount) {
+    if ($fsMountsFileText -eq $null -or $fsMountsFileText -notlike "*$fsMount*") {
       Add-Content -Path $fsMountsFile -Value $fsMount
     }
   }
@@ -18,7 +18,7 @@ function RegisterFileSystemMounts ($fsMountsFile) {
     $taskName = "AAA File System Mounts"
     $taskAction = New-ScheduledTaskAction -Execute $fsMountsFile
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup
-    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -AsJob -User System -Force
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
     Start-Process -FilePath $fsMountsFile -Wait -RedirectStandardOutput "fs-mounts.output.txt" -RedirectStandardError "fs-mounts.error.txt"
   }
 }

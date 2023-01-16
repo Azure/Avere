@@ -119,6 +119,53 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
+if [[ $renderManager == *RoyalRender* ]]; then
+  schedulerVersion="9.0.01"
+  schedulerInstallRoot="/RoyalRender"
+  schedulerBinPath="$schedulerInstallRoot/bin/lx64"
+  binPaths="$binPaths:$schedulerBinPath"
+
+  echo "Customize (Start): Royal Render Download"
+  installFile="RoyalRender__${schedulerVersion}__installer.zip"
+  downloadUrl="$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  unzip -q $installFile
+  echo "Customize (End): Royal Render Download"
+
+  echo "Customize (Start): Royal Render Installer"
+  yum -y install fontconfig
+  yum -y install xcb-util-wm
+  yum -y install xcb-util-image
+  yum -y install xcb-util-keysyms
+  yum -y install xcb-util-renderutil
+  yum -y install libxkbcommon
+  yum -y install libxkbcommon-x11
+  yum -y install qt5-qtbase
+  yum -y install csh
+  installType="royal-render"
+  installFile="rrSetup_linux"
+  installDirectory="RoyalRender*"
+  chmod +x ./$installDirectory/$installFile
+  mkdir $schedulerInstallRoot
+  ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
+  echo "Customize (End): Royal Render Installer"
+
+  serviceUser="rrService"
+  installFile="rrWorkstation_installer"
+  useradd $serviceUser
+  if [ $machineType == "Scheduler" ]; then
+    echo "Customize (Start): Royal Render Server"
+    $schedulerBinPath/$installFile -serviceServer -rrUser $serviceUser 1> "$installType-server.output.txt" 2> "$installType-server.error.txt"
+    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
+    exportfs -a
+    echo "Customize (End): Royal Render Server"
+  else
+    echo "Customize (Start): Royal Render Client"
+    $schedulerBinPath/$installFile -service -rrUser $serviceUser 1> "$installType-client.output.txt" 2> "$installType-client.error.txt"
+    echo "Customize (End): Royal Render Client"
+  fi
+fi
+
 if [[ $renderManager == *Qube* ]]; then
   schedulerVersion="7.5-2"
   schedulerConfigFile="/etc/qb.conf"
@@ -170,53 +217,6 @@ if [[ $renderManager == *Qube* ]]; then
 
     sed -i "s/#qb_supervisor =/qb_supervisor = render.artist.studio/" $schedulerConfigFile
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
-  fi
-fi
-
-if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="9.0.01"
-  schedulerInstallRoot="/RoyalRender"
-  schedulerBinPath="$schedulerInstallRoot/bin/lx64"
-  binPaths="$binPaths:$schedulerBinPath"
-
-  echo "Customize (Start): Royal Render Download"
-  installFile="RoyalRender__${schedulerVersion}__installer.zip"
-  downloadUrl="$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  unzip -q $installFile
-  echo "Customize (End): Royal Render Download"
-
-  echo "Customize (Start): Royal Render Installer"
-  yum -y install fontconfig
-  yum -y install xcb-util-wm
-  yum -y install xcb-util-image
-  yum -y install xcb-util-keysyms
-  yum -y install xcb-util-renderutil
-  yum -y install libxkbcommon
-  yum -y install libxkbcommon-x11
-  yum -y install qt5-qtbase
-  yum -y install csh
-  installType="royal-render"
-  installFile="rrSetup_linux"
-  installDirectory="RoyalRender*"
-  chmod +x ./$installDirectory/$installFile
-  mkdir $schedulerInstallRoot
-  ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
-  echo "Customize (End): Royal Render Installer"
-
-  serviceUser="rrService"
-  installFile="rrWorkstation_installer"
-  useradd $serviceUser
-  if [ $machineType == "Scheduler" ]; then
-    echo "Customize (Start): Royal Render Server"
-    $schedulerBinPath/$installFile -serviceServer -allowShutdown -rrUser $serviceUser 1> "$installType-server.output.txt" 2> "$installType-server.error.txt"
-    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
-    exportfs -a
-    echo "Customize (End): Royal Render Server"
-  else
-    echo "Customize (Start): Royal Render Client"
-    $schedulerBinPath/$installFile -service -allowShutdown -rrUser $serviceUser 1> "$installType-client.output.txt" 2> "$installType-client.error.txt"
-    echo "Customize (End): Royal Render Client"
   fi
 fi
 

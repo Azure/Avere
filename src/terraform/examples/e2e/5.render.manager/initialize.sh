@@ -39,7 +39,6 @@ echo "AccuracySec=1us" >> $timerPath
 echo "" >> $timerPath
 echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
-
 if [ ${autoScale.enable} == true ]; then
   systemctl --now enable computeAutoScaler
 fi
