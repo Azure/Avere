@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.6"
+  required_version = ">= 1.3.7"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.37.0"
+      version = "~>3.40.0"
     }
   }
   backend "azurerm" {
@@ -81,7 +81,6 @@ variable "virtualMachineScaleSets" {
             {
               fileSystemMountsStorage      = list(string)
               fileSystemMountsStorageCache = list(string)
-              fileSystemMountsQube         = list(string)
               fileSystemMountsDeadline     = list(string)
               fileSystemPermissions        = list(string)
             }
@@ -95,9 +94,8 @@ variable "virtualMachineScaleSets" {
       )
       spot = object(
         {
-          enable          = bool
-          evictionPolicy  = string
-          machineMaxPrice = number
+          enable         = bool
+          evictionPolicy = string
         }
       )
       terminationNotification = object(
@@ -124,17 +122,34 @@ variable "kubernetes" {
         {
           name      = string
           dnsPrefix = string
-          defaultPool = object(
+          systemNodePool = object(
             {
               name = string
               machine = object(
                 {
-                  size = string
+                  size  = string
                   count = number
                 }
               )
             }
           )
+          userNodePools = list(object(
+            {
+              name = string
+              machine = object(
+                {
+                  size  = string
+                  count = number
+                }
+              )
+              spot = object(
+                {
+                  enable         = bool
+                  evictionPolicy = string
+                }
+              )
+            }
+          ))
         }
       ))
     }
@@ -217,7 +232,19 @@ data "azurerm_private_dns_zone" "render" {
 }
 
 locals {
-  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  kubernetesUserNodePools = flatten([
+    for kubernetesCluster in var.kubernetes.clusters : [
+      for userNodePool in kubernetesCluster.userNodePools : {
+        name               = userNodePool.name
+        clusterName        = kubernetesCluster.name
+        machineSize        = userNodePool.machine.size
+        machineCount       = userNodePool.machine.count
+        spotEnable         = userNodePool.spot.enable
+        spotEvictionPolicy = userNodePool.spot.evictionPolicy
+      }
+    ] if kubernetesCluster.name != ""
+  ])
 }
 
 resource "azurerm_resource_group" "farm" {
@@ -240,7 +267,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
   priority                        = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
-  max_bid_price                   = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group          = false
   overprovision                   = false
   network_interface {
@@ -335,7 +361,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   admin_password         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   priority               = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
-  max_bid_price          = each.value.spot.enable ? each.value.spot.machineMaxPrice : -1
   single_placement_group = false
   overprovision          = false
   network_interface {
@@ -413,44 +438,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
 # Kubernetes (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
 #######################################################################
 
-# resource "azurerm_private_dns_zone" "farm" {
-#   count               = var.kubernetes.fleet.name != "" ? 1 : 0
-#   name                = "privatelink.${lower(module.global.regionName)}.azmk8s.io"
-#   resource_group_name = azurerm_resource_group.farm.name
-# }
-
-# resource "azurerm_private_dns_zone_virtual_network_link" "farm" {
-#   count                 = var.kubernetes.fleet.name != "" ? 1 : 0
-#   name                  = "${data.azurerm_virtual_network.compute.name}.farm"
-#   resource_group_name   = azurerm_resource_group.farm.name
-#   private_dns_zone_name = azurerm_private_dns_zone.farm[0].name
-#   virtual_network_id    = data.azurerm_virtual_network.compute.id
-# }
-
-# resource "azurerm_private_endpoint" "farm" {
-#   for_each = {
-#     for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if var.kubernetes.fleet.name != ""
-#   }
-#   name                = "aks.${each.value.name}"
-#   resource_group_name = azurerm_resource_group.farm.name
-#   location            = azurerm_resource_group.farm.location
-#   subnet_id           = data.azurerm_subnet.farm.id
-#   private_service_connection {
-#     name                           = each.value.name
-#     private_connection_resource_id = "${azurerm_resource_group.farm.id}/providers/Microsoft.ContainerService/managedClusters/${each.value.name}"
-#     is_manual_connection           = false
-#     subresource_names = [
-#       "management"
-#     ]
-#   }
-#   private_dns_zone_group {
-#     name = each.value.name
-#     private_dns_zone_ids = [
-#       azurerm_private_dns_zone.farm[0].id
-#     ]
-#   }
-# }
-
 resource "azurerm_kubernetes_fleet_manager" "farm" {
   count               = var.kubernetes.fleet.name != "" ? 1 : 0
   name                = var.kubernetes.fleet.name
@@ -461,29 +448,44 @@ resource "azurerm_kubernetes_fleet_manager" "farm" {
   }
 }
 
-# resource "azurerm_kubernetes_cluster" "farm" {
-#   for_each = {
-#     for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
-#   }
-#   name                       = each.value.name
-#   resource_group_name        = azurerm_resource_group.farm.name
-#   location                   = azurerm_resource_group.farm.location
-#   dns_prefix_private_cluster = "studio"
-#   #dns_prefix_private_cluster = each.value.dnsPrefix != "" ? each.value.dnsPrefix : local.stateExistsNetwork ? data.terraform_remote_state.network.outputs.privateDns.zoneName : ""
-#   private_dns_zone_id        = data.azurerm_private_dns_zone.render.id
-#   private_cluster_enabled    = true
-#   identity {
-#     type = "UserAssigned"
-#     identity_ids = [
-#       data.azurerm_user_assigned_identity.render.id
-#     ]
-#   }
-#   default_node_pool {
-#     name       = each.value.defaultPool.name
-#     vm_size    = each.value.defaultPool.machine.size
-#     node_count = each.value.defaultPool.machine.count
-#   }
-# }
+resource "azurerm_kubernetes_cluster" "farm" {
+  for_each = {
+    for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
+  }
+  name                    = each.value.name
+  resource_group_name     = azurerm_resource_group.farm.name
+  location                = azurerm_resource_group.farm.location
+  dns_prefix              = each.value.dnsPrefix == "" ? "render" : each.value.dnsPrefix
+  private_cluster_enabled = true
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.render.id
+    ]
+  }
+  default_node_pool {
+    name                         = each.value.systemNodePool.name
+    vm_size                      = each.value.systemNodePool.machine.size
+    node_count                   = each.value.systemNodePool.machine.count
+    vnet_subnet_id               = data.azurerm_subnet.farm.id
+    only_critical_addons_enabled = true
+  }
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "farm" {
+  for_each = {
+    for userNodePool in local.kubernetesUserNodePools : "${userNodePool.clusterName}.${userNodePool.name}" => userNodePool
+  }
+  name                  = each.value.name
+  kubernetes_cluster_id = "${azurerm_resource_group.farm.id}/providers/Microsoft.ContainerService/managedClusters/${each.value.clusterName}"
+  vm_size               = each.value.machineSize
+  node_count            = each.value.machineCount
+  priority              = each.value.spotEnable ? "Spot" : "Regular"
+  eviction_policy       = each.value.spotEnable ? each.value.spotEvictionPolicy : null
+  depends_on = [
+    azurerm_kubernetes_cluster.farm
+  ]
+}
 
 output "resourceGroupName" {
   value = var.resourceGroupName

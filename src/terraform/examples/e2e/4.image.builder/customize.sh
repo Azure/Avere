@@ -61,7 +61,7 @@ if [[ $gpuPlatform == *CUDA* ]] || [[ $gpuPlatform == *CUDA.OptiX* ]]; then
 fi
 
 if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
-  echo "Customize (Start): NVIDIA GPU (OptiX)"
+  echo "Customize (Start): NVIDIA OptiX"
   versionInfo="7.6.0"
   installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64-31894579.sh"
   downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
@@ -79,7 +79,7 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   $binPathCMake/cmake -B $buildDirectory -S "$binDirectory/$installDirectory/sdk" 1> "nvidia-optix-cmake.output.txt" 2> "nvidia-optix-cmake.error.txt"
   make -j -C $buildDirectory 1> "nvidia-optix-make.output.txt" 2> "nvidia-optix-make.error.txt"
   binPaths="$binPaths:$buildDirectory/bin"
-  echo "Customize (End): NVIDIA GPU (OptiX)"
+  echo "Customize (End): NVIDIA OptiX"
 fi
 
 if [ $machineType == "Scheduler" ]; then

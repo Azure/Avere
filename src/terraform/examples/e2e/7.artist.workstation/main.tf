@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.6"
+  required_version = ">= 1.3.7"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.37.0"
+      version = "~>3.40.0"
     }
   }
   backend "azurerm" {
@@ -70,7 +70,6 @@ variable "virtualMachines" {
             {
               fileSystemMountsStorage      = list(string)
               fileSystemMountsStorageCache = list(string)
-              fileSystemMountsQube         = list(string)
               fileSystemMountsDeadline     = list(string)
               teradiciLicenseKey           = string
             }

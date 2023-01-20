@@ -34,8 +34,6 @@ virtualMachines = [
         ]
         fileSystemMountsStorageCache = [
         ]
-        fileSystemMountsQube = [
-        ]
         fileSystemMountsDeadline = [
           "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
         ]
@@ -74,8 +72,6 @@ virtualMachines = [
           "mount -o anon nolock \\\\azrender1.blob.core.windows.net\\azrender1\\data W:"
         ]
         fileSystemMountsStorageCache = [
-        ]
-        fileSystemMountsQube = [
         ]
         fileSystemMountsDeadline = [
           "mount -o anon \\\\render.artist.studio\\deadline S:"

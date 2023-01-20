@@ -42,8 +42,6 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
-        fileSystemMountsQube = [
-        ]
         fileSystemMountsDeadline = [
           "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
         ]
@@ -57,9 +55,8 @@ virtualMachineScaleSets = [
       enable = false
     }
     spot = {
-      enable          = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
+      enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable                   = true
@@ -104,8 +101,6 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
-        fileSystemMountsQube = [
-        ]
         fileSystemMountsDeadline = [
           "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
         ]
@@ -119,9 +114,8 @@ virtualMachineScaleSets = [
       enable = false
     }
     spot = {
-      enable          = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
+      enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable                   = true
@@ -166,8 +160,6 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
-        fileSystemMountsQube = [
-        ]
         fileSystemMountsDeadline = [
           "mount -o anon \\\\render.artist.studio\\deadline S:"
         ]
@@ -181,9 +173,8 @@ virtualMachineScaleSets = [
       enable = false
     }
     spot = {
-      enable          = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
+      enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable                   = true
@@ -228,8 +219,6 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
-        fileSystemMountsQube = [
-        ]
         fileSystemMountsDeadline = [
           "mount -o anon \\\\render.artist.studio\\deadline S:"
         ]
@@ -243,9 +232,8 @@ virtualMachineScaleSets = [
       enable = false
     }
     spot = {
-      enable          = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
-      evictionPolicy  = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-      machineMaxPrice = -1       # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#pricing
+      enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+      evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
     }
     terminationNotification = {  # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
       enable                   = true
@@ -266,26 +254,39 @@ kubernetes = {
   }
   clusters = [
     {
-      name      = "cluster1"
+      name      = "" # "RenderFarm"
       dnsPrefix = ""
-      defaultPool = {
-        name = "default"
+      systemNodePool = {
+        name = "system"
         machine = {
-          size  = "Standard_HB120rs_v2"
-          count = 2
+          size  = "Standard_D8s_v5"
+          count = 3
         }
       }
-    },
-    {
-      name      = "cluster2"
-      dnsPrefix = ""
-      defaultPool = {
-        name = "default"
-        machine = {
-          size  = "Standard_NV36ads_A10_v5"
-          count = 2
+      userNodePools = [
+        {
+          name = "cpu"
+          machine = {
+            size  = "Standard_HB120rs_v2"
+            count = 2
+          }
+          spot = {
+            enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+            evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
+          }
+        },
+        {
+          name = "gpu"
+          machine = {
+            size  = "Standard_NV36ads_A10_v5"
+            count = 2
+          }
+          spot = {
+            enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
+            evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
+          }
         }
-      }
+      ]
     }
   ]
 }

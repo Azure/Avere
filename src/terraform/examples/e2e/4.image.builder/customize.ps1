@@ -67,7 +67,7 @@ if ($gpuPlatform -contains "GRID") {
   $installFile = "nvidia-gpu-grid.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-gpu-grid.output.txt" -RedirectStandardError "nvidia-gpu-grid.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-grid" -Wait
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 } elseif ($gpuPlatform -contains "AMD") {
   Write-Host "Customize (Start): AMD GPU"
@@ -75,7 +75,7 @@ if ($gpuPlatform -contains "GRID") {
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait
-  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install" -Wait -RedirectStandardOutput "amd-gpu.output.txt" -RedirectStandardError "amd-gpu.error.txt"
+  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install -log $binDirectory\amd-gpu.txt" -Wait
   Write-Host "Customize (End): AMD GPU"
 }
 
@@ -85,17 +85,17 @@ if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   $installFile = "cuda_${versionInfo}_527.41_windows.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n" -Wait -RedirectStandardOutput "nvidia-cuda.output.txt" -RedirectStandardError "nvidia-cuda.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-cuda" -Wait
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 }
 
 if ($gpuPlatform -contains "CUDA.OptiX") {
-  Write-Host "Customize (Start): NVIDIA GPU (OptiX)"
+  Write-Host "Customize (Start): NVIDIA OptiX"
   $versionInfo = "7.6.0"
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-31894579.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/s /n" -Wait -RedirectStandardOutput "nvidia-optix.output.txt" -RedirectStandardError "nvidia-optix.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /O $binDirectory\nvidia-optix.txt" -Wait
   $versionInfo = "v12.0"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
@@ -103,7 +103,7 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
   $binPaths += ";$buildDirectory\bin\Release"
-  Write-Host "Customize (End): NVIDIA GPU (OptiX)"
+  Write-Host "Customize (End): NVIDIA OptiX"
 }
 
 if ($machineType -eq "Scheduler") {
