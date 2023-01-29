@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.40.0"
+      version = "~>3.41.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -85,8 +85,7 @@ variable "vfxtCache" {
           rollingTraceFlag = string
         }
       )
-      localTimezone              = string
-      enableMarketplaceAgreement = bool
+      localTimezone = string
     }
   )
 }
@@ -188,13 +187,13 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_resource_group" "render" {
-  name = module.global.resourceGroupName
-}
+# data "azurerm_resource_group" "render" {
+#   name = module.global.resourceGroupName
+# }
 
-data "azurerm_resource_group" "network" {
-  name = data.azurerm_virtual_network.compute.resource_group_name
-}
+# data "azurerm_resource_group" "network" {
+#   name = data.azurerm_virtual_network.compute.resource_group_name
+# }
 
 data "azurerm_virtual_network" "compute" {
   name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
@@ -218,7 +217,7 @@ data "azuread_service_principal" "hpc_cache" {
 }
 
 locals {
-  stateExistsNetwork      = try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsNetwork      = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   vfxtControllerAddress   = cidrhost(data.azurerm_subnet.cache.address_prefixes[0], 39)
   vfxtVServerFirstAddress = cidrhost(data.azurerm_subnet.cache.address_prefixes[0], 40)
   vfxtVServerAddressCount = 12
@@ -320,36 +319,41 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
 # Avere vFXT (https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) #
 #################################################################################
 
-resource "azurerm_role_assignment" "identity" {
-  role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = data.azurerm_resource_group.render.id
-}
+# resource "azurerm_role_assignment" "managed_identity" {
+#   role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
+#   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+#   scope                = data.azurerm_resource_group.render.id
+# }
 
-resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = data.azurerm_resource_group.network.id
-}
+# resource "azurerm_role_assignment" "network_cache_contributor" {
+#   role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
+#   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+#   scope                = data.azurerm_resource_group.network.id
+# }
 
-resource "azurerm_role_assignment" "cache_identity" {
-  role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = azurerm_resource_group.cache.id
-}
+# resource "azurerm_role_assignment" "network_cache_operator" {
+#   role_definition_name = "Avere Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-operator
+#   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+#   scope                = data.azurerm_resource_group.network.id
+# }
 
-resource "azurerm_role_assignment" "cache_contributor" {
-  role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
-  scope                = azurerm_resource_group.cache.id
-}
+# resource "azurerm_role_assignment" "cache_managed_identity" {
+#   role_definition_name = "Managed Identity Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#managed-identity-operator
+#   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+#   scope                = azurerm_resource_group.cache.id
+# }
 
-resource "azurerm_marketplace_agreement" "cache" {
-  count     = var.vfxtCache.enableMarketplaceAgreement && !var.hpcCache.enable ? 1 : 0
-  publisher = "Microsoft-Avere"
-  offer     = "vFXT"
-  plan      = "Avere-vFXT-Controller"
-}
+# resource "azurerm_role_assignment" "cache_contributor" {
+#   role_definition_name = "Avere Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-contributor
+#   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+#   scope                = azurerm_resource_group.cache.id
+# }
+
+# resource "azurerm_role_assignment" "cache_operator" {
+#   role_definition_name = "Avere Operator" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#avere-operator
+#   principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+#   scope                = azurerm_resource_group.cache.id
+# }
 
 module "vfxt_controller" {
   count                             = var.hpcCache.enable ? 0 : 1
@@ -360,17 +364,19 @@ module "vfxt_controller" {
   admin_username                    = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : var.vfxtCache.cluster.adminUsername
   admin_password                    = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
   ssh_key_data                      = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
+  # user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.render.id
   virtual_network_name              = data.azurerm_virtual_network.compute.name
   virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
-  user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.render.id
   static_ip_address                 = local.vfxtControllerAddress
   depends_on = [
     azurerm_resource_group.cache,
-    azurerm_role_assignment.identity,
-    azurerm_role_assignment.network,
-    azurerm_role_assignment.cache_identity,
-    azurerm_role_assignment.cache_contributor
+    # azurerm_role_assignment.managed_identity,
+    # azurerm_role_assignment.network_cache_contributor,
+    # azurerm_role_assignment.network_cache_operator,
+    # azurerm_role_assignment.cache_managed_identity,
+    # azurerm_role_assignment.cache_contributor,
+    # azurerm_role_assignment.cache_operator
   ]
 }
 
@@ -385,6 +391,7 @@ resource "avere_vfxt" "cache" {
   azure_network_name              = data.azurerm_virtual_network.compute.name
   azure_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   azure_subnet_name               = data.azurerm_subnet.cache.name
+  # user_assigned_managed_identity  = data.azurerm_user_assigned_identity.render.id
   controller_address              = module.vfxt_controller[count.index].controller_address
   controller_admin_username       = module.vfxt_controller[count.index].controller_username
   controller_admin_password       = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
@@ -398,7 +405,6 @@ resource "avere_vfxt" "cache" {
   global_custom_settings          = var.vfxtCache.cluster.customSettings
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount
-  user_assigned_managed_identity  = data.azurerm_user_assigned_identity.render.id
   timezone                        = var.vfxtCache.localTimezone
   dynamic core_filer {
     for_each = {
@@ -421,7 +427,6 @@ resource "avere_vfxt" "cache" {
     }
   }
   depends_on = [
-    azurerm_marketplace_agreement.cache,
     module.vfxt_controller
   ]
 }

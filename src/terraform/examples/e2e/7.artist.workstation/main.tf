@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.40.0"
+      version = "~>3.41.0"
     }
   }
   backend "azurerm" {
@@ -156,7 +156,7 @@ data "azurerm_subnet" "workstation" {
 }
 
 locals {
-  stateExistsNetwork = try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
 resource "azurerm_resource_group" "workstation" {

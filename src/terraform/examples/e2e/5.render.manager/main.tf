@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.40.0"
+      version = "~>3.41.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -205,8 +205,8 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
-  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) > 0, false)
-  stateExistsImage       = try(length(data.terraform_remote_state.image.outputs) > 0, false)
+  stateExistsNetwork     = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsImage       = var.computeGallery.name != "" ? false : try(length(data.terraform_remote_state.image.outputs) > 0, false)
   imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : try(data.terraform_remote_state.image.outputs.imageGallery.name, "")
   imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : try(data.terraform_remote_state.image.outputs.resourceGroupName, "")
   imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"

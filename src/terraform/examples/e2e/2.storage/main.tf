@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.40.0"
+      version = "~>3.41.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -194,8 +194,7 @@ variable "hammerspace" {
           )
         }
       )
-      enableProximityPlacement   = bool
-      enableMarketplaceAgreement = bool
+      enableProximityPlacement = bool
     }
   )
 }
@@ -316,7 +315,7 @@ data "azurerm_subnet" "storage_netapp" {
 }
 
 locals {
-  stateExistsNetwork     = try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsNetwork     = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
@@ -636,13 +635,6 @@ resource "azurerm_managed_disk" "storage" {
   create_option        = "Empty"
 }
 
-resource "azurerm_marketplace_agreement" "hammerspace" {
-  count     = var.hammerspace.namePrefix != "" && var.hammerspace.enableMarketplaceAgreement ? 1 : 0
-  publisher = local.hammerspaceImagePublisher
-  offer     = local.hammerspaceImageProduct
-  plan      = local.hammerspaceImageName
-}
-
 resource "azurerm_linux_virtual_machine" "storage_metadata" {
   for_each = {
     for metadataNode in local.hammerspaceMetadataNodes : metadataNode.name => metadataNode
@@ -684,7 +676,6 @@ resource "azurerm_linux_virtual_machine" "storage_metadata" {
     version   = local.hammerspaceImageVersion
   }
   depends_on = [
-    azurerm_marketplace_agreement.hammerspace,
     azurerm_network_interface.storage_primary,
     azurerm_network_interface.storage_secondary,
     azurerm_lb.storage
@@ -727,7 +718,6 @@ resource "azurerm_linux_virtual_machine" "storage_data" {
     version   = local.hammerspaceImageVersion
   }
   depends_on = [
-    azurerm_marketplace_agreement.hammerspace,
     azurerm_linux_virtual_machine.storage_metadata,
     azurerm_network_interface.storage_primary,
     azurerm_lb.storage
