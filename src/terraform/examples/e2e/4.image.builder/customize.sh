@@ -120,7 +120,7 @@ if [ $machineType == "Scheduler" ]; then
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="9.0.01"
+  schedulerVersion="9.0.02"
   schedulerInstallRoot="/RoyalRender"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"

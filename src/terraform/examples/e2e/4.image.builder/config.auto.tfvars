@@ -226,6 +226,8 @@ imageTemplates = [
   }
 ]
 
+servicePassword = "P@ssword1234" # rrService Local Windows User Password
+
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################

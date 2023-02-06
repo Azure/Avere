@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.41.0"
+      version = "~>3.42.0"
     }
   }
   backend "azurerm" {
@@ -82,6 +82,10 @@ variable "imageTemplates" {
   ))
 }
 
+variable "servicePassword" {
+  type = string
+}
+
 variable "computeNetwork" {
   type = object(
     {
@@ -95,6 +99,18 @@ variable "computeNetwork" {
 data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentity.name
   resource_group_name = module.global.resourceGroupName
+}
+
+data "azurerm_key_vault" "render" {
+  count               = module.global.keyVault.name != "" ? 1 : 0
+  name                = module.global.keyVault.name
+  resource_group_name = module.global.resourceGroupName
+}
+
+data "azurerm_key_vault_secret" "service_password" {
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.adminPassword
+  key_vault_id = data.azurerm_key_vault.render[0].id
 }
 
 data "terraform_remote_state" "network" {
@@ -123,6 +139,7 @@ data "azurerm_subnet" "farm" {
 }
 
 locals {
+  servicePassword    = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
@@ -237,6 +254,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     "imageTemplates" = {
       value = var.imageTemplates
     }
+    "servicePassword" = {
+      value = local.servicePassword
+    }
   })
   template_content = <<TEMPLATE
     {
@@ -257,6 +277,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         },
         "imageTemplates": {
           "type": "array"
+        },
+        "servicePassword": {
+          "type": "string"
         }
       },
       "variables": {
@@ -315,6 +338,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 {
                   "name": "renderManager",
                   "type": "string"
+                },
+                {
+                  "name": "servicePassword",
+                  "type": "string"
                 }
               ],
               "output": {
@@ -342,7 +369,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[concat('C:\\Users\\Public\\Downloads\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager'))))))]"
+                      "[concat('C:\\Users\\Public\\Downloads\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   },
@@ -380,7 +407,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]"
             },
-            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('renderManager')))]",
+            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('renderManager'), parameters('servicePassword')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('renderManager')))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

@@ -56,6 +56,7 @@ $machineType = $buildConfig.machineType
 $gpuPlatform = $buildConfig.gpuPlatform
 $renderManager = $buildConfig.renderManager
 $renderEngines = $buildConfig.renderEngines
+$servicePassword = $buildConfig.servicePassword
 Write-Host "Machine Type: $machineType"
 Write-Host "GPU Platform: $gpuPlatform"
 Write-Host "Render Manager: $renderManager"
@@ -126,7 +127,7 @@ if ($machineType -eq "Scheduler") {
 }
 
 if ($renderManager -like "*RoyalRender*") {
-  $schedulerVersion = "9.0.01"
+  $schedulerVersion = "9.0.02"
   $schedulerInstallRoot = "\RoyalRender"
   $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
   $binPaths += ";$schedulerBinPath"
@@ -148,15 +149,16 @@ if ($renderManager -like "*RoyalRender*") {
   Write-Host "Customize (End): Royal Render Installer"
 
   $serviceUser = "rrService"
+  $securePassword = ConvertTo-SecureString $servicePassword -AsPlainText -Force
   $installFile = "rrWorkstation_installer.exe"
-  New-LocalUser -Name $serviceUser -NoPassword
+  New-LocalUser -Name $serviceUser -Password $securePassword -PasswordNeverExpires
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Royal Render Server"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -fwIn -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW $servicePassword -fwIn" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
     Write-Host "Customize (End): Royal Render Server"
   } else {
     Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -fwOut -rrUser $serviceUser" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -rrUser $serviceUser -rrUserPW $servicePassword -fwOut" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
     Write-Host "Customize (End): Royal Render Client"
 
     Write-Host "Customize (Start): Royal Render Viewer"
