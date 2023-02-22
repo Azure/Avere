@@ -349,7 +349,7 @@ fi
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
   echo "Customize (Start): Unreal Engine"
   yum -y install libicu
-  versionInfo="5.1.0"
+  versionInfo="5.1.1"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
   downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl

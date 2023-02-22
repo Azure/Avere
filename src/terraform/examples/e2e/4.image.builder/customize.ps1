@@ -369,7 +369,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   Write-Host "Customize (Start): Unreal Engine"
   Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.txt" -RedirectStandardError "net-fx3.error.txt"
   Set-Location -Path C:\
-  $versionInfo = "5.1.0"
+  $versionInfo = "5.1.1"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
