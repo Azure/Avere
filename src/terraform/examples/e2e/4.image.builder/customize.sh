@@ -77,7 +77,7 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   buildDirectory="$binDirectory/$installDirectory/build"
   mkdir $buildDirectory
   $binPathCMake/cmake -B $buildDirectory -S "$binDirectory/$installDirectory/sdk" 1> "nvidia-optix-cmake.output.txt" 2> "nvidia-optix-cmake.error.txt"
-  make -j -C $buildDirectory 1> "nvidia-optix-make.output.txt" 2> "nvidia-optix-make.error.txt"
+  make -C $buildDirectory 1> "nvidia-optix-make.output.txt" 2> "nvidia-optix-make.error.txt"
   binPaths="$binPaths:$buildDirectory/bin"
   echo "Customize (End): NVIDIA OptiX"
 fi
@@ -287,7 +287,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
   mkdir -p $rendererPathPBRTv3
   $binPathCMake/cmake -B $rendererPathPBRTv3 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
-  make -j -C $rendererPathPBRTv3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
+  make -C $rendererPathPBRTv3 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
   ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
   echo "Customize (End): PBRT 3"
 
@@ -302,7 +302,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> "pbrt-$versionInfo-git.output.txt" 2> "pbrt-$versionInfo-git.error.txt"
   mkdir -p $rendererPathPBRTv4
   $binPathCMake/cmake -B $rendererPathPBRTv4 -S $binDirectory/pbrt-$versionInfo 1> "pbrt-$versionInfo-cmake.output.txt" 2> "pbrt-$versionInfo-cmake.error.txt"
-  make -j -C $rendererPathPBRTv4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
+  make -C $rendererPathPBRTv4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
   ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
   echo "Customize (End): PBRT 4"
 fi
@@ -355,26 +355,30 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   mkdir $rendererPathUnreal
-  mv UnrealEngine-$versionInfo-release $rendererPathUnreal
+  mv UnrealEngine-$versionInfo-release/* $rendererPathUnreal
   $rendererPathUnreal/Setup.sh 1> "unreal-engine-setup.output.txt" 2> "unreal-engine-setup.error.txt"
   echo "Customize (End): Unreal Engine"
 
   if [ $machineType == "Workstation" ]; then
     echo "Customize (Start): Unreal Project Files"
     $rendererPathUnreal/GenerateProjectFiles.sh 1> "unreal-project-files-generate.output.txt" 2> "unreal-project-files-generate.error.txt"
-    make -j -C $rendererPathUnreal 1> "unreal-project-files-make.output.txt" 2> "unreal-project-files-make.error.txt"
+    make -C $rendererPathUnreal 1> "unreal-project-files-make.output.txt" 2> "unreal-project-files-make.error.txt"
     echo "Customize (End): Unreal Project Files"
   fi
 
   if [[ $renderEngines == *Unreal.PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
-    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure 1> "unreal-stream-git.output.txt" 2> "unreal-stream-git.error.txt"
+    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 1> "unreal-stream-git.output.txt" 2> "unreal-stream-git.error.txt"
+    yum -y install coturn
     installFile="PixelStreamingInfrastructure/SignallingWebServer/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 1> "unreal-stream-signalling.output.txt" 2> "unreal-stream-signalling.error.txt"
     installFile="PixelStreamingInfrastructure/Matchmaker/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 1> "unreal-stream-matchmaker.output.txt" 2> "unreal-stream-matchmaker.error.txt"
+    installFile="PixelStreamingInfrastructure/SFU/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 1> "unreal-stream-sfu.output.txt" 2> "unreal-stream-sfu.error.txt"
     echo "Customize (End): Unreal Pixel Streaming"
   fi
 fi
