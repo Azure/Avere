@@ -494,12 +494,7 @@ EOM
 
     /bin/cat <<EOM >>$FILENAME
 
-fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=function write_inmem() {
-    FILENAME=/home/$LINUX_USER/inmem.conf
-    /bin/cat <<EOM >$FILENAME
-create_anchors=yes
-include=azure-clients.conf
-
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=18
 fsd=default,depth=1,width=1,files=28,size=32m
 EOM
 
