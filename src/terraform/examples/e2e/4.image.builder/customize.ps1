@@ -366,7 +366,7 @@ if ($renderEngines -contains "Blender") {
 }
 
 if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
-  Write-Host "Customize (Start): Unreal Engine"
+  Write-Host "Customize (Start): Unreal Engine Setup"
   Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.txt" -RedirectStandardError "net-fx3.error.txt"
   Set-Location -Path C:\
   $versionInfo = "5.1.1"
@@ -385,35 +385,45 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
   Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-engine-setup.output.txt" -RedirectStandardError "unreal-engine-setup.error.txt"
-  Write-Host "Customize (End): Unreal Engine"
+  Write-Host "Customize (End): Unreal Engine Setup"
+
+  Write-Host "Customize (Start): Visual Studio Workloads"
+  $versionInfo = "2022"
+  $installFile = "VisualStudioSetup.exe"
+  $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  $componentIds = "--add Microsoft.Net.Component.4.8.SDK"
+  $componentIds += " --add Microsoft.Net.Component.4.6.2.TargetingPack"
+  $componentIds += " --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+  $componentIds += " --add Microsoft.VisualStudio.Component.VSSDK"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeGame"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeDesktop"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeCrossPlat"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.ManagedDesktop"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.Universal"
+  Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs.output.txt" -RedirectStandardError "vs.error.txt"
+  Write-Host "Customize (End): Visual Studio Workloads"
+
+  Write-Host "Customize (Start): Unreal Project Files Generate"
+  $installFile = "$rendererPathUnreal\GenerateProjectFiles.bat"
+  $scriptFilePath = $installFile
+  $scriptFileText = Get-Content -Path $scriptFilePath
+  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+  Set-Content -Path $scriptFilePath -Value $scriptFileText
+  $scriptFilePath = "$rendererPathUnreal\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
+  $scriptFileText = Get-Content -Path $scriptFilePath
+  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+  Set-Content -Path $scriptFilePath -Value $scriptFileText
+  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-project-files-generate.output.txt" -RedirectStandardError "unreal-project-files-generate.error.txt"
+  Write-Host "Customize (End): Unreal Project Files Generate"
+
+  Write-Host "Customize (Start): Unreal Engine Build"
+  [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
+  [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$rendererPathUnreal\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Editor"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.txt" -RedirectStandardError "unreal-engine-build.error.txt"
+  Write-Host "Customize (End): Unreal Engine Build"
 
   if ($machineType -eq "Workstation") {
-    Write-Host "Customize (Start): Visual Studio (Community Edition)"
-    $versionInfo = "2022"
-    $installFile = "VisualStudioSetup.exe"
-    $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    $componentIds = "--add Microsoft.Net.Component.4.8.SDK"
-    $componentIds += " --add Microsoft.VisualStudio.Component.VSSDK"
-    Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs.output.txt" -RedirectStandardError "vs.error.txt"
-    Write-Host "Customize (End): Visual Studio (Community Edition)"
-
-    Write-Host "Customize (Start): Unreal Project Files"
-    $installFile = "$rendererPathUnreal\GenerateProjectFiles.bat"
-    $scriptFilePath = $installFile
-    $scriptFileText = Get-Content -Path $scriptFilePath
-    $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
-    Set-Content -Path $scriptFilePath -Value $scriptFileText
-    $scriptFilePath = "$rendererPathUnreal\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
-    $scriptFileText = Get-Content -Path $scriptFilePath
-    $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
-    Set-Content -Path $scriptFilePath -Value $scriptFileText
-    Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-project-files-generate.output.txt" -RedirectStandardError "unreal-project-files-generate.error.txt"
-    [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
-    [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "C:\Program Files\Epic Games\Unreal5\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
-    Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Editor"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-editor-build.output.txt" -RedirectStandardError "unreal-editor-build.error.txt"
-    Write-Host "Customize (End): Unreal Project Files"
-
     Write-Host "Customize (Start): Unreal Editor"
     $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
     netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
@@ -428,11 +438,13 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
 
   if ($renderEngines -contains "Unreal.PixelStream") {
     Write-Host "Customize (Start): Unreal Pixel Streaming"
-    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
+    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
     $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
     Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.txt" -RedirectStandardError "unreal-stream-signalling.error.txt"
     $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
     Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
+    $installFile = "PixelStreamingInfrastructure\SFU\platform_scripts\cmd\setup.bat"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-sfu.output.txt" -RedirectStandardError "unreal-stream-sfu.error.txt"
     Write-Host "Customize (End): Unreal Pixel Streaming"
   }
 }

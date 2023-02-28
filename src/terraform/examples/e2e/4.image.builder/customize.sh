@@ -347,7 +347,7 @@ if [[ $renderEngines == *Blender* ]]; then
 fi
 
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
-  echo "Customize (Start): Unreal Engine"
+  echo "Customize (Start): Unreal Engine Setup"
   yum -y install libicu
   versionInfo="5.1.1"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
@@ -357,14 +357,15 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
   mkdir $rendererPathUnreal
   mv UnrealEngine-$versionInfo-release/* $rendererPathUnreal
   $rendererPathUnreal/Setup.sh 1> "unreal-engine-setup.output.txt" 2> "unreal-engine-setup.error.txt"
-  echo "Customize (End): Unreal Engine"
+  echo "Customize (End): Unreal Engine Setup"
 
-  if [ $machineType == "Workstation" ]; then
-    echo "Customize (Start): Unreal Project Files"
-    $rendererPathUnreal/GenerateProjectFiles.sh 1> "unreal-project-files-generate.output.txt" 2> "unreal-project-files-generate.error.txt"
-    make -C $rendererPathUnreal 1> "unreal-project-files-make.output.txt" 2> "unreal-project-files-make.error.txt"
-    echo "Customize (End): Unreal Project Files"
-  fi
+  echo "Customize (Start): Unreal Project Files Generate"
+  $rendererPathUnreal/GenerateProjectFiles.sh 1> "unreal-project-files-generate.output.txt" 2> "unreal-project-files-generate.error.txt"
+  echo "Customize (End): Unreal Project Files Generate"
+
+  echo "Customize (Start): Unreal Engine Build"
+  make -C $rendererPathUnreal 1> "unreal-engine-build.output.txt" 2> "unreal-engine-build.error.txt"
+  echo "Customize (End): Unreal Engine Build"
 
   if [[ $renderEngines == *Unreal.PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
