@@ -420,7 +420,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   Write-Host "Customize (Start): Unreal Engine Build"
   [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
   [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$rendererPathUnreal\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Editor"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.txt" -RedirectStandardError "unreal-engine-build.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.txt" -RedirectStandardError "unreal-engine-build.error.txt"
   Write-Host "Customize (End): Unreal Engine Build"
 
   if ($machineType -eq "Workstation") {
