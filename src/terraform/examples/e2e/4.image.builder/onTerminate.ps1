@@ -7,12 +7,14 @@ $ErrorActionPreference = "Stop"
 $cycleCloudEnable = $false
 
 function RemoveWorker ($renderManager) {
-  if ($renderManager -like "*Qube*") {
-    qbadmin worker --remove $(hostname)
-  }
   if ($renderManager -like "*Deadline*") {
     deadlineworker -shutdown
     deadlinecommand -DeleteSlave $(hostname)
+  }
+  if ($renderManager -like "*RoyalRender*") {
+  }
+  if ($renderManager -like "*Qube*") {
+    qbadmin worker --remove $(hostname)
   }
 }
 

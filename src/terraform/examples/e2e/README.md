@@ -148,7 +148,6 @@ As an alternative deployment management approach option, sample [GitOps](#8-gito
    * Make sure the **imageId** config references the correct custom image in your Azure subscription.
    * Make sure the **fileSystemMounts*** configs have the correct values (e.g., storage account name).
        * If your config has cache mounts, make sure [3 Storage Cache](#3-storage-cache) is deployed and *running* before deploying this module.
-   * Make sure the **fileSystemPermissions** config has the appropriate value for your environment.
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
@@ -194,7 +193,7 @@ To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure 
 
 ## 9 Render
 
-Now that deployment of the AAA solution framework is complete, this final section provides render job submission examples for multiple render engines (Blender, Physically-Based Ray Tracer) via multiple render managers (Qube, Deadline).
+Now that deployment of the AAA solution framework is complete, this final section provides render job submission examples for multiple render engines (Blender, Physically-Based Ray Tracer) via multiple render managers (Deadline, Royal Render, Qube).
 
 ### 9.1 [Blender](https://www.blender.org) [Splash Screen (3.4)](https://www.blender.org/download/demo-files/#splash)
 
@@ -202,29 +201,41 @@ Now that deployment of the AAA solution framework is complete, this final sectio
   <img src=".github/images/blender-splash-3.4.png" width="1024" />
 </p>
 
-#### 9.1.1 [Qube](https://www.pipelinefx.com) Render Farm (*Linux*)
+#### 9.1.1 [Deadline](https://www.awsthinkbox.com/deadline) (*Linux*)
 
-*The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
-
-```qbsub --name blender-splash blender3-4 --background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1```
-
-#### 9.1.2 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Linux*)
-
-*The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender3-4 -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
 
-#### 9.1.3 [Qube](https://www.pipelinefx.com) Render Farm (*Windows*)
+#### 9.1.2 [Royal Render](https://www.royalrender.de) (*Linux*)
 
-*The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```qbsub --name blender-splash blender3-4 --background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1```
+```rrSubmitterconsole --name blender-splash blender3-4 --background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1```
 
-#### 9.1.4 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Windows*)
+#### 9.1.3 [Qube](https://www.pipelinefx.com) (*Linux*)
 
-*The following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+
+```qbsub --name blender-splash blender3-4 --background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1```
+
+#### 9.1.4 [Deadline](https://www.awsthinkbox.com/deadline) (*Windows*)
+
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender3-4 -arguments "--background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1"```
+
+#### 9.1.5 [Royal Render](https://www.royalrender.de) (*Windows*)
+
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+
+```rrSubmitterconsole --name blender-splash blender3-4 --background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1```
+
+#### 9.1.6 [Qube](https://www.pipelinefx.com) (*Windows*)
+
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+
+```qbsub --name blender-splash blender3-4 --background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1```
 
 ### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
 
@@ -232,37 +243,53 @@ Now that deployment of the AAA solution framework is complete, this final sectio
   <img src=".github/images/moana-island.png" width="1024" />
 </p>
 
-#### 9.2.1 [Qube](https://www.pipelinefx.com) Render Farm (*Linux*)
+#### 9.2.1 [Deadline](https://www.awsthinkbox.com/deadline) (*Linux*)
 
-*The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
-
-```qbsub --name moana-island-v3 pbrt3 --outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt```
-
-```qbsub --name moana-island-v4 pbrt4 --outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt```
-
-#### 9.2.2 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Linux*)
-
-*The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
+*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt"```
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
-#### 9.2.3 [Qube](https://www.pipelinefx.com) Render Farm (*Windows*)
+#### 9.2.2 [Royal Render](https://www.royalrender.de) (*Linux*)
 
-*The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
+*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```qbsub --name moana-island-v3 pbrt3 --outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt```
+```rrSubmitterconsole --name moana-island-v3 pbrt3 --outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt```
 
-```qbsub --name moana-island-v4 pbrt4 --outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt```
+```rrSubmitterconsole --name moana-island-v4 pbrt4 --outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt```
 
-#### 9.2.4 [Deadline](https://www.awsthinkbox.com/deadline) Render Farm (*Windows*)
+#### 9.2.3 [Qube](https://www.pipelinefx.com) (*Linux*)
 
-*The following job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
+*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
+
+```qbsub --name moana-island-v3 pbrt3 --outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt```
+
+```qbsub --name moana-island-v4 pbrt4 --outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt```
+
+#### 9.2.4 [Deadline](https://www.awsthinkbox.com/deadline) (*Windows*)
+
+*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt"```
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"```
+
+#### 9.2.5 [Royal Render](https://www.royalrender.de) (*Windows*)
+
+*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
+
+```rrSubmitterconsole --name moana-island-v3 pbrt3 --outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt```
+
+```rrSubmitterconsole --name moana-island-v4 pbrt4 --outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt```
+
+#### 9.2.6 [Qube](https://www.pipelinefx.com) (*Windows*)
+
+*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
+
+```qbsub --name moana-island-v3 pbrt3 --outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt```
+
+```qbsub --name moana-island-v4 pbrt4 --outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt```
 
 ## 10 Appendix
 

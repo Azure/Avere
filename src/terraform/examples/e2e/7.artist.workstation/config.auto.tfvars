@@ -34,8 +34,11 @@ virtualMachines = [
         ]
         fileSystemMountsStorageCache = [
         ]
+        fileSystemMountsRoyalRender = [
+          "render.artist.studio:/rr /rr nfs defaults 0 0"
+        ]
         fileSystemMountsDeadline = [
-          "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
+          "render.artist.studio:/deadline /deadline nfs defaults 0 0"
         ]
         teradiciLicenseKey = ""
       }
@@ -73,8 +76,11 @@ virtualMachines = [
         ]
         fileSystemMountsStorageCache = [
         ]
+        fileSystemMountsRoyalRender = [
+          "mount -o anon \\\\render.artist.studio\\RoyalRender S:"
+        ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.artist.studio\\deadline S:"
+          "mount -o anon \\\\render.artist.studio\\Deadline S:"
         ]
         teradiciLicenseKey = ""
       }

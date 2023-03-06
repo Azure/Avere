@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.7"
+  required_version = ">= 1.3.9"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.42.0"
+      version = "~>3.46.0"
     }
   }
   backend "azurerm" {
@@ -360,7 +360,7 @@ resource "azurerm_network_security_group" "network" {
   dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []
     content {
-      name                       = "AllowInPCoIP[TCP]"
+      name                       = "AllowInPCoIP.TCP"
       priority                   = 2000
       direction                  = "Inbound"
       access                     = "Allow"
@@ -378,7 +378,7 @@ resource "azurerm_network_security_group" "network" {
   dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []
     content {
-      name                       = "AllowInPCoIP[UDP]"
+      name                       = "AllowInPCoIP.UDP"
       priority                   = 2100
       direction                  = "Inbound"
       access                     = "Allow"
@@ -406,7 +406,7 @@ resource "azurerm_network_security_group" "network" {
   dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []
     content {
-      name                       = "AllowOutPCoIP[TCP]"
+      name                       = "AllowOutPCoIP.TCP"
       priority                   = 2100
       direction                  = "Outbound"
       access                     = "Allow"
@@ -420,7 +420,7 @@ resource "azurerm_network_security_group" "network" {
   dynamic security_rule {
     for_each = each.value.name == "Workstation" ? [1] : []
     content {
-      name                       = "AllowOutPCoIP[UDP]"
+      name                       = "AllowOutPCoIP.UDP"
       priority                   = 2200
       direction                  = "Outbound"
       access                     = "Allow"
@@ -682,7 +682,7 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_range     = "443"
   }
   security_rule {
-    name                       = "AllowOutSSH[RDP]"
+    name                       = "AllowOutSSH-RDP"
     priority                   = 2000
     direction                  = "Outbound"
     access                     = "Allow"

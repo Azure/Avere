@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.7"
+  required_version = ">= 1.3.9"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.42.0"
+      version = "~>3.46.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -48,7 +48,9 @@ variable "storageAccounts" {
       enableLargeFileShare = bool
       blobContainers = list(object(
         {
-          name = string
+          name           = string
+          rootAcl        = string
+          rootAclDefault = string
           dataSource = object(
             {
               accountName   = string
@@ -315,12 +317,14 @@ data "azurerm_subnet" "storage_netapp" {
 }
 
 locals {
-  stateExistsNetwork     = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsNetwork     = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
         name               = blobContainer.name
+        rootAcl            = blobContainer.rootAcl
+        rootAclDefault     = blobContainer.rootAclDefault
         dataSource         = blobContainer.dataSource
         storageAccountName = storageAccount.name
       }
@@ -473,6 +477,12 @@ resource "azurerm_storage_container" "containers" {
   }
   name                 = each.value.name
   storage_account_name = each.value.storageAccountName
+  provisioner "local-exec" {
+    command = "az storage fs access set --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.rootAcl}"
+  }
+  provisioner "local-exec" {
+    command = "az storage fs access set --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.rootAclDefault}"
+  }
   provisioner "local-exec" {
     command = each.value.dataSource.accountName == "" ? "az storage container show --account-name ${each.value.storageAccountName} --name ${each.value.name}" : "az storage copy --source-account-name ${each.value.dataSource.accountName} --source-account-key ${each.value.dataSource.accountKey} --source-container ${each.value.dataSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name}"
   }

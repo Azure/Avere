@@ -42,12 +42,11 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
-        fileSystemMountsDeadline = [
-          "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
+        fileSystemMountsRoyalRender = [
+          "render.artist.studio:/rr /rr nfs defaults 0 0"
         ]
-        fileSystemPermissions = [
-          "chmod 777 /mnt/data/read",
-          "chmod 777 /mnt/data/write"
+        fileSystemMountsDeadline = [
+          "render.artist.studio:/deadline /deadline nfs defaults 0 0"
         ]
       }
     }
@@ -101,12 +100,11 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
-        fileSystemMountsDeadline = [
-          "render.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
+        fileSystemMountsRoyalRender = [
+          "render.artist.studio:/rr /rr nfs defaults 0 0"
         ]
-        fileSystemPermissions = [
-          "chmod 777 /mnt/data/read",
-          "chmod 777 /mnt/data/write"
+        fileSystemMountsDeadline = [
+          "render.artist.studio:/deadline /deadline nfs defaults 0 0"
         ]
       }
     }
@@ -160,12 +158,11 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
-        fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.artist.studio\\deadline S:"
+        fileSystemMountsRoyalRender = [
+          "mount -o anon \\\\render.artist.studio\\RoyalRender S:"
         ]
-        fileSystemPermissions = [
-          "icacls R: /grant Everyone:F",
-          "icacls W: /grant Everyone:F"
+        fileSystemMountsDeadline = [
+          "mount -o anon \\\\render.artist.studio\\Deadline S:"
         ]
       }
     }
@@ -219,12 +216,11 @@ virtualMachineScaleSets = [
         fileSystemMountsStorageCache = [
           "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
         ]
-        fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.artist.studio\\deadline S:"
+        fileSystemMountsRoyalRender = [
+          "mount -o anon \\\\render.artist.studio\\RoyalRender S:"
         ]
-        fileSystemPermissions = [
-          "icacls R: /grant Everyone:F",
-          "icacls W: /grant Everyone:F"
+        fileSystemMountsDeadline = [
+          "mount -o anon \\\\render.artist.studio\\Deadline S:"
         ]
       }
     }

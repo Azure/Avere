@@ -12,12 +12,9 @@ source $functionsFile
 
 AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
 AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
+AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsRoyalRender) }"
 AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
 mount -a
-
-%{ for fsPermission in fileSystemPermissions }
-  ${fsPermission}
-%{ endfor }
 
 servicePath="/etc/systemd/system/scheduledEventHandler.service"
 echo "[Unit]" > $servicePath

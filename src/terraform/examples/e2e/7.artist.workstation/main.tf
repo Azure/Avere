@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.7"
+  required_version = ">= 1.3.9"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.42.0"
+      version = "~>3.46.0"
     }
   }
   backend "azurerm" {
@@ -70,6 +70,7 @@ variable "virtualMachines" {
             {
               fileSystemMountsStorage      = list(string)
               fileSystemMountsStorageCache = list(string)
+              fileSystemMountsRoyalRender  = list(string)
               fileSystemMountsDeadline     = list(string)
               teradiciLicenseKey           = string
             }
@@ -156,6 +157,7 @@ data "azurerm_subnet" "workstation" {
 }
 
 locals {
+  renderManager      = split(",", module.global.renderManager)[0]
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
@@ -229,7 +231,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager             = module.global.renderManager },
+        { renderManager             = local.renderManager },
         { fileSystemMountsDelimiter = ";" }
       ))
     )}"
@@ -302,7 +304,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
   settings = jsonencode({
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager             = module.global.renderManager },
+        { renderManager             = local.renderManager },
         { fileSystemMountsDelimiter = ";" }
       )), "UTF-16LE"
     )}"

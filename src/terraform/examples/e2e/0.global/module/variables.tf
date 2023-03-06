@@ -11,7 +11,7 @@ variable "resourceGroupName" {
 }
 
 variable "renderManager" {
-  default = "RoyalRender,Qube,Deadline"
+  default = "Deadline,RoyalRender,Qube"
 }
 
 # Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction)

@@ -22,7 +22,7 @@ $versionInfo = "3.7.9"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath .\$installFile -ArgumentList "/quiet /log python.txt InstallAllUsers=1 PrependPath=1" -Wait
+Start-Process -FilePath .\$installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /log python.txt" -Wait
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
@@ -112,7 +112,7 @@ if ($machineType -eq "Scheduler") {
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log az-cli.txt" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log az-cli.txt" -Wait
   Write-Host "Customize (End): Azure CLI"
 
   if ($renderManager -like "*Deadline*") {
@@ -124,122 +124,6 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): NFS Client"
   Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" -Wait -RedirectStandardOutput "nfs-client.output.txt" -RedirectStandardError "nfs-client.error.txt"
   Write-Host "Customize (End): NFS Client"
-}
-
-if ($renderManager -like "*RoyalRender*") {
-  $schedulerVersion = "9.0.02"
-  $schedulerInstallRoot = "\RoyalRender"
-  $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
-  $binPaths += ";$schedulerBinPath"
-
-  Write-Host "Customize (Start): Royal Render Download"
-  $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
-  $downloadUrl = "$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Royal Render Download"
-
-  Write-Host "Customize (Start): Royal Render Installer"
-  $installType = "royal-render"
-  $installFile = "rrSetup_win.exe"
-  $installDirectory = "RoyalRender*"
-  New-Item -ItemType Directory -Path $schedulerInstallRoot
-  New-SmbShare -Name "RoyalRender" -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
-  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
-  Write-Host "Customize (End): Royal Render Installer"
-
-  $serviceUser = "rrService"
-  $securePassword = ConvertTo-SecureString $servicePassword -AsPlainText -Force
-  $installFile = "rrWorkstation_installer.exe"
-  New-LocalUser -Name $serviceUser -Password $securePassword -PasswordNeverExpires
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Royal Render Server"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW $servicePassword -fwIn" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
-    Write-Host "Customize (End): Royal Render Server"
-  } else {
-    Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -rrUser $serviceUser -rrUserPW $servicePassword -fwOut" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
-    Write-Host "Customize (End): Royal Render Client"
-
-    Write-Host "Customize (Start): Royal Render Viewer"
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = $schedulerBinPath
-    $shortcut.TargetPath = "$schedulerBinPath\rrViewer.exe"
-    $shortcut.Save()
-    Write-Host "Customize (End): Royal Render Viewer"
-  }
-}
-
-if ($renderManager -like "*Qube*") {
-  $schedulerVersion = "7.5-2"
-  $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
-  $schedulerInstallRoot = "C:\Program Files\pfx\qube"
-  $schedulerBinPath = "$schedulerInstallRoot\bin"
-  $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
-
-  Write-Host "Customize (Start): Qube Core"
-  $installType = "qube-core"
-  $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-  $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
-  Write-Host "Customize (End): Qube Core"
-
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Qube Supervisor"
-    netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor (TCP)" dir=in action=allow protocol=TCP localport=50001,50002
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor Proxy" dir=in action=allow protocol=TCP localport=50555,50556
-    $installType = "qube-supervisor"
-    $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
-    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
-    $binPaths += ";C:\Program Files\pfx\pgsql\bin"
-    Write-Host "Customize (End): Qube Supervisor"
-
-    Write-Host "Customize (Start): Qube Data Relay Agent (DRA)"
-    netsh advfirewall firewall add rule name="Allow Qube Data Relay Agent (DRA)" dir=in action=allow protocol=TCP localport=5001
-    $installType = "qube-dra"
-    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
-    Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
-  } else {
-    Write-Host "Customize (Start): Qube Worker"
-    netsh advfirewall firewall add rule name="Allow Qube Worker (TCP)" dir=in action=allow protocol=TCP localport=50011
-    netsh advfirewall firewall add rule name="Allow Qube Worker (UDP)" dir=in action=allow protocol=UDP localport=50011
-    $installType = "qube-worker"
-    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
-    Write-Host "Customize (End): Qube Worker"
-
-    Write-Host "Customize (Start): Qube Client"
-    $installType = "qube-client"
-    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.txt" -Wait
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$schedulerInstallRoot\QubeUI"
-    $shortcut.TargetPath = "$schedulerInstallRoot\QubeUI\QubeUI.bat"
-    $shortcut.IconLocation = "$schedulerInstallRoot\lib\install\qube_icon.ico"
-    $shortcut.Save()
-    Write-Host "Customize (End): Qube Client"
-
-    $configFileText = Get-Content -Path $schedulerConfigFile
-    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = render.artist.studio")
-    $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
-    Set-Content -Path $schedulerConfigFile -Value $configFileText
-  }
 }
 
 if ($renderManager -like "*Deadline*") {
@@ -304,6 +188,122 @@ if ($renderManager -like "*Deadline*") {
   }
 }
 
+if ($renderManager -like "*RoyalRender*") {
+  $schedulerVersion = "9.0.03"
+  $schedulerInstallRoot = "\RoyalRender"
+  $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
+  $binPaths += ";$schedulerBinPath"
+
+  Write-Host "Customize (Start): Royal Render Download"
+  $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
+  $downloadUrl = "$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Royal Render Download"
+
+  Write-Host "Customize (Start): Royal Render Installer"
+  $installType = "royal-render"
+  $installFile = "rrSetup_win.exe"
+  $installDirectory = "RoyalRender*"
+  New-Item -ItemType Directory -Path $schedulerInstallRoot
+  New-SmbShare -Name "RoyalRender" -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
+  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+  Write-Host "Customize (End): Royal Render Installer"
+
+  $serviceUser = "rrService"
+  $securePassword = ConvertTo-SecureString $servicePassword -AsPlainText -Force
+  $installFile = "rrWorkstation_installer.exe"
+  New-LocalUser -Name $serviceUser -Password $securePassword -PasswordNeverExpires
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Royal Render Server"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW $servicePassword -fwIn" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
+    Write-Host "Customize (End): Royal Render Server"
+  } else {
+    Write-Host "Customize (Start): Royal Render Client"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -rrUser $serviceUser -rrUserPW $servicePassword -fwOut" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
+    Write-Host "Customize (End): Royal Render Client"
+
+    Write-Host "Customize (Start): Royal Render Viewer"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $shortcut.WorkingDirectory = $schedulerBinPath
+    $shortcut.TargetPath = "$schedulerBinPath\rrViewer.exe"
+    $shortcut.Save()
+    Write-Host "Customize (End): Royal Render Viewer"
+  }
+}
+
+if ($renderManager -like "*Qube*") {
+  $schedulerVersion = "7.5-2"
+  $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
+  $schedulerInstallRoot = "C:\Program Files\pfx\qube"
+  $schedulerBinPath = "$schedulerInstallRoot\bin"
+  $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
+
+  Write-Host "Customize (Start): Qube Core"
+  $installType = "qube-core"
+  $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
+  $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+  Write-Host "Customize (End): Qube Core"
+
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Qube Supervisor"
+    netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor (TCP)" dir=in action=allow protocol=TCP localport=50001,50002
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor Proxy" dir=in action=allow protocol=TCP localport=50555,50556
+    $installType = "qube-supervisor"
+    $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
+    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    $binPaths += ";C:\Program Files\pfx\pgsql\bin"
+    Write-Host "Customize (End): Qube Supervisor"
+
+    Write-Host "Customize (Start): Qube Data Relay Agent (DRA)"
+    netsh advfirewall firewall add rule name="Allow Qube Data Relay Agent (DRA)" dir=in action=allow protocol=TCP localport=5001
+    $installType = "qube-dra"
+    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
+    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
+  } else {
+    Write-Host "Customize (Start): Qube Worker"
+    netsh advfirewall firewall add rule name="Allow Qube Worker (TCP)" dir=in action=allow protocol=TCP localport=50011
+    netsh advfirewall firewall add rule name="Allow Qube Worker (UDP)" dir=in action=allow protocol=UDP localport=50011
+    $installType = "qube-worker"
+    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
+    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    Write-Host "Customize (End): Qube Worker"
+
+    Write-Host "Customize (Start): Qube Client"
+    $installType = "qube-client"
+    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
+    $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $shortcut.WorkingDirectory = "$schedulerInstallRoot\QubeUI"
+    $shortcut.TargetPath = "$schedulerInstallRoot\QubeUI\QubeUI.bat"
+    $shortcut.IconLocation = "$schedulerInstallRoot\lib\install\qube_icon.ico"
+    $shortcut.Save()
+    Write-Host "Customize (End): Qube Client"
+
+    $configFileText = Get-Content -Path $schedulerConfigFile
+    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = render.artist.studio")
+    $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
+    Set-Content -Path $schedulerConfigFile -Value $configFileText
+  }
+}
+
 $rendererPathPBRT = "C:\Program Files\PBRT"
 $rendererPathBlender = "C:\Program Files\Blender"
 $rendererPathUnreal = "C:\Program Files\Unreal"
@@ -348,7 +348,7 @@ if ($renderEngines -contains "Blender") {
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" /quiet /norestart /log blender.txt') -Wait
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.txt') -Wait
   New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3-4"
   Write-Host "Customize (End): Blender 3.4"
 

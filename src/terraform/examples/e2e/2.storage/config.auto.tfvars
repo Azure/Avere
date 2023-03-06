@@ -15,7 +15,9 @@ storageAccounts = [
     enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
     blobContainers = [                        # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
-        name = "data"
+        name           = "data"
+        rootAcl        = "user::rwx,group::rwx,other::rwx"
+        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
         dataSource = {
           accountName   = ""
           accountKey    = ""

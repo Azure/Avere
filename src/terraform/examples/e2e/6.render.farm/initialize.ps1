@@ -14,10 +14,6 @@ $fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}"
 $fsMountsFile = AddFileSystemMounts $binDirectory "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
 RegisterFileSystemMounts $fsMountsFile
 
-%{ for fsPermission in fileSystemPermissions }
-  ${fsPermission}
-%{ endfor }
-
 $taskCount = 60 / ${terminationNotificationDetectionIntervalSeconds}
 $nextMinute = (Get-Date).Minute + 1
 for ($i = 0; $i -lt $taskCount; $i++) {
