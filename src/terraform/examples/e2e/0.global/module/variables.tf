@@ -39,8 +39,7 @@ variable "keyVault" {
       adminPassword     = "AdminPassword"
     }
     keyName = {
-      cacheEncryption   = "CacheEncryption"
-      computeEncryption = "ComputeEncryption"
+      cacheEncryption = "CacheEncryption"
     }
     certificateName = {
     }

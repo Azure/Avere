@@ -1,3 +1,13 @@
+#######################################################
+# Storage (https://learn.microsoft.com/azure/storage) #
+#######################################################
+
+rootStorage = {
+  accountType        = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
+  accountRedundancy  = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+  accountPerformance = "Standard"  # https://learn.microsoft.com/azure/storage/blobs/storage-blob-performance-tiers
+}
+
 ############################################################################
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
 ############################################################################
@@ -36,33 +46,10 @@ keyVault = {
         "verify",
         "wrapKey"
       ]
-    },
-    {
-      name = "ComputeEncryption"
-      type = "RSA"
-      size = 2048
-      operations = [
-        "decrypt",
-        "encrypt",
-        "sign",
-        "unwrapKey",
-        "verify",
-        "wrapKey"
-      ]
     }
   ]
   certificates = [
   ]
-}
-
-#######################################################
-# Storage (https://learn.microsoft.com/azure/storage) #
-#######################################################
-
-rootStorage = {
-  accountType        = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
-  accountRedundancy  = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
-  accountPerformance = "Standard"  # https://learn.microsoft.com/azure/storage/blobs/storage-blob-performance-tiers
 }
 
 ######################################################################

@@ -244,24 +244,24 @@ virtualMachineScaleSets = [
 #######################################################################
 
 kubernetes = {
-  fleet = { # https://learn.microsoft.com/azure/kubernetes-fleet/overview
-    name      = ""
+  fleet = {    # https://learn.microsoft.com/azure/kubernetes-fleet/overview
+    name      = "" # "azrender"
     dnsPrefix = ""
   }
-  clusters = [
+  clusters = [ # https://learn.microsoft.com/azure/aks/intro-kubernetes
     {
-      name      = "" # "RenderFarm"
+      name      = "" # "cpu"
       dnsPrefix = ""
       systemNodePool = {
-        name = "system"
+        name = "sys"
         machine = {
           size  = "Standard_D8s_v5"
-          count = 3
+          count = 2
         }
       }
       userNodePools = [
         {
-          name = "cpu"
+          name = "app"
           machine = {
             size  = "Standard_HB120rs_v2"
             count = 2
@@ -270,9 +270,22 @@ kubernetes = {
             enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
             evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
           }
-        },
+        }
+      ]
+    },
+    {
+      name      = "" # "gpu"
+      dnsPrefix = ""
+      systemNodePool = {
+        name = "sys"
+        machine = {
+          size  = "Standard_D8s_v5"
+          count = 2
+        }
+      }
+      userNodePools = [
         {
-          name = "gpu"
+          name = "app"
           machine = {
             size  = "Standard_NV36ads_A10_v5"
             count = 2

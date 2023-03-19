@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.3.9"
+  required_version = ">= 1.4.2"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.46.0"
+      version = "~>3.48.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -36,6 +36,16 @@ provider "azurerm" {
 
 module "global" {
   source = "./module"
+}
+
+variable "rootStorage" {
+  type = object(
+    {
+      accountType        = string
+      accountRedundancy  = string
+      accountPerformance = string
+    }
+  )
 }
 
 variable "keyVault" {
@@ -83,16 +93,6 @@ variable "keyVault" {
   )
 }
 
-variable "rootStorage" {
-  type = object(
-    {
-      accountType        = string
-      accountRedundancy  = string
-      accountPerformance = string
-    }
-  )
-}
-
 variable "monitorWorkspace" {
   type = object(
     {
@@ -111,6 +111,41 @@ data "azurerm_client_config" "provider" {}
 resource "azurerm_resource_group" "render" {
   name     = module.global.resourceGroupName
   location = module.global.regionName
+}
+
+#######################################################
+# Storage (https://learn.microsoft.com/azure/storage) #
+#######################################################
+
+resource "azurerm_storage_account" "storage" {
+  name                            = module.global.rootStorage.accountName
+  resource_group_name             = azurerm_resource_group.render.name
+  location                        = azurerm_resource_group.render.location
+  account_kind                    = var.rootStorage.accountType
+  account_replication_type        = var.rootStorage.accountRedundancy
+  account_tier                    = var.rootStorage.accountPerformance
+  allow_nested_items_to_be_public = false
+  network_rules {
+    default_action = "Deny"
+    ip_rules = [
+      jsondecode(data.http.client_address.response_body).ip
+    ]
+  }
+}
+
+resource "time_sleep" "storage_data" {
+  create_duration = "30s"
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
+}
+
+resource "azurerm_storage_container" "container" {
+  name                 = module.global.rootStorage.containerName
+  storage_account_name = azurerm_storage_account.storage.name
+  depends_on = [
+    time_sleep.storage_data
+  ]
 }
 
 #####################################################################################################################
@@ -194,41 +229,6 @@ resource "azurerm_key_vault_certificate" "certificates" {
       exportable = each.value.key.exportable
     }
   }
-}
-
-#######################################################
-# Storage (https://learn.microsoft.com/azure/storage) #
-#######################################################
-
-resource "azurerm_storage_account" "storage" {
-  name                            = module.global.rootStorage.accountName
-  resource_group_name             = azurerm_resource_group.render.name
-  location                        = azurerm_resource_group.render.location
-  account_kind                    = var.rootStorage.accountType
-  account_replication_type        = var.rootStorage.accountRedundancy
-  account_tier                    = var.rootStorage.accountPerformance
-  allow_nested_items_to_be_public = false
-  network_rules {
-    default_action = "Deny"
-    ip_rules = [
-      jsondecode(data.http.client_address.response_body).ip
-    ]
-  }
-}
-
-resource "time_sleep" "storage_data" {
-  create_duration = "30s"
-  depends_on = [
-    azurerm_storage_account.storage
-  ]
-}
-
-resource "azurerm_storage_container" "container" {
-  name                 = module.global.rootStorage.containerName
-  storage_account_name = azurerm_storage_account.storage.name
-  depends_on = [
-    time_sleep.storage_data
-  ]
 }
 
 ######################################################################
