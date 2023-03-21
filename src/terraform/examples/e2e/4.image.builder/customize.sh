@@ -164,7 +164,7 @@ if [[ $renderManager == *Deadline* ]]; then
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="9.0.03"
+  schedulerVersion="9.0.04"
   schedulerInstallRoot="/rr"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"

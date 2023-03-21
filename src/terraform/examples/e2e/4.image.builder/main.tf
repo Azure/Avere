@@ -96,6 +96,10 @@ variable "computeNetwork" {
   )
 }
 
+data "http" "client_address" {
+  url = "https://api.ipify.org?format=json"
+}
+
 data "azurerm_user_assigned_identity" "render" {
   name                = module.global.managedIdentity.name
   resource_group_name = module.global.resourceGroupName
@@ -191,7 +195,7 @@ resource "azurerm_private_dns_zone" "registry" {
 
 resource "azurerm_private_dns_zone_virtual_network_link" "registry" {
   count                 = var.containerRegistry.name != "" ? 1 : 0
-  name                  = "${azurerm_container_registry.registry[0].name}.registry"
+  name                  = "${azurerm_container_registry.render[0].name}.registry"
   resource_group_name   = azurerm_resource_group.image.name
   private_dns_zone_name = azurerm_private_dns_zone.registry[0].name
   virtual_network_id    = data.azurerm_virtual_network.compute.id
@@ -199,38 +203,48 @@ resource "azurerm_private_dns_zone_virtual_network_link" "registry" {
 
 resource "azurerm_private_endpoint" "farm" {
   count               = var.containerRegistry.name != "" ? 1 : 0
-  name                = "${azurerm_container_registry.registry[0].name}.registry"
+  name                = "${azurerm_container_registry.render[0].name}.registry"
   resource_group_name = azurerm_resource_group.image.name
   location            = azurerm_resource_group.image.location
   subnet_id           = data.azurerm_subnet.farm.id
   private_service_connection {
-    name                           = azurerm_container_registry.registry[0].name
-    private_connection_resource_id = azurerm_container_registry.registry[0].id
+    name                           = azurerm_container_registry.render[0].name
+    private_connection_resource_id = azurerm_container_registry.render[0].id
     is_manual_connection           = false
     subresource_names = [
       "registry"
     ]
   }
   private_dns_zone_group {
-    name = azurerm_container_registry.registry[0].name
+    name = azurerm_container_registry.render[0].name
     private_dns_zone_ids = [
       azurerm_private_dns_zone.registry[0].id
     ]
   }
 }
 
-resource "azurerm_container_registry" "registry" {
-  count                         = var.containerRegistry.name != "" ? 1 : 0
-  name                          = var.containerRegistry.name
-  resource_group_name           = azurerm_resource_group.image.name
-  location                      = azurerm_resource_group.image.location
-  sku                           = var.containerRegistry.sku
-  public_network_access_enabled = false
+resource "azurerm_container_registry" "render" {
+  count               = var.containerRegistry.name != "" ? 1 : 0
+  name                = var.containerRegistry.name
+  resource_group_name = azurerm_resource_group.image.name
+  location            = azurerm_resource_group.image.location
+  sku                 = var.containerRegistry.sku
   identity {
     type = "UserAssigned"
     identity_ids = [
       data.azurerm_user_assigned_identity.render.id
     ]
+  }
+  network_rule_set {
+    default_action = "Deny"
+    virtual_network {
+      action    = "Allow"
+      subnet_id = data.azurerm_subnet.farm.id
+    }
+    ip_rule {
+      action   = "Allow"
+      ip_range = jsondecode(data.http.client_address.response_body).ip
+    }
   }
 }
 

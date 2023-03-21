@@ -189,7 +189,7 @@ if ($renderManager -like "*Deadline*") {
 }
 
 if ($renderManager -like "*RoyalRender*") {
-  $schedulerVersion = "9.0.03"
+  $schedulerVersion = "9.0.04"
   $schedulerInstallRoot = "\RoyalRender"
   $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
   $binPaths += ";$schedulerBinPath"

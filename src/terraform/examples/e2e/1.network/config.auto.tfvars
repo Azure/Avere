@@ -19,7 +19,8 @@ computeNetwork = {
         "10.1.0.0/17"
       ]
       serviceEndpoints = [
-        "Microsoft.Storage"
+        "Microsoft.Storage",
+        "Microsoft.ContainerRegistry"
       ]
       serviceDelegation = ""
     },
