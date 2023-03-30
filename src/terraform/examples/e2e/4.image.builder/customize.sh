@@ -120,7 +120,7 @@ if [ $machineType == "Scheduler" ]; then
 fi
 
 if [[ $renderManager == *Deadline* ]]; then
-  schedulerVersion="10.2.0.10"
+  schedulerVersion="10.2.1.0"
   schedulerInstallRoot="/deadline"
   schedulerDatabaseHost=$(hostname)
   schedulerDatabasePath="/deadlineDatabase"
@@ -307,7 +307,7 @@ if [[ $renderEngines == *PBRT* ]]; then
 fi
 
 if [[ $renderEngines == *Blender* ]]; then
-  echo "Customize (Start): Blender 3.4"
+  echo "Customize (Start): Blender"
   yum -y install libxkbcommon
   yum -y install libXxf86vm
   yum -y install libXfixes
@@ -320,29 +320,10 @@ if [[ $renderEngines == *Blender* ]]; then
   downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
   tar -xJf $installFile
-  cd blender-$versionInfo-$versionType
-  installDirectory="$rendererPathBlender/$versionInfo"
-  mkdir -p $installDirectory
-  mv * $installDirectory
-  cd $binDirectory
-  ln -s $installDirectory/blender $rendererPathBlender/blender3-4
-  echo "Customize (End): Blender 3.4"
-
-  echo "Customize (Start): Blender 3.5"
-  yum -y install libSM
-  versionInfo="3.5.0"
-  versionType="alpha+master.09ba00974f8f-linux.x86_64-release"
-  installFile="blender-$versionInfo-$versionType.tar.xz"
-  downloadUrl="$storageContainerUrl/Blender/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  tar -xJf $installFile
-  cd blender-$versionInfo-$versionType
-  installDirectory="$rendererPathBlender/$versionInfo"
-  mkdir -p $installDirectory
-  mv * $installDirectory
-  cd $binDirectory
-  ln -s $installDirectory/blender $rendererPathBlender/blender3-5
-  echo "Customize (End): Blender 3.5"
+  mkdir -p $rendererPathBlender
+  mv blender-$versionInfo-$versionType/* $rendererPathBlender
+  binPaths="$binPaths:$rendererPathBlender"
+  echo "Customize (End): Blender"
 fi
 
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then

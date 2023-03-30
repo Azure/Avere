@@ -95,67 +95,25 @@ netAppAccount = {
 }
 
 #######################################################################################################
-# Hammerspace (https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5) #
+# Weka (https://azuremarketplace.microsoft.com/marketplace/apps/weka1652213882079.weka_data_platform) #
 #######################################################################################################
 
-hammerspace = {
+weka = {
   namePrefix = ""
-  domainName = ""
-  metadata = {
-    machine = {
-      namePrefix = "Anvil"
-      size       = "Standard_E32s_v5"
-      count      = 1 # Set to 2 (or more) to enable high availability
-    }
-    network = {
-      enableAcceleratedNetworking = true
-    }
-    osDisk = {
-      sizeGB      = 128
-      storageType = "Premium_LRS"
-      cachingType = "ReadWrite"
-    }
-    dataDisk = {
-      sizeGB      = 256
-      storageType = "Premium_LRS"
-      cachingType = "None"
-    }
-    adminLogin = {
-      userName            = ""
-      userPassword        = ""
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
-    }
+  machine = {
+    size  = ""
+    count = 2
   }
-  data = {
-    machine = {
-      namePrefix = "DSX"
-      size       = "Standard_HB120rs_v2"
-      count      = 2
-    }
-    network = {
-      enableAcceleratedNetworking = true
-    }
-    osDisk = {
-      sizeGB      = 128
-      storageType = "Premium_LRS"
-      cachingType = "ReadWrite"
-    }
-    dataDisk = {
-      count       = 2
-      sizeGB      = 256
-      storageType = "Premium_LRS"
-      cachingType = "None"
-      enableRaid0 = false
-    }
-    adminLogin = {
-      userName            = ""
-      userPassword        = ""
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
-    }
+  adminLogin = {
+    userName            = ""
+    userPassword        = ""
+    sshPublicKey        = "" # "ssh-rsa ..."
+    disablePasswordAuth = false
   }
-  enableProximityPlacement = false
+  osDisk = {
+    storageType = "Premium_LRS"
+    cachingType = "ReadWrite"
+  }
 }
 
 ####################################################################################################

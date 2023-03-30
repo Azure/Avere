@@ -127,7 +127,7 @@ if ($machineType -eq "Scheduler") {
 }
 
 if ($renderManager -like "*Deadline*") {
-  $schedulerVersion = "10.2.0.10"
+  $schedulerVersion = "10.2.1.0"
   $schedulerInstallRoot = "C:\Deadline"
   $schedulerClientMount = "S:\"
   $schedulerDatabaseHost = $(hostname)
@@ -342,27 +342,14 @@ if ($renderEngines -contains "PBRT") {
 }
 
 if ($renderEngines -contains "Blender") {
-  Write-Host "Customize (Start): Blender 3.4"
+  Write-Host "Customize (Start): Blender"
   $versionInfo = "3.4.1"
-  $installRoot = "$rendererPathBlender\$versionInfo"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $installRoot + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.txt') -Wait
-  New-Item -ItemType SymbolicLink -Target "$installRoot\blender.exe" -Path "$rendererPathBlender\blender3-4"
-  Write-Host "Customize (End): Blender 3.4"
-
-  Write-Host "Customize (Start): Blender 3.5"
-  $versionInfo = "3.5.0"
-  $versionType = "alpha+master.09ba00974f8f-windows.amd64-release"
-  $installRoot = "$rendererPathBlender\$versionInfo"
-  $installFile = "blender-$versionInfo-$versionType.zip"
-  $downloadUrl = "$storageContainerUrl/Blender/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile -DestinationPath $installRoot
-  $installDirectory = $installFile.Replace(".zip", "")
-  New-Item -ItemType SymbolicLink -Target "$installRoot\$installDirectory\blender.exe" -Path "$rendererPathBlender\blender3-5"
-  Write-Host "Customize (End): Blender 3.5"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.txt') -Wait
+  $binPaths += ";$rendererPathBlender"
+  Write-Host "Customize (End): Blender"
 }
 
 if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
