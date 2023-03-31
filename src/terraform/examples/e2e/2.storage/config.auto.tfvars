@@ -99,21 +99,31 @@ netAppAccount = {
 #######################################################################################################
 
 weka = {
+  authToken  = ""
   namePrefix = ""
   machine = {
-    size  = ""
-    count = 2
+    size  = "Standard_HB120rs_v2"
+    count = 3
   }
-  adminLogin = {
-    userName            = ""
-    userPassword        = ""
-    sshPublicKey        = "" # "ssh-rsa ..."
-    disablePasswordAuth = false
+  network = {
+    enableAcceleratedNetworking = true
   }
   osDisk = {
     storageType = "Premium_LRS"
     cachingType = "ReadWrite"
   }
+  dataDisk = {
+    storageType = "Premium_LRS"
+    cachingType = "None"
+    sizeGB      = 256
+  }
+  adminLogin = {
+    userName            = "azadmin"
+    userPassword        = "P@ssword1234"
+    sshPublicKey        = "" # "ssh-rsa ..."
+    disablePasswordAuth = false
+  }
+  version = "4.1.0.77"
 }
 
 ####################################################################################################

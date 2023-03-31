@@ -5,6 +5,7 @@
 variable "weka" {
   type = object(
     {
+      authToken  = string
       namePrefix = string
       machine = object(
         {
@@ -12,10 +13,22 @@ variable "weka" {
           count = number
         }
       )
+      network = object(
+        {
+          enableAcceleratedNetworking = bool
+        }
+      )
       osDisk = object(
         {
           storageType = string
           cachingType = string
+        }
+      )
+      dataDisk = object(
+        {
+          storageType = string
+          cachingType = string
+          sizeGB      = number
         }
       )
       adminLogin = object(
@@ -26,6 +39,7 @@ variable "weka" {
           disablePasswordAuth = bool
         }
       )
+      version = string
     }
   )
 }
@@ -36,7 +50,7 @@ resource "azurerm_resource_group" "weka" {
   location = azurerm_resource_group.storage.location
 }
 
-resource "azurerm_network_interface" "storage_primary" {
+resource "azurerm_network_interface" "weka" {
   count               = var.weka.namePrefix != "" ? var.weka.machine.count : 0
   name                = "${var.weka.namePrefix}${count.index}"
   resource_group_name = azurerm_resource_group.weka[0].name
@@ -46,7 +60,25 @@ resource "azurerm_network_interface" "storage_primary" {
     subnet_id                     = try(data.azurerm_subnet.storage_primary[0].id, data.azurerm_subnet.compute_storage.id)
     private_ip_address_allocation = "Dynamic"
   }
-  #enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
+  enable_accelerated_networking = var.weka.network.enableAcceleratedNetworking
+}
+
+resource "azurerm_managed_disk" "weka" {
+  count                = var.weka.namePrefix != "" ? var.weka.machine.count : 0
+  name                 = "${var.weka.namePrefix}${count.index}"
+  resource_group_name  = azurerm_resource_group.weka[0].name
+  location             = azurerm_resource_group.weka[0].location
+  storage_account_type = var.weka.dataDisk.storageType
+  disk_size_gb         = var.weka.dataDisk.sizeGB
+  create_option        = "Empty"
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "weka" {
+  count              = var.weka.namePrefix != "" ? var.weka.machine.count : 0
+  managed_disk_id    = azurerm_managed_disk.weka[count.index].id
+  virtual_machine_id = azurerm_linux_virtual_machine.weka[count.index].id
+  caching            = var.weka.dataDisk.cachingType
+  lun                = 1
 }
 
 resource "azurerm_linux_virtual_machine" "weka" {
@@ -59,16 +91,16 @@ resource "azurerm_linux_virtual_machine" "weka" {
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
   disable_password_authentication = var.weka.adminLogin.disablePasswordAuth
   network_interface_ids = [
-    azurerm_network_interface.storage_primary[count.index].id
+    azurerm_network_interface.weka[count.index].id
   ]
   os_disk {
     storage_account_type = var.weka.osDisk.storageType
     caching              = var.weka.osDisk.cachingType
   }
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    publisher = "Microsoft-DSVM"
+    offer     = "Ubuntu-HPC"
+    sku       = "1804"
     version   = "Latest"
   }
   dynamic admin_ssh_key {
@@ -91,7 +123,8 @@ resource "azurerm_virtual_machine_extension" "weka" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile("initialize.sh", merge(
-        { machineSize = var.weka.machine.size }
+        { wekaToken = var.weka.authToken },
+        { wekaVersion = var.weka.version }
       ))
     )}"
   })
