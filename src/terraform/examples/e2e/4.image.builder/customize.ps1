@@ -82,8 +82,8 @@ if ($gpuPlatform -contains "GRID") {
 
 if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
-  $versionInfo = "12.0.0"
-  $installFile = "cuda_${versionInfo}_527.41_windows.exe"
+  $versionInfo = "12.1.0"
+  $installFile = "cuda_${versionInfo}_531.14_windows.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/CUDA/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-cuda" -Wait
@@ -92,8 +92,8 @@ if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
 
 if ($gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (Start): NVIDIA OptiX"
-  $versionInfo = "7.6.0"
-  $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-31894579.exe"
+  $versionInfo = "7.7.0"
+  $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-32649046.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "/S /O $binDirectory\nvidia-optix.txt" -Wait
@@ -105,6 +105,138 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA OptiX"
+}
+
+$rendererPathPBRT = "C:\Program Files\PBRT"
+$rendererPathBlender = "C:\Program Files\Blender"
+$rendererPathUnreal = "C:\Program Files\Unreal"
+
+if ($renderEngines -contains "PBRT") {
+  $binPaths += ";$rendererPathPBRT"
+}
+if ($renderEngines -contains "Blender") {
+  $binPaths += ";$rendererPathBlender"
+}
+if ($renderEngines -contains "Unreal") {
+  $binPaths += ";$rendererPathUnreal"
+}
+setx PATH "$env:PATH$binPaths" /m
+
+if ($renderEngines -contains "PBRT") {
+  Write-Host "Customize (Start): PBRT v3"
+  $versionInfo = "v3"
+  $rendererPathPBRTv3 = "$rendererPathPBRT\$versionInfo"
+  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
+  New-Item -ItemType Directory -Path "$rendererPathPBRTv3" -Force
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv3\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt3"
+  Write-Host "Customize (End): PBRT v3"
+
+  Write-Host "Customize (Start): PBRT v4"
+  $versionInfo = "v4"
+  $rendererPathPBRTv4 = "$rendererPathPBRT\$versionInfo"
+  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
+  New-Item -ItemType Directory -Path "$rendererPathPBRTv4" -Force
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
+  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt4"
+  Write-Host "Customize (End): PBRT v4"
+}
+
+if ($renderEngines -contains "Blender") {
+  Write-Host "Customize (Start): Blender"
+  $versionInfo = "3.4.1"
+  $installFile = "blender-$versionInfo-windows-x64.msi"
+  $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.txt') -Wait
+  $binPaths += ";$rendererPathBlender"
+  Write-Host "Customize (End): Blender"
+}
+
+if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
+  Write-Host "Customize (Start): Unreal Engine Setup"
+  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.txt" -RedirectStandardError "net-fx3.error.txt"
+  Set-Location -Path C:\
+  $versionInfo = "5.1.1"
+  $installFile = "UnrealEngine-$versionInfo-release.zip"
+  $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  New-Item -ItemType Directory -Path "$rendererPathUnreal"
+  Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
+  Remove-Item -Path "Unreal*" -Exclude "*.zip" -Recurse
+  Set-Location -Path $binDirectory
+  $installFile = "$rendererPathUnreal\Setup.bat"
+  $scriptFilePath = $installFile
+  $scriptFileText = Get-Content -Path $scriptFilePath
+  $scriptFileText = $scriptFileText.Replace("/register", "/register /unattended")
+  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+  Set-Content -Path $scriptFilePath -Value $scriptFileText
+  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-engine-setup.output.txt" -RedirectStandardError "unreal-engine-setup.error.txt"
+  Write-Host "Customize (End): Unreal Engine Setup"
+
+  Write-Host "Customize (Start): Visual Studio Workloads"
+  $versionInfo = "2022"
+  $installFile = "VisualStudioSetup.exe"
+  $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  $componentIds = "--add Microsoft.Net.Component.4.8.SDK"
+  $componentIds += " --add Microsoft.Net.Component.4.6.2.TargetingPack"
+  $componentIds += " --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+  $componentIds += " --add Microsoft.VisualStudio.Component.VSSDK"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeGame"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeDesktop"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeCrossPlat"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.ManagedDesktop"
+  $componentIds += " --add Microsoft.VisualStudio.Workload.Universal"
+  Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs.output.txt" -RedirectStandardError "vs.error.txt"
+  Write-Host "Customize (End): Visual Studio Workloads"
+
+  Write-Host "Customize (Start): Unreal Project Files Generate"
+  $installFile = "$rendererPathUnreal\GenerateProjectFiles.bat"
+  $scriptFilePath = $installFile
+  $scriptFileText = Get-Content -Path $scriptFilePath
+  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+  Set-Content -Path $scriptFilePath -Value $scriptFileText
+  $scriptFilePath = "$rendererPathUnreal\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
+  $scriptFileText = Get-Content -Path $scriptFilePath
+  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
+  Set-Content -Path $scriptFilePath -Value $scriptFileText
+  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-project-files-generate.output.txt" -RedirectStandardError "unreal-project-files-generate.error.txt"
+  Write-Host "Customize (End): Unreal Project Files Generate"
+
+  Write-Host "Customize (Start): Unreal Engine Build"
+  [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
+  [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$rendererPathUnreal\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.txt" -RedirectStandardError "unreal-engine-build.error.txt"
+  Write-Host "Customize (End): Unreal Engine Build"
+
+  if ($machineType -eq "Workstation") {
+    Write-Host "Customize (Start): Unreal Editor"
+    $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
+    netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $shortcut.WorkingDirectory = "$rendererPathUnrealEditor"
+    $shortcut.TargetPath = "$rendererPathUnrealEditor\UnrealEditor.exe"
+    $shortcut.Save()
+    Write-Host "Customize (End): Unreal Editor"
+  }
+
+  if ($renderEngines -contains "Unreal.PixelStream") {
+    Write-Host "Customize (Start): Unreal Pixel Streaming"
+    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
+    $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.txt" -RedirectStandardError "unreal-stream-signalling.error.txt"
+    $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
+    $installFile = "PixelStreamingInfrastructure\SFU\platform_scripts\cmd\setup.bat"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-sfu.output.txt" -RedirectStandardError "unreal-stream-sfu.error.txt"
+    Write-Host "Customize (End): Unreal Pixel Streaming"
+  }
 }
 
 if ($machineType -eq "Scheduler") {
@@ -235,7 +367,7 @@ if ($renderManager -like "*RoyalRender*") {
 }
 
 if ($renderManager -like "*Qube*") {
-  $schedulerVersion = "7.5-2"
+  $schedulerVersion = "8.0-0"
   $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
   $schedulerInstallRoot = "C:\Program Files\pfx\qube"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
@@ -304,147 +436,6 @@ if ($renderManager -like "*Qube*") {
   }
 }
 
-$rendererPathPBRT = "C:\Program Files\PBRT"
-$rendererPathBlender = "C:\Program Files\Blender"
-$rendererPathUnreal = "C:\Program Files\Unreal"
-
-if ($renderEngines -contains "PBRT") {
-  $binPaths += ";$rendererPathPBRT"
-}
-if ($renderEngines -contains "Blender") {
-  $binPaths += ";$rendererPathBlender"
-}
-if ($renderEngines -contains "Unreal") {
-  $binPaths += ";$rendererPathUnreal"
-}
-setx PATH "$env:PATH$binPaths" /m
-
-if ($renderEngines -contains "PBRT") {
-  Write-Host "Customize (Start): PBRT 3"
-  $versionInfo = "v3"
-  $rendererPathPBRTv3 = "$rendererPathPBRT\$versionInfo"
-  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
-  New-Item -ItemType Directory -Path "$rendererPathPBRTv3" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv3\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt3"
-  Write-Host "Customize (End): PBRT 3"
-
-  Write-Host "Customize (Start): PBRT 4"
-  $versionInfo = "v4"
-  $rendererPathPBRTv4 = "$rendererPathPBRT\$versionInfo"
-  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
-  New-Item -ItemType Directory -Path "$rendererPathPBRTv4" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt4"
-  Write-Host "Customize (End): PBRT 4"
-}
-
-if ($renderEngines -contains "Blender") {
-  Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.4.1"
-  $installFile = "blender-$versionInfo-windows-x64.msi"
-  $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.txt') -Wait
-  $binPaths += ";$rendererPathBlender"
-  Write-Host "Customize (End): Blender"
-}
-
-if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
-  Write-Host "Customize (Start): Unreal Engine Setup"
-  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.txt" -RedirectStandardError "net-fx3.error.txt"
-  Set-Location -Path C:\
-  $versionInfo = "5.1.1"
-  $installFile = "UnrealEngine-$versionInfo-release.zip"
-  $downloadUrl = "$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  New-Item -ItemType Directory -Path "$rendererPathUnreal"
-  Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
-  Remove-Item -Path "Unreal*" -Exclude "*.zip" -Recurse
-  Set-Location -Path $binDirectory
-  $installFile = "$rendererPathUnreal\Setup.bat"
-  $scriptFilePath = $installFile
-  $scriptFileText = Get-Content -Path $scriptFilePath
-  $scriptFileText = $scriptFileText.Replace("/register", "/register /unattended")
-  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
-  Set-Content -Path $scriptFilePath -Value $scriptFileText
-  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-engine-setup.output.txt" -RedirectStandardError "unreal-engine-setup.error.txt"
-  Write-Host "Customize (End): Unreal Engine Setup"
-
-  Write-Host "Customize (Start): Visual Studio Workloads"
-  $versionInfo = "2022"
-  $installFile = "VisualStudioSetup.exe"
-  $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContainerSas"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  $componentIds = "--add Microsoft.Net.Component.4.8.SDK"
-  $componentIds += " --add Microsoft.Net.Component.4.6.2.TargetingPack"
-  $componentIds += " --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
-  $componentIds += " --add Microsoft.VisualStudio.Component.VSSDK"
-  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeGame"
-  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeDesktop"
-  $componentIds += " --add Microsoft.VisualStudio.Workload.NativeCrossPlat"
-  $componentIds += " --add Microsoft.VisualStudio.Workload.ManagedDesktop"
-  $componentIds += " --add Microsoft.VisualStudio.Workload.Universal"
-  Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs.output.txt" -RedirectStandardError "vs.error.txt"
-  Write-Host "Customize (End): Visual Studio Workloads"
-
-  Write-Host "Customize (Start): Unreal Project Files Generate"
-  $installFile = "$rendererPathUnreal\GenerateProjectFiles.bat"
-  $scriptFilePath = $installFile
-  $scriptFileText = Get-Content -Path $scriptFilePath
-  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
-  Set-Content -Path $scriptFilePath -Value $scriptFileText
-  $scriptFilePath = "$rendererPathUnreal\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
-  $scriptFileText = Get-Content -Path $scriptFilePath
-  $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
-  Set-Content -Path $scriptFilePath -Value $scriptFileText
-  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-project-files-generate.output.txt" -RedirectStandardError "unreal-project-files-generate.error.txt"
-  Write-Host "Customize (End): Unreal Project Files Generate"
-
-  Write-Host "Customize (Start): Unreal Engine Build"
-  [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
-  [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$rendererPathUnreal\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.txt" -RedirectStandardError "unreal-engine-build.error.txt"
-  Write-Host "Customize (End): Unreal Engine Build"
-
-  if ($machineType -eq "Workstation") {
-    Write-Host "Customize (Start): Unreal Editor"
-    $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
-    netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$rendererPathUnrealEditor"
-    $shortcut.TargetPath = "$rendererPathUnrealEditor\UnrealEditor.exe"
-    $shortcut.Save()
-    Write-Host "Customize (End): Unreal Editor"
-  }
-
-  if ($renderEngines -contains "Unreal.PixelStream") {
-    Write-Host "Customize (Start): Unreal Pixel Streaming"
-    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
-    $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.txt" -RedirectStandardError "unreal-stream-signalling.error.txt"
-    $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
-    $installFile = "PixelStreamingInfrastructure\SFU\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-sfu.output.txt" -RedirectStandardError "unreal-stream-sfu.error.txt"
-    Write-Host "Customize (End): Unreal Pixel Streaming"
-  }
-}
-
-if ($renderEngines -contains "Unity") {
-  Write-Host "Customize (Start): Unity Hub"
-  $installFile = "UnityHubSetup.exe"
-  $downloadUrl = "https://public-cdn.cloud.unity3d.com/hub/prod/$installFile"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait -RedirectStandardOutput "unity-hub.output.txt" -RedirectStandardError "unity-hub.error.txt"
-  Write-Host "Customize (End): Unity Hub"
-}
-
 if ($machineType -eq "Farm") {
   Write-Host "Customize (Start): Privacy Experience"
   $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
@@ -455,7 +446,7 @@ if ($machineType -eq "Farm") {
 
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP"
-  $versionInfo = "22.09.2"
+  $versionInfo = "23.01.1"
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
