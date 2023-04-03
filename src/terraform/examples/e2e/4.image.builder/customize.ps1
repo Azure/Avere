@@ -388,7 +388,7 @@ if ($renderManager -like "*Qube*") {
     netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
     netsh advfirewall firewall add rule name="Allow Qube Supervisor Proxy" dir=in action=allow protocol=TCP localport=50555,50556
     $installType = "qube-supervisor"
-    $installFile = "$installType-${schedulerVersion}a-WIN32-6.3-x64.msi"
+    $installFile = "$installType-${schedulerVersion}-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
