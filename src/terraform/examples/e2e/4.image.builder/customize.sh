@@ -195,6 +195,44 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
+if [[ $renderManager == *RoyalRender* ]]; then
+  schedulerVersion="9.0.04"
+  schedulerInstallRoot="/rr"
+  schedulerBinPath="$schedulerInstallRoot/bin/lx64"
+  binPaths="$binPaths:$schedulerBinPath"
+
+  echo "Customize (Start): Royal Render Download"
+  installFile="RoyalRender__${schedulerVersion}__installer.zip"
+  downloadUrl="$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
+  curl -o $installFile -L $downloadUrl
+  unzip -q $installFile
+  echo "Customize (End): Royal Render Download"
+
+  echo "Customize (Start): Royal Render Installer"
+  installType="royal-render"
+  installFile="rrSetup_linux"
+  installDirectory="RoyalRender*"
+  chmod +x ./$installDirectory/$installFile
+  mkdir $schedulerInstallRoot
+  ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
+  echo "Customize (End): Royal Render Installer"
+
+  serviceUser="rrService"
+  installFile="rrWorkstation_installer"
+  useradd $serviceUser
+  if [ $machineType == "Scheduler" ]; then
+    echo "Customize (Start): Royal Render Server"
+    $schedulerBinPath/$installFile -serviceServer -rrUser $serviceUser 1> "$installType-server.output.txt" 2> "$installType-server.error.txt"
+    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
+    exportfs -a
+    echo "Customize (End): Royal Render Server"
+  else
+    echo "Customize (Start): Royal Render Client"
+    $schedulerBinPath/$installFile -service -rrUser $serviceUser 1> "$installType-client.output.txt" 2> "$installType-client.error.txt"
+    echo "Customize (End): Royal Render Client"
+  fi
+fi
+
 if [[ $renderManager == *Deadline* ]]; then
   schedulerVersion="10.2.1.0"
   schedulerInstallRoot="/deadline"
@@ -240,44 +278,6 @@ if [[ $renderManager == *Deadline* ]]; then
     mv /tmp/*_installer.log ./deadline-log-client.txt
     $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot $schedulerCertificate ""
     echo "Customize (End): Deadline Client"
-  fi
-fi
-
-if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="9.0.04"
-  schedulerInstallRoot="/rr"
-  schedulerBinPath="$schedulerInstallRoot/bin/lx64"
-  binPaths="$binPaths:$schedulerBinPath"
-
-  echo "Customize (Start): Royal Render Download"
-  installFile="RoyalRender__${schedulerVersion}__installer.zip"
-  downloadUrl="$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
-  curl -o $installFile -L $downloadUrl
-  unzip -q $installFile
-  echo "Customize (End): Royal Render Download"
-
-  echo "Customize (Start): Royal Render Installer"
-  installType="royal-render"
-  installFile="rrSetup_linux"
-  installDirectory="RoyalRender*"
-  chmod +x ./$installDirectory/$installFile
-  mkdir $schedulerInstallRoot
-  ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> "$installType.output.txt" 2> "$installType.error.txt"
-  echo "Customize (End): Royal Render Installer"
-
-  serviceUser="rrService"
-  installFile="rrWorkstation_installer"
-  useradd $serviceUser
-  if [ $machineType == "Scheduler" ]; then
-    echo "Customize (Start): Royal Render Server"
-    $schedulerBinPath/$installFile -serviceServer -rrUser $serviceUser 1> "$installType-server.output.txt" 2> "$installType-server.error.txt"
-    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
-    exportfs -a
-    echo "Customize (End): Royal Render Server"
-  else
-    echo "Customize (Start): Royal Render Client"
-    $schedulerBinPath/$installFile -service -rrUser $serviceUser 1> "$installType-client.output.txt" 2> "$installType-client.error.txt"
-    echo "Customize (End): Royal Render Client"
   fi
 fi
 
