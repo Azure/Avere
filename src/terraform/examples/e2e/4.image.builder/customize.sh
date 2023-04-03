@@ -209,6 +209,11 @@ if [[ $renderManager == *RoyalRender* ]]; then
   echo "Customize (End): Royal Render Download"
 
   echo "Customize (Start): Royal Render Installer"
+  dnf -y install xcb-util-wm
+  dnf -y install xcb-util-image
+  dnf -y install xcb-util-keysyms
+  dnf -y install xcb-util-renderutil
+  dnf -y install libxkbcommon-x11
   installType="royal-render"
   installFile="rrSetup_linux"
   installDirectory="RoyalRender*"

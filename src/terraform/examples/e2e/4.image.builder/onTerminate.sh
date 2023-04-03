@@ -4,12 +4,12 @@ cycleCloudEnable=false
 
 function RemoveWorker {
   renderManager="$1"
+  if [ $renderManager == "*RoyalRender*" ]; then
+    :
+  fi
   if [ $renderManager == "*Deadline*" ]; then
     deadlineworker -shutdown
     deadlinecommand -DeleteSlave $(hostname)
-  fi
-  if [ $renderManager == "*RoyalRender*" ]; then
-    :
   fi
   if [ $renderManager == "*Qube*" ]; then
     qbadmin worker --remove $(hostname)
