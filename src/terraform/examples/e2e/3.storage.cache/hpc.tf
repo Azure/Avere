@@ -5,7 +5,6 @@
 variable "hpcCache" {
   type = object(
     {
-      enable     = bool
       throughput = string
       size       = number
       mtuSize    = number
@@ -27,13 +26,13 @@ variable "hpcCache" {
 }
 
 data "azuread_service_principal" "hpc_cache" {
-  count        = var.hpcCache.enable ? 1 : 0
+  count        = var.enableHPCCache ? 1 : 0
   display_name = "HPC Cache Resource Provider"
 }
 
 resource "azurerm_role_assignment" "storage_account" {
   for_each = {
-    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.enableHPCCache && storageTargetNfsBlob.name != ""
   }
   role_definition_name = "Storage Account Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   principal_id         = data.azuread_service_principal.hpc_cache[0].object_id
@@ -42,7 +41,7 @@ resource "azurerm_role_assignment" "storage_account" {
 
 resource "azurerm_role_assignment" "storage_blob_data" {
   for_each = {
-    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.enableHPCCache && storageTargetNfsBlob.name != ""
   }
   role_definition_name = "Storage Blob Data Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   principal_id         = data.azuread_service_principal.hpc_cache[0].object_id
@@ -50,7 +49,7 @@ resource "azurerm_role_assignment" "storage_blob_data" {
 }
 
 resource "azurerm_hpc_cache" "cache" {
-  count               = var.hpcCache.enable ? 1 : 0
+  count               = var.enableHPCCache ? 1 : 0
   name                = var.cacheName
   resource_group_name = azurerm_resource_group.cache.name
   location            = azurerm_resource_group.cache.location
@@ -85,7 +84,7 @@ resource "azurerm_hpc_cache" "cache" {
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
   for_each = {
-    for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if var.hpcCache.enable && storageTargetNfs.name != ""
+    for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if var.enableHPCCache && storageTargetNfs.name != ""
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.cache.name
@@ -104,7 +103,7 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
 
 resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   for_each = {
-    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.hpcCache.enable && storageTargetNfsBlob.name != ""
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.enableHPCCache && storageTargetNfsBlob.name != ""
   }
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.cache.name

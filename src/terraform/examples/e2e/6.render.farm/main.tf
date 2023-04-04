@@ -35,12 +35,23 @@ variable "resourceGroupName" {
 variable "virtualMachineScaleSets" {
   type = list(object(
     {
-      name    = string
-      imageId = string
+      name = string
       machine = object(
         {
           size  = string
           count = number
+          image = object(
+            {
+              id = string
+              plan = object(
+                {
+                  publisher = string
+                  product   = string
+                  name      = string
+                }
+              )
+            }
+          )
         }
       )
       network = object(
@@ -232,8 +243,24 @@ data "azurerm_private_dns_zone" "render" {
 }
 
 locals {
-  renderManager           = split(",", module.global.renderManager)[0]
-  stateExistsNetwork      = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  renderManager      = split(",", module.global.renderManager)[0]
+  stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  virtualMachineScaleSetsLinux = [
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet, {
+      machine = {
+        size  = virtualMachineScaleSet.machine.size
+        count = virtualMachineScaleSet.machine.count
+        image = {
+          id = virtualMachineScaleSet.machine.image.id
+          plan = {
+            publisher = virtualMachineScaleSet.machine.image.plan.publisher != "" ? virtualMachineScaleSet.machine.image.plan.publisher : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
+            product   = virtualMachineScaleSet.machine.image.plan.product != "" ? virtualMachineScaleSet.machine.image.plan.product : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
+            name      = virtualMachineScaleSet.machine.image.plan.name != "" ? virtualMachineScaleSet.machine.image.plan.name : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
+          }
+        }
+      }
+    }) if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
+  ]
   kubernetesUserNodePools = flatten([
     for kubernetesCluster in var.kubernetes.clusters : [
       for userNodePool in kubernetesCluster.userNodePools : {
@@ -255,14 +282,14 @@ resource "azurerm_resource_group" "farm" {
 
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   for_each = {
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
+    for virtualMachineScaleSet in local.virtualMachineScaleSetsLinux : virtualMachineScaleSet.name => virtualMachineScaleSet
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name
   location                        = azurerm_resource_group.farm.location
-  source_image_id                 = each.value.imageId
   sku                             = each.value.machine.size
   instances                       = each.value.machine.count
+  source_image_id                 = each.value.machine.image.id
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
@@ -296,6 +323,14 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     identity_ids = [
       data.azurerm_user_assigned_identity.render.id
     ]
+  }
+  dynamic plan {
+    for_each = each.value.machine.image.plan.name == "" ? [] : [1]
+    content {
+      publisher = each.value.machine.image.plan.publisher
+      product   = each.value.machine.image.plan.product
+      name      = each.value.machine.image.plan.name
+    }
   }
   dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -355,9 +390,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   name                   = each.value.name
   resource_group_name    = azurerm_resource_group.farm.name
   location               = azurerm_resource_group.farm.location
-  source_image_id        = each.value.imageId
   sku                    = each.value.machine.size
   instances              = each.value.machine.count
+  source_image_id        = each.value.machine.image.id
   admin_username         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   priority               = each.value.spot.enable ? "Spot" : "Regular"

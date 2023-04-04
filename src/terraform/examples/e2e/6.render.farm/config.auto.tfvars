@@ -6,11 +6,18 @@ resourceGroupName = "ArtistAnywhere.Farm" # Alphanumeric, underscores, hyphens, 
 
 virtualMachineScaleSets = [
   {
-    name    = "LnxFarmG"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/1.1.0"
+    name = "LnxFarmG"
     machine = {
       size  = "Standard_NV36ads_A10_v5"
       count = 2
+      image = {
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/1.1.0"
+        plan = {
+          publisher = ""
+          product   = ""
+          name      = ""
+        }
+      }
     }
     network = {
       enableAcceleratedNetworking = true
@@ -64,11 +71,18 @@ virtualMachineScaleSets = [
     }
   },
   {
-    name    = "" # "LnxFarmC"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/1.0.0"
+    name = "" # "LnxFarmC"
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 2
+      image = {
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/1.0.0"
+        plan = {
+          publisher = ""
+          product   = ""
+          name      = ""
+        }
+      }
     }
     network = {
       enableAcceleratedNetworking = true
@@ -122,11 +136,18 @@ virtualMachineScaleSets = [
     }
   },
   {
-    name    = "" # "WinFarmG"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinFarm/versions/1.1.0"
+    name = "" # "WinFarmG"
     machine = {
       size  = "Standard_NV36ads_A10_v5"
       count = 2
+      image = {
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinFarm/versions/1.1.0"
+        plan = {
+          publisher = ""
+          product   = ""
+          name      = ""
+        }
+      }
     }
     network = {
       enableAcceleratedNetworking = true
@@ -180,11 +201,18 @@ virtualMachineScaleSets = [
     }
   },
   {
-    name    = "" # "WinFarmC"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinFarm/versions/1.0.0"
+    name = "" # "WinFarmC"
     machine = {
       size  = "Standard_HB120rs_v2"
       count = 2
+      image = {
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinFarm/versions/1.0.0"
+        plan = {
+          publisher = ""
+          product   = ""
+          name      = ""
+        }
+      }
     }
     network = {
       enableAcceleratedNetworking = true

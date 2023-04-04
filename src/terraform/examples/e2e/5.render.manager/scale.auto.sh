@@ -5,6 +5,10 @@ az login --identity
 queuedTasks=0
 workerIdleDeleteSeconds=900
 
+if [[ $renderManager == *RoyalRender* ]]; then
+  :
+fi
+
 if [[ $renderManager == *Deadline* ]]; then
   activeJobIds=$(deadlinecommand -GetJobIdsFilter Status=Active)
   for jobId in $(echo $activeJobIds); do
@@ -27,10 +31,6 @@ if [[ $renderManager == *Deadline* ]]; then
       done
     fi
   done
-fi
-
-if [[ $renderManager == *RoyalRender* ]]; then
-  :
 fi
 
 if [[ $renderManager == *Qube* ]]; then
@@ -58,6 +58,10 @@ if [ $queuedTasks -gt 0 ]; then # Scale Up
   nodeCount=$(($nodeCount + $queuedTasks))
   az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $nodeCount
 else # Scale Down
+  if [[ $renderManager == *RoyalRender* ]]; then
+    :
+  fi
+
   if [[ $renderManager == *Deadline* ]]; then
     workerNames=$(deadlinecommand -GetSlaveNames)
     for workerName in $(echo $workerNames); do
@@ -80,10 +84,6 @@ else # Scale Down
         fi
       fi
     done
-  fi
-
-  if [[ $renderManager == *RoyalRender* ]]; then
-    :
   fi
 
   if [[ $renderManager == *Qube* ]]; then

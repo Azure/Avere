@@ -11,9 +11,9 @@ imageGallery = {
       name       = "Linux"
       type       = "Linux"
       generation = "V2"
-      publisher  = "OpenLogic"
-      offer      = "CentOS"
-      sku        = "7_9-Gen2"
+      publisher  = "CIQ"
+      offer      = "Rocky"
+      sku        = "Rocky-8-6-Free"
     },
     {
       name       = "WinScheduler"
@@ -69,7 +69,7 @@ imageTemplates = [
       ]
       outputVersion  = "0.0.0"
       timeoutMinutes = 120
-      osDiskSizeGB   = 0
+      osDiskSizeGB   = 512
       renderEngines = [
       ]
     }
@@ -88,12 +88,11 @@ imageTemplates = [
       ]
       outputVersion  = "1.1.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal",
-        # "Unity"
+        # "Unreal"
       ]
     }
   },
@@ -110,7 +109,7 @@ imageTemplates = [
       ]
       outputVersion  = "1.0.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
         "Blender"
@@ -131,12 +130,11 @@ imageTemplates = [
       ]
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 512
+      osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal.PixelStream",
-        # "Unity"
+        # "Unreal.PixelStream"
       ]
     }
   },
@@ -153,7 +151,7 @@ imageTemplates = [
       ]
       outputVersion  = "0.0.0"
       timeoutMinutes = 180
-      osDiskSizeGB   = 0
+      osDiskSizeGB   = 512
       renderEngines = [
       ]
     }
@@ -172,12 +170,11 @@ imageTemplates = [
       ]
       outputVersion  = "1.1.0"
       timeoutMinutes = 420
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal",
-        # "Unity"
+        # "Unreal"
       ]
     }
   },
@@ -194,7 +191,7 @@ imageTemplates = [
       ]
       outputVersion  = "1.0.0"
       timeoutMinutes = 420
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
         "Blender"
@@ -215,12 +212,11 @@ imageTemplates = [
       ]
       outputVersion  = "2.0.0"
       timeoutMinutes = 420
-      osDiskSizeGB   = 512
+      osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal.PixelStream",
-        # "Unity"
+        # "Unreal.PixelStream"
       ]
     }
   }

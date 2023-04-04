@@ -1,11 +1,12 @@
 #!/bin/bash -ex
 
-binDirectory="/usr/local/bin"
-cd $binDirectory
-
 source /etc/profile.d/aaa.sh
 
-if ["${qubeLicense.userName}" != "" ]; then
+if [[ ${renderManager} == *RoyalRender* ]]; then
+  rrServerconsole -initAndClose > /usr/local/bin/royal-render-server-init.log
+fi
+
+if [ "${qubeLicense.userName}" != "" ]; then
   configFilePath="/etc/qube/dra.conf"
   sed -i "s/# mls_user =/mls_user = ${qubeLicense.userName}/" $configFilePath
   sed -i "s/# mls_password =/mls_password = ${qubeLicense.userPassword}/" $configFilePath

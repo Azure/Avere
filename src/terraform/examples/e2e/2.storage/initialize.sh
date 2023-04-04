@@ -1,8 +1,6 @@
 #!/bin/bash -ex
 
-binDirectory="/usr/local/bin"
-cd $binDirectory
-
-%{ if wekaToken != "" }
-  curl -L https://${wekaToken}@get.prod.weka.io/dist/v1/install/${wekaVersion}/${wekaVersion}
-%{ endif }
+if [ "${wekaToken}" != "" ]; then
+  wekaVersion="4.1.0.77"
+  curl https://${wekaToken}@get.prod.weka.io/dist/v1/install/$wekaVersion/$wekaVersion | sh > weka.log
+fi

@@ -36,10 +36,11 @@ variable "computeNetwork" {
       dnsIpAddresses = list(string)
       subnets = list(object(
         {
-          name              = string
-          addressSpace      = list(string)
-          serviceEndpoints  = list(string)
-          serviceDelegation = string
+          name                 = string
+          addressSpace         = list(string)
+          serviceEndpoints     = list(string)
+          serviceDelegation    = string
+          denyOutboundInternet = bool
         }
       ))
       subnetIndex = object(
@@ -63,10 +64,11 @@ variable "storageNetwork" {
       dnsIpAddresses = list(string)
       subnets = list(object(
         {
-          name              = string
-          addressSpace      = list(string)
-          serviceEndpoints  = list(string)
-          serviceDelegation = string
+          name                 = string
+          addressSpace         = list(string)
+          serviceEndpoints     = list(string)
+          serviceDelegation    = string
+          denyOutboundInternet = bool
         }
       ))
       subnetIndex = object(
@@ -312,7 +314,7 @@ resource "azurerm_network_security_group" "network" {
   location            = each.value.regionName
   security_rule {
     name                       = "AllowOutARM"
-    priority                   = 3000
+    priority                   = 3200
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
@@ -332,29 +334,18 @@ resource "azurerm_network_security_group" "network" {
     destination_address_prefix = "Storage"
     destination_port_range     = "*"
   }
-  security_rule {
-    name                       = "DenyOutInternet"
-    priority                   = 4000
-    direction                  = "Outbound"
-    access                     = "Deny"
-    protocol                   = "*"
-    source_address_prefix      = "*"
-    source_port_range          = "*"
-    destination_address_prefix = "Internet"
-    destination_port_range     = "*"
-  }
   dynamic security_rule {
-    for_each = each.value.name == "Farm" ? [1] : []
+    for_each = each.value.denyOutboundInternet ? [1] : []
     content {
-      name                       = "AllowOutHTTPS"
-      priority                   = 3200
+      name                       = "DenyOutInternet"
+      priority                   = 3000
       direction                  = "Outbound"
-      access                     = "Allow"
-      protocol                   = "Tcp"
+      access                     = "Deny"
+      protocol                   = "*"
       source_address_prefix      = "*"
       source_port_range          = "*"
       destination_address_prefix = "Internet"
-      destination_port_range     = "443"
+      destination_port_range     = "*"
     }
   }
   dynamic security_rule {
@@ -390,7 +381,7 @@ resource "azurerm_network_security_group" "network" {
     }
   }
   dynamic security_rule {
-    for_each = each.value.name == "Workstation" ? [1] : []
+    for_each = each.value.denyOutboundInternet && each.value.name == "Workstation" ? [1] : []
     content {
       name                       = "AllowOutHTTP"
       priority                   = 2000
@@ -404,7 +395,7 @@ resource "azurerm_network_security_group" "network" {
     }
   }
   dynamic security_rule {
-    for_each = each.value.name == "Workstation" ? [1] : []
+    for_each = each.value.denyOutboundInternet && each.value.name == "Workstation" ? [1] : []
     content {
       name                       = "AllowOutPCoIP.TCP"
       priority                   = 2100
@@ -418,7 +409,7 @@ resource "azurerm_network_security_group" "network" {
     }
   }
   dynamic security_rule {
-    for_each = each.value.name == "Workstation" ? [1] : []
+    for_each = each.value.denyOutboundInternet && each.value.name == "Workstation" ? [1] : []
     content {
       name                       = "AllowOutPCoIP.UDP"
       priority                   = 2200

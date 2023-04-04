@@ -1,11 +1,8 @@
 #!/bin/bash -ex
 
-binDirectory="/usr/local/bin"
-cd $binDirectory
-
 source /etc/profile.d/aaa.sh
 
-functionsFile="$binDirectory/functions.sh"
+functionsFile="/usr/local/bin/functions.sh"
 functionsCode="${ filebase64("../0.global/functions.sh") }"
 echo $functionsCode | base64 --decode > $functionsFile
 source $functionsFile
@@ -16,6 +13,6 @@ AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDeli
 AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
 mount -a
 
-%{ if teradiciLicenseKey != "" }
+if [ "${teradiciLicenseKey}" != "" ]; then
   pcoip-register-host --registration-code=${teradiciLicenseKey}
-%{ endif }
+fi

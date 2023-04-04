@@ -39,6 +39,14 @@ variable "cacheName" {
   type = string
 }
 
+variable "enableHPCCache" {
+  type = string
+}
+
+variable "enableDevMode" {
+  type = string
+}
+
 variable "storageTargetsNfs" {
   type = list(object(
     {
@@ -177,7 +185,7 @@ resource "azurerm_private_dns_a_record" "cache" {
   name                = "cache"
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
-  records             = var.hpcCache.enable ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
+  records             = var.enableHPCCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
   ttl                 = 300
 }
 
@@ -190,15 +198,15 @@ output "cacheName" {
 }
 
 output "cacheControllerAddress" {
-  value = var.hpcCache.enable ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].controller_address : ""
+  value = var.enableHPCCache ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].controller_address : ""
 }
 
 output "cacheManagementAddress" {
-  value = var.hpcCache.enable ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vfxt_management_ip: ""
+  value = var.enableHPCCache ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vfxt_management_ip: ""
 }
 
 output "cacheMountAddresses" {
-  value = var.hpcCache.enable && length(azurerm_hpc_cache.cache) > 0 ? azurerm_hpc_cache.cache[0].mount_addresses : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vserver_ip_addresses : null
+  value = var.enableHPCCache && length(azurerm_hpc_cache.cache) > 0 ? azurerm_hpc_cache.cache[0].mount_addresses : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vserver_ip_addresses : null
 }
 
 output "cachePrivateDnsFqdn" {

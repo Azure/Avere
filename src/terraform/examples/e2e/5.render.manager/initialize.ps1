@@ -3,12 +3,17 @@ $ErrorActionPreference = "Stop"
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
-if ("${renderManager}" -like "*Qube*") {
-  $installType = "qube-supervisor"
-  Start-Process -FilePath "C:\Program Files\pfx\qube\utils\supe_postinstall.bat" -Wait -RedirectStandardOutput "$installType-post.output.txt" -RedirectStandardError "$installType-post.error.txt"
+if (${renderManager} -like "*RoyalRender*") {
+  $installType = "royal-render-server-init"
+  Start-Process -FilePath "rrServerconsole" -ArgumentList "-initAndClose" -Wait -RedirectStandardOutput "$installType.output.log" -RedirectStandardError "$installType.error.log"
 }
 
-if ("${qubeLicense.userName}" -ne "") {
+if (${renderManager} -like "*Qube*") {
+  $installType = "qube-supervisor"
+  Start-Process -FilePath "C:\Program Files\pfx\qube\utils\supe_postinstall.bat" -Wait -RedirectStandardOutput "$installType-post.output.log" -RedirectStandardError "$installType-post.error.log"
+}
+
+if (${qubeLicense.userName} -ne "") {
   $configFilePath = "C:\ProgramData\pfx\qube\dra.conf"
   if (!(Test-Path -PathType Leaf -Path $configFilePath)) {
     Copy-Item -Path "C:\Program Files\pfx\qube\dra\dra.conf.default" -Destination $configFilePath
@@ -31,7 +36,7 @@ $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
 $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutputFile -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
-if ("${autoScale.enable}" -eq "true") {
+if (${autoScale.enable}) {
   $taskSettings = New-ScheduledTaskSettingsSet
 } else {
   $taskSettings = New-ScheduledTaskSettingsSet -Disable

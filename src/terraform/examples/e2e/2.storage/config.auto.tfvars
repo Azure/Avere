@@ -102,8 +102,8 @@ weka = {
   authToken  = ""
   namePrefix = ""
   machine = {
-    size  = "Standard_HB120rs_v2"
-    count = 3
+    size  = "Standard_L16as_v3"
+    count = 6
   }
   network = {
     enableAcceleratedNetworking = true
@@ -114,8 +114,8 @@ weka = {
   }
   dataDisk = {
     storageType = "Premium_LRS"
-    cachingType = "None"
-    sizeGB      = 256
+    cachingType = "ReadWrite"
+    sizeGB      = 1024
   }
   adminLogin = {
     userName            = "azadmin"
@@ -123,7 +123,6 @@ weka = {
     sshPublicKey        = "" # "ssh-rsa ..."
     disablePasswordAuth = false
   }
-  version = "4.1.0.77"
 }
 
 ####################################################################################################

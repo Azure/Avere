@@ -1,6 +1,8 @@
 resourceGroupName = "ArtistAnywhere.Cache" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
-cacheName = "cache" # Set to a uniquely identifiable cache name
+cacheName      = "cache" # Set to a uniquely identifiable cache cluster name
+enableHPCCache = true    # Enables HPC Cache (PaaS) instead of Avere vFXT (IaaS)
+enableDevMode  = false   # Enables non-production resource deployment for testing
 
 ##############################################################################
 # HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
@@ -14,7 +16,6 @@ cacheName = "cache" # Set to a uniquely identifiable cache name
 #      Standard_4G - 6144, 12288, 24576   Read Write
 #      Standard_8G - 12288, 24576, 49152  Read Write
 hpcCache = {
-  enable     = true
   throughput = "Standard_L4_5G"
   size       = 21623
   mtuSize    = 1500

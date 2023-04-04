@@ -6,9 +6,18 @@ resourceGroupName = "ArtistAnywhere.Scheduler" # Alphanumeric, underscores, hyph
 
 virtualMachines = [
   {
-    name        = "LnxScheduler"
-    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/0.0.0"
-    machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+    name = "LnxScheduler"
+    machine = {
+      size = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      image = {
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/0.0.0"
+        plan = {
+          publisher = ""
+          product   = ""
+          name      = ""
+        }
+      }
+    }
     network = {
       enableAcceleratedNetworking = true
     }
@@ -52,9 +61,18 @@ virtualMachines = [
     }
   },
   {
-    name        = "" # "WinScheduler"
-    imageId     = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinScheduler/versions/0.0.0"
-    machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+    name = "" # "WinScheduler"
+    machine = {
+       size = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+       image = {
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinScheduler/versions/0.0.0"
+        plan = {
+          publisher = ""
+          product   = ""
+          name      = ""
+        }
+      }
+    }
     network = {
       enableAcceleratedNetworking = true
     }

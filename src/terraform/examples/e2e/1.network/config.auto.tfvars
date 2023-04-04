@@ -22,7 +22,8 @@ computeNetwork = {
         "Microsoft.Storage",
         "Microsoft.ContainerRegistry"
       ]
-      serviceDelegation = ""
+      serviceDelegation    = ""
+      denyOutboundInternet = false
     },
     {
       name = "Workstation"
@@ -32,7 +33,8 @@ computeNetwork = {
       serviceEndpoints = [
         "Microsoft.Storage"
       ]
-      serviceDelegation = ""
+      serviceDelegation    = ""
+      denyOutboundInternet = false
     },
     {
       name = "Storage"
@@ -42,7 +44,8 @@ computeNetwork = {
       serviceEndpoints = [
         "Microsoft.Storage"
       ]
-      serviceDelegation = ""
+      serviceDelegation    = ""
+      denyOutboundInternet = false
     },
     {
       name = "Cache"
@@ -52,7 +55,8 @@ computeNetwork = {
       serviceEndpoints = [
         "Microsoft.Storage"
       ]
-      serviceDelegation = ""
+      serviceDelegation    = ""
+      denyOutboundInternet = false
     },
     {
       name = "GatewaySubnet"
@@ -61,7 +65,8 @@ computeNetwork = {
       ]
       serviceEndpoints = [
       ]
-      serviceDelegation = ""
+      serviceDelegation    = ""
+      denyOutboundInternet = false
     },
     {
       name = "AzureBastionSubnet"
@@ -70,7 +75,8 @@ computeNetwork = {
       ]
       serviceEndpoints = [
       ]
-      serviceDelegation = ""
+      serviceDelegation    = ""
+      denyOutboundInternet = false
     }
   ]
   subnetIndex = { # Make sure each index is in sync with corresponding subnet
@@ -98,7 +104,8 @@ storageNetwork = {
       serviceEndpoints = [
         "Microsoft.Storage"
       ]
-      serviceDelegation = ""
+      serviceDelegation    = ""
+      denyOutboundInternet = false
     },
     {
       name = "Secondary"
@@ -108,16 +115,18 @@ storageNetwork = {
       serviceEndpoints = [
         "Microsoft.Storage"
       ]
-      serviceDelegation = ""
-    # },
-    # {
-    #   name = "NetAppFiles"
-    #   addressSpace = [
-    #     "10.0.2.0/24"
-    #   ]
-    #   serviceEndpoints = [
-    #   ]
-    #   serviceDelegation = "Microsoft.Netapp/volumes"
+      serviceDelegation    = ""
+      denyOutboundInternet = false
+    },
+    {
+      name = "NetAppFiles"
+      addressSpace = [
+        "10.0.2.0/24"
+      ]
+      serviceEndpoints = [
+      ]
+      serviceDelegation    = "Microsoft.Netapp/volumes"
+      denyOutboundInternet = false
     }
   ]
   subnetIndex = { # Make sure each index is in sync with corresponding subnet

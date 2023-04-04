@@ -39,9 +39,14 @@ variable "weka" {
           disablePasswordAuth = bool
         }
       )
-      version = string
     }
   )
+}
+
+locals {
+  imagePublisher = "CIQ"
+  imageProduct   = "Rocky"
+  imageName      = "Rocky-8-6-Free"
 }
 
 resource "azurerm_resource_group" "weka" {
@@ -98,10 +103,21 @@ resource "azurerm_linux_virtual_machine" "weka" {
     caching              = var.weka.osDisk.cachingType
   }
   source_image_reference {
-    publisher = "Microsoft-DSVM"
-    offer     = "Ubuntu-HPC"
-    sku       = "1804"
+    publisher = local.imagePublisher
+    offer     = local.imageProduct
+    sku       = local.imageName
     version   = "Latest"
+  }
+  plan {
+    publisher = lower(local.imagePublisher)
+    product   = lower(local.imageProduct)
+    name      = lower(local.imageName)
+  }
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.render.id
+    ]
   }
   dynamic admin_ssh_key {
     for_each = var.weka.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -123,8 +139,7 @@ resource "azurerm_virtual_machine_extension" "weka" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile("initialize.sh", merge(
-        { wekaToken = var.weka.authToken },
-        { wekaVersion = var.weka.version }
+        { wekaToken = var.weka.authToken }
       ))
     )}"
   })

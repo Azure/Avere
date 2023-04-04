@@ -1,5 +1,5 @@
-function AddFileSystemMounts ($binDirectory, $fsMountsDelimiter, $fsMounts) {
-  $fsMountsFile = "$binDirectory\fs-mounts.bat"
+function AddFileSystemMounts ($fsMountsDelimiter, $fsMounts) {
+  $fsMountsFile = "C:\Windows\fs-mounts.bat"
   if (!(Test-Path -PathType Leaf -Path $fsMountsFile)) {
     New-Item -ItemType File -Path $fsMountsFile
   }
@@ -19,6 +19,6 @@ function RegisterFileSystemMounts ($fsMountsFile) {
     $taskAction = New-ScheduledTaskAction -Execute $fsMountsFile
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup
     Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
-    Start-Process -FilePath $fsMountsFile -Wait -RedirectStandardOutput "fs-mounts.output.txt" -RedirectStandardError "fs-mounts.error.txt"
+    Start-Process -FilePath $fsMountsFile -Wait -RedirectStandardOutput "fs-mounts.output.log" -RedirectStandardError "fs-mounts.error.log"
   }
 }

@@ -72,7 +72,7 @@ locals {
 # }
 
 module "vfxt_controller" {
-  count                             = var.hpcCache.enable ? 0 : 1
+  count                             = var.enableHPCCache ? 0 : 1
   source                            = "github.com/Azure/Avere/src/terraform/modules/controller3"
   create_resource_group             = false
   resource_group_name               = var.resourceGroupName
@@ -97,11 +97,12 @@ module "vfxt_controller" {
 }
 
 resource "avere_vfxt" "cache" {
-  count                           = var.hpcCache.enable ? 0 : 1
+  count                           = var.enableHPCCache ? 0 : 1
   vfxt_cluster_name               = lower(var.cacheName)
   azure_resource_group            = var.resourceGroupName
   location                        = module.global.regionName
   image_id                        = var.vfxtCache.cluster.imageId
+  node_size                       = var.enableDevMode ? "unsupported_test_SKU" : "prod_sku"
   node_cache_size                 = var.vfxtCache.cluster.nodeSize
   vfxt_node_count                 = var.vfxtCache.cluster.nodeCount
   azure_network_name              = data.azurerm_virtual_network.compute.name

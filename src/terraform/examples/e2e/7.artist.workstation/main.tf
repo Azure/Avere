@@ -35,9 +35,24 @@ variable "resourceGroupName" {
 variable "virtualMachines" {
   type = list(object(
     {
-      name        = string
-      imageId     = string
-      machineSize = string
+      name = string
+      machine = object(
+        {
+          size = string
+          image = object(
+            {
+              id = string
+              plan = object(
+                {
+                  publisher = string
+                  product   = string
+                  name      = string
+                }
+              )
+            }
+          )
+        }
+      )
       network = object(
         {
           enableAcceleratedNetworking = bool
@@ -159,6 +174,21 @@ data "azurerm_subnet" "workstation" {
 locals {
   renderManager      = split(",", module.global.renderManager)[0]
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  virtualMachinesLinux = [
+    for virtualMachine in var.virtualMachines : merge(virtualMachine, {
+      machine = {
+        size = virtualMachine.machine.size
+        image = {
+          id = virtualMachine.machine.image.id
+          plan = {
+            publisher = virtualMachine.machine.image.plan.publisher != "" ? virtualMachine.machine.image.plan.publisher : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
+            product   = virtualMachine.machine.image.plan.product != "" ? virtualMachine.machine.image.plan.product : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
+            name      = virtualMachine.machine.image.plan.name != "" ? virtualMachine.machine.image.plan.name : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
+          }
+        }
+      }
+    }) if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
+  ]
 }
 
 resource "azurerm_resource_group" "workstation" {
@@ -183,13 +213,13 @@ resource "azurerm_network_interface" "workstation" {
 
 resource "azurerm_linux_virtual_machine" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.virtualMachinesLinux : virtualMachine.name => virtualMachine
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.workstation.name
   location                        = azurerm_resource_group.workstation.location
-  source_image_id                 = each.value.imageId
-  size                            = each.value.machineSize
+  size                            = each.value.machine.size
+  source_image_id                 = each.value.machine.image.id
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.disablePasswordAuth
@@ -205,6 +235,14 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     identity_ids = [
       data.azurerm_user_assigned_identity.render.id
     ]
+  }
+  dynamic plan {
+    for_each = each.value.machine.image.plan.name == "" ? [] : [1]
+    content {
+      publisher = each.value.machine.image.plan.publisher
+      product   = each.value.machine.image.plan.product
+      name      = each.value.machine.image.plan.name
+    }
   }
   dynamic admin_ssh_key {
     for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -269,8 +307,8 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
   location            = azurerm_resource_group.workstation.location
-  source_image_id     = each.value.imageId
-  size                = each.value.machineSize
+  size                = each.value.machine.size
+  source_image_id     = each.value.machine.image.id
   admin_username      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   network_interface_ids = [
