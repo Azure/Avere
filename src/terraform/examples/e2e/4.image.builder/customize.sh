@@ -79,17 +79,6 @@ rendererPathBlender="/usr/local/blender"
 rendererPathUnreal="/usr/local/unreal"
 
 if [[ $renderEngines == *PBRT* ]]; then
-  binPaths="$binPaths:$rendererPathPBRT"
-fi
-if [[ $renderEngines == *Blender* ]]; then
-  binPaths="$binPaths:$rendererPathBlender"
-fi
-if [[ $renderEngines == *Unreal* ]]; then
-  binPaths="$binPaths:$rendererPathUnreal"
-fi
-echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
-
-if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (Start): PBRT v3"
   versionInfo="v3"
   rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
@@ -109,6 +98,8 @@ if [[ $renderEngines == *PBRT* ]]; then
   make -C $rendererPathPBRTv4 1> "pbrt-$versionInfo-make.output.txt" 2> "pbrt-$versionInfo-make.error.txt"
   ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
   echo "Customize (End): PBRT v4"
+
+  binPaths="$binPaths:$rendererPathPBRT"
 fi
 
 if [[ $renderEngines == *Blender* ]]; then
@@ -161,6 +152,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
     ./$installFile 1> "unreal-stream-sfu.output.txt" 2> "unreal-stream-sfu.error.txt"
     echo "Customize (End): Unreal Pixel Streaming"
   fi
+  binPaths="$binPaths:$rendererPathUnreal"
 fi
 
 if [ $machineType == "Scheduler" ]; then
@@ -261,8 +253,6 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
     $installDirectory/$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
-
-
     mv /tmp/*_installer.log ./deadline-log-repository.txt
     cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerInstallRoot/$schedulerCertificateFile
     chmod +r $schedulerInstallRoot/$schedulerCertificateFile
@@ -339,6 +329,8 @@ if [[ $renderManager == *Qube* ]]; then
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
   fi
 fi
+
+echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
 
 if [ $machineType == "Farm" ]; then
   if [ -f /tmp/onTerminate.sh ]; then

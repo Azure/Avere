@@ -112,17 +112,6 @@ $rendererPathBlender = "C:\Program Files\Blender"
 $rendererPathUnreal = "C:\Program Files\Unreal"
 
 if ($renderEngines -contains "PBRT") {
-  $binPaths += ";$rendererPathPBRT"
-}
-if ($renderEngines -contains "Blender") {
-  $binPaths += ";$rendererPathBlender"
-}
-if ($renderEngines -contains "Unreal") {
-  $binPaths += ";$rendererPathUnreal"
-}
-setx PATH "$env:PATH$binPaths" /m
-
-if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (Start): PBRT v3"
   $versionInfo = "v3"
   $rendererPathPBRTv3 = "$rendererPathPBRT\$versionInfo"
@@ -142,11 +131,13 @@ if ($renderEngines -contains "PBRT") {
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
   New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt4"
   Write-Host "Customize (End): PBRT v4"
+
+  $binPaths += ";$rendererPathPBRT"
 }
 
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.4.1"
+  $versionInfo = "3.5.0"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
@@ -213,6 +204,18 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.txt" -RedirectStandardError "unreal-engine-build.error.txt"
   Write-Host "Customize (End): Unreal Engine Build"
 
+  if ($renderEngines -contains "Unreal.PixelStream") {
+    Write-Host "Customize (Start): Unreal Pixel Streaming"
+    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
+    $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.txt" -RedirectStandardError "unreal-stream-signalling.error.txt"
+    $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
+    $installFile = "PixelStreamingInfrastructure\SFU\platform_scripts\cmd\setup.bat"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-sfu.output.txt" -RedirectStandardError "unreal-stream-sfu.error.txt"
+    Write-Host "Customize (End): Unreal Pixel Streaming"
+  }
+
   if ($machineType -eq "Workstation") {
     Write-Host "Customize (Start): Unreal Editor"
     $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
@@ -226,17 +229,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
     Write-Host "Customize (End): Unreal Editor"
   }
 
-  if ($renderEngines -contains "Unreal.PixelStream") {
-    Write-Host "Customize (Start): Unreal Pixel Streaming"
-    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
-    $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.txt" -RedirectStandardError "unreal-stream-signalling.error.txt"
-    $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
-    $installFile = "PixelStreamingInfrastructure\SFU\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-sfu.output.txt" -RedirectStandardError "unreal-stream-sfu.error.txt"
-    Write-Host "Customize (End): Unreal Pixel Streaming"
-  }
+  $binPaths += ";$rendererPathUnreal"
 }
 
 if ($machineType -eq "Scheduler") {
@@ -435,6 +428,8 @@ if ($renderManager -like "*Qube*") {
     Set-Content -Path $schedulerConfigFile -Value $configFileText
   }
 }
+
+setx PATH "$env:PATH$binPaths" /m
 
 if ($machineType -eq "Farm") {
   Write-Host "Customize (Start): Privacy Experience"
