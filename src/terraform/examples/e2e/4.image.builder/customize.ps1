@@ -22,7 +22,7 @@ $versionInfo = "3.7.9"
 $installFile = "python-$versionInfo-amd64.exe"
 $downloadUrl = "https://www.python.org/ftp/python/$versionInfo/$installFile"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath .\$installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /log python.txt" -Wait
+Start-Process -FilePath .\$installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /log python.log" -Wait
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
@@ -30,7 +30,7 @@ $versionInfo = "2.38.1"
 $installFile = "Git-$versionInfo-64-bit.exe"
 $downloadUrl = "$storageContainerUrl/Git/$versionInfo/$installFile$storageContainerSas"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath .\$installFile -ArgumentList "/silent /norestart /log=git.txt" -Wait
+Start-Process -FilePath .\$installFile -ArgumentList "/silent /norestart /log=git.log" -Wait
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
@@ -43,7 +43,7 @@ $downloadUrl = "$storageContainerUrl/VS/$versionInfo/$installFile$storageContain
 $componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
 $componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
 $componentIds += " --add Microsoft.Component.MSBuild"
-Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs-build-tools.output.txt" -RedirectStandardError "vs-build-tools.error.txt"
+Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs-build-tools.output.log" -RedirectStandardError "vs-build-tools.error.log"
 $binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin\amd64"
 $binPaths += ";$binPathCMake;$binPathMSBuild"
@@ -76,7 +76,7 @@ if ($gpuPlatform -contains "GRID") {
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait
-  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install -log $binDirectory\amd-gpu.txt" -Wait
+  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install -log $binDirectory\amd-gpu.log" -Wait
   Write-Host "Customize (End): AMD GPU"
 }
 
@@ -96,13 +96,13 @@ if ($gpuPlatform -contains "CUDA.OptiX") {
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-32649046.exe"
   $downloadUrl = "$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /O $binDirectory\nvidia-optix.txt" -Wait
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /O $binDirectory\nvidia-optix.log" -Wait
   $versionInfo = "v12.0"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.txt" -RedirectStandardError "nvidia-optix-cmake.error.txt"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.txt" -RedirectStandardError "nvidia-optix-msbuild.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" -Wait -RedirectStandardOutput "nvidia-optix-cmake.output.log" -RedirectStandardError "nvidia-optix-cmake.error.log"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "nvidia-optix-msbuild.output.log" -RedirectStandardError "nvidia-optix-msbuild.error.log"
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA OptiX"
 }
@@ -115,20 +115,20 @@ if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (Start): PBRT v3"
   $versionInfo = "v3"
   $rendererPathPBRTv3 = "$rendererPathPBRT\$versionInfo"
-  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
+  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.log" -RedirectStandardError "pbrt-$versionInfo-git.error.log"
   New-Item -ItemType Directory -Path "$rendererPathPBRTv3" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv3"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.log" -RedirectStandardError "pbrt-$versionInfo-cmake.error.log"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.log" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.log"
   New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv3\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt3"
   Write-Host "Customize (End): PBRT v3"
 
   Write-Host "Customize (Start): PBRT v4"
   $versionInfo = "v4"
   $rendererPathPBRTv4 = "$rendererPathPBRT\$versionInfo"
-  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.txt" -RedirectStandardError "pbrt-$versionInfo-git.error.txt"
+  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/pbrt-$versionInfo.git" -Wait -RedirectStandardOutput "pbrt-$versionInfo-git.output.log" -RedirectStandardError "pbrt-$versionInfo-git.error.log"
   New-Item -ItemType Directory -Path "$rendererPathPBRTv4" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.txt" -RedirectStandardError "pbrt-$versionInfo-cmake.error.txt"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.txt" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.txt"
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv4"" -S $binDirectory\pbrt-$versionInfo" -Wait -RedirectStandardOutput "pbrt-$versionInfo-cmake.output.log" -RedirectStandardError "pbrt-$versionInfo-cmake.error.log"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "pbrt-$versionInfo-msbuild.output.log" -RedirectStandardError "pbrt-$versionInfo-msbuild.error.log"
   New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt4"
   Write-Host "Customize (End): PBRT v4"
 
@@ -141,14 +141,14 @@ if ($renderEngines -contains "Blender") {
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.txt') -Wait
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.log') -Wait
   $binPaths += ";$rendererPathBlender"
   Write-Host "Customize (End): Blender"
 }
 
 if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
   Write-Host "Customize (Start): Unreal Engine Setup"
-  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.txt" -RedirectStandardError "net-fx3.error.txt"
+  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "net-fx3.output.log" -RedirectStandardError "net-fx3.error.log"
   Set-Location -Path C:\
   $versionInfo = "5.1.1"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
@@ -165,7 +165,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   $scriptFileText = $scriptFileText.Replace("/register", "/register /unattended")
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
-  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-engine-setup.output.txt" -RedirectStandardError "unreal-engine-setup.error.txt"
+  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-engine-setup.output.log" -RedirectStandardError "unreal-engine-setup.error.log"
   Write-Host "Customize (End): Unreal Engine Setup"
 
   Write-Host "Customize (Start): Visual Studio Workloads"
@@ -182,7 +182,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   $componentIds += " --add Microsoft.VisualStudio.Workload.NativeCrossPlat"
   $componentIds += " --add Microsoft.VisualStudio.Workload.ManagedDesktop"
   $componentIds += " --add Microsoft.VisualStudio.Workload.Universal"
-  Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs.output.txt" -RedirectStandardError "vs.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "vs.output.log" -RedirectStandardError "vs.error.log"
   Write-Host "Customize (End): Visual Studio Workloads"
 
   Write-Host "Customize (Start): Unreal Project Files Generate"
@@ -195,24 +195,24 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
-  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-project-files-generate.output.txt" -RedirectStandardError "unreal-project-files-generate.error.txt"
+  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-project-files-generate.output.log" -RedirectStandardError "unreal-project-files-generate.error.log"
   Write-Host "Customize (End): Unreal Project Files Generate"
 
   Write-Host "Customize (Start): Unreal Engine Build"
   [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
   [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$rendererPathUnreal\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.txt" -RedirectStandardError "unreal-engine-build.error.txt"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "unreal-engine-build.output.log" -RedirectStandardError "unreal-engine-build.error.log"
   Write-Host "Customize (End): Unreal Engine Build"
 
   if ($renderEngines -contains "Unreal.PixelStream") {
     Write-Host "Customize (Start): Unreal Pixel Streaming"
-    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "unreal-stream-git.output.txt" -RedirectStandardError "unreal-stream-git.error.txt"
+    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "unreal-stream-git.output.log" -RedirectStandardError "unreal-stream-git.error.log"
     $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.txt" -RedirectStandardError "unreal-stream-signalling.error.txt"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-signalling.output.log" -RedirectStandardError "unreal-stream-signalling.error.log"
     $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.txt" -RedirectStandardError "unreal-stream-matchmaker.error.txt"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-matchmaker.output.log" -RedirectStandardError "unreal-stream-matchmaker.error.log"
     $installFile = "PixelStreamingInfrastructure\SFU\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-sfu.output.txt" -RedirectStandardError "unreal-stream-sfu.error.txt"
+    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "unreal-stream-sfu.output.log" -RedirectStandardError "unreal-stream-sfu.error.log"
     Write-Host "Customize (End): Unreal Pixel Streaming"
   }
 
@@ -237,7 +237,7 @@ if ($machineType -eq "Scheduler") {
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log az-cli.txt" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log az-cli.log" -Wait
   Write-Host "Customize (End): Azure CLI"
 
   if ($renderManager -like "*Deadline*") {
@@ -247,7 +247,7 @@ if ($machineType -eq "Scheduler") {
   }
 } else {
   Write-Host "Customize (Start): NFS Client"
-  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" -Wait -RedirectStandardOutput "nfs-client.output.txt" -RedirectStandardError "nfs-client.error.txt"
+  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" -Wait -RedirectStandardOutput "nfs-client.output.log" -RedirectStandardError "nfs-client.error.log"
   Write-Host "Customize (End): NFS Client"
 }
 
@@ -270,7 +270,7 @@ if ($renderManager -like "*RoyalRender*") {
   $installDirectory = "RoyalRender*"
   New-Item -ItemType Directory -Path $schedulerInstallRoot
   New-SmbShare -Name "RoyalRender" -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
-  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.txt" -RedirectStandardError "$installType.error.txt"
+  Start-Process -FilePath .\$installDirectory\$installDirectory\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.output.log" -RedirectStandardError "$installType.error.log"
   Write-Host "Customize (End): Royal Render Installer"
 
   $serviceUser = "rrService"
@@ -279,11 +279,11 @@ if ($renderManager -like "*RoyalRender*") {
   New-LocalUser -Name $serviceUser -Password $securePassword -PasswordNeverExpires
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Royal Render Server"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW $servicePassword -fwIn" -Wait -RedirectStandardOutput "$installType-server.output.txt" -RedirectStandardError "$installType-server.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW $servicePassword -fwIn" -Wait -RedirectStandardOutput "$installType-server.output.log" -RedirectStandardError "$installType-server.error.log"
     Write-Host "Customize (End): Royal Render Server"
   } else {
     Write-Host "Customize (Start): Royal Render Client"
-    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -rrUser $serviceUser -rrUserPW $servicePassword -fwOut" -Wait -RedirectStandardOutput "$installType-client.output.txt" -RedirectStandardError "$installType-client.error.txt"
+    Start-Process -FilePath $schedulerBinPath\$installFile -ArgumentList "-service -rrUser $serviceUser -rrUserPW $servicePassword -fwOut" -Wait -RedirectStandardOutput "$installType-client.output.log" -RedirectStandardError "$installType-client.error.log"
     Write-Host "Customize (End): Royal Render Client"
 
     Write-Host "Customize (Start): Royal Render Viewer"
@@ -320,8 +320,8 @@ if ($renderManager -like "*Deadline*") {
     Write-Host "Customize (Start): Deadline Server"
     netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=27100
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot" -Wait -RedirectStandardOutput "deadline-repository.output.txt" -RedirectStandardError "deadline-repository.error.txt"
-    Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.txt
+    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot" -Wait -RedirectStandardOutput "deadline-repository.output.log" -RedirectStandardError "deadline-repository.error.log"
+    Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-repository.log
     Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallRoot\$schedulerCertificateFile
     New-NfsShare -Name "Deadline" -Path $schedulerInstallRoot -Permission ReadWrite
     Write-Host "Customize (End): Deadline Server"
@@ -343,8 +343,8 @@ if ($renderManager -like "*Deadline*") {
       $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
     }
     Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-    Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-client.txt
-    Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientMount $schedulerCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.txt" -RedirectStandardError "deadline-change-repository.error.txt"
+    Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-log-client.log
+    Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientMount $schedulerCertificate ''" -Wait -RedirectStandardOutput "deadline-change-repository.output.log" -RedirectStandardError "deadline-change-repository.error.log"
     Set-Location -Path $binDirectory
     Write-Host "Customize (End): Deadline Client"
 
@@ -371,7 +371,7 @@ if ($renderManager -like "*Qube*") {
   $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
   $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
   Write-Host "Customize (End): Qube Core"
 
   if ($machineType -eq "Scheduler") {
@@ -384,7 +384,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-${schedulerVersion}-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
     $binPaths += ";C:\Program Files\pfx\pgsql\bin"
     Write-Host "Customize (End): Qube Supervisor"
 
@@ -394,7 +394,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
     Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
   } else {
     Write-Host "Customize (Start): Qube Worker"
@@ -404,7 +404,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
     Write-Host "Customize (End): Qube Worker"
 
     Write-Host "Customize (Start): Qube Client"
@@ -412,7 +412,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.txt" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
     $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
@@ -445,6 +445,6 @@ if ($machineType -eq "Workstation") {
   $installFile = "pcoip-agent-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "pcoip-agent.output.txt" -RedirectStandardError "pcoip-agent.error.txt"
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "pcoip-agent.output.log" -RedirectStandardError "pcoip-agent.error.log"
   Write-Host "Customize (End): Teradici PCoIP"
 }
