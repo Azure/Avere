@@ -130,7 +130,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
   echo "Customize (End): Unreal Engine Setup"
 
   echo "Customize (Start): Unreal Project Files Generate"
-  $rendererPathUnreal/GenerateProjectFiles.sh 1> unreal-project-files-generate.output.log" 2> unreal-project-files-generate.error.log
+  $rendererPathUnreal/GenerateProjectFiles.sh 1> unreal-project-files-generate.output.log 2> unreal-project-files-generate.error.log
   echo "Customize (End): Unreal Project Files Generate"
 
   echo "Customize (Start): Unreal Engine Build"
@@ -245,7 +245,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-${schedulerVersion}.CENTOS_8.2.x86_64.rpm"
     downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> $installType.output.log" 2> $installType.error.log
+    rpm -i $installType-*.rpm 1> $installType.output.log 2> $installType.error.log
     echo "Customize (End): Qube Supervisor"
 
     echo "Customize (Start): Qube Data Relay Agent (DRA)"
@@ -261,7 +261,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
     downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> $installType.output.log" 2> $installType.error.log
+    rpm -i $installType-*.rpm 1> $installType.output.log 2> $installType.error.log
     echo "Customize (End): Qube Worker"
 
     echo "Customize (Start): Qube Client"
@@ -338,14 +338,14 @@ fi
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Teradici PCoIP"
   versionInfo="23.01.1"
-  installFile="pcoip-agent-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
+  installType="pcoip-agent"
+  installFile="$installType-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
   downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   curl -o $installFile -L $downloadUrl
-  installDirectory="pcoip-agent"
-  mkdir $installDirectory
-  tar -xzf $installFile -C $installDirectory
-  cd $installDirectory
-  ./install-pcoip-agent.sh pcoip-agent-graphics usb-vhci 1> ../$installDirectory.output.log 2> ../$installDirectory.error.log
+  mkdir $installType
+  tar -xzf $installFile -C $installType
+  cd $installType
+  ./install-$installType.sh $installType-graphics usb-vhci 1> ../$installType.output.log 2> ../$installType.error.log
   cd $binDirectory
   echo "Customize (End): Teradici PCoIP"
 fi

@@ -437,9 +437,10 @@ if ($machineType -eq "Farm") {
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP"
   $versionInfo = "23.01.1"
-  $installFile = "pcoip-agent-graphics_$versionInfo.exe"
+  $installType = "pcoip-agent"
+  $installFile = "$installType-graphics_$versionInfo.exe"
   $downloadUrl = "$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "pcoip-agent.output.log" -RedirectStandardError "pcoip-agent.error.log"
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installType.output.log" -RedirectStandardError "$installType.error.log"
   Write-Host "Customize (End): Teradici PCoIP"
 }
