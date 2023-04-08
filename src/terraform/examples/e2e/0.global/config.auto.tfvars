@@ -31,6 +31,10 @@ keyVault = {
     {
       name  = "AdminPassword"
       value = "P@ssword1234"
+    },
+    {
+      name  = "ServicePassword"
+      value = "P@ssword1234"
     }
   ]
   keys = [

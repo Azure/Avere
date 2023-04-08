@@ -5,7 +5,7 @@ resourceGroupName = "ArtistAnywhere.Image" # Alphanumeric, underscores, hyphens,
 ###############################################################################################
 
 imageGallery = {
-  name = "azrender"
+  name = "azstudio"
   imageDefinitions = [
     {
       name       = "Linux"
@@ -47,7 +47,7 @@ imageGallery = {
 #####################################################################################################
 
 containerRegistry = {
-  name = "azrender"
+  name = ""
   sku  = "Premium"
 }
 
@@ -221,8 +221,6 @@ imageTemplates = [
     }
   }
 ]
-
-servicePassword = "P@ssword1234" # rrService Local Windows User Password
 
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #

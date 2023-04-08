@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.49.0"
+      version = "~>3.51.0"
     }
   }
   backend "azurerm" {
@@ -193,7 +193,7 @@ variable "monitor" {
   )
 }
 
-data "azurerm_key_vault" "render" {
+data "azurerm_key_vault" "studio" {
   count               = module.global.keyVault.name != "" ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
@@ -202,15 +202,15 @@ data "azurerm_key_vault" "render" {
 data "azurerm_key_vault_secret" "gateway_connection" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.gatewayConnection
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
-data "azurerm_storage_account" "render" {
+data "azurerm_storage_account" "studio" {
   name                = module.global.rootStorage.accountName
   resource_group_name = module.global.resourceGroupName
 }
 
-data "azurerm_log_analytics_workspace" "render" {
+data "azurerm_log_analytics_workspace" "studio" {
   count               = module.global.monitorWorkspace.name != "" && var.monitor.enablePrivateLink ? 1 : 0
   name                = module.global.monitorWorkspace.name
   resource_group_name = module.global.resourceGroupName
@@ -472,7 +472,7 @@ resource "azurerm_virtual_network_peering" "network_peering_down" {
 # Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
 ############################################################################
 
-resource "azurerm_private_dns_zone" "render" {
+resource "azurerm_private_dns_zone" "studio" {
   name                = var.privateDns.zoneName
   resource_group_name = azurerm_resource_group.network.name
 }
@@ -483,7 +483,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   }
   name                  = each.value.name
   resource_group_name   = azurerm_resource_group.network.name
-  private_dns_zone_name = azurerm_private_dns_zone.render.name
+  private_dns_zone_name = azurerm_private_dns_zone.studio.name
   virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.name}"
   registration_enabled  = var.privateDns.enableAutoRegistration
   depends_on = [
@@ -496,6 +496,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
 ###############################################################################################
 
 resource "azurerm_private_dns_zone" "key_vault" {
+  count               = module.global.keyVault.name != "" ? 1 : 0
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = azurerm_resource_group.network.name
 }
@@ -511,9 +512,10 @@ resource "azurerm_private_dns_zone" "storage_file" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "key_vault" {
+  count                 = module.global.keyVault.name != "" ? 1 : 0
   name                  = "${local.computeNetwork.name}.vault"
   resource_group_name   = azurerm_resource_group.network.name
-  private_dns_zone_name = azurerm_private_dns_zone.key_vault.name
+  private_dns_zone_name = azurerm_private_dns_zone.key_vault[0].name
   virtual_network_id    = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetwork.name}"
 }
 
@@ -539,22 +541,22 @@ resource "azurerm_private_dns_zone_virtual_network_link" "storage_file" {
 
 resource "azurerm_private_endpoint" "key_vault" {
   count               = module.global.keyVault.name != "" ? 1 : 0
-  name                = "${data.azurerm_key_vault.render[0].name}.vault"
+  name                = "${data.azurerm_key_vault.studio[0].name}.vault"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
-  subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.key_vault.virtual_network_id}/subnets/${local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage].name}"
+  subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.key_vault[0].virtual_network_id}/subnets/${local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage].name}"
   private_service_connection {
-    name                           = data.azurerm_key_vault.render[0].name
-    private_connection_resource_id = data.azurerm_key_vault.render[0].id
+    name                           = data.azurerm_key_vault.studio[0].name
+    private_connection_resource_id = data.azurerm_key_vault.studio[0].id
     is_manual_connection           = false
     subresource_names = [
       "vault"
     ]
   }
   private_dns_zone_group {
-    name = data.azurerm_key_vault.render[0].name
+    name = data.azurerm_key_vault.studio[0].name
     private_dns_zone_ids = [
-      azurerm_private_dns_zone.key_vault.id
+      azurerm_private_dns_zone.key_vault[0].id
     ]
   }
   depends_on = [
@@ -566,20 +568,20 @@ resource "azurerm_private_endpoint" "storage_blob" {
   for_each = {
     for storageSubnet in local.storageSubnets : storageSubnet.name => storageSubnet
   }
-  name                = "${data.azurerm_storage_account.render.name}.blob"
+  name                = "${data.azurerm_storage_account.studio.name}.blob"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
   subnet_id           = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
   private_service_connection {
-    name                           = data.azurerm_storage_account.render.name
-    private_connection_resource_id = data.azurerm_storage_account.render.id
+    name                           = data.azurerm_storage_account.studio.name
+    private_connection_resource_id = data.azurerm_storage_account.studio.id
     is_manual_connection           = false
     subresource_names = [
       "blob"
     ]
   }
   private_dns_zone_group {
-    name = data.azurerm_storage_account.render.name
+    name = data.azurerm_storage_account.studio.name
     private_dns_zone_ids = [
       azurerm_private_dns_zone.storage_blob.id
     ]
@@ -593,20 +595,20 @@ resource "azurerm_private_endpoint" "storage_file" {
   for_each = {
     for storageSubnet in local.storageSubnets : storageSubnet.name => storageSubnet
   }
-  name                = "${data.azurerm_storage_account.render.name}.file"
+  name                = "${data.azurerm_storage_account.studio.name}.file"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
   subnet_id           = "${azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
   private_service_connection {
-    name                           = data.azurerm_storage_account.render.name
-    private_connection_resource_id = data.azurerm_storage_account.render.id
+    name                           = data.azurerm_storage_account.studio.name
+    private_connection_resource_id = data.azurerm_storage_account.studio.id
     is_manual_connection           = false
     subresource_names = [
       "file"
     ]
   }
   private_dns_zone_group {
-    name = data.azurerm_storage_account.render.name
+    name = data.azurerm_storage_account.studio.name
     private_dns_zone_ids = [
       azurerm_private_dns_zone.storage_file.id
     ]
@@ -1085,20 +1087,20 @@ resource "azurerm_private_dns_zone_virtual_network_link" "monitor_automation" {
 
 resource "azurerm_private_endpoint" "monitor" {
   count               = var.monitor.enablePrivateLink ? 1 : 0
-  name                = "${data.azurerm_log_analytics_workspace.render[0].name}.monitor"
+  name                = "${data.azurerm_log_analytics_workspace.studio[0].name}.monitor"
   resource_group_name = azurerm_resource_group.network.name
   location            = azurerm_resource_group.network.location
   subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.monitor[0].virtual_network_id}/subnets/${local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage].name}"
   private_service_connection {
-    name                           = data.azurerm_log_analytics_workspace.render[0].name
-    private_connection_resource_id = data.azurerm_log_analytics_workspace.render[0].id
+    name                           = data.azurerm_log_analytics_workspace.studio[0].name
+    private_connection_resource_id = data.azurerm_log_analytics_workspace.studio[0].id
     is_manual_connection           = false
     subresource_names = [
       "azuremonitor"
     ]
   }
   private_dns_zone_group {
-    name = data.azurerm_log_analytics_workspace.render[0].name
+    name = data.azurerm_log_analytics_workspace.studio[0].name
     private_dns_zone_ids = [
       azurerm_private_dns_zone.monitor[0].id,
       azurerm_private_dns_zone.monitor_opinsights_oms[0].id,
@@ -1122,7 +1124,7 @@ resource "azurerm_monitor_private_link_scoped_service" "monitor" {
   count               = var.monitor.enablePrivateLink ? 1 : 0
   name                = module.global.monitorWorkspace.name
   resource_group_name = azurerm_resource_group.network.name
-  linked_resource_id  = data.azurerm_log_analytics_workspace.render[0].id
+  linked_resource_id  = data.azurerm_log_analytics_workspace.studio[0].id
   scope_name          = azurerm_monitor_private_link_scope.monitor[0].name
 }
 

@@ -5,7 +5,7 @@ resourceGroupName = "ArtistAnywhere.Network" # Alphanumeric, underscores, hyphen
 #################################################################################################
 
 computeNetwork = {
-  name       = "Render"
+  name       = "Content"
   regionName = "" # Optional region override
   addressSpace = [
     "10.1.0.0/16"
@@ -151,7 +151,7 @@ networkPeering = {
 ############################################################################
 
 privateDns = {
-  zoneName               = "artist.studio"
+  zoneName               = "content.studio"
   enableAutoRegistration = true
 }
 

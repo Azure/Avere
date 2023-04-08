@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.49.0"
+      version = "~>3.51.0"
     }
   }
   backend "azurerm" {
@@ -101,6 +101,10 @@ variable "virtualMachines" {
   ))
 }
 
+variable "servicePassword" {
+  type = string
+}
+
 variable "computeNetwork" {
   type = object(
     {
@@ -111,12 +115,12 @@ variable "computeNetwork" {
   )
 }
 
-data "azurerm_user_assigned_identity" "render" {
+data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
   resource_group_name = module.global.resourceGroupName
 }
 
-data "azurerm_key_vault" "render" {
+data "azurerm_key_vault" "studio" {
   count               = module.global.keyVault.name != "" ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
@@ -125,13 +129,19 @@ data "azurerm_key_vault" "render" {
 data "azurerm_key_vault_secret" "admin_username" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
+}
+
+data "azurerm_key_vault_secret" "service_password" {
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.servicePassword
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
@@ -145,7 +155,7 @@ data "terraform_remote_state" "network" {
   config = {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName
+    container_name       = module.global.rootStorage.containerName.terraform
     key                  = "1.network"
   }
 }
@@ -155,7 +165,7 @@ data "terraform_remote_state" "image" {
   config = {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName
+    container_name       = module.global.rootStorage.containerName.terraform
     key                  = "4.image.builder"
   }
 }
@@ -173,6 +183,7 @@ data "azurerm_subnet" "workstation" {
 
 locals {
   renderManager      = split(",", module.global.renderManager)[0]
+  servicePassword    = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachinesLinux = [
     for virtualMachine in var.virtualMachines : merge(virtualMachine, {
@@ -233,7 +244,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.render.id
+      data.azurerm_user_assigned_identity.studio.id
     ]
   }
   dynamic plan {
@@ -270,6 +281,7 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
         { renderManager             = local.renderManager },
+        { servicePassword           = local.servicePassword },
         { fileSystemMountsDelimiter = ";" }
       ))
     )}"
@@ -321,7 +333,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.render.id
+      data.azurerm_user_assigned_identity.studio.id
     ]
   }
   depends_on = [
@@ -343,6 +355,7 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
         { renderManager             = local.renderManager },
+        { servicePassword           = local.servicePassword },
         { fileSystemMountsDelimiter = ";" }
       )), "UTF-16LE"
     )}"

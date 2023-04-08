@@ -13,12 +13,13 @@ function AddFileSystemMounts ($fsMountsDelimiter, $fsMounts) {
 }
 
 function RegisterFileSystemMounts ($fsMountsFile) {
+  $installType = "fs-mounts"
   $fsMountsFileSize = (Get-Item -Path $fsMountsFile).Length
   if ($fsMountsFileSize -gt 0) {
     $taskName = "AAA File System Mounts"
     $taskAction = New-ScheduledTaskAction -Execute $fsMountsFile
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup
     Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
-    Start-Process -FilePath $fsMountsFile -Wait -RedirectStandardOutput "fs-mounts.output.log" -RedirectStandardError "fs-mounts.error.log"
+    Start-Process -FilePath $fsMountsFile -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
   }
 }

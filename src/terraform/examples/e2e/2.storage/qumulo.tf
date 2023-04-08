@@ -91,3 +91,7 @@ resource "azurerm_resource_group_template_deployment" "qumulo" {
     }
   TEMPLATE
 }
+
+output "resourceGroupNameQumulo" {
+  value = var.qumulo.name == "" ? "" : azurerm_resource_group.qumulo[0].name
+}

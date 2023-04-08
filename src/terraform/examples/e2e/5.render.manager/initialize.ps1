@@ -4,13 +4,17 @@ $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
 if (${renderManager} -like "*RoyalRender*") {
-  $installType = "royal-render-server-init"
-  Start-Process -FilePath "rrServerconsole" -ArgumentList "-initAndClose" -Wait -RedirectStandardOutput "$installType.output.log" -RedirectStandardError "$installType.error.log"
+  $installType = "royal-render-server"
+  $serviceUser = "rrService"
+  $servicePassword = ConvertTo-SecureString ${servicePassword} -AsPlainText -Force
+  New-LocalUser -Name $serviceUser -Password $servicePassword -PasswordNeverExpires
+  Start-Process -FilePath "rrServerconsole" -ArgumentList "-initAndClose" -Wait -RedirectStandardOutput "$installType-init.out.log" -RedirectStandardError "$installType-init.err.log"
+  Start-Process -FilePath "rrWorkstation_installer" -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW $servicePassword -fwIn" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
 }
 
 if (${renderManager} -like "*Qube*") {
   $installType = "qube-supervisor"
-  Start-Process -FilePath "C:\Program Files\pfx\qube\utils\supe_postinstall.bat" -Wait -RedirectStandardOutput "$installType-post.output.log" -RedirectStandardError "$installType-post.error.log"
+  Start-Process -FilePath "C:\Program Files\pfx\qube\utils\supe_postinstall.bat" -Wait -RedirectStandardOutput "$installType-post.out.log" -RedirectStandardError "$installType-post.err.log"
 }
 
 if (${qubeLicense.userName} -ne "") {

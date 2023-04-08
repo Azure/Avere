@@ -2,8 +2,15 @@
 
 source /etc/profile.d/aaa.sh
 
+binDirectory="/usr/local/bin"
+cd $binDirectory
+
 if [[ ${renderManager} == *RoyalRender* ]]; then
-  rrServerconsole -initAndClose > /usr/local/bin/royal-render-server-init.log
+  installType="royal-render-server"
+  serviceUser="rrService"
+  useradd -r $serviceUser -p ${servicePassword}
+  rrServerconsole -initAndClose > $installType-init.log
+  rrWorkstation_installer -serviceServer -rrUser $serviceUser -rrUserPW ${servicePassword} 1> $installType-service.out.log 2> $installType-service.err.log
 fi
 
 if [ "${qubeLicense.userName}" != "" ]; then
@@ -113,7 +120,7 @@ if [ ${cycleCloud.enable} == true ]; then
   clusterTemplateFile="cluster_template.txt"
   echo "[cluster Render Farm]" > $clusterTemplateFile
   echo "Category = Schedulers" >> $clusterTemplateFile
-  echo "IconUrl = https://azrender.blob.core.windows.net/bin/icon.png?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D" >> $clusterTemplateFile
+  echo "IconUrl = ${binStorageHost}/CycleCloud/icon.png${binStorageAuth}" >> $clusterTemplateFile
   echo "FormLayout = SelectionPanel" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "[[node defaults]]" >> $clusterTemplateFile
@@ -135,12 +142,12 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "" >> $clusterTemplateFile
   %{ if length(regexall("Deadline", renderManager)) > 0 }
     echo "mkdir /deadline" >> $clusterTemplateFile
-    echo "echo 'render.artist.studio:/deadline /deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+    echo "echo 'render.content.studio:/deadline /deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
   %{ endif }
   echo "mkdir -p /mnt/data/write" >> $clusterTemplateFile
-  echo "echo 'azrender1.blob.core.windows.net:/azrender1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "echo 'azstudio1.blob.core.windows.net:/azstudio1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
   echo "mkdir -p /mnt/data/read" >> $clusterTemplateFile
-  echo "echo 'cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
+  echo "echo 'cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile
   echo "" >> $clusterTemplateFile
   echo "mount -a" >> $clusterTemplateFile
   echo "chmod 777 /mnt/data/read" >> $clusterTemplateFile

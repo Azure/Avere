@@ -2,7 +2,10 @@
 
 source /etc/profile.d/aaa.sh
 
-functionsFile="/usr/local/bin/functions.sh"
+binDirectory="/usr/local/bin"
+cd $binDirectory
+
+functionsFile="$binDirectory/functions.sh"
 functionsCode="${ filebase64("../0.global/functions.sh") }"
 echo $functionsCode | base64 --decode > $functionsFile
 source $functionsFile
@@ -12,6 +15,13 @@ AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDeli
 AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsRoyalRender) }"
 AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
 mount -a
+
+if [[ ${renderManager} == *RoyalRender* ]]; then
+  installType="royal-render-client"
+  serviceUser="rrService"
+  useradd -r $serviceUser -p ${servicePassword}
+  rrWorkstation_installer -service -rrUser $serviceUser -rrUserPW ${servicePassword} -fwOut 1> $installType-service.out.log 2> $installType-service.err.log
+fi
 
 servicePath="/etc/systemd/system/scheduledEventHandler.service"
 echo "[Unit]" > $servicePath

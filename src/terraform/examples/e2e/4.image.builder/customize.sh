@@ -4,8 +4,20 @@ binPaths=""
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-storageContainerUrl="https://azrender.blob.core.windows.net/bin"
-storageContainerSas="?sv=2021-04-10&st=2022-01-01T08%3A00%3A00Z&se=2222-12-31T08%3A00%3A00Z&sr=c&sp=r&sig=Q10Ob58%2F4hVJFXfV8SxJNPbGOkzy%2BxEaTd5sJm8BLk8%3D"
+echo "Customize (Start): Image Build Parameters"
+dnf -y install jq
+buildConfig=$(echo $buildConfigEncoded | base64 -d)
+machineType=$(echo $buildConfig | jq -r .machineType)
+gpuPlatform=$(echo $buildConfig | jq -c .gpuPlatform)
+renderManager=$(echo $buildConfig | jq -r .renderManager)
+renderEngines=$(echo $buildConfig | jq -c .renderEngines)
+binStorageHost=$(echo $buildConfig | jq -r .binStorageHost)
+binStorageAuth=$(echo $buildConfig | jq -r .binStorageAuth)
+echo "Machine Type: $machineType"
+echo "GPU Platform: $gpuPlatform"
+echo "Render Manager: $renderManager"
+echo "Render Engines: $renderEngines"
+echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
@@ -16,60 +28,44 @@ dnf -y install unzip
 dnf -y install cmake
 dnf -y install make
 dnf -y install git
-dnf -y install jq
-dnf -y install mesa-libGL-devel
-dnf -y install libXrandr-devel
-dnf -y install libXinerama-devel
-dnf -y install libXcursor-devel
-dnf -y install libXi-devel
 echo "Customize (End): Image Build Platform"
-
-echo "Customize (Start): Image Build Parameters"
-buildConfig=$(echo $buildConfigEncoded | base64 -d)
-machineType=$(echo $buildConfig | jq -r .machineType)
-gpuPlatform=$(echo $buildConfig | jq -c .gpuPlatform)
-renderManager=$(echo $buildConfig | jq -r .renderManager)
-renderEngines=$(echo $buildConfig | jq -c .renderEngines)
-echo "Machine Type: $machineType"
-echo "GPU Platform: $gpuPlatform"
-echo "Render Manager: $renderManager"
-echo "Render Engines: $renderEngines"
-echo "Customize (End): Image Build Parameters"
 
 if [[ $gpuPlatform == *GRID* ]]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
   dnf -y install kernel-devel-$(uname -r)
-  installFile="nvidia-gpu-grid.run"
+  installType="nvidia-gpu-grid"
+  installFile="$installType.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent 1> nvidia-gpu-grid.output.log 2> nvidia-gpu-grid.error.log
-  #./$installFile --silent --dkms 1> nvidia-gpu-grid.output.log 2> nvidia-gpu-grid.error.log
+  ./$installFile --silent 1> $installType.out.log 2> $installType.err.log
+  #./$installFile --silent --dkms 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): NVIDIA GPU (GRID)"
 fi
 
 if [[ $gpuPlatform == *CUDA* ]] || [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (Start): NVIDIA GPU (CUDA)"
+  installType="nvidia-cuda"
   dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-  #dnf -y module install nvidia-driver:latest-dkms 1> nvidia-cuda-dkms.output.log 2> nvidia-cuda-dkms.error.log
-  dnf -y install cuda 1> nvidia-cuda.output.log 2> nvidia-cuda.error.log
+  #dnf -y module install nvidia-driver:latest-dkms 1> $installType-dkms.out.log 2> $installType-dkms.err.log
+  dnf -y install cuda 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): NVIDIA GPU (CUDA)"
 fi
 
 if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (Start): NVIDIA OptiX"
   versionInfo="7.7.0"
+  installType="nvidia-optix"
   installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
-  downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$storageContainerSas"
+  downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  installDirectory="nvidia-optix"
-  mkdir $installDirectory
-  ./$installFile --skip-license --prefix=$binDirectory/$installDirectory 1> $installDirectory.output.log 2> $installDirectory.error.log
-  buildDirectory="$binDirectory/$installDirectory/build"
+  mkdir $installType
+  ./$installFile --skip-license --prefix=$binDirectory/$installType 1> $installType.out.log 2> $installType.err.log
+  buildDirectory="$binDirectory/$installType/build"
   mkdir $buildDirectory
-  cmake -B $buildDirectory -S $binDirectory/$installDirectory/SDK 1> $installDirectory-cmake.output.log 2> $installDirectory-cmake.error.log
-  make -C $buildDirectory 1> $installDirectory-make.output.log 2> $installDirectory-make.error.log
+  cmake -B $buildDirectory -S $binDirectory/$installType/SDK 1> $installType-cmake.out.log 2> $installType-cmake.err.log
+  make -C $buildDirectory 1> $installType-make.out.log 2> $installType-make.err.log
   binPaths="$binPaths:$buildDirectory/bin"
   echo "Customize (End): NVIDIA OptiX"
 fi
@@ -81,21 +77,28 @@ rendererPathUnreal="/usr/local/unreal"
 if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (Start): PBRT v3"
   versionInfo="v3"
+  installType="pbrt-$versionInfo"
   rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.log 2> pbrt-$versionInfo-git.error.log
+  git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
   mkdir -p $rendererPathPBRTv3
-  cmake -B $rendererPathPBRTv3 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo-cmake.output.log 2> pbrt-$versionInfo-cmake.error.log
-  make -C $rendererPathPBRTv3 1> pbrt-$versionInfo-make.output.log 2> pbrt-$versionInfo-make.error.log
+  cmake -B $rendererPathPBRTv3 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
+  make -C $rendererPathPBRTv3 1> $installType-make.out.log 2> $installType-make.err.log
   ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
   echo "Customize (End): PBRT v3"
 
   echo "Customize (Start): PBRT v4"
+  dnf -y install mesa-libGL-devel
+  dnf -y install libXrandr-devel
+  dnf -y install libXinerama-devel
+  dnf -y install libXcursor-devel
+  dnf -y install libXi-devel
   versionInfo="v4"
+  installType="pbrt-$versionInfo"
   rendererPathPBRTv4="$rendererPathPBRT/$versionInfo"
-  git clone --recursive https://github.com/mmp/pbrt-$versionInfo.git 1> pbrt-$versionInfo-git.output.log 2> pbrt-$versionInfo-git.error.log
+  git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
   mkdir -p $rendererPathPBRTv4
-  cmake -B $rendererPathPBRTv4 -S $binDirectory/pbrt-$versionInfo 1> pbrt-$versionInfo-cmake.output.log 2> pbrt-$versionInfo-cmake.error.log
-  make -C $rendererPathPBRTv4 1> pbrt-$versionInfo-make.output.log 2> pbrt-$versionInfo-make.error.log
+  cmake -B $rendererPathPBRTv4 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
+  make -C $rendererPathPBRTv4 1> $installType-make.out.log 2> $installType-make.err.log
   ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
   echo "Customize (End): PBRT v4"
 
@@ -104,12 +107,17 @@ fi
 
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
+  dnf -y install mesa-libGL
+  dnf -y install libXxf86vm
+  dnf -y install libXfixes
+  dnf -y install libXi
+  dnf -y install libSM
   versionInfo="3.5.0"
   versionType="linux-x64"
   installFile="blender-$versionInfo-$versionType.tar.xz"
-  downloadUrl="$storageContainerUrl/Blender/$versionInfo/$installFile$storageContainerSas"
+  downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
-  tar -xJf $installFile
+  tar -xf $installFile --xz
   mkdir -p $rendererPathBlender
   mv blender-$versionInfo-$versionType/* $rendererPathBlender
   binPaths="$binPaths:$rendererPathBlender"
@@ -120,36 +128,38 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
   echo "Customize (Start): Unreal Engine Setup"
   dnf -y install libicu
   versionInfo="5.1.1"
+  installType="unreal-engine"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
-  downloadUrl="$storageContainerUrl/Unreal/$versionInfo/$installFile$storageContainerSas"
+  downloadUrl="$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   mkdir $rendererPathUnreal
   mv UnrealEngine-$versionInfo-release/* $rendererPathUnreal
-  $rendererPathUnreal/Setup.sh 1> unreal-engine-setup.output.log 2> unreal-engine-setup.error.log
+  $rendererPathUnreal/Setup.sh 1> $installType-setup.out.log 2> $installType-setup.err.log
   echo "Customize (End): Unreal Engine Setup"
 
   echo "Customize (Start): Unreal Project Files Generate"
-  $rendererPathUnreal/GenerateProjectFiles.sh 1> unreal-project-files-generate.output.log 2> unreal-project-files-generate.error.log
+  $rendererPathUnreal/GenerateProjectFiles.sh 1> unreal-project-files-generate.out.log 2> unreal-project-files-generate.err.log
   echo "Customize (End): Unreal Project Files Generate"
 
   echo "Customize (Start): Unreal Engine Build"
-  make -C $rendererPathUnreal 1> unreal-engine-build.output.log 2> unreal-engine-build.error.log
+  make -C $rendererPathUnreal 1> $installType-build.out.log 2> $installType-build.err.log
   echo "Customize (End): Unreal Engine Build"
 
   if [[ $renderEngines == *Unreal.PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
-    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 1> unreal-stream-git.output.log 2> unreal-stream-git.error.log
+    installType="unreal-stream"
+    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 1> $installType-git.out.log 2> $installType-git.err.log
     dnf -y install coturn
     installFile="PixelStreamingInfrastructure/SignallingWebServer/platform_scripts/bash/setup.sh"
     chmod +x $installFile
-    ./$installFile 1> unreal-stream-signalling.output.log 2> unreal-stream-signalling.error.log
+    ./$installFile 1> $installType-signalling.out.log 2> $installType-signalling.err.log
     installFile="PixelStreamingInfrastructure/Matchmaker/platform_scripts/bash/setup.sh"
     chmod +x $installFile
-    ./$installFile 1> unreal-stream-matchmaker.output.log 2> unreal-stream-matchmaker.error.log
+    ./$installFile 1> $installType-matchmaker.out.log 2> $installType-matchmaker.err.log
     installFile="PixelStreamingInfrastructure/SFU/platform_scripts/bash/setup.sh"
     chmod +x $installFile
-    ./$installFile 1> unreal-stream-sfu.output.log 2> unreal-stream-sfu.error.log
+    ./$installFile 1> $installType-sfu.out.log 2> $installType-sfu.err.log
     echo "Customize (End): Unreal Pixel Streaming"
   fi
   binPaths="$binPaths:$rendererPathUnreal"
@@ -157,9 +167,10 @@ fi
 
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
+  installType="az-cli"
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
   dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-  dnf -y install azure-cli 1> az-cli.output.log 2> az-cli.error.log
+  dnf -y install azure-cli 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): Azure CLI"
 
   if [[ $renderManager == *Deadline* ]]; then
@@ -195,7 +206,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
 
   echo "Customize (Start): Royal Render Download"
   installFile="RoyalRender__${schedulerVersion}__installer.zip"
-  downloadUrl="$storageContainerUrl/RoyalRender/$schedulerVersion/$installFile$storageContainerSas"
+  downloadUrl="$binStorageHost/RoyalRender/$schedulerVersion/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   unzip -q $installFile
   echo "Customize (End): Royal Render Download"
@@ -207,11 +218,11 @@ if [[ $renderManager == *RoyalRender* ]]; then
   dnf -y install xcb-util-renderutil
   dnf -y install libxkbcommon-x11
   installType="royal-render"
+  installPath="RoyalRender*"
   installFile="rrSetup_linux"
-  installDirectory="RoyalRender*"
-  chmod +x ./$installDirectory/$installFile
+  chmod +x ./$installPath/$installFile
   mkdir $schedulerInstallRoot
-  ./$installDirectory/$installFile -console -rrRoot $schedulerInstallRoot 1> $installType.output.log 2> $installType.error.log
+  ./$installPath/$installFile -console -rrRoot $schedulerInstallRoot 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): Royal Render Installer"
 
   if [ $machineType == "Scheduler" ]; then
@@ -234,45 +245,45 @@ if [[ $renderManager == *Qube* ]]; then
   dnf -y install xinetd
   installType="qube-core"
   installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-  downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+  downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
-  rpm -i $installType-*.rpm 1> $installType.output.log 2> $installType.error.log
+  rpm -i $installType-*.rpm 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): Qube Core"
 
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Qube Supervisor"
     installType="qube-supervisor"
     installFile="$installType-${schedulerVersion}.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> $installType.output.log 2> $installType.error.log
+    rpm -i $installType-*.rpm 1> $installType.out.log 2> $installType.err.log
     echo "Customize (End): Qube Supervisor"
 
     echo "Customize (Start): Qube Data Relay Agent (DRA)"
     installType="qube-dra"
     installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> $installType.output.log 2> $installType.error.log
+    rpm -i $installType-*.rpm 1> $installType.out.log 2> $installType.err.log
     echo "Customize (End): Qube Data Relay Agent (DRA)"
   else
     echo "Customize (Start): Qube Worker"
     installType="qube-worker"
     installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> $installType.output.log 2> $installType.error.log
+    rpm -i $installType-*.rpm 1> $installType.out.log 2> $installType.err.log
     echo "Customize (End): Qube Worker"
 
     echo "Customize (Start): Qube Client"
     installType="qube-client"
     installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$storageContainerUrl/Qube/$schedulerVersion/$installFile$storageContainerSas"
+    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 1> $installType.output.log 2> $installType.error.log
+    rpm -i $installType-*.rpm 1> $installType.out.log 2> $installType.err.log
     echo "Customize (End): Qube Client"
 
-    sed -i "s/#qb_supervisor =/qb_supervisor = render.artist.studio/" $schedulerConfigFile
+    sed -i "s/#qb_supervisor =/qb_supervisor = render.content.studio/" $schedulerConfigFile
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
   fi
 fi
@@ -289,17 +300,17 @@ if [[ $renderManager == *Deadline* ]]; then
 
   echo "Customize (Start): Deadline Download"
   installFile="Deadline-$schedulerVersion-linux-installers.tar"
-  downloadUrl="$storageContainerUrl/Deadline/$schedulerVersion/$installFile$storageContainerSas"
+  installPath=$(echo $installFile | cut -d"." -f1,2,3,4)
+  downloadUrl="$binStorageHost/Deadline/$schedulerVersion/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
-  installDirectory=$(echo $installFile | cut -d"." -f1,2,3,4)
-  mkdir $installDirectory
-  tar -xzf $installFile -C $installDirectory
+  mkdir $installPath
+  tar -xzf $installFile -C $installPath
   echo "Customize (End): Deadline Download"
 
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    $installDirectory/$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
     mv /tmp/*_installer.log ./deadline-repository.log
     cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerInstallRoot/$schedulerCertificateFile
     chmod +r $schedulerInstallRoot/$schedulerCertificateFile
@@ -316,7 +327,7 @@ if [[ $renderManager == *Deadline* ]]; then
       [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
       installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
     fi
-    $installDirectory/$installFile $installArgs
+    $installPath/$installFile $installArgs
     mv /tmp/*_installer.log ./deadline-client.log
     $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot $schedulerCertificate ""
     echo "Customize (End): Deadline Client"
@@ -340,12 +351,12 @@ if [ $machineType == "Workstation" ]; then
   versionInfo="23.01.1"
   installType="pcoip-agent"
   installFile="$installType-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
-  downloadUrl="$storageContainerUrl/Teradici/$versionInfo/$installFile$storageContainerSas"
+  downloadUrl="$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   mkdir $installType
   tar -xzf $installFile -C $installType
   cd $installType
-  ./install-$installType.sh $installType-graphics usb-vhci 1> ../$installType.output.log 2> ../$installType.error.log
+  ./install-$installType.sh $installType-graphics usb-vhci 1> ../$installType.out.log 2> ../$installType.err.log
   cd $binDirectory
   echo "Customize (End): Teradici PCoIP"
 fi

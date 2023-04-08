@@ -6,7 +6,7 @@ resourceGroupName = "ArtistAnywhere.Storage" # Alphanumeric, underscores, hyphen
 
 storageAccounts = [
   {
-    name                 = "azrender1"        # Name must be globally unique (lowercase alphanumeric)
+    name                 = "azstudio1"        # Name must be globally unique (lowercase alphanumeric)
     type                 = "BlockBlobStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
     tier                 = "Premium"          # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
     redundancy           = "LRS"              # https://learn.microsoft.com/azure/storage/common/storage-redundancy
@@ -29,7 +29,7 @@ storageAccounts = [
     ]
   },
   {
-    name                 = "azrender2"   # Name must be globally unique (lowercase alphanumeric)
+    name                 = "azstudio2"   # Name must be globally unique (lowercase alphanumeric)
     type                 = "FileStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
     tier                 = "Premium"     # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
     redundancy           = "LRS"         # https://learn.microsoft.com/azure/storage/common/storage-redundancy
@@ -99,11 +99,12 @@ netAppAccount = {
 #######################################################################################################
 
 weka = {
-  authToken  = ""
-  namePrefix = ""
+  authToken   = ""
+  clusterName = ""
   machine = {
-    size  = "Standard_L16as_v3"
-    count = 6
+    namePrefix = ""
+    size       = "Standard_L16as_v3"
+    count      = 6
   }
   network = {
     enableAcceleratedNetworking = true
@@ -113,7 +114,7 @@ weka = {
     cachingType = "ReadWrite"
   }
   dataDisk = {
-    storageType = "Premium_LRS"
+    storageType = "StandardSSD_LRS"
     cachingType = "ReadWrite"
     sizeGB      = 1024
   }
@@ -123,6 +124,14 @@ weka = {
     sshPublicKey        = "" # "ssh-rsa ..."
     disablePasswordAuth = false
   }
+}
+
+#############################################################################################################
+# Hammerspace (https://azuremarketplace.microsoft.com/en-US/marketplace/apps/hammerspace.hammerspace_4_6_5) #
+#############################################################################################################
+
+hammerspace = {
+  clusterName = ""
 }
 
 ####################################################################################################

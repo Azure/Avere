@@ -89,7 +89,7 @@ storageTargetsNfsBlob = [
     usageModel = "WRITE_AROUND" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
     storage = {
       resourceGroupName = "ArtistAnywhere.Storage"
-      accountName       = "azrender1"
+      accountName       = "azstudio1"
       containerName     = "data"
     }
   }

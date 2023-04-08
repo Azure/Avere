@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.49.0"
+      version = "~>3.51.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -108,7 +108,7 @@ data "http" "client_address" {
 
 data "azurerm_client_config" "provider" {}
 
-resource "azurerm_resource_group" "render" {
+resource "azurerm_resource_group" "studio" {
   name     = module.global.resourceGroupName
   location = module.global.regionName
 }
@@ -119,8 +119,8 @@ resource "azurerm_resource_group" "render" {
 
 resource "azurerm_storage_account" "storage" {
   name                            = module.global.rootStorage.accountName
-  resource_group_name             = azurerm_resource_group.render.name
-  location                        = azurerm_resource_group.render.location
+  resource_group_name             = azurerm_resource_group.studio.name
+  location                        = azurerm_resource_group.studio.location
   account_kind                    = var.rootStorage.accountType
   account_replication_type        = var.rootStorage.accountRedundancy
   account_tier                    = var.rootStorage.accountPerformance
@@ -140,8 +140,8 @@ resource "time_sleep" "storage_data" {
   ]
 }
 
-resource "azurerm_storage_container" "container" {
-  name                 = module.global.rootStorage.containerName
+resource "azurerm_storage_container" "terraform" {
+  name                 = module.global.rootStorage.containerName.terraform
   storage_account_name = azurerm_storage_account.storage.name
   depends_on = [
     time_sleep.storage_data
@@ -152,21 +152,21 @@ resource "azurerm_storage_container" "container" {
 # Managed Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview) #
 #####################################################################################################################
 
-resource "azurerm_user_assigned_identity" "render" {
+resource "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
-  resource_group_name = azurerm_resource_group.render.name
-  location            = azurerm_resource_group.render.location
+  resource_group_name = azurerm_resource_group.studio.name
+  location            = azurerm_resource_group.studio.location
 }
 
 ############################################################################
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
 ############################################################################
 
-resource "azurerm_key_vault" "render" {
+resource "azurerm_key_vault" "studio" {
   count                           = module.global.keyVault.name != "" ? 1 : 0
   name                            = module.global.keyVault.name
-  resource_group_name             = azurerm_resource_group.render.name
-  location                        = azurerm_resource_group.render.location
+  resource_group_name             = azurerm_resource_group.studio.name
+  location                        = azurerm_resource_group.studio.location
   tenant_id                       = data.azurerm_client_config.provider.tenant_id
   sku_name                        = var.keyVault.type
   purge_protection_enabled        = var.keyVault.enablePurgeProtection
@@ -190,7 +190,7 @@ resource "azurerm_key_vault_secret" "secrets" {
   }
   name         = each.value.name
   value        = each.value.value
-  key_vault_id = azurerm_key_vault.render[0].id
+  key_vault_id = azurerm_key_vault.studio[0].id
 }
 
 resource "azurerm_key_vault_key" "keys" {
@@ -201,7 +201,7 @@ resource "azurerm_key_vault_key" "keys" {
   key_type     = each.value.type
   key_size     = each.value.size
   key_opts     = each.value.operations
-  key_vault_id = azurerm_key_vault.render[0].id
+  key_vault_id = azurerm_key_vault.studio[0].id
 }
 
 resource "azurerm_key_vault_certificate" "certificates" {
@@ -209,7 +209,7 @@ resource "azurerm_key_vault_certificate" "certificates" {
     for certificate in var.keyVault.certificates : certificate.name => certificate if module.global.keyVault.name != ""
   }
   name         = each.value.name
-  key_vault_id = azurerm_key_vault.render[0].id
+  key_vault_id = azurerm_key_vault.studio[0].id
   certificate_policy {
     x509_certificate_properties {
       subject            = each.value.subject
@@ -238,8 +238,8 @@ resource "azurerm_key_vault_certificate" "certificates" {
 resource "azurerm_log_analytics_workspace" "monitor" {
   count                      = module.global.monitorWorkspace.name != "" ? 1 : 0
   name                       = module.global.monitorWorkspace.name
-  resource_group_name        = azurerm_resource_group.render.name
-  location                   = azurerm_resource_group.render.location
+  resource_group_name        = azurerm_resource_group.studio.name
+  location                   = azurerm_resource_group.studio.location
   sku                        = var.monitorWorkspace.sku
   retention_in_days          = var.monitorWorkspace.retentionDays
   internet_ingestion_enabled = false

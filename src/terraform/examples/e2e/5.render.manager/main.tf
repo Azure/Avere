@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.49.0"
+      version = "~>3.51.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -122,6 +122,10 @@ variable "virtualMachines" {
   ))
 }
 
+variable "servicePassword" {
+  type = string
+}
+
 variable "privateDns" {
   type = object(
     {
@@ -154,12 +158,12 @@ variable "computeGallery" {
 
 data "azurerm_client_config" "provider" {}
 
-data "azurerm_user_assigned_identity" "render" {
+data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
   resource_group_name = module.global.resourceGroupName
 }
 
-data "azurerm_key_vault" "render" {
+data "azurerm_key_vault" "studio" {
   count               = module.global.keyVault.name != "" ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
@@ -168,13 +172,19 @@ data "azurerm_key_vault" "render" {
 data "azurerm_key_vault_secret" "admin_username" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
+}
+
+data "azurerm_key_vault_secret" "service_password" {
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.servicePassword
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
@@ -188,7 +198,7 @@ data "terraform_remote_state" "network" {
   config = {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName
+    container_name       = module.global.rootStorage.containerName.terraform
     key                  = "1.network"
   }
 }
@@ -198,7 +208,7 @@ data "terraform_remote_state" "image" {
   config = {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName
+    container_name       = module.global.rootStorage.containerName.terraform
     key                  = "4.image.builder"
   }
 }
@@ -220,6 +230,7 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
+  servicePassword        = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork     = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   stateExistsImage       = var.computeGallery.name != "" ? false : try(length(data.terraform_remote_state.image.outputs) > 0, false)
   imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : try(data.terraform_remote_state.image.outputs.imageGallery.name, "")
@@ -252,7 +263,7 @@ resource "azurerm_resource_group" "scheduler" {
 
 resource "azurerm_role_assignment" "scheduler" {
   role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.render.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
   scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}"
 }
 
@@ -302,7 +313,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.render.id
+      data.azurerm_user_assigned_identity.studio.id
     ]
   }
   dynamic plan {
@@ -341,7 +352,10 @@ resource "azurerm_virtual_machine_extension" "custom_linux" {
         { tenantId                 = data.azurerm_client_config.provider.tenant_id },
         { subscriptionId           = data.azurerm_client_config.provider.subscription_id },
         { regionName               = module.global.regionName },
+        { binStorageHost           = module.global.binStorage.host },
+        { binStorageAuth           = module.global.binStorage.auth },
         { renderManager            = module.global.renderManager },
+        { servicePassword          = local.servicePassword },
         { networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name },
         { networkName              = data.azurerm_virtual_network.compute.name },
         { networkSubnetName        = data.azurerm_subnet.farm.name },
@@ -405,7 +419,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      data.azurerm_user_assigned_identity.render.id
+      data.azurerm_user_assigned_identity.studio.id
     ]
   }
   depends_on = [
@@ -426,7 +440,8 @@ resource "azurerm_virtual_machine_extension" "custom_windows" {
   settings = jsonencode({
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager = module.global.renderManager }
+        { renderManager   = module.global.renderManager },
+        { servicePassword = local.servicePassword }
       )), "UTF-16LE"
     )}"
   })

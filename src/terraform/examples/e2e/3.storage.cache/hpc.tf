@@ -66,11 +66,11 @@ resource "azurerm_hpc_cache" "cache" {
     }
   }
   dynamic "identity" {
-    for_each = try(data.azurerm_user_assigned_identity.render.id, "") != "" ? [1] : []
+    for_each = try(data.azurerm_user_assigned_identity.studio.id, "") != "" ? [1] : []
     content {
       type = "UserAssigned"
       identity_ids = [
-        data.azurerm_user_assigned_identity.render.id
+        data.azurerm_user_assigned_identity.studio.id
       ]
     }
   }

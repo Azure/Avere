@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.49.0"
+      version = "~>3.51.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -105,12 +105,12 @@ variable "computeNetwork" {
 
 data "azurerm_client_config" "provider" {}
 
-data "azurerm_user_assigned_identity" "render" {
+data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
   resource_group_name = module.global.resourceGroupName
 }
 
-data "azurerm_key_vault" "render" {
+data "azurerm_key_vault" "studio" {
   count               = module.global.keyVault.name != "" ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
@@ -119,19 +119,19 @@ data "azurerm_key_vault" "render" {
 data "azurerm_key_vault_secret" "admin_username" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault_key" "cache_encryption" {
   count        = module.global.keyVault.name != "" && var.hpcCache.encryption.keyName != "" ? 1 : 0
   name         = var.hpcCache.encryption.keyName != "" ? var.hpcCache.encryption.keyName : module.global.keyVault.keyName.cacheEncryption
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "terraform_remote_state" "network" {
@@ -139,18 +139,10 @@ data "terraform_remote_state" "network" {
   config = {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName
+    container_name       = module.global.rootStorage.containerName.terraform
     key                  = "1.network"
   }
 }
-
-# data "azurerm_resource_group" "render" {
-#   name = module.global.resourceGroupName
-# }
-
-# data "azurerm_resource_group" "network" {
-#   name = data.azurerm_virtual_network.compute.resource_group_name
-# }
 
 data "azurerm_virtual_network" "compute" {
   name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name

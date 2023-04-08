@@ -10,7 +10,7 @@ virtualMachines = [
     machine = {
       size = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       image = {
-        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/Linux/versions/0.0.0"
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/0.0.0"
         plan = {
           publisher = ""
           product   = ""
@@ -52,7 +52,7 @@ virtualMachines = [
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
           enable             = false
-          storageAccountName = "azrender0"
+          storageAccountName = "azstudio0"
         }
       }
     }
@@ -65,7 +65,7 @@ virtualMachines = [
     machine = {
        size = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
        image = {
-        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azrender/images/WinScheduler/versions/0.0.0"
+        id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinScheduler/versions/0.0.0"
         plan = {
           publisher = ""
           product   = ""
@@ -107,7 +107,7 @@ virtualMachines = [
         }
         cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
           enable             = false
-          storageAccountName = "azrender1"
+          storageAccountName = "azstudio1"
         }
       }
     }
@@ -116,6 +116,8 @@ virtualMachines = [
     }
   }
 ]
+
+servicePassword = "P@ssword1234"
 
 ############################################################################
 # Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #

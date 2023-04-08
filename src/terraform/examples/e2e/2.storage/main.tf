@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.49.0"
+      version = "~>3.51.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -58,12 +58,12 @@ data "http" "client_address" {
   url = "https://api.ipify.org?format=json"
 }
 
-data "azurerm_user_assigned_identity" "render" {
+data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
   resource_group_name = module.global.resourceGroupName
 }
 
-data "azurerm_key_vault" "render" {
+data "azurerm_key_vault" "studio" {
   count               = module.global.keyVault.name != "" ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
@@ -72,13 +72,13 @@ data "azurerm_key_vault" "render" {
 data "azurerm_key_vault_secret" "admin_username" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.render[0].id
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
@@ -92,7 +92,7 @@ data "terraform_remote_state" "network" {
   config = {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName
+    container_name       = module.global.rootStorage.containerName.terraform
     key                  = "1.network"
   }
 }
@@ -138,16 +138,4 @@ locals {
 
 output "resourceGroupName" {
   value = var.resourceGroupName
-}
-
-output "resourceGroupNameNetAppFiles" {
-  value = var.netAppAccount.name == "" ? "" : azurerm_resource_group.netapp_files[0].name
-}
-
-output "resourceGroupNameWeka" {
-  value = var.weka.namePrefix == "" ? "" : azurerm_resource_group.weka[0].name
-}
-
-output "resourceGroupNameQumulo" {
-  value = var.qumulo.name == "" ? "" : azurerm_resource_group.qumulo[0].name
 }
