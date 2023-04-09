@@ -142,11 +142,11 @@ if [ ${cycleCloud.enable} == true ]; then
   echo "" >> $clusterTemplateFile
   %{ if length(regexall("RoyalRender", renderManager)) > 0 }
     echo "mkdir /RoyalRender" >> $clusterTemplateFile
-    echo "echo 'render.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+    echo "echo 'scheduler.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
   %{ endif }
   %{ if length(regexall("Deadline", renderManager)) > 0 }
     echo "mkdir /Deadline" >> $clusterTemplateFile
-    echo "echo 'render.content.studio:/Deadline /Deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
+    echo "echo 'scheduler.content.studio:/Deadline /Deadline nfs defaults 0 0' >> /etc/fstab" >> $clusterTemplateFile
   %{ endif }
   echo "mkdir -p /mnt/data/write" >> $clusterTemplateFile
   echo "echo 'azstudio1.blob.core.windows.net:/azstudio1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0' >> /etc/fstab" >> $clusterTemplateFile

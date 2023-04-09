@@ -126,7 +126,7 @@ servicePassword = "P@ssword1234"
 ############################################################################
 
 privateDns = {
-  aRecordName = "render"
+  aRecordName = "scheduler"
   ttlSeconds  = 300
 }
 

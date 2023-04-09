@@ -473,7 +473,7 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   ]
 }
 
-resource "azurerm_private_dns_a_record" "render" {
+resource "azurerm_private_dns_a_record" "scheduler" {
   name                = var.privateDns.aRecordName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
@@ -492,5 +492,5 @@ output "virtualMachines" {
 }
 
 output "privateDnsRecord" {
-  value = azurerm_private_dns_a_record.render
+  value = azurerm_private_dns_a_record.scheduler
 }

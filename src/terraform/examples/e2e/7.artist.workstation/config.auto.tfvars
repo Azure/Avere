@@ -45,10 +45,10 @@ virtualMachines = [
         fileSystemMountsStorageCache = [
         ]
         fileSystemMountsRoyalRender = [
-          "render.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
+          "scheduler.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "render.content.studio:/Deadline /Deadline nfs defaults 0 0"
+          "scheduler.content.studio:/Deadline /Deadline nfs defaults 0 0"
         ]
         teradiciLicenseKey = ""
       }
@@ -97,10 +97,10 @@ virtualMachines = [
         fileSystemMountsStorageCache = [
         ]
         fileSystemMountsRoyalRender = [
-          "mount -o anon \\\\render.content.studio\\RoyalRender S:"
+          "mount -o anon \\\\scheduler.content.studio\\RoyalRender S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.content.studio\\Deadline S:"
+          "mount -o anon \\\\scheduler.content.studio\\Deadline S:"
         ]
         teradiciLicenseKey = ""
       }

@@ -283,7 +283,7 @@ if [[ $renderManager == *Qube* ]]; then
     rpm -i $installType-*.rpm 1> $installType.out.log 2> $installType.err.log
     echo "Customize (End): Qube Client"
 
-    sed -i "s/#qb_supervisor =/qb_supervisor = render.content.studio/" $schedulerConfigFile
+    sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $schedulerConfigFile
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
   fi
 fi

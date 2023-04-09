@@ -51,10 +51,10 @@ virtualMachineScaleSets = [
           "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsRoyalRender = [
-          "render.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
+          "scheduler.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "render.content.studio:/Deadline /Deadline nfs defaults 0 0"
+          "scheduler.content.studio:/Deadline /Deadline nfs defaults 0 0"
         ]
       }
     }
@@ -117,10 +117,10 @@ virtualMachineScaleSets = [
           "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsRoyalRender = [
-          "render.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
+          "scheduler.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "render.content.studio:/Deadline /Deadline nfs defaults 0 0"
+          "scheduler.content.studio:/Deadline /Deadline nfs defaults 0 0"
         ]
       }
     }
@@ -183,10 +183,10 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
         ]
         fileSystemMountsRoyalRender = [
-          "mount -o anon \\\\render.content.studio\\RoyalRender S:"
+          "mount -o anon \\\\scheduler.content.studio\\RoyalRender S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.content.studio\\Deadline S:"
+          "mount -o anon \\\\scheduler.content.studio\\Deadline S:"
         ]
       }
     }
@@ -249,10 +249,10 @@ virtualMachineScaleSets = [
           "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
         ]
         fileSystemMountsRoyalRender = [
-          "mount -o anon \\\\render.content.studio\\RoyalRender S:"
+          "mount -o anon \\\\scheduler.content.studio\\RoyalRender S:"
         ]
         fileSystemMountsDeadline = [
-          "mount -o anon \\\\render.content.studio\\Deadline S:"
+          "mount -o anon \\\\scheduler.content.studio\\Deadline S:"
         ]
       }
     }

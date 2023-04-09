@@ -363,7 +363,7 @@ if ("$renderManager" -like "*Qube*") {
     Write-Host "Customize (End): Qube Client"
 
     $configFileText = Get-Content -Path $schedulerConfigFile
-    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = render.content.studio")
+    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = scheduler.content.studio")
     $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
     Set-Content -Path $schedulerConfigFile -Value $configFileText
   }
