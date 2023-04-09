@@ -310,6 +310,14 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   "type": "object"
                 },
                 {
+                  "name": "binStorageHost",
+                  "type": "string"
+                },
+                {
+                  "name": "binStorageAuth",
+                  "type": "string"
+                },
+                {
                   "name": "renderManager",
                   "type": "string"
                 }
@@ -337,7 +345,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost'), createObject('binStorageAuth', parameters('binStorageAuth'), createObject('renderManager', parameters('renderManager')))))))]"
+                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager')))))))]"
                     ]
                   }
                 ]
@@ -348,6 +356,14 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 {
                   "name": "imageTemplate",
                   "type": "object"
+                },
+                {
+                  "name": "binStorageHost",
+                  "type": "string"
+                },
+                {
+                  "name": "binStorageAuth",
+                  "type": "string"
                 },
                 {
                   "name": "renderManager",
@@ -379,7 +395,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[concat('C:\\Windows\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost'), createObject('binStorageAuth', parameters('binStorageAuth'), createObject('renderManager', parameters('renderManager'))))))]"
+                      "[concat('C:\\Windows\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   },
@@ -418,7 +434,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]",
               "planInfo": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Linux'), json(concat('{\"planPublisher\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher), '\", \"planProduct\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer), '\", \"planName\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku), '\"}')), json('null'))]"
             },
-            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('renderManager')))]",
+            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('binStorageHost'), parameters('binStorageAuth'), parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('binStorageHost'), parameters('binStorageAuth'), parameters('renderManager')))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {
