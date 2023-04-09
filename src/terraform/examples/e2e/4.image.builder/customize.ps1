@@ -280,7 +280,7 @@ if ($renderManager -like "*RoyalRender*") {
   $installPath = "RoyalRender*"
   $installFile = "rrSetup_win.exe"
   New-Item -ItemType Directory -Path $schedulerInstallRoot
-  New-SmbShare -Name "RoyalRender" -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
+  New-SmbShare -Name $schedulerInstallRoot.TrimStart("\") -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
   Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
   Write-Host "Customize (End): Royal Render Installer"
 
