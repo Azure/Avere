@@ -267,11 +267,11 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "custom_linux" {
+resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux"
   }
-  name                       = "Custom"
+  name                       = each.value.customExtension.name
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
@@ -341,11 +341,11 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "custom_windows" {
+resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows"
   }
-  name                       = "Custom"
+  name                       = each.value.customExtension.name
   type                       = "CustomScriptExtension"
   publisher                  = "Microsoft.Compute"
   type_handler_version       = "1.10"

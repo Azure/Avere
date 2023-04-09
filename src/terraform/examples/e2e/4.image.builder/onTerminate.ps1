@@ -7,14 +7,14 @@ $ErrorActionPreference = "Stop"
 $cycleCloudEnable = $false
 
 function RemoveWorker ($renderManager) {
-  if ($renderManager -like "*RoyalRender*") {
+  if ("$renderManager" -like "*RoyalRender*") {
   }
-  if ($renderManager -like "*Deadline*") {
+  if ("$renderManager" -like "*Qube*") {
+    qbadmin worker --remove $(hostname)
+  }
+  if ("$renderManager" -like "*Deadline*") {
     deadlineworker -shutdown
     deadlinecommand -DeleteSlave $(hostname)
-  }
-  if ($renderManager -like "*Qube*") {
-    qbadmin worker --remove $(hostname)
   }
 }
 
@@ -27,7 +27,7 @@ if ($cycleCloudEnable) {
     if ($eventType -eq "Preempt" -or $eventType -eq "Terminate") {
       $eventScope = $scheduledEvent.Resources
       $instanceName = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method Get -Uri "http://169.254.169.254/metadata/instance/compute/name?api-version=2021-05-01&format=text"
-      if ($eventScope -like "*$instanceName*") {
+      if ("$eventScope" -like "*$instanceName*") {
         RemoveWorker $renderManager
       }
     }

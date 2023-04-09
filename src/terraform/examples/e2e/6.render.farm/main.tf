@@ -87,6 +87,7 @@ variable "virtualMachineScaleSets" {
       customExtension = object(
         {
           enable   = bool
+          name     = string
           fileName = string
           parameters = object(
             {
@@ -353,7 +354,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   dynamic extension {
     for_each = each.value.customExtension.enable ? [1] : []
     content {
-      name                       = "Custom"
+      name                       = each.value.customExtension.name
       type                       = "CustomScript"
       publisher                  = "Microsoft.Azure.Extensions"
       type_handler_version       = "2.1"
@@ -441,7 +442,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   dynamic extension {
     for_each = each.value.customExtension.enable ? [1] : []
     content {
-      name                       = "Custom"
+      name                       = each.value.customExtension.name
       type                       = "CustomScriptExtension"
       publisher                  = "Microsoft.Compute"
       type_handler_version       = "1.10"

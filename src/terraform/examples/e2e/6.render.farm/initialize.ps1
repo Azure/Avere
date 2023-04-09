@@ -15,12 +15,12 @@ $fsMountsFile = AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(file
 $fsMountsFile = AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
 RegisterFileSystemMounts $fsMountsFile
 
-if (${renderManager} -like "*RoyalRender*") {
+if ("${renderManager}" -like "*RoyalRender*") {
   $installType = "royal-render-client"
   $serviceUser = "rrService"
-  $servicePassword = ConvertTo-SecureString ${servicePassword} -AsPlainText -Force
+  $servicePassword = ConvertTo-SecureString "${servicePassword}" -AsPlainText -Force
   New-LocalUser -Name $serviceUser -Password $servicePassword -PasswordNeverExpires
-  Start-Process -FilePath "rrWorkstation_installer" -ArgumentList "-service -rrUser $serviceUser -rrUserPW $servicePassword -fwOut" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
+  Start-Process -FilePath "rrWorkstation_installer" -ArgumentList "-plugins -service -rrUser $serviceUser -rrUserPW ""${servicePassword}"" -fwOut" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
 }
 
 $taskCount = 60 / ${terminationNotificationDetectionIntervalSeconds}

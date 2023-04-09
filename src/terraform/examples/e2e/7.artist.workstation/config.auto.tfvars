@@ -36,6 +36,7 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
         fileSystemMountsStorage = [
@@ -87,6 +88,7 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMountsStorage = [

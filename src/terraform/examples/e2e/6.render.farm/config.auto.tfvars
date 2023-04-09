@@ -41,6 +41,7 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
         fileSystemMountsStorage = [
@@ -106,6 +107,7 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
         fileSystemMountsStorage = [
@@ -171,6 +173,7 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMountsStorage = [
@@ -236,6 +239,7 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
         fileSystemMountsStorage = [

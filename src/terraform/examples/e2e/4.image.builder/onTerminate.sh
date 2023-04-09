@@ -7,12 +7,12 @@ function RemoveWorker {
   if [ $renderManager == "*RoyalRender*" ]; then
     :
   fi
+  if [ $renderManager == "*Qube*" ]; then
+    qbadmin worker --remove $(hostname)
+  fi
   if [ $renderManager == "*Deadline*" ]; then
     deadlineworker -shutdown
     deadlinecommand -DeleteSlave $(hostname)
-  fi
-  if [ $renderManager == "*Qube*" ]; then
-    qbadmin worker --remove $(hostname)
   fi
 }
 

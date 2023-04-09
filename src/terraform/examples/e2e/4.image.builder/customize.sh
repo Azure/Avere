@@ -349,14 +349,14 @@ fi
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Teradici PCoIP"
   versionInfo="23.01.1"
-  installType="pcoip-agent"
-  installFile="$installType-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
+  [[ $gpuPlatform == *GRID* ]] && installType=pcoip-agent-graphics || installType=pcoip-agent-standard
+  installFile="pcoip-agent-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
   downloadUrl="$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   mkdir $installType
   tar -xzf $installFile -C $installType
   cd $installType
-  ./install-$installType.sh $installType-graphics usb-vhci 1> ../$installType.out.log 2> ../$installType.err.log
+  ./install-pcoip-agent.sh $installType usb-vhci 1> ../$installType.out.log 2> ../$installType.err.log
   cd $binDirectory
   echo "Customize (End): Teradici PCoIP"
 fi

@@ -12,10 +12,10 @@ az login --identity
 $queuedTasks = 0
 $workerIdleDeleteSeconds = 900
 
-if ($renderManager -like "*RoyalRender*") {
+if ("$renderManager" -like "*RoyalRender*") {
 }
 
-if ($renderManager -like "*Deadline*") {
+if ("$renderManager" -like "*Deadline*") {
   $activeJobIds = deadlinecommand -GetJobIdsFilter Status=Active
   foreach ($jobId in $activeJobIds) {
     $jobDetails = deadlinecommand -GetJobDetails $jobId
@@ -33,7 +33,7 @@ if ($renderManager -like "*Deadline*") {
   }
 }
 
-if ($renderManager -like "*Qube*") {
+if ("$renderManager" -like "*Qube*") {
   $qbDelimiter = ";"
   $pendingJobs = qbjobs --pending --delimit $qbDelimiter --fields id,reason,timesubmit
   foreach ($pendingJob in $pendingJobs) {
@@ -56,10 +56,10 @@ if ($queuedTasks -gt 0) { # Scale Up
   $nodeCount = [int] $nodeCount + $queuedTasks
   az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $nodeCount
 } else { # Scale Down
-  if ($renderManager -like "*RoyalRender*") {
+  if ("$renderManager" -like "*RoyalRender*") {
   }
 
-  if ($renderManager -like "*Deadline*") {
+  if ("$renderManager" -like "*Deadline*") {
     $workerNames = deadlinecommand -GetSlaveNames
     foreach ($workerName in $workerNames) {
       $worker = deadlinecommand -GetSlave $workerName | ConvertFrom-StringData
@@ -75,7 +75,7 @@ if ($queuedTasks -gt 0) { # Scale Up
     }
   }
 
-  if ($renderManager -like "*Qube*") {
+  if ("$renderManager" -like "*Qube*") {
     $qbDelimiter = ";"
     $activeHosts = qbhosts --active --delimit $qbDelimiter
     foreach ($activeHost in $activeHosts) {

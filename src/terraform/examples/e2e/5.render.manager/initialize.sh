@@ -8,9 +8,9 @@ cd $binDirectory
 if [[ ${renderManager} == *RoyalRender* ]]; then
   installType="royal-render-server"
   serviceUser="rrService"
-  useradd -r $serviceUser -p ${servicePassword}
+  useradd -r $serviceUser -p "${servicePassword}"
   rrServerconsole -initAndClose > $installType-init.log
-  rrWorkstation_installer -serviceServer -rrUser $serviceUser -rrUserPW ${servicePassword} 1> $installType-service.out.log 2> $installType-service.err.log
+  rrWorkstation_installer -serviceServer -rrUser $serviceUser -rrUserPW "${servicePassword}" 1> $installType-service.out.log 2> $installType-service.err.log
 fi
 
 if [ "${qubeLicense.userName}" != "" ]; then

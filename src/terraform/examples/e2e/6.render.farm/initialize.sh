@@ -19,8 +19,8 @@ mount -a
 if [[ ${renderManager} == *RoyalRender* ]]; then
   installType="royal-render-client"
   serviceUser="rrService"
-  useradd -r $serviceUser -p ${servicePassword}
-  rrWorkstation_installer -service -rrUser $serviceUser -rrUserPW ${servicePassword} -fwOut 1> $installType-service.out.log 2> $installType-service.err.log
+  useradd -r $serviceUser -p "${servicePassword}"
+  rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "${servicePassword}" -fwOut 1> $installType-service.out.log 2> $installType-service.err.log
 fi
 
 servicePath="/etc/systemd/system/scheduledEventHandler.service"

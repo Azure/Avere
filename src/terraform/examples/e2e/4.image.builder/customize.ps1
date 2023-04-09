@@ -250,7 +250,7 @@ if ($machineType -eq "Scheduler") {
   Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log az-cli.log" -Wait
   Write-Host "Customize (End): Azure CLI"
 
-  if ($renderManager -like "*Deadline*") {
+  if ("$renderManager" -like "*Deadline*") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"
     Write-Host "Customize (End): NFS Server"
@@ -262,7 +262,7 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-if ($renderManager -like "*RoyalRender*") {
+if ("$renderManager" -like "*RoyalRender*") {
   $schedulerVersion = "9.0.04"
   $schedulerInstallRoot = "\rr"
   $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
@@ -284,19 +284,17 @@ if ($renderManager -like "*RoyalRender*") {
   Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
   Write-Host "Customize (End): Royal Render Installer"
 
-  if ($machineType -ne "Scheduler") {
-    Write-Host "Customize (Start): Royal Render Viewer"
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = $schedulerBinPath
-    $shortcut.TargetPath = "$schedulerBinPath\rrViewer"
-    $shortcut.Save()
-    Write-Host "Customize (End): Royal Render Viewer"
-  }
+  Write-Host "Customize (Start): Royal Render Viewer"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $schedulerBinPath
+  $shortcut.TargetPath = "$schedulerBinPath\rrViewer.exe"
+  $shortcut.Save()
+  Write-Host "Customize (End): Royal Render Viewer"
 }
 
-if ($renderManager -like "*Qube*") {
+if ("$renderManager" -like "*Qube*") {
   $schedulerVersion = "8.0-0"
   $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
   $schedulerInstallRoot = "C:\Program Files\pfx\qube"
@@ -371,7 +369,7 @@ if ($renderManager -like "*Qube*") {
   }
 }
 
-if ($renderManager -like "*Deadline*") {
+if ("$renderManager" -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
   $schedulerInstallRoot = "C:\Deadline"
   $schedulerClientMount = "S:\"
@@ -448,8 +446,8 @@ if ($machineType -eq "Farm") {
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP"
   $versionInfo = "23.01.1"
-  $installType = "pcoip-agent"
-  $installFile = "$installType-graphics_$versionInfo.exe"
+  $installType = if ($gpuPlatform -contains "GRID") {"pcoip-agent-graphics"} else {"pcoip-agent-standard"}
+  $installFile = "$installType_$versionInfo.exe"
   $downloadUrl = "$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"

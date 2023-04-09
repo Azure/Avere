@@ -84,6 +84,7 @@ variable "virtualMachines" {
       customExtension = object(
         {
           enable   = bool
+          name     = string
           fileName = string
           parameters = object(
             {
@@ -336,11 +337,11 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "custom_linux" {
+resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux"
   }
-  name                       = "Custom"
+  name                       = each.value.customExtension.name
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
@@ -406,7 +407,8 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   custom_data = base64encode(
     templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters,
-      { renderManager = module.global.renderManager }
+      { renderManager   = module.global.renderManager },
+      { servicePassword = local.servicePassword }
     ))
   )
   network_interface_ids = [
@@ -427,11 +429,11 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   ]
 }
 
-resource "azurerm_virtual_machine_extension" "custom_windows" {
+resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows"
   }
-  name                       = "Custom"
+  name                       = each.value.customExtension.name
   type                       = "CustomScriptExtension"
   publisher                  = "Microsoft.Compute"
   type_handler_version       = "1.10"

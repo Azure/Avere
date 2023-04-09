@@ -36,6 +36,7 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
         qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
@@ -91,6 +92,7 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
+      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
         qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
