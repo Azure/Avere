@@ -51,10 +51,10 @@ virtualMachineScaleSets = [
           "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsRoyalRender = [
-          "render.content.studio:/rr /rr nfs defaults 0 0"
+          "render.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "render.content.studio:/deadline /deadline nfs defaults 0 0"
+          "render.content.studio:/Deadline /Deadline nfs defaults 0 0"
         ]
       }
     }
@@ -117,10 +117,10 @@ virtualMachineScaleSets = [
           "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
         ]
         fileSystemMountsRoyalRender = [
-          "render.content.studio:/rr /rr nfs defaults 0 0"
+          "render.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "render.content.studio:/deadline /deadline nfs defaults 0 0"
+          "render.content.studio:/Deadline /Deadline nfs defaults 0 0"
         ]
       }
     }

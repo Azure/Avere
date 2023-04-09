@@ -264,7 +264,7 @@ if ($machineType -eq "Scheduler") {
 
 if ("$renderManager" -like "*RoyalRender*") {
   $schedulerVersion = "9.0.04"
-  $schedulerInstallRoot = "\rr"
+  $schedulerInstallRoot = "\RoyalRender"
   $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
   $binPaths += ";$schedulerBinPath"
 

@@ -45,10 +45,10 @@ virtualMachines = [
         fileSystemMountsStorageCache = [
         ]
         fileSystemMountsRoyalRender = [
-          "render.content.studio:/rr /rr nfs defaults 0 0"
+          "render.content.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
         ]
         fileSystemMountsDeadline = [
-          "render.content.studio:/deadline /deadline nfs defaults 0 0"
+          "render.content.studio:/Deadline /Deadline nfs defaults 0 0"
         ]
         teradiciLicenseKey = ""
       }

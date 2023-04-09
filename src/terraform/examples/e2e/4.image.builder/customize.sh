@@ -200,7 +200,7 @@ fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
   schedulerVersion="9.0.04"
-  schedulerInstallRoot="/rr"
+  schedulerInstallRoot="/RoyalRender"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
   binPaths="$binPaths:$schedulerBinPath"
 
@@ -290,9 +290,9 @@ fi
 
 if [[ $renderManager == *Deadline* ]]; then
   schedulerVersion="10.2.1.0"
-  schedulerInstallRoot="/deadline"
+  schedulerInstallRoot="/Deadline"
   schedulerDatabaseHost=$(hostname)
-  schedulerDatabasePath="/deadlineDatabase"
+  schedulerDatabasePath="/DeadlineDatabase"
   schedulerCertificateFile="Deadline10Client.pfx"
   schedulerCertificate="$schedulerInstallRoot/$schedulerCertificateFile"
   schedulerBinPath="$schedulerInstallRoot/bin"
