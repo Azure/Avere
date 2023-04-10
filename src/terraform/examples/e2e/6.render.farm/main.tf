@@ -266,7 +266,6 @@ data "azurerm_private_dns_zone" "studio" {
 }
 
 locals {
-  renderManager      = split(",", module.global.renderManager)[0]
   servicePassword    = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachineScaleSetsLinux = [
@@ -374,7 +373,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "script": "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager                                 = local.renderManager },
+            { renderManager                                 = module.global.renderManager },
             { servicePassword                               = local.servicePassword },
             { terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds }
           ))
@@ -462,7 +461,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager                                 = local.renderManager },
+            { renderManager                                 = module.global.renderManager },
             { servicePassword                               = local.servicePassword },
             { terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds }
           )), "UTF-16LE"

@@ -29,7 +29,7 @@ if [[ $renderManager == *Qube* ]]; then
   done < $jobFileName
 fi
 
-if [[ $renderManager == *Deadline* ]]; then
+# if [[ $renderManager == *Deadline* ]]; then
   activeJobIds=$(deadlinecommand -GetJobIdsFilter Status=Active)
   for jobId in $(echo $activeJobIds); do
     jobDetails=$(deadlinecommand -GetJobDetails $jobId)

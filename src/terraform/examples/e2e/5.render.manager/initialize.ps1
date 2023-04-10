@@ -29,12 +29,12 @@ if ("${qubeLicense.userName}" -ne "") {
 }
 
 $autoScaleData = "C:\AzureData\CustomData.bin"
-$autoScaleCode = "C:\AzureData\scale.auto.ps1"
+$autoScaleCode = "C:\AzureData\aaa-scale.ps1"
 $fileStream = New-Object System.IO.FileStream($autoScaleData, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
 $streamReader = New-Object System.IO.StreamReader($fileStream)
 Out-File -InputObject $streamReader.ReadToEnd() -FilePath $autoScaleCode -Force
 
-$taskName = "AAA Compute Auto Scaler"
+$taskName = "AAA Auto Scale"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
 $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $autoScaleCode -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"

@@ -19,14 +19,16 @@ if [ "${qubeLicense.userName}" != "" ]; then
   systemctl restart dra.service
 fi
 
+serviceType="aaa-scale"
+serviceName="AAA Auto Scale"
 autoScaleData="/var/lib/waagent/ovf-env.xml"
-autoScaleCode="/var/lib/waagent/scale.auto.sh"
+autoScaleCode="/var/lib/waagent/$serviceType.sh"
 autoScaleText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $autoScaleData)
 echo $autoScaleText | base64 -d > $autoScaleCode
 
-servicePath="/etc/systemd/system/computeAutoScaler.service"
+servicePath="/etc/systemd/system/$serviceType.service"
 echo "[Unit]" > $servicePath
-echo "Description=AAA Compute Auto Scaler Service" >> $servicePath
+echo "Description=$serviceName Service" >> $servicePath
 echo "After=network-online.target" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
@@ -36,9 +38,10 @@ echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $serviceP
 echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $servicePath
 echo "ExecStart=/bin/bash $autoScaleCode" >> $servicePath
 echo "" >> $servicePath
-timerPath="/etc/systemd/system/computeAutoScaler.timer"
+
+timerPath="/etc/systemd/system/$serviceType.timer"
 echo "[Unit]" > $timerPath
-echo "Description=AAA Compute Auto Scaler Timer" >> $timerPath
+echo "Description=$serviceName Timer" >> $servicePath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
 echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $timerPath
@@ -46,8 +49,9 @@ echo "AccuracySec=1us" >> $timerPath
 echo "" >> $timerPath
 echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
+
 if [ ${autoScale.enable} == true ]; then
-  systemctl --now enable computeAutoScaler
+  systemctl --now enable $serviceType
 fi
 
 if [ ${cycleCloud.enable} == true ]; then

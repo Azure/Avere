@@ -279,9 +279,12 @@ if ("$renderManager" -like "*RoyalRender*") {
   $installType = "royal-render"
   $installPath = "RoyalRender*"
   $installFile = "rrSetup_win.exe"
+  $rrShareName = $schedulerInstallRoot.TrimStart("\")
+  $rrRootShare = "\\$(hostname)$schedulerInstallRoot"
   New-Item -ItemType Directory -Path $schedulerInstallRoot
-  New-SmbShare -Name $schedulerInstallRoot.TrimStart("\") -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
-  Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  New-SmbShare -Name $rrShareName -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
+  Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot $rrRootShare" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  Remove-SmbShare -Name $rrShareName
   Write-Host "Customize (End): Royal Render Installer"
 
   if ($machineType -eq "Scheduler") {
@@ -378,7 +381,7 @@ if ("$renderManager" -like "*Qube*") {
 if ("$renderManager" -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
   $schedulerInstallRoot = "C:\Deadline"
-  $schedulerClientMount = "S:\"
+  $schedulerClientMount = "Y:\"
   $schedulerDatabaseHost = $(hostname)
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"

@@ -185,8 +185,8 @@ virtualMachineScaleSets = [
           storageReadCache     = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
           storageWrite         = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\data W:"
           storageWriteCache    = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data W:"
-          schedulerRoyalRender = "mount -o anon \\\\scheduler.content.studio\\RoyalRender S:"
-          schedulerDeadline    = "mount -o anon \\\\scheduler.content.studio\\Deadline S:"
+          schedulerRoyalRender = "mount -o anon \\\\scheduler.content.studio\\RoyalRender X:"
+          schedulerDeadline    = "mount -o anon \\\\scheduler.content.studio\\Deadline Y:"
         }
       }
     }
@@ -251,8 +251,8 @@ virtualMachineScaleSets = [
           storageReadCache     = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
           storageWrite         = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\data W:"
           storageWriteCache    = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data W:"
-          schedulerRoyalRender = "mount -o anon \\\\scheduler.content.studio\\RoyalRender S:"
-          schedulerDeadline    = "mount -o anon \\\\scheduler.content.studio\\Deadline S:"
+          schedulerRoyalRender = "mount -o anon \\\\scheduler.content.studio\\RoyalRender X:"
+          schedulerDeadline    = "mount -o anon \\\\scheduler.content.studio\\Deadline Y:"
         }
       }
     }
