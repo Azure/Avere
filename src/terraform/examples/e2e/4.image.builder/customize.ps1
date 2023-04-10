@@ -381,11 +381,11 @@ if ("$renderManager" -like "*Qube*") {
 if ("$renderManager" -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
   $schedulerInstallRoot = "C:\Deadline"
-  $schedulerClientMount = "Y:\"
+  $schedulerClientDrive = "Y:"
   $schedulerDatabaseHost = $(hostname)
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"
-  $schedulerCertificate = "$schedulerClientMount$schedulerCertificateFile"
+  $schedulerCertificate = "$schedulerClientDrive\$schedulerCertificateFile"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
   $binPaths += ";$schedulerBinPath"
 
@@ -427,7 +427,7 @@ if ("$renderManager" -like "*Deadline*") {
     Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
     Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-client.log
     $installType = "deadline-change-repository"
-    Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientMount $schedulerCertificate ''" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+    Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientDrive $schedulerCertificate ''" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
     Set-Location -Path $binDirectory
     Write-Host "Customize (End): Deadline Client"
 
