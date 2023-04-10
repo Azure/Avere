@@ -453,7 +453,7 @@ if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP"
   $versionInfo = "23.01.1"
   $installType = if ($gpuPlatform -contains "GRID") {"pcoip-agent-graphics"} else {"pcoip-agent-standard"}
-  $installFile = "$installType_$versionInfo.exe"
+  $installFile = "${installType}_$versionInfo.exe"
   $downloadUrl = "$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
