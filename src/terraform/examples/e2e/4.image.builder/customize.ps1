@@ -250,7 +250,7 @@ if ($machineType -eq "Scheduler") {
   Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log az-cli.log" -Wait
   Write-Host "Customize (End): Azure CLI"
 
-  if ("$renderManager" -like "*RoyalRender*" || "$renderManager" -like "*Deadline*") {
+  if ("$renderManager" -like "*RoyalRender*" -or "$renderManager" -like "*Deadline*") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"
     Write-Host "Customize (End): NFS Server"
