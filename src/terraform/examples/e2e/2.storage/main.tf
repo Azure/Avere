@@ -20,6 +20,11 @@ provider "azurerm" {
     resource_group {
       prevent_deletion_if_contains_resources = false
     }
+    virtual_machine_scale_set {
+      force_delete                  = false
+      roll_instances_when_required  = true
+      scale_to_zero_before_deletion = true
+    }
     virtual_machine {
       delete_os_disk_on_deletion     = true
       graceful_shutdown              = false

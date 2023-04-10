@@ -18,15 +18,15 @@ storageAccounts = [
         name           = "data"
         rootAcl        = "user::rwx,group::rwx,other::rwx"
         rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
-        dataSource = {
-          accountName   = ""
-          accountKey    = ""
-          containerName = ""
-        }
       }
     ]
     fileShares = [                            # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
     ]
+    dataSource = {
+      accountName   = ""
+      accountKey    = ""
+      containerName = ""
+    }
   },
   {
     name                 = "azstudio2"   # Name must be globally unique (lowercase alphanumeric)
@@ -44,13 +44,13 @@ storageAccounts = [
         tier     = "Premium"
         sizeGiB  = 5120
         protocol = "SMB"
-        dataSource = {
-          accountName   = ""
-          accountKey    = ""
-          containerName = ""
-        }
       }
     ]
+    dataSource = {
+      accountName   = ""
+      accountKey    = ""
+      containerName = ""
+    }
   }
 ]
 
@@ -99,11 +99,10 @@ netAppAccount = {
 #######################################################################################################
 
 weka = {
-  authToken   = ""
-  clusterName = ""
+  clusterName = "" # Alphanumeric, hyphens and periods are allowed
   machine = {
-    namePrefix = ""
     size       = "Standard_L16as_v3"
+    namePrefix = ""
     count      = 6
   }
   network = {
@@ -131,7 +130,7 @@ weka = {
 #######################################################################################################
 
 hammerspace = {
-  clusterName = ""
+  clusterName = "" # Alphanumeric, hyphens and periods are allowed
 }
 
 ####################################################################################################

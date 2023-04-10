@@ -5,13 +5,12 @@
 variable "weka" {
   type = object(
     {
-      authToken   = string
       clusterName = string
       machine = object(
         {
+          size       = string
           namePrefix = string
-          size  = string
-          count = number
+          count      = number
         }
       )
       network = object(
@@ -30,7 +29,6 @@ variable "weka" {
           storageType = string
           cachingType = string
           sizeGB      = number
-          count       = number
         }
       )
       adminLogin = object(
@@ -46,10 +44,9 @@ variable "weka" {
 }
 
 locals {
-  imagePublisher    = "CIQ"
-  imageProduct      = "Rocky"
-  imageName         = "Rocky-8-6-Free"
-  machineNamePrefix = var.weka.machine.namePrefix != "" ? var.weka.machine.namePrefix : var.weka.clusterName
+  imagePublisher = "CIQ"
+  imageProduct   = "Rocky"
+  imageName      = "Rocky-8-6-Free"
 }
 
 resource "azurerm_resource_group" "weka" {
@@ -58,12 +55,12 @@ resource "azurerm_resource_group" "weka" {
   location = azurerm_resource_group.storage.location
 }
 
-resource "azurerm_proximity_placement_group" "weka" {
-  count               = var.weka.clusterName != "" ? 1 : 0
-  name                = var.weka.clusterName
-  resource_group_name = azurerm_resource_group.weka[0].name
-  location            = azurerm_resource_group.weka[0].location
-}
+# resource "azurerm_proximity_placement_group" "weka" {
+#   count               = var.weka.clusterName != "" ? 1 : 0
+#   name                = var.weka.clusterName
+#   resource_group_name = azurerm_resource_group.weka[0].name
+#   location            = azurerm_resource_group.weka[0].location
+# }
 
 resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   count                           = var.weka.clusterName != "" ? 1 : 0
@@ -75,9 +72,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : var.weka.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
   disable_password_authentication = var.weka.adminLogin.disablePasswordAuth
-  proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
-  single_placement_group          = true
-  overprovision                   = false
+  computer_name_prefix            = var.weka.machine.namePrefix != "" ? var.weka.machine.namePrefix : null
+  # proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   network_interface {
     name    = "primary"
     primary = true
@@ -125,7 +121,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     settings = jsonencode({
       "script": "${base64encode(
         templatefile("initialize.sh", merge(
-          { wekaAuthToken = var.weka.authToken }
+          { binStorageHost  = module.global.binStorage.host },
+          { binStorageAuth  = module.global.binStorage.auth },
+          { wekaClusterName = var.weka.clusterName }
         ))
       )}"
     })

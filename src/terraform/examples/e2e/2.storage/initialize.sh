@@ -3,7 +3,7 @@
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-if [ "${wekaAuthToken}" != "" ]; then
+if [ "${wekaClusterName}" != "" ]; then
   osDisk="/dev/sdc"
   installType="weka-mkfs"
   volumeLabel="weka-iosw"
@@ -16,5 +16,11 @@ if [ "${wekaAuthToken}" != "" ]; then
 
   versionInfo="4.1.0.77"
   installType="weka-iosw"
-  curl https://${wekaAuthToken}@get.prod.weka.io/dist/v1/install/$wekaVersion/$wekaVersion | sh 1> $installType.out.log 2> $installType.err.log
+  installFile="weka-$versionInfo.tar"
+  downloadUrl="$binStorageHost/Weka/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xf $installFile
+  cd weka-$versionInfo
+  ./install.sh 1> ../$installType.out.log 2> ../$installType.err.log
+  cd $binDirectory
 fi

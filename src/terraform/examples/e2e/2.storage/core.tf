@@ -17,13 +17,6 @@ variable "storageAccounts" {
           name           = string
           rootAcl        = string
           rootAclDefault = string
-          dataSource = object(
-            {
-              accountName   = string
-              accountKey    = string
-              containerName = string
-            }
-          )
         }
       ))
       fileShares = list(object(
@@ -32,15 +25,15 @@ variable "storageAccounts" {
           tier     = string
           sizeGiB  = number
           protocol = string
-          dataSource = object(
-            {
-              accountName   = string
-              accountKey    = string
-              containerName = string
-            }
-          )
         }
       ))
+      dataSource = object(
+        {
+          accountName   = string
+          accountKey    = string
+          containerName = string
+        }
+      )
     }
   ))
 }
@@ -53,8 +46,8 @@ locals {
         name               = blobContainer.name
         rootAcl            = blobContainer.rootAcl
         rootAclDefault     = blobContainer.rootAclDefault
-        dataSource         = blobContainer.dataSource
         storageAccountName = storageAccount.name
+        dataSource         = storageAccount.dataSource
       }
     ]
   ])
@@ -65,8 +58,8 @@ locals {
         tier               = fileShare.tier
         size               = fileShare.sizeGiB
         accessProtocol     = fileShare.protocol
-        dataSource         = fileShare.dataSource
         storageAccountName = storageAccount.name
+        dataSource         = storageAccount.dataSource
       }
     ]
   ])
@@ -106,7 +99,7 @@ resource "azurerm_storage_account" "storage" {
 
 resource "time_sleep" "storage_data" {
   for_each = {
-    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.dataSource.accountName != ""
   }
   create_duration = "30s"
   depends_on = [
