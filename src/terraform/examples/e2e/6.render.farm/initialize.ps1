@@ -1,34 +1,32 @@
 $ErrorActionPreference = "Stop"
 
-$binDirectory = "C:\Users\Public\Downloads"
-Set-Location -Path $binDirectory
+Set-Location -Path "C:\Users\Public\Downloads"
 
-$functionsFile = "$binDirectory\functions.ps1"
-$functionsCode = "${ filebase64("../0.global/functions.ps1") }"
-$functionsBytes = [System.Convert]::FromBase64String($functionsCode)
-[System.Text.Encoding]::UTF8.GetString($functionsBytes) | Out-File $functionsFile -Force
-. $functionsFile
+$functionsData = "C:\AzureData\CustomData.bin"
+$functionsCode = "C:\AzureData\functions.ps1"
+$fileStream = New-Object System.IO.FileStream($functionsData, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
+$streamReader = New-Object System.IO.StreamReader($fileStream)
+Out-File -InputObject $streamReader.ReadToEnd() -FilePath $functionsCode -Force
+. $functionsCode
 
-$fsMountsFile = AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
-$fsMountsFile = AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
-$fsMountsFile = AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsRoyalRender) }"
-$fsMountsFile = AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
-RegisterFileSystemMounts $fsMountsFile
-
+SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
+SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
 if ("${renderManager}" -like "*RoyalRender*") {
-  $installType = "royal-render-client"
-  $serviceUser = "rrService"
-  $servicePassword = ConvertTo-SecureString "${servicePassword}" -AsPlainText -Force
-  New-LocalUser -Name $serviceUser -Password $servicePassword -PasswordNeverExpires
-  Start-Process -FilePath "rrWorkstation_installer" -ArgumentList "-plugins -service -rrUser $serviceUser -rrUserPW ""${servicePassword}"" -fwOut" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
+  AddMount "${fsMount.schedulerRoyalRender}"
 }
+if ("${renderManager}" -like "*Deadline*") {
+  AddMount "${fsMount.schedulerDeadline}"
+}
+RegisterMounts
 
-$taskCount = 60 / ${terminationNotificationDetectionIntervalSeconds}
+EnableRenderClient "${renderManager}" "${servicePassword}"
+
+$taskCount = 60 / ${terminateNotificationDetectionIntervalSeconds}
 $nextMinute = (Get-Date).Minute + 1
 for ($i = 0; $i -lt $taskCount; $i++) {
   $taskName = "AAA Event Handler $i"
   $taskInterval = New-TimeSpan -Minutes 1
-  $taskStart = Get-Date -Minute $nextMinute -Second ($i * ${terminationNotificationDetectionIntervalSeconds})
+  $taskStart = Get-Date -Minute $nextMinute -Second ($i * ${terminateNotificationDetectionIntervalSeconds})
   $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File C:\Windows\onTerminate.ps1"
   $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force

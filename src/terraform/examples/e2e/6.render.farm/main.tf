@@ -91,10 +91,22 @@ variable "virtualMachineScaleSets" {
           fileName = string
           parameters = object(
             {
-              fileSystemMountsStorage      = list(string)
-              fileSystemMountsStorageCache = list(string)
-              fileSystemMountsRoyalRender  = list(string)
-              fileSystemMountsDeadline     = list(string)
+              storageCache = object(
+                {
+                  enableRead  = bool
+                  enableWrite = bool
+                }
+              )
+              fsMount = object(
+                {
+                  storageRead          = string
+                  storageReadCache     = string
+                  storageWrite         = string
+                  storageWriteCache    = string
+                  schedulerRoyalRender = string
+                  schedulerDeadline    = string
+                }
+              )
             }
           )
         }
@@ -110,7 +122,7 @@ variable "virtualMachineScaleSets" {
           evictionPolicy = string
         }
       )
-      terminationNotification = object(
+      terminateNotification = object(
         {
           enable                   = bool
           timeoutDelay             = string
@@ -362,10 +374,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "script": "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager                                   = local.renderManager },
-            { servicePassword                                 = local.servicePassword },
-            { fileSystemMountsDelimiter                       = ";" },
-            { terminationNotificationDetectionIntervalSeconds = each.value.terminationNotification.detectionIntervalSeconds }
+            { renderManager                                 = local.renderManager },
+            { servicePassword                               = local.servicePassword },
+            { terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds }
           ))
         )}"
       })
@@ -388,10 +399,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic termination_notification {
-    for_each = each.value.terminationNotification.enable ? [1] : []
+    for_each = each.value.terminateNotification.enable ? [1] : []
     content {
-      enabled = each.value.terminationNotification.enable
-      timeout = each.value.terminationNotification.timeoutDelay
+      enabled = each.value.terminateNotification.enable
+      timeout = each.value.terminateNotification.timeoutDelay
     }
   }
 }
@@ -410,6 +421,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   admin_password         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   priority               = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
+  custom_data            = base64encode(templatefile("../0.global/functions.ps1", {}))
   single_placement_group = false
   overprovision          = false
   network_interface {
@@ -450,10 +462,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager                                   = local.renderManager },
-            { servicePassword                                 = local.servicePassword },
-            { fileSystemMountsDelimiter                       = ";" },
-            { terminationNotificationDetectionIntervalSeconds = each.value.terminationNotification.detectionIntervalSeconds }
+            { renderManager                                 = local.renderManager },
+            { servicePassword                               = local.servicePassword },
+            { terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds }
           )), "UTF-16LE"
         )}"
       })
@@ -476,10 +487,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic termination_notification {
-    for_each = each.value.terminationNotification.enable ? [1] : []
+    for_each = each.value.terminateNotification.enable ? [1] : []
     content {
-      enabled = each.value.terminationNotification.enable
-      timeout = each.value.terminationNotification.timeoutDelay
+      enabled = each.value.terminateNotification.enable
+      timeout = each.value.terminateNotification.timeoutDelay
     }
   }
 }

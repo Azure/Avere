@@ -83,11 +83,23 @@ variable "virtualMachines" {
           fileName = string
           parameters = object(
             {
-              fileSystemMountsStorage      = list(string)
-              fileSystemMountsStorageCache = list(string)
-              fileSystemMountsRoyalRender  = list(string)
-              fileSystemMountsDeadline     = list(string)
-              teradiciLicenseKey           = string
+              storageCache = object(
+                {
+                  enableRead  = bool
+                  enableWrite = bool
+                }
+              )
+              fsMount = object(
+                {
+                  storageRead          = string
+                  storageReadCache     = string
+                  storageWrite         = string
+                  storageWriteCache    = string
+                  schedulerRoyalRender = string
+                  schedulerDeadline    = string
+                }
+              )
+              teradiciLicenseKey = string
             }
           )
         }
@@ -280,9 +292,8 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager             = local.renderManager },
-        { servicePassword           = local.servicePassword },
-        { fileSystemMountsDelimiter = ";" }
+        { renderManager   = local.renderManager },
+        { servicePassword = local.servicePassword }
       ))
     )}"
   })
@@ -323,6 +334,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   source_image_id     = each.value.machine.image.id
   admin_username      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  custom_data         = base64encode(templatefile("../0.global/functions.ps1", {}))
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
@@ -354,9 +366,8 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   settings = jsonencode({
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager             = local.renderManager },
-        { servicePassword           = local.servicePassword },
-        { fileSystemMountsDelimiter = ";" }
+        { renderManager   = local.renderManager },
+        { servicePassword = local.servicePassword }
       )), "UTF-16LE"
     )}"
   })

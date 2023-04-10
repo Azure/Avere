@@ -250,7 +250,7 @@ if ($machineType -eq "Scheduler") {
   Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log az-cli.log" -Wait
   Write-Host "Customize (End): Azure CLI"
 
-  if ("$renderManager" -like "*Deadline*") {
+  if ("$renderManager" -like "*RoyalRender*" || "$renderManager" -like "*Deadline*") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"
     Write-Host "Customize (End): NFS Server"
@@ -283,6 +283,12 @@ if ("$renderManager" -like "*RoyalRender*") {
   New-SmbShare -Name $schedulerInstallRoot.TrimStart("\") -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
   Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot \\$(hostname)$schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
   Write-Host "Customize (End): Royal Render Installer"
+
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Royal Render Server"
+    New-NfsShare -Name "RoyalRender" -Path C:$schedulerInstallRoot -Permission ReadWrite
+    Write-Host "Customize (End): Royal Render Server"
+  }
 
   Write-Host "Customize (Start): Royal Render Viewer"
   $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"

@@ -1,7 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$binDirectory = "C:\Users\Public\Downloads"
-Set-Location -Path $binDirectory
+Set-Location -Path "C:\Users\Public\Downloads"
 
 if ("${renderManager}" -like "*RoyalRender*") {
   $installType = "royal-render-server"
@@ -29,16 +28,16 @@ if ("${qubeLicense.userName}" -ne "") {
   Restart-Service -Name "qubedra"
 }
 
-$customDataInputFile = "C:\AzureData\CustomData.bin"
-$customDataOutputFile = "C:\AzureData\scale.auto.ps1"
-$fileStream = New-Object System.IO.FileStream($customDataInputFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
+$autoScaleData = "C:\AzureData\CustomData.bin"
+$autoScaleCode = "C:\AzureData\scale.auto.ps1"
+$fileStream = New-Object System.IO.FileStream($autoScaleData, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
 $streamReader = New-Object System.IO.StreamReader($fileStream)
-Out-File -InputObject $streamReader.ReadToEnd() -FilePath $customDataOutputFile -Force
+Out-File -InputObject $streamReader.ReadToEnd() -FilePath $autoScaleCode -Force
 
 $taskName = "AAA Compute Auto Scaler"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
-$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $customDataOutputFile -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $autoScaleCode -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
 if ("${autoScale.enable}" -ne "false") {
   $taskSettings = New-ScheduledTaskSettingsSet

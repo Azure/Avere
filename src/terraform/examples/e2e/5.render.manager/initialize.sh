@@ -2,8 +2,7 @@
 
 source /etc/profile.d/aaa.sh
 
-binDirectory="/usr/local/bin"
-cd $binDirectory
+cd "/usr/local/bin"
 
 if [[ ${renderManager} == *RoyalRender* ]]; then
   installType="royal-render-server"
@@ -20,10 +19,10 @@ if [ "${qubeLicense.userName}" != "" ]; then
   systemctl restart dra.service
 fi
 
-customDataInputFile="/var/lib/waagent/ovf-env.xml"
-customDataOutputFile="/var/lib/waagent/scale.auto.sh"
-customData=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customDataInputFile)
-echo $customData | base64 -d > $customDataOutputFile
+autoScaleData="/var/lib/waagent/ovf-env.xml"
+autoScaleCode="/var/lib/waagent/scale.auto.sh"
+autoScaleText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $autoScaleData)
+echo $autoScaleText | base64 -d > $autoScaleCode
 
 servicePath="/etc/systemd/system/computeAutoScaler.service"
 echo "[Unit]" > $servicePath
@@ -35,7 +34,7 @@ echo "Environment=renderManager=${renderManager}" >> $servicePath
 echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
 echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
 echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $servicePath
-echo "ExecStart=/bin/bash $customDataOutputFile" >> $servicePath
+echo "ExecStart=/bin/bash $autoScaleCode" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/computeAutoScaler.timer"
 echo "[Unit]" > $timerPath

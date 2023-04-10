@@ -2,26 +2,24 @@
 
 source /etc/profile.d/aaa.sh
 
-binDirectory="/usr/local/bin"
-cd $binDirectory
+cd "/usr/local/bin"
 
-functionsFile="$binDirectory/functions.sh"
-functionsCode="${ filebase64("../0.global/functions.sh") }"
-echo $functionsCode | base64 --decode > $functionsFile
-source $functionsFile
+functionsCode="functions.sh"
+functionsData="${filebase64("../0.global/functions.sh")}"
+echo $functionsData | base64 --decode > $functionsCode
+source $functionsCode
 
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorage) }"
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsStorageCache) }"
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsRoyalRender) }"
-AddFileSystemMounts "${fileSystemMountsDelimiter}" "${ join(fileSystemMountsDelimiter, fileSystemMountsDeadline) }"
+SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
+SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
+if [[ ${renderManager} == *RoyalRender* ]]; then
+  AddMount "${fsMount.schedulerRoyalRender}"
+fi
+if [[ ${renderManager} == *Deadline* ]]; then
+  AddMount "${fsMount.schedulerDeadline}"
+fi
 mount -a
 
-if [[ ${renderManager} == *RoyalRender* ]]; then
-  installType="royal-render-client"
-  serviceUser="rrService"
-  useradd -r $serviceUser -p "${servicePassword}"
-  rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "${servicePassword}" -fwOut 1> $installType-service.out.log 2> $installType-service.err.log
-fi
+EnableRenderClient "${renderManager}" "${servicePassword}"
 
 servicePath="/etc/systemd/system/scheduledEventHandler.service"
 echo "[Unit]" > $servicePath
@@ -37,7 +35,7 @@ echo "[Unit]" > $timerPath
 echo "Description=AAA Scheduled Event Handler Timer" >> $timerPath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
-echo "OnUnitActiveSec=${terminationNotificationDetectionIntervalSeconds}" >> $timerPath
+echo "OnUnitActiveSec=${terminateNotificationDetectionIntervalSeconds}" >> $timerPath
 echo "AccuracySec=1us" >> $timerPath
 echo "" >> $timerPath
 echo "[Install]" >> $timerPath
