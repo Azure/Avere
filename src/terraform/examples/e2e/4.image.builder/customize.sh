@@ -173,7 +173,7 @@ if [ $machineType == "Scheduler" ]; then
   dnf -y install azure-cli 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): Azure CLI"
 
-  if [[ $renderManager == *RoyalRender* || $renderManager == *Deadline* ]]; then
+  if [[ $renderManager == *Deadline* || $renderManager == *RoyalRender* ]]; then
     echo "Customize (Start): NFS Server"
     systemctl --now enable nfs-server
     echo "Customize (End): NFS Server"
@@ -198,6 +198,71 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (End): CycleCloud"
 fi
 
+if [[ $renderManager == *Deadline* ]]; then
+  schedulerVersion="10.2.1.0"
+  schedulerInstallRoot="/Deadline"
+  schedulerDatabaseHost=$(hostname)
+  schedulerDatabasePath="/DeadlineDatabase"
+  # schedulerCertificateFile="Deadline10Client.pfx"
+  # schedulerCertificate="$schedulerInstallRoot/$schedulerCertificateFile"
+  schedulerBinPath="$schedulerInstallRoot/bin"
+  binPaths="$binPaths:$schedulerBinPath"
+
+  echo "Customize (Start): Deadline Download"
+  installFile="Deadline-$schedulerVersion-linux-installers.tar"
+  installPath=$(echo $installFile | cut -d"." -f1,2,3,4)
+  downloadUrl="$binStorageHost/Deadline/$schedulerVersion/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  mkdir $installPath
+  tar -xzf $installFile -C $installPath
+  echo "Customize (End): Deadline Download"
+
+  if [ $machineType == "Scheduler" ]; then
+    echo "Customize (Start): Mongo DB"
+    repoPath="/etc/yum.repos.d/mongodb.repo"
+    echo "[mongodb-org-4.4]" > $repoPath
+    echo "name=MongoDB 4.4" >> $repoPath
+    echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.4/x86_64/" >> $repoPath
+    echo "gpgcheck=1" >> $repoPath
+    echo "enabled=1" >> $repoPath
+    echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc" >> $repoPath
+    dnf -y install mongodb-org
+    mongoConfigFile="/etc/mongod.conf"
+    sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $mongoConfigFile
+    sed -i "/bindIp: 0.0.0.0/a\  tls:" $mongoConfigFile
+    sed -i "/tls:/a\    mode: disabled" $mongoConfigFile
+    sed -i "s/#security:/security:/" $mongoConfigFile
+    sed -i "/security:/a\  authorization: disabled" $mongoConfigFile
+    systemctl --now enable mongod
+    echo "Customize (End): Mongo DB"
+
+    echo "Customize (Start): Deadline Server"
+    installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb false --dbauth false --dbhost $schedulerDatabaseHost --dbport 27017 --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
+    cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
+    # cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerInstallRoot/$schedulerCertificateFile
+    # chmod +r $schedulerInstallRoot/$schedulerCertificateFile
+    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
+    exportfs -a
+    echo "Customize (End): Deadline Server"
+  else
+    echo "Customize (Start): Deadline Client"
+    installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
+    installArgs="--mode unattended --prefix $schedulerInstallRoot"
+    if [ $machineType == "Scheduler" ]; then
+      installArgs="$installArgs --slavestartup false --launcherdaemon false"
+    else
+      [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
+      installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+    fi
+    $installPath/$installFile $installArgs
+    cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+    # $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot $schedulerCertificate ""
+    $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot "" ""
+    echo "Customize (End): Deadline Client"
+  fi
+fi
+
 if [[ $renderManager == *RoyalRender* ]]; then
   schedulerVersion="9.0.04"
   schedulerInstallRoot="/RoyalRender"
@@ -211,22 +276,19 @@ if [[ $renderManager == *RoyalRender* ]]; then
   unzip -q $installFile
   echo "Customize (End): Royal Render Download"
 
-  echo "Customize (Start): Royal Render Installer"
   dnf -y install xcb-util-wm
   dnf -y install xcb-util-image
   dnf -y install xcb-util-keysyms
   dnf -y install xcb-util-renderutil
   dnf -y install libxkbcommon-x11
-  installType="royal-render"
-  installPath="RoyalRender*"
-  installFile="rrSetup_linux"
-  chmod +x ./$installPath/$installFile
-  mkdir $schedulerInstallRoot
-  ./$installPath/$installFile -console -rrRoot $schedulerInstallRoot 1> $installType.out.log 2> $installType.err.log
-  echo "Customize (End): Royal Render Installer"
-
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Royal Render Server"
+    installType="royal-render"
+    installPath="RoyalRender*"
+    installFile="rrSetup_linux"
+    chmod +x ./$installPath/$installFile
+    mkdir $schedulerInstallRoot
+    ./$installPath/$installFile -console -rrRoot $schedulerInstallRoot 1> $installType.out.log 2> $installType.err.log
     echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Royal Render Server"
@@ -285,52 +347,6 @@ if [[ $renderManager == *Qube* ]]; then
 
     sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $schedulerConfigFile
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
-  fi
-fi
-
-if [[ $renderManager == *Deadline* ]]; then
-  schedulerVersion="10.2.1.0"
-  schedulerInstallRoot="/Deadline"
-  schedulerDatabaseHost=$(hostname)
-  schedulerDatabasePath="/DeadlineDatabase"
-  schedulerCertificateFile="Deadline10Client.pfx"
-  schedulerCertificate="$schedulerInstallRoot/$schedulerCertificateFile"
-  schedulerBinPath="$schedulerInstallRoot/bin"
-  binPaths="$binPaths:$schedulerBinPath"
-
-  echo "Customize (Start): Deadline Download"
-  installFile="Deadline-$schedulerVersion-linux-installers.tar"
-  installPath=$(echo $installFile | cut -d"." -f1,2,3,4)
-  downloadUrl="$binStorageHost/Deadline/$schedulerVersion/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  mkdir $installPath
-  tar -xzf $installFile -C $installPath
-  echo "Customize (End): Deadline Download"
-
-  if [ $machineType == "Scheduler" ]; then
-    echo "Customize (Start): Deadline Server"
-    installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
-    cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
-    cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerInstallRoot/$schedulerCertificateFile
-    chmod +r $schedulerInstallRoot/$schedulerCertificateFile
-    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
-    exportfs -a
-    echo "Customize (End): Deadline Server"
-  else
-    echo "Customize (Start): Deadline Client"
-    installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-    installArgs="--mode unattended --prefix $schedulerInstallRoot"
-    if [ $machineType == "Scheduler" ]; then
-      installArgs="$installArgs --slavestartup false --launcherdaemon false"
-    else
-      [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
-      installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
-    fi
-    $installPath/$installFile $installArgs
-    cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot $schedulerCertificate ""
-    echo "Customize (End): Deadline Client"
   fi
 fi
 
