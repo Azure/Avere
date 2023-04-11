@@ -99,7 +99,7 @@ resource "azurerm_storage_account" "storage" {
 
 resource "time_sleep" "storage_data" {
   for_each = {
-    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.dataSource.accountName != ""
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
   }
   create_duration = "30s"
   depends_on = [
