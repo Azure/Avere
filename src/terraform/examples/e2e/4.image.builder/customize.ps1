@@ -265,11 +265,9 @@ if ($machineType -eq "Scheduler") {
 if ("$renderManager" -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
   $schedulerInstallRoot = "C:\Deadline"
-  $schedulerClientDrive = "X:"
   $schedulerDatabaseHost = $(hostname)
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"
-  $schedulerCertificate = "$schedulerClientDrive\$schedulerCertificateFile"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
   $binPaths += ";$schedulerBinPath"
 
@@ -310,7 +308,6 @@ if ("$renderManager" -like "*Deadline*") {
     }
     Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
     Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log
-    Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientDrive $schedulerCertificate ''" -Wait
     Set-Location -Path $binDirectory
     Write-Host "Customize (End): Deadline Client"
 

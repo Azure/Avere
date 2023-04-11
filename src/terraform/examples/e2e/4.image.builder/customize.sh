@@ -202,9 +202,7 @@ if [[ $renderManager == *Deadline* ]]; then
   schedulerVersion="10.2.1.0"
   schedulerInstallRoot="/Deadline"
   schedulerDatabaseHost=$(hostname)
-  schedulerDatabasePath="/DeadlineDatabase"
-  # schedulerCertificateFile="Deadline10Client.pfx"
-  # schedulerCertificate="$schedulerInstallRoot/$schedulerCertificateFile"
+  schedulerDatabasePort=27017
   schedulerBinPath="$schedulerInstallRoot/bin"
   binPaths="$binPaths:$schedulerBinPath"
 
@@ -238,10 +236,8 @@ if [[ $renderManager == *Deadline* ]]; then
 
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb false --dbauth false --dbhost $schedulerDatabaseHost --dbport 27017 --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerInstallRoot --installmongodb false --dbauth false
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
-    # cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerInstallRoot/$schedulerCertificateFile
-    # chmod +r $schedulerInstallRoot/$schedulerCertificateFile
     echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Deadline Server"
@@ -257,8 +253,6 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     $installPath/$installFile $installArgs
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    # $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot $schedulerCertificate ""
-    $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot "" ""
     echo "Customize (End): Deadline Client"
   fi
 fi
@@ -281,12 +275,12 @@ if [[ $renderManager == *RoyalRender* ]]; then
   dnf -y install xcb-util-keysyms
   dnf -y install xcb-util-renderutil
   dnf -y install libxkbcommon-x11
+  installPath="RoyalRender*"
+  installFile="rrSetup_linux"
+  chmod +x ./$installPath/$installFile
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Royal Render Server"
     installType="royal-render"
-    installPath="RoyalRender*"
-    installFile="rrSetup_linux"
-    chmod +x ./$installPath/$installFile
     mkdir $schedulerInstallRoot
     ./$installPath/$installFile -console -rrRoot $schedulerInstallRoot 1> $installType.out.log 2> $installType.err.log
     echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
