@@ -70,101 +70,6 @@ if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (End): NVIDIA OptiX"
 fi
 
-rendererPathPBRT="/usr/local/pbrt"
-rendererPathBlender="/usr/local/blender"
-rendererPathUnreal="/usr/local/unreal"
-
-if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT v3"
-  versionInfo="v3"
-  installType="pbrt-$versionInfo"
-  rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
-  git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
-  mkdir -p $rendererPathPBRTv3
-  cmake -B $rendererPathPBRTv3 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
-  make -C $rendererPathPBRTv3 1> $installType-make.out.log 2> $installType-make.err.log
-  ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
-  echo "Customize (End): PBRT v3"
-
-  echo "Customize (Start): PBRT v4"
-  dnf -y install mesa-libGL-devel
-  dnf -y install libXrandr-devel
-  dnf -y install libXinerama-devel
-  dnf -y install libXcursor-devel
-  dnf -y install libXi-devel
-  versionInfo="v4"
-  installType="pbrt-$versionInfo"
-  rendererPathPBRTv4="$rendererPathPBRT/$versionInfo"
-  git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
-  mkdir -p $rendererPathPBRTv4
-  cmake -B $rendererPathPBRTv4 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
-  make -C $rendererPathPBRTv4 1> $installType-make.out.log 2> $installType-make.err.log
-  ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
-  echo "Customize (End): PBRT v4"
-
-  binPaths="$binPaths:$rendererPathPBRT"
-fi
-
-if [[ $renderEngines == *Blender* ]]; then
-  echo "Customize (Start): Blender"
-  dnf -y install mesa-libGL
-  dnf -y install libXxf86vm
-  dnf -y install libXfixes
-  dnf -y install libXi
-  dnf -y install libSM
-  versionInfo="3.5.0"
-  versionType="linux-x64"
-  installFile="blender-$versionInfo-$versionType.tar.xz"
-  downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xf $installFile --xz
-  mkdir -p $rendererPathBlender
-  mv blender-$versionInfo-$versionType/* $rendererPathBlender
-  binPaths="$binPaths:$rendererPathBlender"
-  echo "Customize (End): Blender"
-fi
-
-if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
-  echo "Customize (Start): Unreal Engine Setup"
-  dnf -y install libicu
-  versionInfo="5.1.1"
-  installType="unreal-engine"
-  installFile="UnrealEngine-$versionInfo-release.tar.gz"
-  downloadUrl="$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  mkdir $rendererPathUnreal
-  mv UnrealEngine-$versionInfo-release/* $rendererPathUnreal
-  $rendererPathUnreal/Setup.sh 1> $installType-setup.out.log 2> $installType-setup.err.log
-  echo "Customize (End): Unreal Engine Setup"
-
-  echo "Customize (Start): Unreal Project Files Generate"
-  $rendererPathUnreal/GenerateProjectFiles.sh 1> unreal-project-files-generate.out.log 2> unreal-project-files-generate.err.log
-  echo "Customize (End): Unreal Project Files Generate"
-
-  echo "Customize (Start): Unreal Engine Build"
-  make -C $rendererPathUnreal 1> $installType-build.out.log 2> $installType-build.err.log
-  echo "Customize (End): Unreal Engine Build"
-
-  if [[ $renderEngines == *Unreal.PixelStream* ]]; then
-    echo "Customize (Start): Unreal Pixel Streaming"
-    installType="unreal-stream"
-    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 1> $installType-git.out.log 2> $installType-git.err.log
-    dnf -y install coturn
-    installFile="PixelStreamingInfrastructure/SignallingWebServer/platform_scripts/bash/setup.sh"
-    chmod +x $installFile
-    ./$installFile 1> $installType-signalling.out.log 2> $installType-signalling.err.log
-    installFile="PixelStreamingInfrastructure/Matchmaker/platform_scripts/bash/setup.sh"
-    chmod +x $installFile
-    ./$installFile 1> $installType-matchmaker.out.log 2> $installType-matchmaker.err.log
-    installFile="PixelStreamingInfrastructure/SFU/platform_scripts/bash/setup.sh"
-    chmod +x $installFile
-    ./$installFile 1> $installType-sfu.out.log 2> $installType-sfu.err.log
-    echo "Customize (End): Unreal Pixel Streaming"
-  fi
-  binPaths="$binPaths:$rendererPathUnreal"
-fi
-
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
   installType="az-cli"
@@ -344,8 +249,6 @@ if [[ $renderManager == *Qube* ]]; then
   fi
 fi
 
-echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
-
 if [ $machineType == "Farm" ]; then
   if [ -f /tmp/onTerminate.sh ]; then
     echo "Customize (Start): CycleCloud Event Handler"
@@ -355,6 +258,103 @@ if [ $machineType == "Farm" ]; then
     echo "Customize (End): CycleCloud Event Handler"
   fi
 fi
+
+rendererPathPBRT="/usr/local/pbrt"
+rendererPathBlender="/usr/local/blender"
+rendererPathUnreal="/usr/local/unreal"
+
+if [[ $renderEngines == *PBRT* ]]; then
+  echo "Customize (Start): PBRT v3"
+  versionInfo="v3"
+  installType="pbrt-$versionInfo"
+  rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
+  git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
+  mkdir -p $rendererPathPBRTv3
+  cmake -B $rendererPathPBRTv3 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
+  make -C $rendererPathPBRTv3 1> $installType-make.out.log 2> $installType-make.err.log
+  ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
+  echo "Customize (End): PBRT v3"
+
+  echo "Customize (Start): PBRT v4"
+  dnf -y install mesa-libGL-devel
+  dnf -y install libXrandr-devel
+  dnf -y install libXinerama-devel
+  dnf -y install libXcursor-devel
+  dnf -y install libXi-devel
+  versionInfo="v4"
+  installType="pbrt-$versionInfo"
+  rendererPathPBRTv4="$rendererPathPBRT/$versionInfo"
+  git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
+  mkdir -p $rendererPathPBRTv4
+  cmake -B $rendererPathPBRTv4 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
+  make -C $rendererPathPBRTv4 1> $installType-make.out.log 2> $installType-make.err.log
+  ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
+  echo "Customize (End): PBRT v4"
+
+  binPaths="$binPaths:$rendererPathPBRT"
+fi
+
+if [[ $renderEngines == *Blender* ]]; then
+  echo "Customize (Start): Blender"
+  dnf -y install mesa-libGL
+  dnf -y install libXxf86vm
+  dnf -y install libXfixes
+  dnf -y install libXi
+  dnf -y install libSM
+  versionInfo="3.5.0"
+  versionType="linux-x64"
+  installFile="blender-$versionInfo-$versionType.tar.xz"
+  downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xf $installFile --xz
+  mkdir -p $rendererPathBlender
+  mv blender-$versionInfo-$versionType/* $rendererPathBlender
+  binPaths="$binPaths:$rendererPathBlender"
+  echo "Customize (End): Blender"
+fi
+
+if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
+  echo "Customize (Start): Unreal Engine Setup"
+  dnf -y install libicu
+  versionInfo="5.1.1"
+  installType="unreal-engine"
+  installFile="UnrealEngine-$versionInfo-release.tar.gz"
+  downloadUrl="$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  mkdir $rendererPathUnreal
+  mv UnrealEngine-$versionInfo-release/* $rendererPathUnreal
+  $rendererPathUnreal/Setup.sh 1> $installType-setup.out.log 2> $installType-setup.err.log
+  echo "Customize (End): Unreal Engine Setup"
+
+  echo "Customize (Start): Unreal Project Files Generate"
+  $rendererPathUnreal/GenerateProjectFiles.sh 1> unreal-project-files-generate.out.log 2> unreal-project-files-generate.err.log
+  echo "Customize (End): Unreal Project Files Generate"
+
+  echo "Customize (Start): Unreal Engine Build"
+  make -C $rendererPathUnreal 1> $installType-build.out.log 2> $installType-build.err.log
+  echo "Customize (End): Unreal Engine Build"
+
+  if [[ $renderEngines == *Unreal.PixelStream* ]]; then
+    echo "Customize (Start): Unreal Pixel Streaming"
+    installType="unreal-stream"
+    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 1> $installType-git.out.log 2> $installType-git.err.log
+    dnf -y install coturn
+    installFile="PixelStreamingInfrastructure/SignallingWebServer/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 1> $installType-signalling.out.log 2> $installType-signalling.err.log
+    installFile="PixelStreamingInfrastructure/Matchmaker/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 1> $installType-matchmaker.out.log 2> $installType-matchmaker.err.log
+    installFile="PixelStreamingInfrastructure/SFU/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 1> $installType-sfu.out.log 2> $installType-sfu.err.log
+    echo "Customize (End): Unreal Pixel Streaming"
+  fi
+  binPaths="$binPaths:$rendererPathUnreal"
+fi
+
+echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
 
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Teradici PCoIP"
