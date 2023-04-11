@@ -21,10 +21,11 @@ fi
 
 serviceType="aaa-scale"
 serviceName="AAA Auto Scale"
-autoScaleData="/var/lib/waagent/ovf-env.xml"
-autoScaleCode="/var/lib/waagent/$serviceType.sh"
-autoScaleText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $autoScaleData)
-echo $autoScaleText | base64 -d > $autoScaleCode
+
+customData="/var/lib/waagent/ovf-env.xml"
+customCode=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customData)
+scriptFile="/var/lib/waagent/$serviceType.sh"
+echo $customCode | base64 -d > $scriptFile
 
 servicePath="/etc/systemd/system/$serviceType.service"
 echo "[Unit]" > $servicePath
@@ -36,7 +37,7 @@ echo "Environment=renderManager=${renderManager}" >> $servicePath
 echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
 echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
 echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $servicePath
-echo "ExecStart=/bin/bash $autoScaleCode" >> $servicePath
+echo "ExecStart=/bin/bash $scriptFile" >> $servicePath
 echo "" >> $servicePath
 
 timerPath="/etc/systemd/system/$serviceType.timer"

@@ -73,7 +73,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
   disable_password_authentication = var.weka.adminLogin.disablePasswordAuth
   computer_name_prefix            = var.weka.machine.namePrefix != "" ? var.weka.machine.namePrefix : null
+  custom_data                     = base64encode(templatefile("install.sh", {}))
   # proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
+  single_placement_group          = true
+  overprovision                   = false
   network_interface {
     name    = "primary"
     primary = true

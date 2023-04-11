@@ -173,7 +173,7 @@ if [ $machineType == "Scheduler" ]; then
   dnf -y install azure-cli 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): Azure CLI"
 
-  if [[ $renderManager == *Deadline* ]]; then
+  if [[ $renderManager == *RoyalRender* || $renderManager == *Deadline* ]]; then
     echo "Customize (Start): NFS Server"
     systemctl --now enable nfs-server
     echo "Customize (End): NFS Server"
@@ -311,7 +311,7 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
     $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot
-    mv /tmp/*_installer.log ./deadline-repository.log
+    mv -f /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
     cp $schedulerDatabasePath/certs/$schedulerCertificateFile $schedulerInstallRoot/$schedulerCertificateFile
     chmod +r $schedulerInstallRoot/$schedulerCertificateFile
     echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
@@ -328,7 +328,7 @@ if [[ $renderManager == *Deadline* ]]; then
       installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
     fi
     $installPath/$installFile $installArgs
-    mv /tmp/*_installer.log ./deadline-client.log
+    mv -f /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
     $schedulerBinPath/deadlinecommand -ChangeRepositorySkipValidation Direct $schedulerInstallRoot $schedulerCertificate ""
     echo "Customize (End): Deadline Client"
   fi

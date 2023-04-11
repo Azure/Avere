@@ -284,7 +284,7 @@ if ("$renderManager" -like "*RoyalRender*") {
   New-Item -ItemType Directory -Path $schedulerInstallRoot
   New-SmbShare -Name $rrShareName -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
   Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot $rrRootShare" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-  Remove-SmbShare -Name $rrShareName
+  Remove-SmbShare -Name $rrShareName -Force
   Write-Host "Customize (End): Royal Render Installer"
 
   if ($machineType -eq "Scheduler") {
@@ -403,7 +403,7 @@ if ("$renderManager" -like "*Deadline*") {
     $installType = "deadline-repository"
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
     Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-    Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-repository.log
+    Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log -Force
     Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallRoot\$schedulerCertificateFile
     New-NfsShare -Name "Deadline" -Path $schedulerInstallRoot -Permission ReadWrite
     Write-Host "Customize (End): Deadline Server"
@@ -425,9 +425,8 @@ if ("$renderManager" -like "*Deadline*") {
       $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
     }
     Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-    Move-Item -Path $env:TMP\*_installer.log -Destination .\deadline-client.log
-    $installType = "deadline-change-repository"
-    Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientDrive $schedulerCertificate ''" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+    Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log -Force
+    Start-Process -FilePath "$schedulerBinPath\deadlinecommand.exe" -ArgumentList "-ChangeRepositorySkipValidation Direct $schedulerClientDrive $schedulerCertificate ''" -Wait
     Set-Location -Path $binDirectory
     Write-Host "Customize (End): Deadline Client"
 

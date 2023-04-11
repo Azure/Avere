@@ -1,26 +1,36 @@
 #!/bin/bash -ex
 
-binDirectory="/usr/local/bin"
-cd $binDirectory
+serviceType="aaa-install"
+serviceName="AAA Storage Install"
 
-if [ "${wekaClusterName}" != "" ]; then
-  osDisk="/dev/sdc"
-  installType="weka-mkfs"
-  volumeLabel="weka-iosw"
-  mkfs.ext4 -L $volumeLabel $osDisk 1> $installType.out.log 2> $installType.err.log
-  installPath="/opt/weka"
-  mkdir -p $installPath
-  installType="weka-mount"
-  mount $osDisk $installPath 1> $installType.out.log 2> $installType.err.log
-  echo "LABEL=$volumeLabel $installPath ext4 defaults 0 2" >> /etc/fstab
+customData="/var/lib/waagent/ovf-env.xml"
+customCode=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $customData)
+scriptFile="/var/lib/waagent/$serviceType.sh"
+echo $customCode | base64 -d > $scriptFile
 
-  versionInfo="4.1.0.77"
-  installType="weka-iosw"
-  installFile="weka-$versionInfo.tar"
-  downloadUrl="$binStorageHost/Weka/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xf $installFile
-  cd weka-$versionInfo
-  ./install.sh 1> ../$installType.out.log 2> ../$installType.err.log
-  cd $binDirectory
-fi
+servicePath="/etc/systemd/system/$serviceType.service"
+echo "[Unit]" > $servicePath
+echo "Description=$serviceName Service" >> $servicePath
+echo "After=network-online.target" >> $servicePath
+echo "" >> $servicePath
+echo "[Service]" >> $servicePath
+echo "Environment=binStorageHost=${binStorageHost}" >> $servicePath
+echo "Environment=binStorageAuth=${binStorageAuth}" >> $servicePath
+echo "Environment=wekaClusterName=${wekaClusterName}" >> $servicePath
+echo "ExecStart=/bin/bash $scriptFile" >> $servicePath
+echo "" >> $servicePath
+
+timerPath="/etc/systemd/system/$serviceType.timer"
+echo "[Unit]" > $timerPath
+echo "Description=$serviceName Timer" >> $servicePath
+echo "" >> $timerPath
+echo "[Timer]" >> $timerPath
+echo "OnStartupSec=10" >> $timerPath
+echo "AccuracySec=1us" >> $timerPath
+echo "" >> $timerPath
+echo "[Install]" >> $timerPath
+echo "WantedBy=timers.target" >> $timerPath
+
+systemctl enable $serviceType
+dnf -y upgrade --refresh
+reboot
