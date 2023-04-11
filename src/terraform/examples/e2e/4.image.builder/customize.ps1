@@ -265,7 +265,7 @@ if ($machineType -eq "Scheduler") {
 if ("$renderManager" -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
   $schedulerInstallRoot = "C:\Deadline"
-  $schedulerClientDrive = "Y:"
+  $schedulerClientDrive = "X:"
   $schedulerDatabaseHost = $(hostname)
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"
