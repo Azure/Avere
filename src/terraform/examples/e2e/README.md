@@ -201,13 +201,13 @@ Now that deployment of the AAA solution framework is complete, this final sectio
   <img src=".github/images/blender-splash-3.4.png" width="1024" />
 </p>
 
-#### 9.1.1 [Deadline](https://www.awsthinkbox.com/deadline) (*Linux*)
+#### 9.1.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
 
-#### 9.1.2 [Deadline](https://www.awsthinkbox.com/deadline) (*Windows*)
+#### 9.1.2 Azure *Windows* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
@@ -219,7 +219,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
   <img src=".github/images/moana-island.png" width="1024" />
 </p>
 
-#### 9.2.1 [Deadline](https://www.awsthinkbox.com/deadline) (*Linux*)
+#### 9.2.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
@@ -227,7 +227,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
-#### 9.2.2 [Deadline](https://www.awsthinkbox.com/deadline) (*Windows*)
+#### 9.2.2 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
