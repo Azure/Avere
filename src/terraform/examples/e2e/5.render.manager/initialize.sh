@@ -42,7 +42,7 @@ echo "" >> $servicePath
 
 timerPath="/etc/systemd/system/$serviceType.timer"
 echo "[Unit]" > $timerPath
-echo "Description=$serviceName Timer" >> $servicePath
+echo "Description=$serviceName Timer" >> $timerPath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
 echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $timerPath

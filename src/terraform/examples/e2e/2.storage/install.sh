@@ -14,6 +14,7 @@ if [[ "$wekaClusterName" != "" && ! -d /opt/weka ]]; then
   mount $osDisk $installPath 1> $installType.out.log 2> $installType.err.log
   echo "LABEL=$volumeLabel $installPath ext4 defaults 0 2" >> /etc/fstab
 
+  dnf -y install kernel-devel-$(uname -r)
   versionInfo="4.1.0.77"
   installType="weka-iosw"
   installFile="weka-$versionInfo.tar"

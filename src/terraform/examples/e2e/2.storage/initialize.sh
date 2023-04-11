@@ -1,5 +1,8 @@
 #!/bin/bash -ex
 
+binDirectory="/usr/local/bin"
+cd $binDirectory
+
 serviceType="aaa-install"
 serviceName="AAA Storage Install"
 
@@ -22,7 +25,7 @@ echo "" >> $servicePath
 
 timerPath="/etc/systemd/system/$serviceType.timer"
 echo "[Unit]" > $timerPath
-echo "Description=$serviceName Timer" >> $servicePath
+echo "Description=$serviceName Timer" >> $timerPath
 echo "" >> $timerPath
 echo "[Timer]" >> $timerPath
 echo "OnStartupSec=10" >> $timerPath
@@ -32,5 +35,5 @@ echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
 
 systemctl enable $serviceType
-dnf -y upgrade --refresh
-reboot
+dnf -y upgrade --refresh > init-upgrade.log
+shutdown -r > init-shutdown.log
