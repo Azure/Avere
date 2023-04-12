@@ -91,12 +91,11 @@ variable "virtualMachines" {
               )
               fsMount = object(
                 {
-                  storageRead          = string
-                  storageReadCache     = string
-                  storageWrite         = string
-                  storageWriteCache    = string
-                  schedulerRoyalRender = string
-                  schedulerDeadline    = string
+                  storageRead       = string
+                  storageReadCache  = string
+                  storageWrite      = string
+                  storageWriteCache = string
+                  schedulerDeadline = string
                 }
               )
               teradiciLicenseKey = string

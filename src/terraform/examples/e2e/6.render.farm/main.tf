@@ -99,12 +99,11 @@ variable "virtualMachineScaleSets" {
               )
               fsMount = object(
                 {
-                  storageRead          = string
-                  storageReadCache     = string
-                  storageWrite         = string
-                  storageWriteCache    = string
-                  schedulerRoyalRender = string
-                  schedulerDeadline    = string
+                  storageRead       = string
+                  storageReadCache  = string
+                  storageWrite      = string
+                  storageWriteCache = string
+                  schedulerDeadline = string
                 }
               )
             }
@@ -131,53 +130,6 @@ variable "virtualMachineScaleSets" {
       )
     }
   ))
-}
-
-variable "kubernetes" {
-  type = object(
-    {
-      fleet = object(
-        {
-          name      = string
-          dnsPrefix = string
-        }
-      )
-      clusters = list(object(
-        {
-          name      = string
-          dnsPrefix = string
-          systemNodePool = object(
-            {
-              name = string
-              machine = object(
-                {
-                  size  = string
-                  count = number
-                }
-              )
-            }
-          )
-          userNodePools = list(object(
-            {
-              name = string
-              machine = object(
-                {
-                  size  = string
-                  count = number
-                }
-              )
-              spot = object(
-                {
-                  enable         = bool
-                  evictionPolicy = string
-                }
-              )
-            }
-          ))
-        }
-      ))
-    }
-  )
 }
 
 variable "servicePassword" {
@@ -284,18 +236,6 @@ locals {
       }
     }) if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
   ]
-  kubernetesUserNodePools = flatten([
-    for kubernetesCluster in var.kubernetes.clusters : [
-      for userNodePool in kubernetesCluster.userNodePools : {
-        name               = userNodePool.name
-        clusterName        = kubernetesCluster.name
-        machineSize        = userNodePool.machine.size
-        machineCount       = userNodePool.machine.count
-        spotEnable         = userNodePool.spot.enable
-        spotEvictionPolicy = userNodePool.spot.evictionPolicy
-      }
-    ] if kubernetesCluster.name != ""
-  ])
 }
 
 resource "azurerm_resource_group" "farm" {
@@ -494,67 +434,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   }
 }
 
-#######################################################################
-# Kubernetes (https://learn.microsoft.com/azure/aks/intro-kubernetes) #
-#######################################################################
-
-resource "azurerm_kubernetes_fleet_manager" "farm" {
-  count               = var.kubernetes.fleet.name != "" ? 1 : 0
-  name                = var.kubernetes.fleet.name
-  resource_group_name = azurerm_resource_group.farm.name
-  location            = azurerm_resource_group.farm.location
-  hub_profile {
-    dns_prefix = var.kubernetes.fleet.dnsPrefix == "" ? var.kubernetes.fleet.name : var.kubernetes.fleet.dnsPrefix
-  }
-}
-
-resource "azurerm_kubernetes_cluster" "farm" {
-  for_each = {
-    for kubernetesCluster in var.kubernetes.clusters : kubernetesCluster.name => kubernetesCluster if kubernetesCluster.name != ""
-  }
-  name                    = each.value.name
-  resource_group_name     = azurerm_resource_group.farm.name
-  location                = azurerm_resource_group.farm.location
-  dns_prefix              = each.value.dnsPrefix == "" ? "studio" : each.value.dnsPrefix
-  private_cluster_enabled = true
-  identity {
-    type = "UserAssigned"
-    identity_ids = [
-      data.azurerm_user_assigned_identity.studio.id
-    ]
-  }
-  default_node_pool {
-    name                         = each.value.systemNodePool.name
-    vm_size                      = each.value.systemNodePool.machine.size
-    node_count                   = each.value.systemNodePool.machine.count
-    vnet_subnet_id               = data.azurerm_subnet.farm.id
-    only_critical_addons_enabled = true
-  }
-}
-
-resource "azurerm_kubernetes_cluster_node_pool" "farm" {
-  for_each = {
-    for userNodePool in local.kubernetesUserNodePools : "${userNodePool.clusterName}.${userNodePool.name}" => userNodePool
-  }
-  name                  = each.value.name
-  kubernetes_cluster_id = "${azurerm_resource_group.farm.id}/providers/Microsoft.ContainerService/managedClusters/${each.value.clusterName}"
-  vm_size               = each.value.machineSize
-  node_count            = each.value.machineCount
-  priority              = each.value.spotEnable ? "Spot" : "Regular"
-  eviction_policy       = each.value.spotEnable ? each.value.spotEvictionPolicy : null
-  depends_on = [
-    azurerm_kubernetes_cluster.farm
-  ]
-}
-
 output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
 output "virtualMachineScaleSets" {
   value = var.virtualMachineScaleSets
-}
-
-output "kubernetes" {
-  value = var.kubernetes
 }

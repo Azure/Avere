@@ -7,8 +7,8 @@ if ("${renderManager}" -like "*RoyalRender*") {
   $serviceUser = "rrService"
   $servicePassword = ConvertTo-SecureString "${servicePassword}" -AsPlainText -Force
   New-LocalUser -Name $serviceUser -Password $servicePassword -PasswordNeverExpires
-  Start-Process -FilePath "rrServerconsole" -ArgumentList "-initAndClose" -Wait -RedirectStandardOutput "$installType-init.out.log" -RedirectStandardError "$installType-init.err.log"
-  Start-Process -FilePath "rrWorkstation_installer" -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW ""${servicePassword}"" -fwIn" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
+  Start-Process -FilePath "rrServerconsole.exe" -ArgumentList "-initAndClose" -Wait -RedirectStandardOutput "$installType-init.out.log" -RedirectStandardError "$installType-init.err.log"
+  Start-Process -FilePath "rrWorkstation_installer.exe" -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW ""${servicePassword}"" -fwIn" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
 }
 
 if ("${renderManager}" -like "*Qube*") {

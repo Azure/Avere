@@ -11,9 +11,6 @@ Out-File -InputObject $streamReader.ReadToEnd() -FilePath $functionsCode -Force
 
 SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
 SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
-if ("${renderManager}" -like "*RoyalRender*") {
-  AddMount "${fsMount.schedulerRoyalRender}"
-}
 if ("${renderManager}" -like "*Deadline*") {
   AddMount "${fsMount.schedulerDeadline}"
 }

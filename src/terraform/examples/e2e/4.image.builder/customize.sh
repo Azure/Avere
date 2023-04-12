@@ -21,8 +21,8 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
-#dnf -y install epel-release
-#dnf -y install dkms
+dnf -y install epel-release
+dnf -y install dkms
 dnf -y install gcc gcc-c++
 dnf -y install unzip
 dnf -y install cmake
@@ -38,8 +38,7 @@ if [[ $gpuPlatform == *GRID* ]]; then
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent 1> $installType.out.log 2> $installType.err.log
-  #./$installFile --silent --dkms 1> $installType.out.log 2> $installType.err.log
+  ./$installFile --silent --dkms 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): NVIDIA GPU (GRID)"
 fi
 
@@ -47,7 +46,7 @@ if [[ $gpuPlatform == *CUDA* ]] || [[ $gpuPlatform == *CUDA.OptiX* ]]; then
   echo "Customize (Start): NVIDIA GPU (CUDA)"
   installType="nvidia-cuda"
   dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-  #dnf -y module install nvidia-driver:latest-dkms 1> $installType-dkms.out.log 2> $installType-dkms.err.log
+  dnf -y module install nvidia-driver:latest-dkms 1> $installType-dkms.out.log 2> $installType-dkms.err.log
   dnf -y install cuda 1> $installType.out.log 2> $installType.err.log
   echo "Customize (End): NVIDIA GPU (CUDA)"
 fi
@@ -83,24 +82,6 @@ if [ $machineType == "Scheduler" ]; then
     systemctl --now enable nfs-server
     echo "Customize (End): NFS Server"
   fi
-
-  echo "Customize (Start): CycleCloud"
-  cycleCloudPath="/usr/local/cyclecloud"
-  repoPath="/etc/yum.repos.d/cyclecloud.repo"
-  echo "[cyclecloud]" > $repoPath
-  echo "name=CycleCloud" >> $repoPath
-  echo "baseurl=https://packages.microsoft.com/yumrepos/cyclecloud" >> $repoPath
-  echo "gpgcheck=1" >> $repoPath
-  echo "gpgkey=https://packages.microsoft.com/keys/microsoft.asc" >> $repoPath
-  dnf -y install java-1.8.0-openjdk
-  JAVA_HOME=/bin/java
-  dnf -y install cyclecloud8
-  cd /opt/cycle_server
-  unzip -q ./tools/cyclecloud-cli.zip
-  ./cyclecloud-cli-installer/install.sh --installdir $cycleCloudPath
-  cd $binDirectory
-  binPaths="$binPaths:$cycleCloudPath/bin"
-  echo "Customize (End): CycleCloud"
 fi
 
 if [[ $renderManager == *Deadline* ]]; then
@@ -108,7 +89,7 @@ if [[ $renderManager == *Deadline* ]]; then
   schedulerInstallRoot="/Deadline"
   schedulerDatabaseHost=$(hostname)
   schedulerDatabasePort=27017
-  schedulerBinPath="$schedulerInstallRoot/bin"
+  schedulerBinPath="$schedulerInstallRoot/bin/Linux"
   binPaths="$binPaths:$schedulerBinPath"
 
   echo "Customize (Start): Deadline Download"
@@ -158,6 +139,9 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     $installPath/$installFile $installArgs
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+    cd $schedulerBinPath
+    unzip bin.zip
+    cd $binDirectory
     echo "Customize (End): Deadline Client"
   fi
 fi
@@ -246,16 +230,6 @@ if [[ $renderManager == *Qube* ]]; then
 
     sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $schedulerConfigFile
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
-  fi
-fi
-
-if [ $machineType == "Farm" ]; then
-  if [ -f /tmp/onTerminate.sh ]; then
-    echo "Customize (Start): CycleCloud Event Handler"
-    mkdir -p /opt/cycle/jetpack/scripts
-    cp /tmp/onTerminate.sh /opt/cycle/jetpack/scripts/onPreempt.sh
-    cp /tmp/onTerminate.sh /opt/cycle/jetpack/scripts/onTerminate.sh
-    echo "Customize (End): CycleCloud Event Handler"
   fi
 fi
 
@@ -351,6 +325,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
     ./$installFile 1> $installType-sfu.out.log 2> $installType-sfu.err.log
     echo "Customize (End): Unreal Pixel Streaming"
   fi
+
   binPaths="$binPaths:$rendererPathUnreal"
 fi
 

@@ -10,8 +10,11 @@ Set-Location -Path $binDirectory
 
 Write-Host "Customize (Start): Resize OS Disk"
 $osDriveLetter = "C"
-$partitionSize = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
-Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSize.SizeMax
+$partitionSizeActive = (Get-Partition -DriveLetter $osDriveLetter).Size
+$partitionSizeRange = Get-PartitionSupportedSize -DriveLetter $osDriveLetter
+if ($partitionSizeActive -lt $partitionSizeRange.SizeMax) {
+  Resize-Partition -DriveLetter $osDriveLetter -Size $partitionSizeRange.SizeMax
+}
 Write-Host "Customize (End): Resize OS Disk"
 
 Write-Host "Customize (Start): Image Build Parameters"

@@ -104,12 +104,6 @@ variable "virtualMachines" {
                   detectionIntervalSeconds = number
                 }
               )
-              cycleCloud = object(
-                {
-                  enable             = bool
-                  storageAccountName = string
-                }
-              )
             }
           )
         }
@@ -146,18 +140,6 @@ variable "computeNetwork" {
     }
   )
 }
-
-variable "computeGallery" {
-  type = object(
-    {
-      name                  = string
-      resourceGroupName     = string
-      imageVersionIdDefault = string
-    }
-  )
-}
-
-data "azurerm_client_config" "provider" {}
 
 data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
@@ -231,12 +213,8 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
-  servicePassword        = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
-  stateExistsNetwork     = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
-  stateExistsImage       = var.computeGallery.name != "" ? false : try(length(data.terraform_remote_state.image.outputs) > 0, false)
-  imageGalleryName       = !local.stateExistsImage ? var.computeGallery.name : try(data.terraform_remote_state.image.outputs.imageGallery.name, "")
-  imageResourceGroupName = !local.stateExistsImage ? var.computeGallery.resourceGroupName : try(data.terraform_remote_state.image.outputs.resourceGroupName, "")
-  imageVersionIdDefault  = !local.stateExistsImage ? var.computeGallery.imageVersionIdDefault : "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${local.imageResourceGroupName}/providers/Microsoft.Compute/galleries/${local.imageGalleryName}/images/Linux/versions/0.0.0"
+  servicePassword    = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
+  stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachinesLinux = [
     for virtualMachine in var.virtualMachines : merge(virtualMachine, {
       machine = {
@@ -260,12 +238,6 @@ locals {
 resource "azurerm_resource_group" "scheduler" {
   name     = var.resourceGroupName
   location = module.global.regionName
-}
-
-resource "azurerm_role_assignment" "scheduler" {
-  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
-  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}"
 }
 
 #########################################################################
@@ -350,21 +322,10 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { tenantId                 = data.azurerm_client_config.provider.tenant_id },
-        { subscriptionId           = data.azurerm_client_config.provider.subscription_id },
-        { regionName               = module.global.regionName },
-        { binStorageHost           = module.global.binStorage.host },
-        { binStorageAuth           = module.global.binStorage.auth },
-        { renderManager            = module.global.renderManager },
-        { servicePassword          = local.servicePassword },
-        { networkResourceGroupName = data.azurerm_virtual_network.compute.resource_group_name },
-        { networkName              = data.azurerm_virtual_network.compute.name },
-        { networkSubnetName        = data.azurerm_subnet.farm.name },
-        { imageResourceGroupName   = local.imageResourceGroupName },
-        { imageGalleryName         = local.imageGalleryName },
-        { imageVersionIdDefault    = local.imageVersionIdDefault },
-        { adminUsername            = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName },
-        { adminPassword            = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword }
+        { binStorageHost  = module.global.binStorage.host },
+        { binStorageAuth  = module.global.binStorage.auth },
+        { renderManager   = module.global.renderManager },
+        { servicePassword = local.servicePassword }
       ))
     )}"
   })

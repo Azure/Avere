@@ -21,10 +21,19 @@ function AddMount {
 function EnableRenderClient {
   renderManager="$1"
   servicePassword="$2"
-  if [[ $renderManager == *RoyalRender* ]]; then
-    installType="royal-render-client"
-    serviceUser="rrService"
-    useradd -r $serviceUser -p "$servicePassword"
-    rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "$servicePassword" -fwOut 1> $installType-service.out.log 2> $installType-service.err.log
+  if [[ $renderManager == *Deadline* ]]; then
+    deadlinecommand -ChangeRepository Direct /Deadline "" ""
   fi
+  # if [[ $renderManager == *RoyalRender* ]]; then
+  #   installType="royal-render-client"
+
+  #   installPath="RoyalRender*"
+  #   installFile="rrSetup_linux"
+  #   rrRootShare="\\scheduler.content.studio\RoyalRender"
+  #   ./$installPath/$installFile -console -rrRoot $rrRootShare 1> $installType.out.log 2> $installType.err.log
+
+  #   serviceUser="rrService"
+  #   useradd -r $serviceUser -p "$servicePassword"
+  #   rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "$servicePassword" -fwOut 1> $installType-service.out.log 2> $installType-service.err.log
+  # fi
 }

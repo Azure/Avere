@@ -51,10 +51,6 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           detectionIntervalSeconds = 60
         }
-        cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
-          enable             = false
-          storageAccountName = "azstudio0"
-        }
       }
     }
     monitorExtension = {
@@ -107,10 +103,6 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           detectionIntervalSeconds = 60
         }
-        cycleCloud = { # https://learn.microsoft.com/azure/cyclecloud/overview
-          enable             = false
-          storageAccountName = "azstudio1"
-        }
       }
     }
     monitorExtension = {
@@ -139,10 +131,4 @@ computeNetwork = {
   subnetName         = ""
   resourceGroupName  = ""
   privateDnsZoneName = ""
-}
-
-computeGallery = { # Only applies if customExtension.cycleCloud.enable = true
-  name                  = ""
-  resourceGroupName     = ""
-  imageVersionIdDefault = ""
 }

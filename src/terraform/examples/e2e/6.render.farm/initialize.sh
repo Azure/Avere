@@ -11,9 +11,6 @@ source $functionsCode
 
 SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
 SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
-if [[ ${renderManager} == *RoyalRender* ]]; then
-  AddMount "${fsMount.schedulerRoyalRender}"
-fi
 if [[ ${renderManager} == *Deadline* ]]; then
   AddMount "${fsMount.schedulerDeadline}"
 fi
