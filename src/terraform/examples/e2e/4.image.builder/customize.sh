@@ -139,11 +139,9 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     $installPath/$installFile $installArgs
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    cd $schedulerBinPath
-    unzip bin.zip
-    cd $binDirectory
     echo "Customize (End): Deadline Client"
   fi
+  unzip $schedulerBinPath/bin.zip -d $schedulerBinPath
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
