@@ -339,8 +339,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/onTerminate.sh",
-                    "destination": "/tmp/onTerminate.sh"
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/terminate.sh",
+                    "destination": "/tmp/terminate.sh"
                   },
                   {
                     "type": "Shell",
@@ -389,8 +389,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/onTerminate.ps1",
-                    "destination": "C:\\Windows\\onTerminate.ps1"
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/terminate.ps1",
+                    "destination": "C:\\Windows\\terminate.ps1"
                   },
                   {
                     "type": "PowerShell",

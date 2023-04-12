@@ -25,7 +25,7 @@ echo "After=network-online.target" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
 echo "Environment=renderManager=${renderManager}" >> $servicePath
-echo "ExecStart=/bin/bash /tmp/onTerminate.sh" >> $servicePath
+echo "ExecStart=/bin/bash /tmp/terminate.sh" >> $servicePath
 echo "" >> $servicePath
 timerPath="/etc/systemd/system/scheduledEventHandler.timer"
 echo "[Unit]" > $timerPath

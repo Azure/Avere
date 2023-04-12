@@ -24,7 +24,7 @@ for ($i = 0; $i -lt $taskCount; $i++) {
   $taskName = "AAA Event Handler $i"
   $taskInterval = New-TimeSpan -Minutes 1
   $taskStart = Get-Date -Minute $nextMinute -Second ($i * ${terminateNotificationDetectionIntervalSeconds})
-  $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File C:\Windows\onTerminate.ps1"
+  $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File C:\Windows\terminate.ps1"
   $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
 }
