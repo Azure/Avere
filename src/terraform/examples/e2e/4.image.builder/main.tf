@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.4.4"
+  required_version = ">= 1.4.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.51.0"
+      version = "~>3.52.0"
     }
   }
   backend "azurerm" {
@@ -76,10 +76,15 @@ variable "imageTemplates" {
           timeoutMinutes = number
           osDiskSizeGB   = number
           renderEngines  = list(string)
+          customize      = list(string)
         }
       )
     }
   ))
+}
+
+variable "servicePassword" {
+  type = string
 }
 
 variable "computeNetwork" {
@@ -105,6 +110,12 @@ data "azurerm_key_vault" "studio" {
   count               = module.global.keyVault.name != "" ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
+}
+
+data "azurerm_key_vault_secret" "service_password" {
+  count        = module.global.keyVault.name != "" ? 1 : 0
+  name         = module.global.keyVault.secretName.servicePassword
+  key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "terraform_remote_state" "network" {
@@ -133,6 +144,7 @@ data "azurerm_subnet" "farm" {
 }
 
 locals {
+  servicePassword    = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
@@ -267,6 +279,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     "imageTemplates" = {
       value = var.imageTemplates
     }
+    "servicePassword" = {
+      value = local.servicePassword
+    }
   })
   template_content = <<TEMPLATE
     {
@@ -293,16 +308,40 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         },
         "imageTemplates": {
           "type": "array"
+        },
+        "servicePassword": {
+          "type": "string"
         }
       },
       "variables": {
-        "imageBuilderApiVersion": "2022-02-14",
+        "imageBuilderApiVersion": "2022-07-01",
         "imageGalleryApiVersion": "2022-08-03"
       },
       "functions": [
         {
           "namespace": "fx",
           "members": {
+            "GetCustomizeInlineCommands": {
+              "parameters": [
+                {
+                  "name": "osType",
+                  "type": "string"
+                },
+                {
+                  "name": "inlineCommands",
+                  "type": "array"
+                }
+              ],
+              "output": {
+                "type": "array",
+                "value": [
+                  {
+                    "type": "[if(equals(parameters('osType'), 'Windows'), 'PowerShell', 'Shell')]",
+                    "inline": "[parameters('inlineCommands')]"
+                  }
+                ]
+              }
+            },
             "GetCustomizeCommandsLinux": {
               "parameters": [
                 {
@@ -320,6 +359,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 {
                   "name": "renderManager",
                   "type": "string"
+                },
+                {
+                  "name": "servicePassword",
+                  "type": "string"
                 }
               ],
               "output": {
@@ -328,7 +371,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "#dnf -y upgrade --refresh",
                       "[concat('hostname ', parameters('imageTemplate').name)]"
                     ]
                   },
@@ -345,7 +387,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager')))))))]"
+                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword')))))))]"
                     ]
                   }
                 ]
@@ -367,6 +409,10 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 },
                 {
                   "name": "renderManager",
+                  "type": "string"
+                },
+                {
+                  "name": "servicePassword",
                   "type": "string"
                 }
               ],
@@ -395,7 +441,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[concat('C:\\Windows\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager'))))))]"
+                      "[concat('C:\\Windows\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   },
@@ -434,7 +480,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]",
               "planInfo": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Linux'), json(concat('{\"planPublisher\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher), '\", \"planProduct\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer), '\", \"planName\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku), '\"}')), json('null'))]"
             },
-            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('binStorageHost'), parameters('binStorageAuth'), parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('binStorageHost'), parameters('binStorageAuth'), parameters('renderManager')))]",
+            "customize": "[if(greater(length(parameters('imageTemplates')[copyIndex()].build.customize), 0), fx.GetCustomizeInlineCommands(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, parameters('imageTemplates')[copyIndex()].build.customize), if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('binStorageHost'), parameters('binStorageAuth'), parameters('renderManager'), parameters('servicePassword')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('binStorageHost'), parameters('binStorageAuth'), parameters('renderManager'), parameters('servicePassword'))))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {

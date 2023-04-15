@@ -8,9 +8,20 @@ variable "weka" {
       clusterName = string
       machine = object(
         {
-          size       = string
-          namePrefix = string
-          count      = number
+          size  = string
+          count = number
+          image = object(
+            {
+              id = string
+              plan = object(
+                {
+                  publisher = string
+                  product   = string
+                  name      = string
+                }
+              )
+            }
+          )
         }
       )
       network = object(
@@ -43,10 +54,37 @@ variable "weka" {
   )
 }
 
+data "terraform_remote_state" "image" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = module.global.resourceGroupName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName.terraform
+    key                  = "4.image.builder"
+  }
+}
+
+data "azurerm_virtual_machine_scale_set" "weka" {
+  count               = var.weka.clusterName != "" ? 1 : 0
+  name                = azurerm_linux_virtual_machine_scale_set.weka[0].name
+  resource_group_name = azurerm_linux_virtual_machine_scale_set.weka[0].resource_group_name
+}
+
 locals {
-  imagePublisher = "CIQ"
-  imageProduct   = "Rocky"
-  imageName      = "Rocky-8-6-Free"
+  weka = merge(var.weka, {
+    machine = {
+      size  = var.weka.machine.size
+      count = var.weka.machine.count
+      image = {
+        id = var.weka.machine.image.id
+        plan = {
+          publisher = var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
+          product   = var.weka.machine.image.plan.product != "" ? var.weka.machine.image.plan.product : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
+          name      = var.weka.machine.image.plan.name != "" ? var.weka.machine.image.plan.name : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
+        }
+      }
+    }
+  })
 }
 
 resource "azurerm_resource_group" "weka" {
@@ -69,11 +107,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   location                        = azurerm_resource_group.weka[0].location
   sku                             = var.weka.machine.size
   instances                       = var.weka.machine.count
+  source_image_id                 = var.weka.machine.image.id
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : var.weka.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
   disable_password_authentication = var.weka.adminLogin.disablePasswordAuth
-  computer_name_prefix            = var.weka.machine.namePrefix != "" ? var.weka.machine.namePrefix : null
-  custom_data                     = base64encode(templatefile("install.sh", {}))
   # proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   single_placement_group          = true
   overprovision                   = false
@@ -98,17 +135,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     create_option        = "Empty"
     lun                  = 0
   }
-  source_image_reference {
-    publisher = local.imagePublisher
-    offer     = local.imageProduct
-    sku       = local.imageName
-    version   = "Latest"
-  }
-  plan {
-    publisher = lower(local.imagePublisher)
-    product   = lower(local.imageProduct)
-    name      = lower(local.imageName)
-  }
   identity {
     type = "UserAssigned"
     identity_ids = [
@@ -124,12 +150,21 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     settings = jsonencode({
       "script": "${base64encode(
         templatefile("initialize.sh", merge(
-          { binStorageHost  = module.global.binStorage.host },
-          { binStorageAuth  = module.global.binStorage.auth },
-          { wekaClusterName = var.weka.clusterName }
+          { binStorageHost   = module.global.binStorage.host },
+          { binStorageAuth   = module.global.binStorage.auth },
+          { wekaClusterName  = var.weka.clusterName },
+          { wekaDataDiskSize = var.weka.dataDisk.sizeGB }
         ))
       )}"
     })
+  }
+  dynamic plan {
+    for_each = local.weka.machine.image.plan.name == "" ? [] : [1]
+    content {
+      publisher = local.weka.machine.image.plan.publisher
+      product   = local.weka.machine.image.plan.product
+      name      = local.weka.machine.image.plan.name
+    }
   }
   dynamic admin_ssh_key {
     for_each = var.weka.adminLogin.sshPublicKey == "" ? [] : [1]
@@ -137,6 +172,21 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
       username   = var.weka.adminLogin.userName
       public_key = var.weka.adminLogin.sshPublicKey
     }
+  }
+}
+
+resource "terraform_data" "weka" {
+  count = var.weka.clusterName != "" ? 1 : 0
+  connection {
+    type     = "ssh"
+    host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
+    user     = var.weka.adminLogin.userName
+    password = var.weka.adminLogin.userPassword
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "pwd"
+    ]
   }
 }
 

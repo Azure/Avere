@@ -57,6 +57,27 @@ containerRegistry = {
 
 imageTemplates = [
   {
+    name = "LnxStorage"
+    image = {
+      definitionName = "Linux"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType = "Storage"
+      machineSize = "Standard_L16as_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                   # GRID, AMD, CUDA and/or CUDA.OptiX
+      ]
+      outputVersion  = "0.0.0"
+      timeoutMinutes = 120
+      osDiskSizeGB   = 0
+      renderEngines = [
+      ]
+      customize = [
+        "dnf -y upgrade --refresh"
+      ]
+    }
+  },
+  {
     name = "LnxScheduler"
     image = {
       definitionName = "Linux"
@@ -67,32 +88,12 @@ imageTemplates = [
       machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      outputVersion  = "0.0.0"
+      outputVersion  = "1.0.0"
       timeoutMinutes = 120
       osDiskSizeGB   = 512
       renderEngines = [
       ]
-    }
-  },
-  {
-    name = "LnxFarmGPU"
-    image = {
-      definitionName = "Linux"
-      inputVersion   = "Latest"
-    }
-    build = {
-      machineType = "Farm"
-      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
-        "GRID"
-      ]
-      outputVersion  = "1.1.0"
-      timeoutMinutes = 240
-      osDiskSizeGB   = 1024
-      renderEngines = [
-        "PBRT",
-        "Blender",
-        # "Unreal"
+      customize = [
       ]
     }
   },
@@ -114,6 +115,32 @@ imageTemplates = [
         "PBRT",
         "Blender"
       ]
+      customize = [
+      ]
+    }
+  },
+  {
+    name = "LnxFarmGPU"
+    image = {
+      definitionName = "Linux"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType = "Farm"
+      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
+        "GRID"
+      ]
+      outputVersion  = "2.1.0"
+      timeoutMinutes = 240
+      osDiskSizeGB   = 1024
+      renderEngines = [
+        "PBRT",
+        "Blender",
+        # "Unreal"
+      ]
+      customize = [
+      ]
     }
   },
   {
@@ -128,13 +155,15 @@ imageTemplates = [
       gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
         "GRID"
       ]
-      outputVersion  = "2.0.0"
+      outputVersion  = "3.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
         "Blender",
         # "Unreal.PixelStream"
+      ]
+      customize = [
       ]
     }
   },
@@ -149,32 +178,12 @@ imageTemplates = [
       machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      outputVersion  = "0.0.0"
+      outputVersion  = "1.0.0"
       timeoutMinutes = 180
       osDiskSizeGB   = 512
       renderEngines = [
       ]
-    }
-  },
-  {
-    name = "WinFarmGPU"
-    image = {
-      definitionName = "WinFarm"
-      inputVersion   = "Latest"
-    }
-    build = {
-      machineType = "Farm"
-      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
-        "GRID"
-      ]
-      outputVersion  = "1.1.0"
-      timeoutMinutes = 420
-      osDiskSizeGB   = 1024
-      renderEngines = [
-        "PBRT",
-        "Blender",
-        # "Unreal"
+      customize = [
       ]
     }
   },
@@ -196,6 +205,32 @@ imageTemplates = [
         "PBRT",
         "Blender"
       ]
+      customize = [
+      ]
+    }
+  },
+  {
+    name = "WinFarmGPU"
+    image = {
+      definitionName = "WinFarm"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType = "Farm"
+      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
+        "GRID"
+      ]
+      outputVersion  = "2.1.0"
+      timeoutMinutes = 420
+      osDiskSizeGB   = 1024
+      renderEngines = [
+        "PBRT",
+        "Blender",
+        # "Unreal"
+      ]
+      customize = [
+      ]
     }
   },
   {
@@ -210,7 +245,7 @@ imageTemplates = [
       gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
         "GRID"
       ]
-      outputVersion  = "2.0.0"
+      outputVersion  = "3.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
@@ -218,9 +253,13 @@ imageTemplates = [
         "Blender",
         # "Unreal.PixelStream"
       ]
+      customize = [
+      ]
     }
   }
 ]
+
+servicePassword = "P@ssword1234"
 
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #

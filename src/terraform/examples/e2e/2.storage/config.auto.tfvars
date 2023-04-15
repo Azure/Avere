@@ -101,9 +101,16 @@ netAppAccount = {
 weka = {
   clusterName = "" # Alphanumeric, hyphens and periods are allowed
   machine = {
-    size       = "Standard_L16as_v3"
-    namePrefix = ""
-    count      = 6
+    size  = "Standard_L16as_v3"
+    count = 6
+    image = {
+      id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/0.0.0"
+      plan = {
+        publisher = ""
+        product   = ""
+        name      = ""
+      }
+    }
   }
   network = {
     enableAcceleratedNetworking = true
@@ -113,9 +120,9 @@ weka = {
     cachingType = "ReadWrite"
   }
   dataDisk = {
-    storageType = "StandardSSD_LRS"
+    storageType = "Premium_LRS"
     cachingType = "ReadWrite"
-    sizeGB      = 1024
+    sizeGB      = 512
   }
   adminLogin = {
     userName            = "azadmin"

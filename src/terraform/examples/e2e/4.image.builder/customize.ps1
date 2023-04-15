@@ -43,13 +43,13 @@ $binPaths += ";$binPathChoco"
 Write-Host "Customize (End): Chocolatey"
 
 Write-Host "Customize (Start): Python"
-$packageName = "python"
-Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $packageName -y" -Wait -RedirectStandardOutput "$packageName.out.log" -RedirectStandardError "$packageName.err.log"
+$installType = "python"
+Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $installType -y" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
-$packageName = "git"
-Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $packageName -y" -Wait -RedirectStandardOutput "$packageName.out.log" -RedirectStandardError "$packageName.err.log"
+$installType = "git"
+Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $installType -y" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
@@ -240,8 +240,8 @@ if ("$renderManager" -like "*Qube*") {
   $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
 
   Write-Host "Customize (Start): Strawberry Perl"
-  $packageName = "strawberryperl"
-  Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $packageName -y" -Wait -RedirectStandardOutput "$packageName.out.log" -RedirectStandardError "$packageName.err.log"
+  $installType = "strawberryperl"
+  Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $installType -y" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
   Write-Host "Customize (End): Strawberry Perl"
 
   Write-Host "Customize (Start): Qube Core"

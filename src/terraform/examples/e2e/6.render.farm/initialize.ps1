@@ -2,12 +2,9 @@ $ErrorActionPreference = "Stop"
 
 Set-Location -Path "C:\Users\Public\Downloads"
 
-$functionsData = "C:\AzureData\CustomData.bin"
-$functionsCode = "C:\AzureData\functions.ps1"
-$fileStream = New-Object System.IO.FileStream($functionsData, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
-$streamReader = New-Object System.IO.StreamReader($fileStream)
-Out-File -InputObject $streamReader.ReadToEnd() -FilePath $functionsCode -Force
-. $functionsCode
+$scriptFile = "C:\AzureData\functions.ps1"
+Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
+. $scriptFile
 
 SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
 SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"

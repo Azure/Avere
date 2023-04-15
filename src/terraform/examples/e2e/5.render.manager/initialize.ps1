@@ -2,6 +2,11 @@ $ErrorActionPreference = "Stop"
 
 Set-Location -Path "C:\Users\Public\Downloads"
 
+if ("${renderManager}" -like "*Deadline*") {
+  $installType = "deadline-database"
+  Start-Process -FilePath "sc.exe" -ArgumentList "start Deadline10DatabaseService" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
+}
+
 if ("${renderManager}" -like "*RoyalRender*") {
   $installType = "royal-render-server"
   $serviceUser = "rrService"
@@ -28,16 +33,13 @@ if ("${qubeLicense.userName}" -ne "") {
   Restart-Service -Name "qubedra"
 }
 
-$autoScaleData = "C:\AzureData\CustomData.bin"
-$autoScaleCode = "C:\AzureData\aaa-scale.ps1"
-$fileStream = New-Object System.IO.FileStream($autoScaleData, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read)
-$streamReader = New-Object System.IO.StreamReader($fileStream)
-Out-File -InputObject $streamReader.ReadToEnd() -FilePath $autoScaleCode -Force
+$scriptFile = "C:\AzureData\scale.ps1"
+Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 
 $taskName = "AAA Auto Scale"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
-$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $autoScaleCode -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"
+$taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $scriptFile -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
 if ("${autoScale.enable}" -ne "false") {
   $taskSettings = New-ScheduledTaskSettingsSet
