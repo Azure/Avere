@@ -7,18 +7,27 @@ locals {
   network_resource_group_name   = "vdbench_network_rg"
   vmss_resource_group_name      = "vdbench_vmss_rg"
 
-  // HPC Cache Throughput SKU - 3 allowed values for throughput (GB/s) of the cache
+  // HPC Cache Throughput SKU - allowed values for throughput (GB/s) of the cache
   //  Standard_2G
   //  Standard_4G
   //  Standard_8G
+  //  Standard_L4_5G 
+  //  Standard_L9G 
+  //  Standard_L16G 
+  //  Premium_5G
+  //  Premium_10G
+  //  Premium_20G
   cache_throughput = "Standard_2G"
 
-  // HPC Cache Size - 5 allowed sizes (GBs) for the cache
+  // HPC Cache Size - allowed sizes (GBs) for the cache
   //   3072
   //   6144
   //  12288
+  //  21623 - Premium 5G
   //  24576
+  //  43246 - Premium 10G
   //  49152
+  //  86491 - Premium 15G
   cache_size = 12288
 
   // unique name for cache
