@@ -836,6 +836,7 @@ function write_vdbench_files() {
     write_3node_32client_ondisk
     write_throughput
     write_smallfileIO
+    write_perf.conf
     # choose how to write the files based on node type
     if hostname -s | grep -E "000[0-9A-Fa-f]{3}$" > /dev/null ; then
         write_vmss_copy_idrsa
