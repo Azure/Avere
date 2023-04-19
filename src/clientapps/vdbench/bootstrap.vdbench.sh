@@ -38,13 +38,17 @@ ensureAzureNetwork()
     COUNTER=0
     if hostname -s | grep -E "000[0-9A-Fa-f]{3}$" > /dev/null ; then
         # these are VMSS nodes, count the VMSS nodes
+        LOCAL_IP=$(host vmss000000${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep vmss000000 | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+	IFS="." read -a IP_ARRAY <<< $LOCAL_IP
         FAILURE_COUNTER=0
         FAILURE_MAX=255
         while (( (COUNTER-FAILURE_COUNTER) < NODE_COUNT && FAILURE_COUNTER < $FAILURE_MAX )); do
             VMSS_INDEX=$COUNTER
-            VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
-            NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
-            IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+            FOURTH_OCT=$((${IP_ARRAY[3]}+$COUNTER))
+            # VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
+            # NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
+            # IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+            NODE_NAME=$(nslookup -a ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT | awk '{print $4}' | cut -d. -f1 | grep vmss)
 
             if [ $? -ne 0 ] ; then
                 FAILURE_COUNTER=$[$FAILURE_COUNTER+1]
@@ -217,9 +221,11 @@ function write_copy_idrsa() {
     echo "#!/usr/bin/env bash" > "copy_idrsa.sh"
     COUNTER=0
     while [ $COUNTER -lt $NODE_COUNT ]; do
-        NODE_NAME="${NODE_PREFIX}-${COUNTER}"
-        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
-        echo "scp -o \"StrictHostKeyChecking no\" /home/$LINUX_USER/.ssh/id_rsa ${IP}:.ssh/id_rsa" >> $FILENAME
+        LOCAL_IP=$(host vmss000000${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep vmss000000 | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+	IFS="." read -a IP_ARRAY <<< $LOCAL_IP
+	FOURTH_OCT=$((${IP_ARRAY[3]}+$COUNTER))
+        NODE_NAME=$(nslookup -a ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT | awk '{print $4}' | cut -d. -f1 | grep vmss)
+        echo "scp -o \"StrictHostKeyChecking no\" /home/$LINUX_USER/.ssh/id_rsa ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT:.ssh/id_rsa" >> $FILENAME
         COUNTER=$[$COUNTER+1]
     done
     chown $LINUX_USER:$LINUX_USER $FILENAME
@@ -235,11 +241,12 @@ EOM
     COUNTER=0
     while [ $COUNTER -lt $NODE_COUNT ]; do
         HOST_NUMBER=$(($COUNTER + 1))
-        HOST_NUMBER_HEX=$( printf '%02x' $HOST_NUMBER )
-        NODE_NAME="${NODE_PREFIX}-${COUNTER}"
-        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
-        echo "NODE NAME ${NODE_NAME}, $IP"
-        echo "hd=host${HOST_NUMBER_HEX},system=${IP}">>$FILENAME
+	LOCAL_IP=$(host vmss000000${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep vmss000000 | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+        IFS="." read -a IP_ARRAY <<< $LOCAL_IP
+	FOURTH_OCT=$((${IP_ARRAY[3]}+$COUNTER))
+        NODE_NAME=$(nslookup -a ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT | awk '{print $4}' | cut -d. -f1 | grep vmss)
+        echo "NODE NAME ${NODE_NAME}, ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT"
+        echo "hd=host${HOST_NUMBER},system=${IP}">>$FILENAME
         COUNTER=$[$COUNTER+1]
     done
     chown $LINUX_USER:$LINUX_USER $FILENAME
@@ -253,10 +260,11 @@ function write_vmss_copy_idrsa() {
     FAILURE_MAX=255
     while (( (COUNTER-FAILURE_COUNTER) < NODE_COUNT && FAILURE_COUNTER < $FAILURE_MAX )); do
         VMSS_INDEX=$COUNTER
-        VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
-        NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
-        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
-
+	LOCAL_IP=$(host vmss000000${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep vmss000000 | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+        IFS="." read -a IP_ARRAY <<< $LOCAL_IP
+	FOURTH_OCT=$((${IP_ARRAY[3]}+$COUNTER))
+        NODE_NAME=$(nslookup -a ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT | awk '{print $4}' | cut -d. -f1 | grep vmss)
+        IP=${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."${FOURTH_OCT}
         if [ $? -ne 0 ] ; then
                 FAILURE_COUNTER=$[$FAILURE_COUNTER+1]
         else
@@ -279,17 +287,21 @@ EOM
     FAILURE_MAX=255
     while (( (COUNTER-FAILURE_COUNTER) < NODE_COUNT && FAILURE_COUNTER < $FAILURE_MAX )); do
         HOST_NUMBER=$[1+($COUNTER-$FAILURE_COUNTER)]
-        HOST_NUMBER_HEX=$( printf '%02x' $HOST_NUMBER )
+	LOCAL_IP=$(host vmss000000${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep vmss000000 | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+        IFS="." read -a IP_ARRAY <<< $LOCAL_IP
+	FOURTH_OCT=$((${IP_ARRAY[3]}+$COUNTER))
+	NODE_NAME=$(nslookup -a  ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT | awk '{print $4}' | cut -d. -f1 | grep vmss)
+        # HOST_NUMBER_HEX=$( printf '%02x' $HOST_NUMBER )
         VMSS_INDEX=$COUNTER
-        VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
-        NODE_NAME="${NODE_PREFIX}${VMSS_INDEX_HEX}"
-        IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
+        # VMSS_INDEX_HEX=$( printf '%06x' $VMSS_INDEX )
+        # NODE_NAME="${NODE_PREFIX}${VMSS_INDEX}"
+        # IP=$( host ${NODE_NAME}${DNS_SUFFIX} ${HOST_DNS_SERVER} | grep ${NODE_NAME} | grep -oE '((1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])\.){3}(1?[0-9][0-9]?|2[0-4][0-9]|25[0-5])' )
 
         if [ $? -ne 0 ] ; then
                 FAILURE_COUNTER=$[$FAILURE_COUNTER+1]
         else
-                echo "NODE NAME ${NODE_NAME}, $IP"
-                echo "hd=host${HOST_NUMBER_HEX},system=${IP}">>$FILENAME
+                echo "NODE NAME ${NODE_NAME}, ${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT"
+                echo "hd=host$(seq -f "%03g" ${HOST_NUMBER} ${HOST_NUMBER}),system=${IP_ARRAY[0]}"."${IP_ARRAY[1]}"."${IP_ARRAY[2]}"."$FOURTH_OCT">>$FILENAME
         fi
         COUNTER=$[$COUNTER+1]
     done
@@ -320,8 +332,7 @@ fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=24
 fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync
 fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct
 
-rd=default,elapsed=600,fwdrate=max,interval=1,maxdata=126g
-rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=default,elapsed=600,fwdrate=max,interval=1,maxdata=126g,rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
 rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
 
 rd=writefiles1,fwd=(fwdWhost*)
@@ -378,6 +389,52 @@ rd=readall2,fwd=(fwdRhost*),format=no
 rd=writefiles3,fwd=(fwdWhost*)
 rd=writeread3,fwd=(fwdRhost*,fwdWhost*)
 rd=readall3,fwd=(fwdRhost*)
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
+function write_perf.conf() {
+    FILENAME=/home/$LINUX_USER/max_perf.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
+fsd=default,depth=1,width=1,files=64,size=32m
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd_thrp!${FSD_HOST},anchor=${MOUNT_POINT}/vdbench/!${FSD_HOST},depth=1,files=3,sizes=1g,width=1" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd_iops!${FSD_HOST},anchor=${MOUNT_POINT}/vdbench/!${FSD_HOST},depth=1,files=32,sizes=256m,width=1" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME
+fwd=format,threads=18,xfersize=512k,openflags=fsync
+fwd=fwd_thrp!host,fsd=(fsd_thrp!host*),host=!host,fileio=sequential,operation=write,openflags=directio,threads=6,xfersize=32m
+fwd=fwd_iops!host,fsd=(fsd_iops!host*),host=!host,fileio=sequential,operation=write,openflags=directio,threads=6,xfersize=32m
+fwd=fwd_rd_thrp!host,fsd=(fsd_thrp!host*),host=!host,fileio=sequential,fileselect=sequential,operation=read,openflags=o_direct,threads=9,xfersize=32m
+fwd=fwd_rd_iops!host,fsd=(fsd_iops!host*),host=!host,fileio=random,fileselect=random,operation=read,openflags=o_direct,threads=96,xfersize=4k
+fwd=fwd_wr_thrp!host,fsd=(fsd_thrp!host*),host=!host,fileio=sequential,fileselect=sequential,operation=write,openflags=o_direct,threads=6,xfersize=32m
+fwd=fwd_wr_iops!host,fsd=(fsd_iops!host*),host=!host,fileio=random,fileselect=random,operation=write,openflags=o_direct,threads=64,xfersize=4k
+
+rd=format_thrp_files,fwd=fwd_thrp*,fwdrate=max,format=yes,elapsed=2,interval=1
+rd=format_iops_files,fwd=fwd_iops*,fwdrate=max,format=yes,elapsed=2,interval=1
+rd=filesys_maxRDthrp,fwd=fwd_rd_thrp*,fwdrate=max,format=no,elapsed=120,interval=1
+rd=filesys_maxRDiops,fwd=fwd_rd_iops*,fwdrate=max,format=no,elapsed=120,interval=1
+rd=filesys_maxWRthrp,fwd=fwd_wr_thrp*,fwdrate=max,format=no,elapsed=120,interval=1
+rd=filesys_maxWRiops,fwd=fwd_wr_iops*,fwdrate=max,format=no,elapsed=120,interval=1
 EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
@@ -467,6 +524,48 @@ rd=writeread3,fwd=(fwdRhost*,fwdWhost*),format=no
 rd=readall3,fwd=(fwdRhost*),format=no,maxdata=432g
 
 rd=deleteall1=fwd(fwdRhost*),format=no,operations=(delete),maxdata=1m
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
+function write_3node_32client_inmem() {
+    FILENAME=/home/$LINUX_USER/3node_32client_inmem.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
+fsd=default,depth=1,width=1,files=38,size=21m
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/vdbench/!sizedir/!${FSD_HOST}" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME
+
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential,threads=18
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync,threads=12
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct,threads=30
+
+rd=default,elapsed=600,fwdrate=max,interval=1,maxdata=126g,rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*)
+rd=readall1,fwd=(fwdRhost*),format=no,maxdata=432g
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*)
+
+rd=writefiles2,fwd=(fwdWhost*)
+rd=readall2,fwd=(fwdRhost*),format=no,maxdata=432g
+rd=writeread2,fwd=(fwdRhost*,fwdWhost*)
+
+rd=writefiles3,fwd=(fwdWhost*)
+rd=readall3,fwd=(fwdRhost*),format=no,maxdata=432g
+rd=writeread3,fwd=(fwdRhost*,fwdWhost*)
 EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
@@ -603,6 +702,50 @@ EOM
     chown $LINUX_USER:$LINUX_USER $FILENAME
 }
 
+function write_3node_32client_ondisk() {
+    FILENAME=/home/$LINUX_USER/3node_32client_ondisk.conf
+    /bin/cat <<EOM >$FILENAME
+create_anchors=yes
+include=azure-clients.conf
+
+fsd=default,depth=1,width=1,files=180,size=32m
+EOM
+
+    COUNTER=0
+    for VFXT in $(echo $NFS_IP_CSV | sed "s/,/ /g")
+    do
+        MOUNT_POINT="${BASE_DIR}${NODE_MOUNT_PREFIX}${COUNTER}"
+        FSD_HOST="host-${COUNTER}"
+        echo "fsd=fsd!${FSD_HOST},anchor=${MOUNT_POINT}/!junction/!sizedir/!${FSD_HOST}" >> $FILENAME
+        COUNTER=$(($COUNTER + 1))
+    done
+
+    /bin/cat <<EOM >>$FILENAME
+
+fwd=format,threads=18,xfersize=512k,openflags=fsync
+fwd=default,xfersize=512k,fileio=sequential,fileselect=sequential
+fwd=fwdW!host,host=!host,fsd=(fsd!host*),operation=write,openflags=fsync,threads=18
+fwd=fwdR!host,host=!host,fsd=(fsd!host*),operation=read,openflags=o_direct,threads=30
+
+rd=default,elapsed=10800,fwdrate=max,interval=1,maxdata=202.5g
+rd=makedirs1,fwd=(fwdWhost*),operations=(mkdir),maxdata=1m
+rd=makefiles1,fwd=(fwdWhost*),operations=(create),maxdata=1m
+
+rd=writefiles1,fwd=(fwdWhost*)
+rd=readall1,fwd=(fwdRhost*)
+rd=writeread1,fwd=(fwdRhost*,fwdWhost*)
+
+rd=writefiles2,fwd=(fwdWhost*)
+rd=readall2,fwd=(fwdRhost*)
+rd=writeread2,fwd=(fwdRhost*,fwdWhost*)
+
+rd=writefiles3,fwd=(fwdWhost*)
+rd=readall3,fwd=(fwdRhost*)
+rd=writeread3,fwd=(fwdRhost*,fwdWhost*)
+EOM
+    chown $LINUX_USER:$LINUX_USER $FILENAME
+}
+
 function write_throughput() {
     FILENAME=/home/$LINUX_USER/throughput.conf
     /bin/cat <<EOM >$FILENAME
@@ -686,9 +829,11 @@ function write_vdbench_files() {
     write_inmem
     write_3node_inmem32
     write_6node_inmem32
+    write_3node_32client_inmem
     write_ondisk
     write_3node_32_ondisk
     write_6node_32_ondisk
+    write_3node_32client_ondisk
     write_throughput
     write_smallfileIO
     # choose how to write the files based on node type
