@@ -18,6 +18,11 @@ storageAccounts = [
         name           = "data"
         rootAcl        = "user::rwx,group::rwx,other::rwx"
         rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
+      },
+      {
+        name           = "weka"
+        rootAcl        = "user::rwx,group::rwx,other::rwx"
+        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
       }
     ]
     fileShares = [                            # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
@@ -99,9 +104,12 @@ netAppAccount = {
 #######################################################################################################
 
 weka = {
-  clusterName = "" # Alphanumeric, hyphens and periods are allowed
+  name = {
+    resource = ""
+    display  = "Azure Artist Anywhere"
+  }
   machine = {
-    size  = "Standard_L16as_v3"
+    size  = "Standard_L8as_v3"
     count = 6
     image = {
       id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/0.0.0"
@@ -113,7 +121,19 @@ weka = {
     }
   }
   network = {
-    enableAcceleratedNetworking = true
+    subnet = {
+      range = "10.1.192.64-127"
+      mask  = 26
+    }
+    enableAcceleration = false
+  }
+  objectTier = {
+    percent = 80
+    storage = {
+      accountName   = ""
+      accountKey    = ""
+      containerName = "weka"
+    }
   }
   osDisk = {
     storageType = "Premium_LRS"
@@ -122,14 +142,22 @@ weka = {
   dataDisk = {
     storageType = "Premium_LRS"
     cachingType = "ReadWrite"
-    sizeGB      = 512
+    sizeGB      = 256
+  }
+  dataProtection = {
+    level       = 2
+    hotSpare    = 1
+    stripeWidth = 0
   }
   adminLogin = {
-    userName            = "azadmin"
-    userPassword        = "P@ssword1234"
-    sshPublicKey        = "" # "ssh-rsa ..."
-    disablePasswordAuth = false
+    userName     = "azadmin"
+    userPassword = "P@ssword1234"
+    sshPublicKey = "" # "ssh-rsa ..."
+    passwordAuth = {
+      disable = false
+    }
   }
+  multiContainerMode = false
 }
 
 #######################################################################################################
@@ -137,7 +165,10 @@ weka = {
 #######################################################################################################
 
 hammerspace = {
-  clusterName = "" # Alphanumeric, hyphens and periods are allowed
+  name = {
+    resource = ""
+    display  = "Azure Artist Anywhere"
+  }
 }
 
 ####################################################################################################

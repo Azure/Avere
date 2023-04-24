@@ -7,13 +7,17 @@ variable "vfxtCache" {
     {
       cluster = object(
         {
-          nodeSize       = number
-          nodeCount      = number
-          adminUsername  = string
-          adminPassword  = string
-          sshPublicKey   = string
-          imageId        = string
-          customSettings = list(string)
+          nodeSize      = number
+          nodeCount     = number
+          adminUsername = string
+          adminPassword = string
+          sshPublicKey  = string
+          imageId = object(
+            {
+              controller = string
+              node       = string
+            }
+          )
         }
       )
       support = object(
@@ -93,6 +97,7 @@ module "vfxt_controller" {
   virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
   static_ip_address                 = local.vfxtControllerAddress
+  image_id                          = var.vfxtCache.cluster.imageId.controller
   depends_on = [
     azurerm_resource_group.cache,
     # azurerm_role_assignment.managed_identity,
@@ -109,8 +114,6 @@ resource "avere_vfxt" "cache" {
   vfxt_cluster_name               = lower(var.cacheName)
   azure_resource_group            = var.resourceGroupName
   location                        = module.global.regionName
-  image_id                        = var.vfxtCache.cluster.imageId
-  node_size                       = var.enableDevMode ? "unsupported_test_SKU" : "prod_sku"
   node_cache_size                 = var.vfxtCache.cluster.nodeSize
   vfxt_node_count                 = var.vfxtCache.cluster.nodeCount
   azure_network_name              = data.azurerm_virtual_network.compute.name
@@ -127,10 +130,11 @@ resource "avere_vfxt" "cache" {
   enable_secure_proactive_support = var.vfxtCache.support.enableProactive
   enable_rolling_trace_data       = var.vfxtCache.support.rollingTraceFlag != ""
   rolling_trace_flag              = var.vfxtCache.support.rollingTraceFlag
-  global_custom_settings          = var.vfxtCache.cluster.customSettings
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount
   timezone                        = var.vfxtCache.localTimezone
+  image_id                        = var.vfxtCache.cluster.imageId.node
+  node_size                       = var.enableDevMode ? "unsupported_test_SKU" : "prod_sku"
   dynamic core_filer {
     for_each = {
       for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if storageTargetNfs.name != ""
@@ -140,7 +144,6 @@ resource "avere_vfxt" "cache" {
       fqdn_or_primary_ip        = core_filer.value["storageHost"]
       cache_policy              = core_filer.value["vfxtCache"].cachePolicy
       nfs_connection_multiplier = core_filer.value["vfxtCache"].nfsConnections
-      custom_settings           = core_filer.value["vfxtCache"].customSettings
       dynamic junction {
         for_each = core_filer.value["namespaceJunctions"]
         content {

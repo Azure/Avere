@@ -5,7 +5,12 @@
 variable "hammerspace" {
   type = object(
     {
-      clusterName = string
+      name = object(
+        {
+          resource = string
+          display  = string
+        }
+      )
     }
   )
 }

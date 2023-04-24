@@ -19,7 +19,7 @@ virtualMachines = [
       }
     }
     network = {
-      enableAcceleratedNetworking = true
+      enableAcceleration = true
     }
     operatingSystem = {
       type = "Linux"
@@ -29,10 +29,12 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
-      userPassword        = "P@ssword1234"
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
     }
     customExtension = {
       enable   = true
@@ -71,7 +73,7 @@ virtualMachines = [
       }
     }
     network = {
-      enableAcceleratedNetworking = true
+      enableAcceleration = true
     }
     operatingSystem = {
       type = "Windows"
@@ -81,10 +83,12 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
-      userPassword        = "P@ssword1234"
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
     }
     customExtension = {
       enable   = true

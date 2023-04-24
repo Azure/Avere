@@ -5,7 +5,12 @@
 variable "weka" {
   type = object(
     {
-      clusterName = string
+      name = object(
+        {
+          resource = string
+          display  = string
+        }
+      )
       machine = object(
         {
           size  = string
@@ -26,7 +31,25 @@ variable "weka" {
       )
       network = object(
         {
-          enableAcceleratedNetworking = bool
+          subnet = object(
+            {
+              range = string
+              mask  = number
+            }
+          )
+          enableAcceleration = bool
+        }
+      )
+      objectTier = object(
+        {
+          percent = number
+          storage = object(
+            {
+              accountName   = string
+              accountKey    = string
+              containerName = string
+            }
+          )
         }
       )
       osDisk = object(
@@ -42,67 +65,118 @@ variable "weka" {
           sizeGB      = number
         }
       )
-      adminLogin = object(
+      dataProtection = object(
         {
-          userName            = string
-          userPassword        = string
-          sshPublicKey        = string
-          disablePasswordAuth = bool
+          level       = number
+          hotSpare    = number
+          stripeWidth = number
         }
       )
+      adminLogin = object(
+        {
+          userName     = string
+          userPassword = string
+          sshPublicKey = string
+          passwordAuth = object(
+            {
+              disable = bool
+            }
+          )
+        }
+      )
+      multiContainerMode = bool
     }
   )
 }
 
-data "terraform_remote_state" "image" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "4.image.builder"
-  }
-}
-
 data "azurerm_virtual_machine_scale_set" "weka" {
-  count               = var.weka.clusterName != "" ? 1 : 0
+  count               = local.wekaCount
   name                = azurerm_linux_virtual_machine_scale_set.weka[0].name
   resource_group_name = azurerm_linux_virtual_machine_scale_set.weka[0].resource_group_name
 }
 
 locals {
-  weka = merge(var.weka, {
-    machine = {
-      size  = var.weka.machine.size
-      count = var.weka.machine.count
-      image = {
-        id = var.weka.machine.image.id
-        plan = {
-          publisher = var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
-          product   = var.weka.machine.image.plan.product != "" ? var.weka.machine.image.plan.product : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
-          name      = var.weka.machine.image.plan.name != "" ? var.weka.machine.image.plan.name : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
-        }
-      }
+  wekaCount = var.weka.name.resource != "" ? 1 : 0
+  wekaImage = {
+    id = var.weka.machine.image.id
+    plan = {
+      publisher = var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
+      product   = var.weka.machine.image.plan.product != "" ? var.weka.machine.image.plan.product : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
+      name      = var.weka.machine.image.plan.name != "" ? var.weka.machine.image.plan.name : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
+    }
+  }
+  wekaObjectTier = merge(var.weka.objectTier, {
+    storage = {
+      accountName   = var.weka.objectTier.storage.accountName != "" ? var.weka.objectTier.storage.accountName : data.azurerm_storage_account.blob.name
+      accountKey    = var.weka.objectTier.storage.accountKey != "" ? var.weka.objectTier.storage.accountKey : data.azurerm_storage_account.blob.secondary_access_key
+      containerName = var.weka.objectTier.storage.containerName != "" ? var.weka.objectTier.storage.containerName : "weka"
     }
   })
+  wekaNetworkSubnet = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
+  wekaMachineSize   = trimsuffix(trimsuffix(trimprefix(var.weka.machine.size, "Standard_"), "as_v3"), "s_v3")
+  wekaContainerSize = local.wekaContainerSizes[local.wekaMachineSize]
+  wekaContainerSizes = {
+    L8 = <<-json
+      '{
+        "nvmeDisk"     : 1,
+        "coreDrives"   : 1,
+        "coreCompute"  : 1,
+        "coreFrontend" : 1,
+        "memory"       : "31GB"
+      }'
+    json
+    L16 = <<-json
+      '{
+        "nvmeDisk"     : 2,
+        "coreDrives"   : 2,
+        "coreCompute"  : 4,
+        "coreFrontend" : 1,
+        "memory"       : "72GB"
+      }'
+    json
+    L32 = <<-json
+      '{
+        "nvmeDisk"     : 4,
+        "coreDrives"   : 2,
+        "coreCompute"  : 4,
+        "coreFrontend" : 1,
+        "memory"       : "189GB"
+      }'
+    json
+    L48 = <<-json
+      '{
+        "nvmeDisk"     : 6,
+        "coreDrives"   : 3,
+        "coreCompute"  : 3,
+        "coreFrontend" : 1,
+        "memory"       : "306GB"
+      }'
+    json
+  }
+  wekaStripWidth     = var.weka.dataProtection.stripeWidth >= 3 && var.weka.dataProtection.stripeWidth <= 16 ? var.weka.dataProtection.stripeWidth : var.weka.machine.count - var.weka.dataProtection.level - 1
+  wekaDataProtection = merge(var.weka.dataProtection,
+    {
+      stripeWidth = local.wekaStripWidth < 16 ? local.wekaStripWidth : 16
+    }
+  )
 }
 
 resource "azurerm_resource_group" "weka" {
-  count    = var.weka.clusterName != "" ? 1 : 0
+  count    = local.wekaCount
   name     = "${var.resourceGroupName}.Weka"
   location = azurerm_resource_group.storage.location
 }
 
-# resource "azurerm_proximity_placement_group" "weka" {
-#   count               = var.weka.clusterName != "" ? 1 : 0
-#   name                = var.weka.clusterName
-#   resource_group_name = azurerm_resource_group.weka[0].name
-#   location            = azurerm_resource_group.weka[0].location
-# }
+resource "azurerm_proximity_placement_group" "weka" {
+  count               = local.wekaCount
+  name                = var.weka.name.resource
+  resource_group_name = azurerm_resource_group.weka[0].name
+  location            = azurerm_resource_group.weka[0].location
+}
 
 resource "azurerm_linux_virtual_machine_scale_set" "weka" {
-  count                           = var.weka.clusterName != "" ? 1 : 0
-  name                            = var.weka.clusterName
+  count                           = local.wekaCount
+  name                            = var.weka.name.resource
   resource_group_name             = azurerm_resource_group.weka[0].name
   location                        = azurerm_resource_group.weka[0].location
   sku                             = var.weka.machine.size
@@ -110,8 +184,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   source_image_id                 = var.weka.machine.image.id
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : var.weka.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
-  disable_password_authentication = var.weka.adminLogin.disablePasswordAuth
-  # proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
+  disable_password_authentication = var.weka.adminLogin.passwordAuth.disable
+  proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   single_placement_group          = true
   overprovision                   = false
   network_interface {
@@ -120,9 +194,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     ip_configuration {
       name      = "ipConfig"
       primary   = true
-      subnet_id = try(data.azurerm_subnet.storage_primary[0].id, data.azurerm_subnet.compute_storage.id)
+      subnet_id = local.wekaNetworkSubnet.id
     }
-    enable_accelerated_networking = var.weka.network.enableAcceleratedNetworking
+    enable_accelerated_networking = var.weka.network.enableAcceleration
   }
   os_disk {
     storage_account_type = var.weka.osDisk.storageType
@@ -150,24 +224,30 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     settings = jsonencode({
       "script": "${base64encode(
         templatefile("initialize.sh", merge(
-          { binStorageHost   = module.global.binStorage.host },
-          { binStorageAuth   = module.global.binStorage.auth },
-          { wekaClusterName  = var.weka.clusterName },
-          { wekaDataDiskSize = var.weka.dataDisk.sizeGB }
+          {wekaVersion            = "4.1.0.77"},
+          {wekaResourceName       = var.weka.name.resource},
+          {wekaNetwork            = var.weka.network},
+          {wekaMachineSize        = var.weka.machine.size},
+          {wekaDataDiskSize       = var.weka.dataDisk.sizeGB},
+          {wekaDataProtection     = local.wekaDataProtection},
+          {wekaContainerSize      = local.wekaContainerSize},
+          {wekaMultiContainerMode = var.weka.multiContainerMode},
+          {binStorageHost         = module.global.binStorage.host},
+          {binStorageAuth         = module.global.binStorage.auth}
         ))
       )}"
     })
   }
   dynamic plan {
-    for_each = local.weka.machine.image.plan.name == "" ? [] : [1]
+    for_each = local.wekaImage.plan.name != "" ? [1] : []
     content {
-      publisher = local.weka.machine.image.plan.publisher
-      product   = local.weka.machine.image.plan.product
-      name      = local.weka.machine.image.plan.name
+      publisher = local.wekaImage.plan.publisher
+      product   = local.wekaImage.plan.product
+      name      = local.wekaImage.plan.name
     }
   }
   dynamic admin_ssh_key {
-    for_each = var.weka.adminLogin.sshPublicKey == "" ? [] : [1]
+    for_each = var.weka.adminLogin.sshPublicKey != "" ? [1] : []
     content {
       username   = var.weka.adminLogin.userName
       public_key = var.weka.adminLogin.sshPublicKey
@@ -176,7 +256,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
 }
 
 resource "terraform_data" "weka" {
-  count = var.weka.clusterName != "" ? 1 : 0
+  count = local.wekaCount
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
@@ -185,11 +265,48 @@ resource "terraform_data" "weka" {
   }
   provisioner "remote-exec" {
     inline = [
-      "pwd"
+      "weka cluster create ${azurerm_linux_virtual_machine_scale_set.weka[0].name}{000000..${format("%06d", var.weka.machine.count - 1)}} --admin-password ${var.weka.adminLogin.userPassword}",
+      "weka user login admin ${var.weka.adminLogin.userPassword}",
+      "weka cluster update --cluster-name='${var.weka.name.display}'",
+      "weka cluster default-net set --range ${var.weka.network.subnet.range} --netmask-bits ${var.weka.network.subnet.mask}",
+      "containerSize=${local.wekaContainerSize}",
+      "coreCountDrives=$(echo $containerSize | jq -r .coreDrives)",
+      "coreCountCompute=$(echo $containerSize | jq -r .coreCompute)",
+      "coreCountFrontend=$(echo $containerSize | jq -r .coreFrontend)",
+      "for (( i=0; i<${var.weka.machine.count}; i++ )); do",
+      "  containerId=$i",
+      "  containerSize=${local.wekaContainerSize}",
+      "  nvmeDisk=$(echo $containerSize | jq -r .nvmeDisk)",
+      "  clusterHost=${azurerm_linux_virtual_machine_scale_set.weka[0].name}$(printf %06d $i)",
+      "  for (( d=0; d<$nvmeDisk; d++ )); do",
+      "    weka cluster drive add $containerId --HOST $clusterHost /dev/nvme$(echo $d)n1",
+      "  done",
+      "  containerCores=$(($coreCountDrives + $coreCountCompute + $coreCountFrontend))",
+      "  weka cluster container cores $containerId $containerCores",
+      "done",
+      "weka cluster container apply --all --force",
+      "sleep 30s",
+      "weka cloud enable",
+      "weka cluster update --data-drives ${local.wekaDataProtection.stripeWidth} --parity-drives ${local.wekaDataProtection.level}",
+      "weka cluster hot-spare ${local.wekaDataProtection.hotSpare}",
+      "weka cluster start-io",
+      "ioStatus=$(weka status --json | jq -r .io_status)",
+      "if [ \"$ioStatus\" == \"STARTED\" ]; then",
+      "  fsName=default",
+      "  fsGroupName=default",
+      "  fsContainerName=${local.wekaObjectTier.storage.containerName}",
+      "  fsDriveBytes=$(weka status --json | jq -r .capacity.unprovisioned_bytes)",
+      "  fsTotalBytes=$(($fsDriveBytes * 100 / (100 - ${local.wekaObjectTier.percent})))",
+      "  weka fs tier s3 add $fsContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
+      "  weka fs group create $fsGroupName",
+      "  weka fs create $fsName $fsGroupName \"$fsTotalBytes\"B --obs-name $fsContainerName --ssd-capacity \"$fsDriveBytes\"B",
+      "fi",
+      "weka status",
+      "weka alerts"
     ]
   }
 }
 
 output "resourceGroupNameWeka" {
-  value = var.weka.clusterName == "" ? "" : azurerm_resource_group.weka[0].name
+  value = local.wekaCount == 0 ? "" : azurerm_resource_group.weka[0].name
 }

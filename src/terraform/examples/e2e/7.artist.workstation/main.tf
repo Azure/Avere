@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.52.0"
+      version = "~>3.53.0"
     }
   }
   backend "azurerm" {
@@ -55,7 +55,7 @@ variable "virtualMachines" {
       )
       network = object(
         {
-          enableAcceleratedNetworking = bool
+          enableAcceleration = bool
         }
       )
       operatingSystem = object(
@@ -71,10 +71,14 @@ variable "virtualMachines" {
       )
       adminLogin = object(
         {
-          userName            = string
-          userPassword        = string
-          sshPublicKey        = string
-          disablePasswordAuth = bool
+          userName     = string
+          userPassword = string
+          sshPublicKey = string
+          passwordAuth = object(
+            {
+              disable = bool
+            }
+          )
         }
       )
       customExtension = object(
@@ -229,7 +233,7 @@ resource "azurerm_network_interface" "workstation" {
     subnet_id                     = data.azurerm_subnet.workstation.id
     private_ip_address_allocation = "Dynamic"
   }
-  enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
+  enable_accelerated_networking = each.value.network.enableAcceleration
 }
 
 resource "azurerm_linux_virtual_machine" "workstation" {
@@ -243,7 +247,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   source_image_id                 = each.value.machine.image.id
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
-  disable_password_authentication = each.value.adminLogin.disablePasswordAuth
+  disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
@@ -258,7 +262,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     ]
   }
   dynamic plan {
-    for_each = each.value.machine.image.plan.name == "" ? [] : [1]
+    for_each = each.value.machine.image.plan.name != "" ? [1] : []
     content {
       publisher = each.value.machine.image.plan.publisher
       product   = each.value.machine.image.plan.product
@@ -266,7 +270,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     }
   }
   dynamic admin_ssh_key {
-    for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
+    for_each = each.value.adminLogin.sshPublicKey != "" ? [1] : []
     content {
       username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
@@ -290,8 +294,8 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   settings = jsonencode({
     "script": "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager   = module.global.renderManager },
-        { servicePassword = local.servicePassword }
+        {renderManager   = module.global.renderManager},
+        {servicePassword = local.servicePassword}
       ))
     )}"
   })
@@ -364,8 +368,8 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   settings = jsonencode({
     "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-        { renderManager   = module.global.renderManager },
-        { servicePassword = local.servicePassword }
+        {renderManager   = module.global.renderManager},
+        {servicePassword = local.servicePassword}
       )), "UTF-16LE"
     )}"
   })

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.52.0"
+      version = "~>3.53.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -102,6 +102,16 @@ data "terraform_remote_state" "network" {
   }
 }
 
+data "terraform_remote_state" "image" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = module.global.resourceGroupName
+    storage_account_name = module.global.rootStorage.accountName
+    container_name       = module.global.rootStorage.containerName.terraform
+    key                  = "4.image.builder"
+  }
+}
+
 data "azurerm_resource_group" "network" {
   name = data.azurerm_virtual_network.compute.resource_group_name
 }
@@ -141,6 +151,11 @@ locals {
   stateExistsNetwork = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
+resource "azurerm_resource_group" "storage" {
+  name     = var.resourceGroupName
+  location = try(data.azurerm_virtual_network.storage[0].location, data.azurerm_virtual_network.compute.location)
+}
+
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = azurerm_resource_group.storage.name
 }

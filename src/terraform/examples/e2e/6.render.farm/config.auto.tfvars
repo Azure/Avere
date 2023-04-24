@@ -20,7 +20,7 @@ virtualMachineScaleSets = [
       }
     }
     network = {
-      enableAcceleratedNetworking = true
+      enableAcceleration = true
     }
     operatingSystem = {
       type = "Linux"
@@ -34,10 +34,12 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
-      userPassword        = "P@ssword1234"
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
     }
     customExtension = {
       enable   = true
@@ -85,7 +87,7 @@ virtualMachineScaleSets = [
       }
     }
     network = {
-      enableAcceleratedNetworking = true
+      enableAcceleration = true
     }
     operatingSystem = {
       type = "Linux"
@@ -99,10 +101,12 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
-      userPassword        = "P@ssword1234"
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
     }
     customExtension = {
       enable   = true
@@ -150,7 +154,7 @@ virtualMachineScaleSets = [
       }
     }
     network = {
-      enableAcceleratedNetworking = true
+      enableAcceleration = true
     }
     operatingSystem = {
       type = "Windows"
@@ -164,10 +168,12 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
-      userPassword        = "P@ssword1234"
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
     }
     customExtension = {
       enable   = true
@@ -215,7 +221,7 @@ virtualMachineScaleSets = [
       }
     }
     network = {
-      enableAcceleratedNetworking = true
+      enableAcceleration = true
     }
     operatingSystem = {
       type = "Windows"
@@ -229,10 +235,12 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName            = "azadmin"
-      userPassword        = "P@ssword1234"
-      sshPublicKey        = "" # "ssh-rsa ..."
-      disablePasswordAuth = false
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
     }
     customExtension = {
       enable   = true

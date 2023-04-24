@@ -42,9 +42,10 @@ vfxtCache = {
     adminUsername = "azadmin"
     adminPassword = "P@ssword1234"
     sshPublicKey  = ""
-    imageId       = ""
-    customSettings = [
-    ]
+    imageId = {
+      controller = ""
+      node       = ""
+    }
   }
   support = {                    # https://privacy.microsoft.com/privacystatement
     companyName      = ""        # https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#support_uploads_company_name

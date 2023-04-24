@@ -38,6 +38,11 @@ variable "storageAccounts" {
   ))
 }
 
+data "azurerm_storage_account" "blob" {
+  name                = var.storageAccounts[0].name
+  resource_group_name = azurerm_resource_group.storage.name
+}
+
 locals {
   serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
   blobContainers = flatten([
@@ -63,11 +68,6 @@ locals {
       }
     ]
   ])
-}
-
-resource "azurerm_resource_group" "storage" {
-  name     = var.resourceGroupName
-  location = try(data.azurerm_virtual_network.storage[0].location, data.azurerm_virtual_network.compute.location)
 }
 
 resource "azurerm_storage_account" "storage" {

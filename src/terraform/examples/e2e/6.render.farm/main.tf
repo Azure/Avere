@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.52.0"
+      version = "~>3.53.0"
     }
   }
   backend "azurerm" {
@@ -56,7 +56,7 @@ variable "virtualMachineScaleSets" {
       )
       network = object(
         {
-          enableAcceleratedNetworking = bool
+          enableAcceleration = bool
         }
       )
       operatingSystem = object(
@@ -78,10 +78,14 @@ variable "virtualMachineScaleSets" {
       )
       adminLogin = object(
         {
-          userName            = string
-          userPassword        = string
-          sshPublicKey        = string
-          disablePasswordAuth = bool
+          userName     = string
+          userPassword = string
+          sshPublicKey = string
+          passwordAuth = object(
+            {
+              disable = bool
+            }
+          )
         }
       )
       customExtension = object(
@@ -255,7 +259,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   source_image_id                 = each.value.machine.image.id
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
-  disable_password_authentication = each.value.adminLogin.disablePasswordAuth
+  disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   priority                        = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
   single_placement_group          = false
@@ -268,7 +272,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
-    enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
+    enable_accelerated_networking = each.value.network.enableAcceleration
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -288,7 +292,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     ]
   }
   dynamic plan {
-    for_each = each.value.machine.image.plan.name == "" ? [] : [1]
+    for_each = each.value.machine.image.plan.name != "" ? [1] : []
     content {
       publisher = each.value.machine.image.plan.publisher
       product   = each.value.machine.image.plan.product
@@ -296,7 +300,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic admin_ssh_key {
-    for_each = each.value.adminLogin.sshPublicKey == "" ? [] : [1]
+    for_each = each.value.adminLogin.sshPublicKey != "" ? [1] : []
     content {
       username   = each.value.adminLogin.userName
       public_key = each.value.adminLogin.sshPublicKey
@@ -313,9 +317,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "script": "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager                                 = module.global.renderManager },
-            { servicePassword                               = local.servicePassword },
-            { terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds }
+            {renderManager                                 = module.global.renderManager},
+            {servicePassword                               = local.servicePassword},
+            {terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds}
           ))
         )}"
       })
@@ -371,7 +375,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       primary   = true
       subnet_id = data.azurerm_subnet.farm.id
     }
-    enable_accelerated_networking = each.value.network.enableAcceleratedNetworking
+    enable_accelerated_networking = each.value.network.enableAcceleration
   }
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -401,9 +405,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            { renderManager                                 = module.global.renderManager },
-            { servicePassword                               = local.servicePassword },
-            { terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds }
+            {renderManager                                 = module.global.renderManager},
+            {servicePassword                               = local.servicePassword},
+            {terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds}
           )), "UTF-16LE"
         )}"
       })

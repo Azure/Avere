@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.52.0"
+      version = "~>3.53.0"
     }
   }
   backend "azurerm" {
@@ -218,31 +218,31 @@ data "azurerm_log_analytics_workspace" "studio" {
 
 locals {
   computeNetwork = var.computeNetwork.regionName != "" ? var.computeNetwork : merge(var.computeNetwork,
-    { regionName = module.global.regionName }
+    {regionName = module.global.regionName}
   )
   storageNetwork = var.storageNetwork.regionName != "" ? var.storageNetwork : merge(var.storageNetwork,
-    { regionName = module.global.regionName }
+    {regionName = module.global.regionName}
   )
   computeNetworkSubnets = [
     for virtualNetworkSubnet in local.computeNetwork.subnets : merge(virtualNetworkSubnet,
-      { virtualNetworkName = local.computeNetwork.name }
+      {virtualNetworkName = local.computeNetwork.name}
     ) if virtualNetworkSubnet.name != "GatewaySubnet"
   ]
   storageNetworkSubnets = [
     for virtualNetworkSubnet in local.storageNetwork.subnets : merge(virtualNetworkSubnet,
-      { virtualNetworkName = local.storageNetwork.name }
+      {virtualNetworkName = local.storageNetwork.name}
     ) if virtualNetworkSubnet.name != "GatewaySubnet" && local.storageNetwork.name != ""
   ]
   computeStorageSubnet = merge(local.computeNetwork.subnets[local.computeNetwork.subnetIndex.storage],
-    { virtualNetworkName = local.computeNetwork.name }
+    {virtualNetworkName = local.computeNetwork.name}
   )
   storageSubnets  = setunion(local.storageNetworkSubnets, [local.computeStorageSubnet])
   virtualNetworks = distinct(local.storageNetwork.name == "" ? [local.computeNetwork, local.computeNetwork] : [local.computeNetwork, local.storageNetwork])
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for virtualNetworkSubnet in virtualNetwork.subnets : merge(virtualNetworkSubnet,
-        { virtualNetworkName = virtualNetwork.name },
-        { regionName         = virtualNetwork.regionName }
+        {virtualNetworkName = virtualNetwork.name},
+        {regionName         = virtualNetwork.regionName}
       )
     ]
   ])

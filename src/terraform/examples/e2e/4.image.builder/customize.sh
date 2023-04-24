@@ -13,6 +13,7 @@ renderManager=$(echo $buildConfig | jq -r .renderManager)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
 binStorageHost=$(echo $buildConfig | jq -r .binStorageHost)
 binStorageAuth=$(echo $buildConfig | jq -r .binStorageAuth)
+servicePassword=$(echo $buildConfig | jq -r .servicePassword)
 echo "Machine Type: $machineType"
 echo "GPU Platform: $gpuPlatform"
 echo "Render Manager: $renderManager"
@@ -27,6 +28,7 @@ dnf -y install gcc gcc-c++
 dnf -y install unzip
 dnf -y install cmake
 dnf -y install make
+dnf -y install lsof
 dnf -y install git
 echo "Customize (End): Image Build Platform"
 
@@ -89,12 +91,13 @@ if [[ $renderManager == *Deadline* ]]; then
   schedulerInstallRoot="/Deadline"
   schedulerDatabaseHost=$(hostname)
   schedulerDatabasePort=27017
+  schedulerDatabaseUser="dbService"
   schedulerBinPath="$schedulerInstallRoot/bin/Linux"
   binPaths="$binPaths:$schedulerBinPath"
 
   echo "Customize (Start): Deadline Download"
   installFile="Deadline-$schedulerVersion-linux-installers.tar"
-  installPath=$(echo $installFile | cut -d"." -f1,2,3,4)
+  installPath=$(echo ${installFile%.tar})
   downloadUrl="$binStorageHost/Deadline/$schedulerVersion/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   mkdir $installPath
@@ -118,6 +121,15 @@ if [[ $renderManager == *Deadline* ]]; then
     sed -i "s/#security:/security:/" $mongoConfigFile
     sed -i "/security:/a\  authorization: disabled" $mongoConfigFile
     systemctl --now enable mongod
+    # mongoCreateUserFile="mongo-create-user.js"
+    # echo "db = db.getSiblingDB(\"admin\");" > $mongoCreateUserFile
+    # echo "db.createUser({" >> $mongoCreateUserFile
+    # echo "user: \"$schedulerDatabaseUser\"," >> $mongoCreateUserFile
+    # echo "pwd: \"$servicePassword\"," >> $mongoCreateUserFile
+    # echo "roles: [" >> $mongoCreateUserFile
+    # echo "{ role: \"root\", db: \"admin\" }" >> $mongoCreateUserFile
+    # echo "]})" >> $mongoCreateUserFile
+    # mongo $mongoCreateUserFile
     echo "Customize (End): Mongo DB"
 
     echo "Customize (Start): Deadline Server"
