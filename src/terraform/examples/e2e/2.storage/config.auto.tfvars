@@ -135,6 +135,11 @@ weka = {
       containerName = "weka"
     }
   }
+  fileSystem = {
+    name         = "default"
+    groupName    = "default"
+    authRequired = false
+  }
   osDisk = {
     storageType = "Premium_LRS"
     cachingType = "ReadWrite"
@@ -157,7 +162,7 @@ weka = {
       disable = false
     }
   }
-  multiContainerMode = false
+  enableSupportCloud = true
 }
 
 #######################################################################################################

@@ -52,6 +52,13 @@ variable "weka" {
           )
         }
       )
+      fileSystem = object(
+        {
+          name         = string
+          groupName    = string
+          authRequired = bool
+        }
+      )
       osDisk = object(
         {
           storageType = string
@@ -84,7 +91,7 @@ variable "weka" {
           )
         }
       )
-      multiContainerMode = bool
+      enableSupportCloud = bool
     }
   )
 }
@@ -155,9 +162,7 @@ locals {
   }
   wekaStripWidth     = var.weka.dataProtection.stripeWidth >= 3 && var.weka.dataProtection.stripeWidth <= 16 ? var.weka.dataProtection.stripeWidth : var.weka.machine.count - var.weka.dataProtection.level - 1
   wekaDataProtection = merge(var.weka.dataProtection,
-    {
-      stripeWidth = local.wekaStripWidth < 16 ? local.wekaStripWidth : 16
-    }
+    {stripeWidth = local.wekaStripWidth < 16 ? local.wekaStripWidth : 16}
   )
 }
 
@@ -224,16 +229,15 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     settings = jsonencode({
       "script": "${base64encode(
         templatefile("initialize.sh", merge(
-          {wekaVersion            = "4.1.0.77"},
-          {wekaResourceName       = var.weka.name.resource},
-          {wekaNetwork            = var.weka.network},
-          {wekaMachineSize        = var.weka.machine.size},
-          {wekaDataDiskSize       = var.weka.dataDisk.sizeGB},
-          {wekaDataProtection     = local.wekaDataProtection},
-          {wekaContainerSize      = local.wekaContainerSize},
-          {wekaMultiContainerMode = var.weka.multiContainerMode},
-          {binStorageHost         = module.global.binStorage.host},
-          {binStorageAuth         = module.global.binStorage.auth}
+          {wekaVersion        = "4.1.0.77"},
+          {wekaResourceName   = var.weka.name.resource},
+          {wekaNetwork        = var.weka.network},
+          {wekaMachineSize    = var.weka.machine.size},
+          {wekaDataDiskSize   = var.weka.dataDisk.sizeGB},
+          {wekaDataProtection = local.wekaDataProtection},
+          {wekaContainerSize  = local.wekaContainerSize},
+          {binStorageHost     = module.global.binStorage.host},
+          {binStorageAuth     = module.global.binStorage.auth}
         ))
       )}"
     })
@@ -286,20 +290,23 @@ resource "terraform_data" "weka" {
       "done",
       "weka cluster container apply --all --force",
       "sleep 30s",
-      "weka cloud enable",
       "weka cluster update --data-drives ${local.wekaDataProtection.stripeWidth} --parity-drives ${local.wekaDataProtection.level}",
       "weka cluster hot-spare ${local.wekaDataProtection.hotSpare}",
       "weka cluster start-io",
       "ioStatus=$(weka status --json | jq -r .io_status)",
       "if [ \"$ioStatus\" == \"STARTED\" ]; then",
-      "  fsName=default",
-      "  fsGroupName=default",
+      "  fsName=${var.weka.fileSystem.name}",
+      "  fsGroupName=${var.weka.fileSystem.groupName}",
+      "  fsAuthRequired=${var.weka.fileSystem.authRequired ? "yes" : "no"}",
       "  fsContainerName=${local.wekaObjectTier.storage.containerName}",
       "  fsDriveBytes=$(weka status --json | jq -r .capacity.unprovisioned_bytes)",
       "  fsTotalBytes=$(($fsDriveBytes * 100 / (100 - ${local.wekaObjectTier.percent})))",
       "  weka fs tier s3 add $fsContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
       "  weka fs group create $fsGroupName",
-      "  weka fs create $fsName $fsGroupName \"$fsTotalBytes\"B --obs-name $fsContainerName --ssd-capacity \"$fsDriveBytes\"B",
+      "  weka fs create $fsName $fsGroupName \"$fsTotalBytes\"B --obs-name $fsContainerName --ssd-capacity \"$fsDriveBytes\"B --auth-required $fsAuthRequired",
+      "fi",
+      "if [ \"${var.weka.enableSupportCloud}\" == \"true\" ]; then",
+      "  weka cloud enable",
       "fi",
       "weka status",
       "weka alerts"
