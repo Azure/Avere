@@ -104,14 +104,13 @@ data "azurerm_virtual_machine_scale_set" "weka" {
 
 locals {
   wekaCount = var.weka.name.resource != "" ? 1 : 0
-  wekaImage = {
-    id = var.weka.machine.image.id
+  wekaImage = merge(var.weka.machine.image, {
     plan = {
-      publisher = var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher), "")
-      product   = var.weka.machine.image.plan.product != "" ? var.weka.machine.image.plan.product : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer), "")
-      name      = var.weka.machine.image.plan.name != "" ? var.weka.machine.image.plan.name : try(lower(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku), "")
+      publisher = lower(var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher, ""))
+      product   = lower(var.weka.machine.image.plan.product != "" ? var.weka.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer, ""))
+      name      = lower(var.weka.machine.image.plan.name != "" ? var.weka.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku, ""))
     }
-  }
+  })
   wekaObjectTier = merge(var.weka.objectTier, {
     storage = {
       accountName   = var.weka.objectTier.storage.accountName != "" ? var.weka.objectTier.storage.accountName : data.azurerm_storage_account.blob.name

@@ -10,9 +10,8 @@ if [ "${wekaResourceName}" != "" ]; then
   mkfs.ext4 -L $volumeLabel $installDisk 1> $installType.out.log 2> $installType.err.log
   installPath="/opt/weka"
   mkdir -p $installPath
-  installType="weka-mount"
-  mount $installDisk $installPath 1> $installType.out.log 2> $installType.err.log
   echo "LABEL=$volumeLabel $installPath ext4 defaults 0 2" >> /etc/fstab
+  mount -a
 
   dnf -y install kernel-devel-$(uname -r)
   versionInfo="${wekaVersion}"
