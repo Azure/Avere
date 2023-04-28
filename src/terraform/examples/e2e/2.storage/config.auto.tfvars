@@ -150,9 +150,9 @@ weka = {
     sizeGB      = 256
   }
   dataProtection = {
-    level       = 2
+    stripeWidth = 3
+    parityLevel = 2
     hotSpare    = 1
-    stripeWidth = 0
   }
   adminLogin = {
     userName     = "azadmin"

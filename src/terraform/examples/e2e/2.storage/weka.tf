@@ -74,9 +74,9 @@ variable "weka" {
       )
       dataProtection = object(
         {
-          level       = number
-          hotSpare    = number
           stripeWidth = number
+          parityLevel = number
+          hotSpare    = number
         }
       )
       adminLogin = object(
@@ -159,10 +159,7 @@ locals {
       }'
     json
   }
-  wekaStripWidth     = var.weka.dataProtection.stripeWidth >= 3 && var.weka.dataProtection.stripeWidth <= 16 ? var.weka.dataProtection.stripeWidth : var.weka.machine.count - var.weka.dataProtection.level - 1
-  wekaDataProtection = merge(var.weka.dataProtection,
-    {stripeWidth = local.wekaStripWidth < 16 ? local.wekaStripWidth : 16}
-  )
+  wekaCoreIdsScript = "weka-core-ids.sh"
 }
 
 resource "azurerm_resource_group" "weka" {
@@ -190,7 +187,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
   disable_password_authentication = var.weka.adminLogin.passwordAuth.disable
   proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
-  single_placement_group          = true
+  single_placement_group          = false
   overprovision                   = false
   network_interface {
     name    = "primary"
@@ -228,15 +225,13 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     settings = jsonencode({
       "script": "${base64encode(
         templatefile("initialize.sh", merge(
-          {wekaVersion        = "4.1.0.77"},
-          {wekaResourceName   = var.weka.name.resource},
-          {wekaNetwork        = var.weka.network},
-          {wekaMachineSize    = var.weka.machine.size},
-          {wekaDataDiskSize   = var.weka.dataDisk.sizeGB},
-          {wekaDataProtection = local.wekaDataProtection},
-          {wekaContainerSize  = local.wekaContainerSize},
-          {binStorageHost     = module.global.binStorage.host},
-          {binStorageAuth     = module.global.binStorage.auth}
+          {wekaVersion       = "4.1.0.77"},
+          {wekaResourceName  = var.weka.name.resource},
+          {wekaDataDiskSize  = var.weka.dataDisk.sizeGB},
+          {wekaContainerSize = local.wekaContainerSize},
+          {wekaCoreIdsScript = local.wekaCoreIdsScript},
+          {binStorageHost    = module.global.binStorage.host},
+          {binStorageAuth    = module.global.binStorage.auth}
         ))
       )}"
     })
@@ -268,29 +263,26 @@ resource "terraform_data" "weka" {
   }
   provisioner "remote-exec" {
     inline = [
+      "containerSize=${local.wekaContainerSize}",
+      "source /usr/local/bin/${local.wekaCoreIdsScript}",
       "weka cluster create ${azurerm_linux_virtual_machine_scale_set.weka[0].name}{000000..${format("%06d", var.weka.machine.count - 1)}} --admin-password ${var.weka.adminLogin.userPassword}",
       "weka user login admin ${var.weka.adminLogin.userPassword}",
       "weka cluster update --cluster-name='${var.weka.name.display}'",
       "weka cluster default-net set --range ${var.weka.network.subnet.range} --netmask-bits ${var.weka.network.subnet.mask}",
-      "containerSize=${local.wekaContainerSize}",
-      "coreCountDrives=$(echo $containerSize | jq -r .coreDrives)",
-      "coreCountCompute=$(echo $containerSize | jq -r .coreCompute)",
-      "coreCountFrontend=$(echo $containerSize | jq -r .coreFrontend)",
       "for (( i=0; i<${var.weka.machine.count}; i++ )); do",
       "  containerId=$i",
       "  containerSize=${local.wekaContainerSize}",
       "  nvmeDisk=$(echo $containerSize | jq -r .nvmeDisk)",
-      "  clusterHost=${azurerm_linux_virtual_machine_scale_set.weka[0].name}$(printf %06d $i)",
+      "  hostName=${azurerm_linux_virtual_machine_scale_set.weka[0].name}$(printf %06d $i)",
       "  for (( d=0; d<$nvmeDisk; d++ )); do",
-      "    weka cluster drive add $containerId --HOST $clusterHost /dev/nvme$(echo $d)n1",
+      "    weka cluster drive add $containerId --HOST $hostName /dev/nvme$(echo $d)n1",
       "  done",
-      "  containerCores=$(($coreCountDrives + $coreCountCompute + $coreCountFrontend))",
-      "  weka cluster container cores $containerId $containerCores",
+      "  weka cluster container cores $containerId $(($coreCountDrives + $coreCountCompute + $coreCountFrontend)) --drives-dedicated-cores $coreCountDrives --compute-dedicated-cores $coreCountCompute --frontend-dedicated-cores $coreCountFrontend",
       "done",
       "weka cluster container apply --all --force",
       "sleep 30s",
-      "weka cluster update --data-drives ${local.wekaDataProtection.stripeWidth} --parity-drives ${local.wekaDataProtection.level}",
-      "weka cluster hot-spare ${local.wekaDataProtection.hotSpare}",
+      "weka cluster update --data-drives ${var.weka.dataProtection.stripeWidth} --parity-drives ${var.weka.dataProtection.parityLevel}",
+      "weka cluster hot-spare ${var.weka.dataProtection.hotSpare}",
       "weka cluster start-io",
       "ioStatus=$(weka status --json | jq -r .io_status)",
       "if [ \"$ioStatus\" == \"STARTED\" ]; then",
