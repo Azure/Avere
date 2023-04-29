@@ -284,7 +284,7 @@ resource "terraform_data" "weka_cluster_create" {
   }
 }
 
-resource "terraform_data" "weka_compute_setup" {
+resource "terraform_data" "weka_container_compute" {
   count = var.weka.name.resource != "" ? var.weka.machine.count : 0
   connection {
     type     = "ssh"
@@ -296,8 +296,7 @@ resource "terraform_data" "weka_compute_setup" {
     inline = [
       "containerSize=${local.wekaContainerSize}",
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
-      #"joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
-      #"sudo weka local setup container --name compute --base-port 15000 --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
+      #"sudo weka local setup container --name compute --base-port 15000 --join-ips $(hostname -i) --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
       "sudo weka local setup container --name compute --base-port 15000 --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
     ]
   }
@@ -326,11 +325,11 @@ resource "terraform_data" "weka_cluster_start" {
     ]
   }
   depends_on = [
-    terraform_data.weka_compute_setup
+    terraform_data.weka_container_compute
   ]
 }
 
-resource "terraform_data" "weka_frontend_setup" {
+resource "terraform_data" "weka_container_frontend" {
   count = var.weka.name.resource != "" ? var.weka.machine.count : 0
   connection {
     type     = "ssh"
@@ -342,9 +341,7 @@ resource "terraform_data" "weka_frontend_setup" {
     inline = [
       "containerSize=${local.wekaContainerSize}",
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
-      #"joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
-      #"sudo weka local setup container --name frontend --base-port 16000 --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate --allow-protocols true"
-      "sudo weka local setup container --name frontend --base-port 16000 --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate --allow-protocols true"
+      "sudo weka local setup container --name frontend --base-port 16000 --join-ips $(hostname -i) --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
     ]
   }
   depends_on = [
@@ -379,7 +376,7 @@ resource "terraform_data" "weka_file_system" {
     ]
   }
   depends_on = [
-    terraform_data.weka_frontend_setup
+    terraform_data.weka_container_frontend
   ]
 }
 
