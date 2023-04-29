@@ -112,5 +112,5 @@ resource "azurerm_netapp_volume" "storage" {
 }
 
 output "resourceGroupNameNetAppFiles" {
-  value = var.netAppAccount.name == "" ? "" : azurerm_resource_group.netapp_files[0].name
+  value = var.netAppAccount.name != "" ? azurerm_resource_group.netapp_files[0].name : ""
 }

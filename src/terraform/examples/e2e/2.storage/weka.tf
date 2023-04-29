@@ -91,19 +91,19 @@ variable "weka" {
           )
         }
       )
-      enableSupportCloud = bool
+      supportCloudUrl = string
+      classicLicense  = string
     }
   )
 }
 
 data "azurerm_virtual_machine_scale_set" "weka" {
-  count               = local.wekaCount
+  count               = var.weka.name.resource != "" ? 1 : 0
   name                = azurerm_linux_virtual_machine_scale_set.weka[0].name
   resource_group_name = azurerm_linux_virtual_machine_scale_set.weka[0].resource_group_name
 }
 
 locals {
-  wekaCount = var.weka.name.resource != "" ? 1 : 0
   wekaImage = merge(var.weka.machine.image, {
     plan = {
       publisher = lower(var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher, ""))
@@ -163,20 +163,20 @@ locals {
 }
 
 resource "azurerm_resource_group" "weka" {
-  count    = local.wekaCount
+  count    = var.weka.name.resource != "" ? 1 : 0
   name     = "${var.resourceGroupName}.Weka"
   location = azurerm_resource_group.storage.location
 }
 
 resource "azurerm_proximity_placement_group" "weka" {
-  count               = local.wekaCount
+  count               = var.weka.name.resource != "" ? 1 : 0
   name                = var.weka.name.resource
   resource_group_name = azurerm_resource_group.weka[0].name
   location            = azurerm_resource_group.weka[0].location
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "weka" {
-  count                           = local.wekaCount
+  count                           = var.weka.name.resource != "" ? 1 : 0
   name                            = var.weka.name.resource
   resource_group_name             = azurerm_resource_group.weka[0].name
   location                        = azurerm_resource_group.weka[0].location
@@ -253,8 +253,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   }
 }
 
-resource "terraform_data" "weka" {
-  count = local.wekaCount
+resource "terraform_data" "weka_cluster_create" {
+  count = var.weka.name.resource != "" ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
@@ -267,7 +267,6 @@ resource "terraform_data" "weka" {
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
       "weka cluster create ${azurerm_linux_virtual_machine_scale_set.weka[0].name}{000000..${format("%06d", var.weka.machine.count - 1)}} --admin-password ${var.weka.adminLogin.userPassword}",
       "weka user login admin ${var.weka.adminLogin.userPassword}",
-      "weka cluster update --cluster-name='${var.weka.name.display}'",
       "weka cluster default-net set --range ${var.weka.network.subnet.range} --netmask-bits ${var.weka.network.subnet.mask}",
       "for (( i=0; i<${var.weka.machine.count}; i++ )); do",
       "  containerId=$i",
@@ -281,9 +280,88 @@ resource "terraform_data" "weka" {
       "done",
       "weka cluster container apply --all --force",
       "sleep 30s",
-      "weka cluster update --data-drives ${var.weka.dataProtection.stripeWidth} --parity-drives ${var.weka.dataProtection.parityLevel}",
+    ]
+  }
+}
+
+resource "terraform_data" "weka_compute_setup" {
+  count = var.weka.name.resource != "" ? var.weka.machine.count : 0
+  connection {
+    type     = "ssh"
+    host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[count.index].private_ip_address
+    user     = var.weka.adminLogin.userName
+    password = var.weka.adminLogin.userPassword
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "containerSize=${local.wekaContainerSize}",
+      "source /usr/local/bin/${local.wekaCoreIdsScript}",
+      #"joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
+      #"sudo weka local setup container --name compute --base-port 15000 --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
+      "sudo weka local setup container --name compute --base-port 15000 --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
+    ]
+  }
+  depends_on = [
+    terraform_data.weka_cluster_create
+  ]
+}
+
+resource "terraform_data" "weka_cluster_start" {
+  count = var.weka.name.resource != "" ? 1 : 0
+  connection {
+    type     = "ssh"
+    host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
+    user     = var.weka.adminLogin.userName
+    password = var.weka.adminLogin.userPassword
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "weka cluster update --cluster-name='${var.weka.name.display}' --data-drives ${var.weka.dataProtection.stripeWidth} --parity-drives ${var.weka.dataProtection.parityLevel}",
       "weka cluster hot-spare ${var.weka.dataProtection.hotSpare}",
+      "weka cloud enable ${var.weka.supportCloudUrl != "" ? "--cloud-url=${var.weka.supportCloudUrl}" : ""}",
+      "if [ \"${var.weka.classicLicense}\" != \"\" ]; then",
+      "  weka cluster license set ${var.weka.classicLicense}",
+      "fi",
       "weka cluster start-io",
+    ]
+  }
+  depends_on = [
+    terraform_data.weka_compute_setup
+  ]
+}
+
+resource "terraform_data" "weka_frontend_setup" {
+  count = var.weka.name.resource != "" ? var.weka.machine.count : 0
+  connection {
+    type     = "ssh"
+    host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[count.index].private_ip_address
+    user     = var.weka.adminLogin.userName
+    password = var.weka.adminLogin.userPassword
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "containerSize=${local.wekaContainerSize}",
+      "source /usr/local/bin/${local.wekaCoreIdsScript}",
+      #"joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
+      #"sudo weka local setup container --name frontend --base-port 16000 --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate --allow-protocols true"
+      "sudo weka local setup container --name frontend --base-port 16000 --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate --allow-protocols true"
+    ]
+  }
+  depends_on = [
+    terraform_data.weka_cluster_start
+  ]
+}
+
+resource "terraform_data" "weka_file_system" {
+  count = var.weka.name.resource != "" ? 1 : 0
+  connection {
+    type     = "ssh"
+    host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
+    user     = var.weka.adminLogin.userName
+    password = var.weka.adminLogin.userPassword
+  }
+  provisioner "remote-exec" {
+    inline = [
       "ioStatus=$(weka status --json | jq -r .io_status)",
       "if [ \"$ioStatus\" == \"STARTED\" ]; then",
       "  fsName=${var.weka.fileSystem.name}",
@@ -296,15 +374,15 @@ resource "terraform_data" "weka" {
       "  weka fs group create $fsGroupName",
       "  weka fs create $fsName $fsGroupName \"$fsTotalBytes\"B --obs-name $fsContainerName --ssd-capacity \"$fsDriveBytes\"B --auth-required $fsAuthRequired",
       "fi",
-      "if [ \"${var.weka.enableSupportCloud}\" == \"true\" ]; then",
-      "  weka cloud enable",
-      "fi",
       "weka status",
       "weka alerts"
     ]
   }
+  depends_on = [
+    terraform_data.weka_frontend_setup
+  ]
 }
 
 output "resourceGroupNameWeka" {
-  value = local.wekaCount == 0 ? "" : azurerm_resource_group.weka[0].name
+  value = var.weka.name.resource != "" ? azurerm_resource_group.weka[0].name : ""
 }

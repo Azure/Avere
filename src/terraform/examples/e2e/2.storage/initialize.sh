@@ -15,13 +15,12 @@ if [ "${wekaResourceName}" != "" ]; then
 
   dnf -y install kernel-devel-$(uname -r)
   versionInfo="${wekaVersion}"
-  installType="weka-iosw"
   installFile="weka-$versionInfo.tar"
   downloadUrl="${binStorageHost}/Weka/$versionInfo/$installFile${binStorageAuth}"
   curl -o $installFile -L $downloadUrl
   tar -xf $installFile
   cd weka-$versionInfo
-  ./install.sh 1> ../$installType.out.log 2> ../$installType.err.log
+  ./install.sh 1> ../$volumeLabel.out.log 2> ../$volumeLabel.err.log
   cd $binDirectory
 
   coreIdsScript="${wekaCoreIdsScript}"
@@ -48,26 +47,21 @@ if [ "${wekaResourceName}" != "" ]; then
   echo '  echo $containerCoreIds' >> $coreIdsScript
   echo '}' >> $coreIdsScript
   echo '' >> $coreIdsScript
-  echo 'coreIdsDrive=$(GetCoreIds $coreCountDrives 0)' >> $coreIdsScript
+  echo 'coreIdsDrives=$(GetCoreIds $coreCountDrives 0)' >> $coreIdsScript
   echo 'coreIdsCompute=$(GetCoreIds $coreCountCompute $coreCountDrives)' >> $coreIdsScript
   echo 'coreIdsFrontend=$(GetCoreIds $coreCountFrontend $(($coreCountDrives + $coreCountCompute)))' >> $coreIdsScript
 
   containerSize=${wekaContainerSize}
   source $coreIdsScript
 
+  echo $coreIdsDrives > core-ids-drives.log
+  echo $coreIdsCompute > core-ids-compute.log
+  echo $coreIdsFrontend > core-ids-frontend.log
+
   containerName="default"
   weka local stop --force $containerName
   weka local rm --force $containerName
 
   installType="weka-local-setup-drives"
-  echo $coreIdsDrive > $installType-core-ids.log
-  weka local setup container --name drives0 --base-port 14000 --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrive --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
-
-  installType="weka-local-setup-compute"
-  echo $coreIdsCompute > $installType-core-ids.log
-  weka local setup container --name compute0 --base-port 15000 --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends 1> $installType.out.log 2> $installType.err.log
-
-  installType="weka-local-setup-frontend"
-  echo $coreIdsFrontend > $installType-core-ids.log
-  weka local setup container --name frontend0 --base-port 16000 --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate --allow-protocols true 1> $installType.out.log 2> $installType.err.log
+  weka local setup container --name drives --base-port 14000 --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
 fi
