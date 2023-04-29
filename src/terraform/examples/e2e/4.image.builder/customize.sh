@@ -137,7 +137,7 @@ if [[ $renderManager == *Deadline* ]]; then
 
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallRoot --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword $servicePassword
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallRoot --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword env:servicePassword
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
     echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
