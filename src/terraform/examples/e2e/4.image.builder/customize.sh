@@ -95,7 +95,6 @@ if [[ $renderManager == *Deadline* ]]; then
   schedulerDatabaseUser="dbService"
   schedulerDatabaseName="deadline10db"
   schedulerBinPath="$schedulerInstallRoot/bin/Linux"
-  binPaths="$binPaths:$schedulerBinPath"
 
   echo "Customize (Start): Deadline Download"
   installFile="Deadline-$schedulerVersion-linux-installers.tar"
@@ -131,7 +130,7 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "user: \"$schedulerDatabaseUser\"," >> $createUserScript
     echo "pwd: \"$servicePassword\"," >> $createUserScript
     echo "roles: [" >> $createUserScript
-    echo "{ role: \"readWrite\", db: \"$schedulerDatabaseName\" }" >> $createUserScript
+    echo "{ role: \"dbOwner\", db: \"$schedulerDatabaseName\" }" >> $createUserScript
     echo "]})" >> $createUserScript
     mongo $createUserScript 1> $installType.out.log 2> $installType.err.log
     echo "Customize (End): Mongo DB User"
@@ -157,14 +156,15 @@ if [[ $renderManager == *Deadline* ]]; then
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
     echo "Customize (End): Deadline Client"
   fi
+
   unzip $schedulerBinPath/bin.zip -d $schedulerBinPath
+  binPaths="$binPaths:$schedulerBinPath"
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
   schedulerVersion="9.0.04"
   schedulerInstallRoot="/RoyalRender"
   schedulerBinPath="$schedulerInstallRoot/bin/lx64"
-  binPaths="$binPaths:$schedulerBinPath"
 
   echo "Customize (Start): Royal Render Download"
   installFile="RoyalRender__${schedulerVersion}__installer.zip"
@@ -190,6 +190,8 @@ if [[ $renderManager == *RoyalRender* ]]; then
     exportfs -a
     echo "Customize (End): Royal Render Server"
   fi
+
+  binPaths="$binPaths:$schedulerBinPath"
 fi
 
 if [[ $renderManager == *Qube* ]]; then
@@ -197,7 +199,6 @@ if [[ $renderManager == *Qube* ]]; then
   schedulerConfigFile="/etc/qb.conf"
   schedulerInstallRoot="/usr/local/pfx/qube"
   schedulerBinPath="$schedulerInstallRoot/bin"
-  binPaths="$binPaths:$schedulerBinPath:$schedulerInstallRoot/sbin"
 
   echo "Customize (Start): Qube Core"
   dnf -y install perl
@@ -245,6 +246,30 @@ if [[ $renderManager == *Qube* ]]; then
     sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $schedulerConfigFile
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
   fi
+
+  binPaths="$binPaths:$schedulerBinPath:$schedulerInstallRoot/sbin"
+fi
+
+if [[ $renderEngines == *Maya* ]]; then
+  echo "Customize (Start): Maya"
+  dnf -y install mesa-libGL
+  dnf -y install mesa-libGLU
+  dnf -y install alsa-lib
+  dnf -y install libXxf86vm
+  dnf -y install libXmu
+  dnf -y install libXpm
+  dnf -y install libnsl
+  dnf -y install gtk3
+  versionInfo="2024_0_1"
+  installType="autodesk-maya"
+  installFile="Autodesk_Maya_${versionInfo}_Update_Linux_64bit.tgz"
+  downloadUrl="$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  mkdir $installType
+  tar -xzf $installFile -C $installType
+  ./$installType/Setup --silent 1> $installType.out.log 2> $installType.err.log
+  binPaths="$binPaths:/usr/autodesk/maya/bin"
+  echo "Customize (End): Maya"
 fi
 
 if [[ $renderEngines == *PBRT* ]]; then
@@ -279,26 +304,6 @@ if [[ $renderEngines == *PBRT* ]]; then
   binPaths="$binPaths:$installPath"
 fi
 
-if [[ $renderEngines == *Blender* ]]; then
-  echo "Customize (Start): Blender"
-  dnf -y install mesa-libGL
-  dnf -y install libXxf86vm
-  dnf -y install libXfixes
-  dnf -y install libXi
-  dnf -y install libSM
-  versionInfo="3.5.1"
-  versionType="linux-x64"
-  installPath="/usr/local/blender"
-  installFile="blender-$versionInfo-$versionType.tar.xz"
-  downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xf $installFile --xz
-  mkdir -p $installPath
-  mv blender-$versionInfo-$versionType/* $installPath
-  binPaths="$binPaths:$installPath"
-  echo "Customize (End): Blender"
-fi
-
 if [[ $renderEngines == *Houdini* ]]; then
   echo "Customize (Start): Houdini"
   dnf -y install mesa-libGL
@@ -325,26 +330,24 @@ if [[ $renderEngines == *Houdini* ]]; then
   echo "Customize (End): Houdini"
 fi
 
-if [[ $renderEngines == *Maya* ]]; then
-  echo "Customize (Start): Maya"
+if [[ $renderEngines == *Blender* ]]; then
+  echo "Customize (Start): Blender"
   dnf -y install mesa-libGL
-  dnf -y install mesa-libGLU
-  dnf -y install alsa-lib
   dnf -y install libXxf86vm
-  dnf -y install libXmu
-  dnf -y install libXpm
-  dnf -y install libnsl
-  dnf -y install gtk3
-  versionInfo="2024_0_1"
-  installType="autodesk-maya"
-  installFile="Autodesk_Maya_${versionInfo}_Update_Linux_64bit.tgz"
-  downloadUrl="$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
+  dnf -y install libXfixes
+  dnf -y install libXi
+  dnf -y install libSM
+  versionInfo="3.5.1"
+  versionType="linux-x64"
+  installPath="/usr/local/blender"
+  installFile="blender-$versionInfo-$versionType.tar.xz"
+  downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
-  mkdir $installType
-  tar -xzf $installFile -C $installType
-  ./$installType/Setup --silent 1> $installType.out.log 2> $installType.err.log
-  binPaths="$binPaths:/usr/autodesk/maya/bin"
-  echo "Customize (End): Maya"
+  tar -xf $installFile --xz
+  mkdir -p $installPath
+  mv blender-$versionInfo-$versionType/* $installPath
+  binPaths="$binPaths:$installPath"
+  echo "Customize (End): Blender"
 fi
 
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
@@ -394,7 +397,7 @@ echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
 
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Teradici PCoIP"
-  versionInfo="23.01.1"
+  versionInfo="23.04.1"
   [[ $gpuPlatform == *GRID* ]] && installType=pcoip-agent-graphics || installType=pcoip-agent-standard
   installFile="pcoip-agent-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
   downloadUrl="$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"

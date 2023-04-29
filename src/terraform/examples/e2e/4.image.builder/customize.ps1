@@ -141,7 +141,6 @@ if ("$renderManager" -like "*Deadline*") {
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
-  $binPaths += ";$schedulerBinPath"
 
   Write-Host "Customize (Start): Deadline Download"
   $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
@@ -192,13 +191,14 @@ if ("$renderManager" -like "*Deadline*") {
     $shortcut.Save()
     Write-Host "Customize (End): Deadline Monitor"
   }
+
+  $binPaths += ";$schedulerBinPath"
 }
 
 if ("$renderManager" -like "*RoyalRender*") {
   $schedulerVersion = "9.0.04"
   $schedulerInstallRoot = "\RoyalRender"
   $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
-  $binPaths += ";$schedulerBinPath"
 
   Write-Host "Customize (Start): Royal Render Download"
   $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
@@ -230,6 +230,8 @@ if ("$renderManager" -like "*RoyalRender*") {
   $shortcut.TargetPath = "$schedulerBinPath\rrViewer.exe"
   $shortcut.Save()
   Write-Host "Customize (End): Royal Render Viewer"
+
+  $binPaths += ";$schedulerBinPath"
 }
 
 if ("$renderManager" -like "*Qube*") {
@@ -237,7 +239,6 @@ if ("$renderManager" -like "*Qube*") {
   $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
   $schedulerInstallRoot = "C:\Program Files\pfx\qube"
   $schedulerBinPath = "$schedulerInstallRoot\bin"
-  $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
 
   Write-Host "Customize (Start): Strawberry Perl"
   $installType = "strawberryperl"
@@ -305,14 +306,21 @@ if ("$renderManager" -like "*Qube*") {
     $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
     Set-Content -Path $schedulerConfigFile -Value $configFileText
   }
+
+  $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
 }
 
-if ($machineType -eq "Farm") {
-  Write-Host "Customize (Start): Privacy Experience"
-  $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
-  New-Item -ItemType Directory -Path $registryKeyPath -Force
-  New-ItemProperty -Path $registryKeyPath -PropertyType DWORD -Name "DisablePrivacyExperience" -Value 1 -Force
-  Write-Host "Customize (End): Privacy Experience"
+if ($renderEngines -contains "*Maya*") {
+  Write-Host "Customize (Start): Maya"
+  $versionInfo = "2024_0_1"
+  $installFile = "Autodesk_Maya_${versionInfo}_Update_Windows_64bit_dlm.zip"
+  $downloadUrl = "$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Start-Process -FilePath .\Autodesk_Maya*\Autodesk_Maya*\Setup.exe -ArgumentList "--silent"
+  Start-Sleep -Seconds 600
+  $binPaths += ";C:\Program Files\Autodesk\Maya2024\bin"
+  Write-Host "Customize (End): Maya"
 }
 
 if ($renderEngines -contains "PBRT") {
@@ -342,17 +350,6 @@ if ($renderEngines -contains "PBRT") {
   $binPaths += ";$installPath"
 }
 
-if ($renderEngines -contains "Blender") {
-  Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.5.1"
-  $installFile = "blender-$versionInfo-windows-x64.msi"
-  $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart /log blender.log') -Wait
-  $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.5"
-  Write-Host "Customize (End): Blender"
-}
-
 if ($renderEngines -contains "Houdini") {
   Write-Host "Customize (Start): Houdini"
   $versionInfo = "19.5.569"
@@ -377,19 +374,15 @@ if ($renderEngines -contains "Houdini") {
   Write-Host "Customize (End): Houdini"
 }
 
-if ($renderEngines -contains "*Maya*") {
-  Write-Host "Customize (Start): Maya"
-  $versionInfo = "2024_0_1"
-  $installFile = "Autodesk_Maya_${versionInfo}_Update_Windows_64bit_dlm.zip"
-  $downloadUrl = "$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
+if ($renderEngines -contains "Blender") {
+  Write-Host "Customize (Start): Blender"
+  $versionInfo = "3.5.1"
+  $installFile = "blender-$versionInfo-windows-x64.msi"
+  $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  $installType = "maya-odis"
-  Start-Process -FilePath .\Autodesk_Maya*\Autodesk_Maya*\ODIS\AdODIS-installer.exe -ArgumentList "--mode unattended" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-  $installType = "maya"
-  Start-Process -FilePath .\Autodesk_Maya*\Autodesk_Maya*\Setup.exe -ArgumentList "--silent" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-  $binPaths += ";C:\Program Files\Autodesk\Maya2024\bin"
-  Write-Host "Customize (End): Maya"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart /log blender.log') -Wait
+  $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.5"
+  Write-Host "Customize (End): Blender"
 }
 
 if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+PixelStream") {
@@ -486,9 +479,17 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
 
 setx PATH "$env:PATH$binPaths" /m
 
+if ($machineType -eq "Farm") {
+  Write-Host "Customize (Start): Privacy Experience"
+  $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
+  New-Item -ItemType Directory -Path $registryKeyPath -Force
+  New-ItemProperty -Path $registryKeyPath -PropertyType DWORD -Name "DisablePrivacyExperience" -Value 1 -Force
+  Write-Host "Customize (End): Privacy Experience"
+}
+
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP"
-  $versionInfo = "23.01.1"
+  $versionInfo = "23.04.1"
   $installType = if ($gpuPlatform -contains "GRID") {"pcoip-agent-graphics"} else {"pcoip-agent-standard"}
   $installFile = "${installType}_$versionInfo.exe"
   $downloadUrl = "$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
