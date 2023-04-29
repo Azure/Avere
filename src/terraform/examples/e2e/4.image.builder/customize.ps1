@@ -119,7 +119,7 @@ if ($machineType -eq "Scheduler") {
   $installFile = "az-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log az-cli.log" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log az-cli.log" -Wait
   Write-Host "Customize (End): Azure CLI"
 
   if ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*") {
@@ -156,7 +156,7 @@ if ("$renderManager" -like "*Deadline*") {
     netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=27100
     $installType = "deadline-repository"
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --installmongodb true --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --prefix $schedulerInstallRoot" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallRoot --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --installmongodb true" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
     Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
     Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallRoot\$schedulerCertificateFile
     New-NfsShare -Name "Deadline" -Path $schedulerInstallRoot -Permission ReadWrite
@@ -249,7 +249,7 @@ if ("$renderManager" -like "*Qube*") {
   $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
   $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
   Write-Host "Customize (End): Qube Core"
 
   if ($machineType -eq "Scheduler") {
@@ -262,7 +262,7 @@ if ("$renderManager" -like "*Qube*") {
     $installFile = "$installType-${schedulerVersion}-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
     $binPaths += ";C:\Program Files\pfx\pgsql\bin"
     Write-Host "Customize (End): Qube Supervisor"
 
@@ -272,7 +272,7 @@ if ("$renderManager" -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
     Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
   } else {
     Write-Host "Customize (Start): Qube Worker"
@@ -282,7 +282,7 @@ if ("$renderManager" -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
     Write-Host "Customize (End): Qube Worker"
 
     Write-Host "Customize (Start): Qube Client"
@@ -290,7 +290,7 @@ if ("$renderManager" -like "*Qube*") {
     $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "InstallAllUsers=1 PrependPath=1 /quiet /norestart /log $installType.log" -Wait
+    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
     $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
@@ -315,48 +315,84 @@ if ($machineType -eq "Farm") {
   Write-Host "Customize (End): Privacy Experience"
 }
 
-$rendererPathPBRT = "C:\Program Files\PBRT"
-$rendererPathBlender = "C:\Program Files\Blender"
-$rendererPathUnreal = "C:\Program Files\Unreal"
-
 if ($renderEngines -contains "PBRT") {
   Write-Host "Customize (Start): PBRT v3"
   $versionInfo = "v3"
   $installType = "pbrt-$versionInfo"
-  $rendererPathPBRTv3 = "$rendererPathPBRT\$versionInfo"
+  $installPath = "C:\Program Files\PBRT"
+  $installPathV3 = "$installPath\$versionInfo"
   Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/$installType.git" -Wait -RedirectStandardOutput "$installType-git.out.log" -RedirectStandardError "$installType-git.err.log"
-  New-Item -ItemType Directory -Path "$rendererPathPBRTv3" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv3"" -S $binDirectory\$installType" -Wait -RedirectStandardOutput "$installType-cmake.out.log" -RedirectStandardError "$installType-cmake.err.log"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "$installType-msbuild.out.log" -RedirectStandardError "$installType-msbuild.err.log"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv3\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt3"
+  New-Item -ItemType Directory -Path "$installPathV3" -Force
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$installPathV3"" -S $binDirectory\$installType" -Wait -RedirectStandardOutput "$installType-cmake.out.log" -RedirectStandardError "$installType-cmake.err.log"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$installPathV3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "$installType-msbuild.out.log" -RedirectStandardError "$installType-msbuild.err.log"
+  New-Item -ItemType SymbolicLink -Target "$installPathV3\Release\pbrt.exe" -Path "$installPath\pbrt3"
   Write-Host "Customize (End): PBRT v3"
 
   Write-Host "Customize (Start): PBRT v4"
   $versionInfo = "v4"
   $installType = "pbrt-$versionInfo"
-  $rendererPathPBRTv4 = "$rendererPathPBRT\$versionInfo"
+  $installPathV4 = "$installPath\$versionInfo"
   Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/$installType.git" -Wait -RedirectStandardOutput "$installType-git.out.log" -RedirectStandardError "$installType-git.err.log"
-  New-Item -ItemType Directory -Path "$rendererPathPBRTv4" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$rendererPathPBRTv4"" -S $binDirectory\$installType" -Wait -RedirectStandardOutput "$installType-cmake.out.log" -RedirectStandardError "$installType-cmake.err.log"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathPBRTv4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "$installType-msbuild.out.log" -RedirectStandardError "$installType-msbuild.err.log"
-  New-Item -ItemType SymbolicLink -Target "$rendererPathPBRTv4\Release\pbrt.exe" -Path "$rendererPathPBRT\pbrt4"
+  New-Item -ItemType Directory -Path "$installPathV4" -Force
+  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$installPathV4"" -S $binDirectory\$installType" -Wait -RedirectStandardOutput "$installType-cmake.out.log" -RedirectStandardError "$installType-cmake.err.log"
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$installPathV4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "$installType-msbuild.out.log" -RedirectStandardError "$installType-msbuild.err.log"
+  New-Item -ItemType SymbolicLink -Target "$installPathV4\Release\pbrt.exe" -Path "$installPath\pbrt4"
   Write-Host "Customize (End): PBRT v4"
 
-  $binPaths += ";$rendererPathPBRT"
+  $binPaths += ";$installPath"
 }
 
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.5.0"
+  $versionInfo = "3.5.1"
   $installFile = "blender-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' INSTALL_ROOT="' + $rendererPathBlender + '" InstallAllUsers=1 PrependPath=1 /quiet /norestart /log blender.log') -Wait
-  $binPaths += ";$rendererPathBlender"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart /log blender.log') -Wait
+  $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.5"
   Write-Host "Customize (End): Blender"
 }
 
-if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.PixelStream") {
+if ($renderEngines -contains "Houdini") {
+  Write-Host "Customize (Start): Houdini"
+  $versionInfo = "19.5.569"
+  $versionEULA = "2021-10-13"
+  $installType = "houdini"
+  $installFile = "$installType-$versionInfo-win64-vc142.exe"
+  $downloadUrl = "$binStorageHost/Houdini/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  if ($machineType -eq "Workstation") {
+    $installArgs = "/MainApp=Yes"
+  } else {
+    $installArgs = "/HoudiniEngineOnly=Yes"
+  }
+  if ($renderEngines -contains "Maya") {
+    $installArgs += " /EngineMaya=Yes"
+  }
+  if ($renderEngines -contains "Unreal") {
+    $installArgs += " /EngineUnreal=Yes"
+  }
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /AcceptEULA=$versionEULA $installArgs" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  $binPaths += ";C:\Program Files\Side Effects Software\Houdini $versionInfo\bin"
+  Write-Host "Customize (End): Houdini"
+}
+
+if ($renderEngines -contains "*Maya*") {
+  Write-Host "Customize (Start): Maya"
+  $versionInfo = "2024_0_1"
+  $installFile = "Autodesk_Maya_${versionInfo}_Update_Windows_64bit_dlm.zip"
+  $downloadUrl = "$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  $installType = "maya-odis"
+  Start-Process -FilePath .\Autodesk_Maya*\Autodesk_Maya*\ODIS\AdODIS-installer.exe -ArgumentList "--mode unattended" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  $installType = "maya"
+  Start-Process -FilePath .\Autodesk_Maya*\Autodesk_Maya*\Setup.exe -ArgumentList "--silent" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  $binPaths += ";C:\Program Files\Autodesk\Maya2024\bin"
+  Write-Host "Customize (End): Maya"
+}
+
+if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+PixelStream") {
   Write-Host "Customize (Start): Visual Studio Workloads"
   $versionInfo = "2022"
   $installType = "unreal-vs"
@@ -381,15 +417,17 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   Set-Location -Path C:\
   $versionInfo = "5.1.1"
   $installType = "unreal-engine"
+  $installPath = "C:\Program Files\Unreal"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Expand-Archive -Path $installFile
-  New-Item -ItemType Directory -Path "$rendererPathUnreal"
-  Move-Item -Path "Unreal*\Unreal*\*" -Destination "$rendererPathUnreal"
+
+  New-Item -ItemType Directory -Path "$installPath"
+  Move-Item -Path "Unreal*\Unreal*\*" -Destination "$installPath"
   Remove-Item -Path "Unreal*" -Exclude "*.zip" -Recurse
   Set-Location -Path $binDirectory
-  $installFile = "$rendererPathUnreal\Setup.bat"
+  $installFile = "$installPath\Setup.bat"
   $scriptFilePath = $installFile
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("/register", "/register /unattended")
@@ -399,12 +437,12 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
   Write-Host "Customize (End): Unreal Engine Setup"
 
   Write-Host "Customize (Start): Unreal Project Files Generate"
-  $installFile = "$rendererPathUnreal\GenerateProjectFiles.bat"
+  $installFile = "$installPath\GenerateProjectFiles.bat"
   $scriptFilePath = $installFile
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
-  $scriptFilePath = "$rendererPathUnreal\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
+  $scriptFilePath = "$installPath\Engine\Build\BatchFiles\GenerateProjectFiles.bat"
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
@@ -413,11 +451,11 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
 
   Write-Host "Customize (Start): Unreal Engine Build"
   [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
-  [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$rendererPathUnreal\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$rendererPathUnreal\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "$installType-build.out.log" -RedirectStandardError "$installType-build.err.log"
+  [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$installPath\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
+  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$installPath\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "$installType-build.out.log" -RedirectStandardError "$installType-build.err.log"
   Write-Host "Customize (End): Unreal Engine Build"
 
-  if ($renderEngines -contains "Unreal.PixelStream") {
+  if ($renderEngines -contains "Unreal+PixelStream") {
     Write-Host "Customize (Start): Unreal Pixel Streaming"
     $installType = "unreal-stream"
     Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "$installType-git.out.log" -RedirectStandardError "$installType-git.err.log"
@@ -432,18 +470,18 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal.Pixel
 
   if ($machineType -eq "Workstation") {
     Write-Host "Customize (Start): Unreal Editor"
-    $rendererPathUnrealEditor = "$rendererPathUnreal\Engine\Binaries\Win64"
-    netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$rendererPathUnrealEditor\UnrealEditor.exe"
+    $installPathEditor = "$installPath\Engine\Binaries\Win64"
+    netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$installPathEditor\UnrealEditor.exe"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$rendererPathUnrealEditor"
-    $shortcut.TargetPath = "$rendererPathUnrealEditor\UnrealEditor.exe"
+    $shortcut.WorkingDirectory = "$installPathEditor"
+    $shortcut.TargetPath = "$installPathEditor\UnrealEditor.exe"
     $shortcut.Save()
     Write-Host "Customize (End): Unreal Editor"
   }
 
-  $binPaths += ";$rendererPathUnreal"
+  $binPaths += ";$installPath"
 }
 
 setx PATH "$env:PATH$binPaths" /m

@@ -30,6 +30,7 @@ dnf -y install cmake
 dnf -y install make
 dnf -y install lsof
 dnf -y install git
+dnf -y install bc
 echo "Customize (End): Image Build Platform"
 
 if [[ $gpuPlatform == *GRID* ]]; then
@@ -92,6 +93,7 @@ if [[ $renderManager == *Deadline* ]]; then
   schedulerDatabaseHost=$(hostname)
   schedulerDatabasePort=27017
   schedulerDatabaseUser="dbService"
+  schedulerDatabaseName="deadline10db"
   schedulerBinPath="$schedulerInstallRoot/bin/Linux"
   binPaths="$binPaths:$schedulerBinPath"
 
@@ -105,7 +107,7 @@ if [[ $renderManager == *Deadline* ]]; then
   echo "Customize (End): Deadline Download"
 
   if [ $machineType == "Scheduler" ]; then
-    echo "Customize (Start): Mongo DB"
+    echo "Customize (Start): Mongo DB Service"
     repoPath="/etc/yum.repos.d/mongodb.repo"
     echo "[mongodb-org-4.4]" > $repoPath
     echo "name=MongoDB 4.4" >> $repoPath
@@ -114,27 +116,29 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "enabled=1" >> $repoPath
     echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc" >> $repoPath
     dnf -y install mongodb-org
-    mongoConfigFile="/etc/mongod.conf"
-    sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $mongoConfigFile
-    sed -i "/bindIp: 0.0.0.0/a\  tls:" $mongoConfigFile
-    sed -i "/tls:/a\    mode: disabled" $mongoConfigFile
-    sed -i "s/#security:/security:/" $mongoConfigFile
-    sed -i "/security:/a\  authorization: disabled" $mongoConfigFile
+    serviceConfigFile="/etc/mongod.conf"
+    sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $serviceConfigFile
+    sed -i "/bindIp: 0.0.0.0/a\  tls:" $serviceConfigFile
+    sed -i "/tls:/a\    mode: disabled" $serviceConfigFile
     systemctl --now enable mongod
-    # mongoCreateUserFile="mongo-create-user.js"
-    # echo "db = db.getSiblingDB(\"admin\");" > $mongoCreateUserFile
-    # echo "db.createUser({" >> $mongoCreateUserFile
-    # echo "user: \"$schedulerDatabaseUser\"," >> $mongoCreateUserFile
-    # echo "pwd: \"$servicePassword\"," >> $mongoCreateUserFile
-    # echo "roles: [" >> $mongoCreateUserFile
-    # echo "{ role: \"root\", db: \"admin\" }" >> $mongoCreateUserFile
-    # echo "]})" >> $mongoCreateUserFile
-    # mongo $mongoCreateUserFile
-    echo "Customize (End): Mongo DB"
+    echo "Customize (End): Mongo DB Service"
+
+    echo "Customize (Start): Mongo DB User"
+    installType="mongo-create-user"
+    createUserScript="$installType.js"
+    echo "db = db.getSiblingDB(\"$schedulerDatabaseName\");" > $createUserScript
+    echo "db.createUser({" >> $createUserScript
+    echo "user: \"$schedulerDatabaseUser\"," >> $createUserScript
+    echo "pwd: \"$servicePassword\"," >> $createUserScript
+    echo "roles: [" >> $createUserScript
+    echo "{ role: \"readWrite\", db: \"$schedulerDatabaseName\" }" >> $createUserScript
+    echo "]})" >> $createUserScript
+    mongo $createUserScript 1> $installType.out.log 2> $installType.err.log
+    echo "Customize (End): Mongo DB User"
 
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --prefix $schedulerInstallRoot --installmongodb false --dbauth false
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallRoot --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword $servicePassword
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
     echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
@@ -243,20 +247,17 @@ if [[ $renderManager == *Qube* ]]; then
   fi
 fi
 
-rendererPathPBRT="/usr/local/pbrt"
-rendererPathBlender="/usr/local/blender"
-rendererPathUnreal="/usr/local/unreal"
-
 if [[ $renderEngines == *PBRT* ]]; then
   echo "Customize (Start): PBRT v3"
   versionInfo="v3"
   installType="pbrt-$versionInfo"
-  rendererPathPBRTv3="$rendererPathPBRT/$versionInfo"
+  installPath="/usr/local/pbrt"
+  installPathV3="$installPath/$versionInfo"
   git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
-  mkdir -p $rendererPathPBRTv3
-  cmake -B $rendererPathPBRTv3 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
-  make -C $rendererPathPBRTv3 1> $installType-make.out.log 2> $installType-make.err.log
-  ln -s $rendererPathPBRTv3/pbrt $rendererPathPBRT/pbrt3
+  mkdir -p $installPathV3
+  cmake -B $installPathV3 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
+  make -C $installPathV3 1> $installType-make.out.log 2> $installType-make.err.log
+  ln -s $installPathV3/pbrt $installPath/pbrt3
   echo "Customize (End): PBRT v3"
 
   echo "Customize (Start): PBRT v4"
@@ -267,15 +268,15 @@ if [[ $renderEngines == *PBRT* ]]; then
   dnf -y install libXi-devel
   versionInfo="v4"
   installType="pbrt-$versionInfo"
-  rendererPathPBRTv4="$rendererPathPBRT/$versionInfo"
+  installPathV4="$installPath/$versionInfo"
   git clone --recursive https://github.com/mmp/$installType.git 1> $installType-git.out.log 2> $installType-git.err.log
-  mkdir -p $rendererPathPBRTv4
-  cmake -B $rendererPathPBRTv4 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
-  make -C $rendererPathPBRTv4 1> $installType-make.out.log 2> $installType-make.err.log
-  ln -s $rendererPathPBRTv4/pbrt $rendererPathPBRT/pbrt4
+  mkdir -p $installPathV4
+  cmake -B $installPathV4 -S $binDirectory/$installType 1> $installType-cmake.out.log 2> $installType-cmake.err.log
+  make -C $installPathV4 1> $installType-make.out.log 2> $installType-make.err.log
+  ln -s $installPathV4/pbrt $installPath/pbrt4
   echo "Customize (End): PBRT v4"
 
-  binPaths="$binPaths:$rendererPathPBRT"
+  binPaths="$binPaths:$installPath"
 fi
 
 if [[ $renderEngines == *Blender* ]]; then
@@ -285,41 +286,91 @@ if [[ $renderEngines == *Blender* ]]; then
   dnf -y install libXfixes
   dnf -y install libXi
   dnf -y install libSM
-  versionInfo="3.5.0"
+  versionInfo="3.5.1"
   versionType="linux-x64"
+  installPath="/usr/local/blender"
   installFile="blender-$versionInfo-$versionType.tar.xz"
   downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xf $installFile --xz
-  mkdir -p $rendererPathBlender
-  mv blender-$versionInfo-$versionType/* $rendererPathBlender
-  binPaths="$binPaths:$rendererPathBlender"
+  mkdir -p $installPath
+  mv blender-$versionInfo-$versionType/* $installPath
+  binPaths="$binPaths:$installPath"
   echo "Customize (End): Blender"
 fi
 
-if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream* ]]; then
+if [[ $renderEngines == *Houdini* ]]; then
+  echo "Customize (Start): Houdini"
+  dnf -y install mesa-libGL
+  dnf -y install libXcomposite
+  dnf -y install libXdamage
+  dnf -y install libXrandr
+  dnf -y install libXcursor
+  dnf -y install libXi
+  dnf -y install libXtst
+  dnf -y install libXScrnSaver
+  dnf -y install alsa-lib
+  dnf -y install libnsl
+  versionInfo="19.5.569"
+  versionEULA="2021-10-13"
+  installType="houdini"
+  installFile="$installType-$versionInfo-linux_x86_64_gcc9.3.tar.gz"
+  downloadUrl="$binStorageHost/Houdini/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
+  [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
+  ./houdini*/houdini.install --auto-install --make-dir --accept-EULA $versionEULA $mayaPlugIn $unrealPlugIn 1> $installType.out.log 2> $installType.err.log
+  binPaths="$binPaths:/opt/hfs$versionInfo/bin"
+  echo "Customize (End): Houdini"
+fi
+
+if [[ $renderEngines == *Maya* ]]; then
+  echo "Customize (Start): Maya"
+  dnf -y install mesa-libGL
+  dnf -y install mesa-libGLU
+  dnf -y install alsa-lib
+  dnf -y install libXxf86vm
+  dnf -y install libXmu
+  dnf -y install libXpm
+  dnf -y install libnsl
+  dnf -y install gtk3
+  versionInfo="2024_0_1"
+  installType="autodesk-maya"
+  installFile="Autodesk_Maya_${versionInfo}_Update_Linux_64bit.tgz"
+  downloadUrl="$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  mkdir $installType
+  tar -xzf $installFile -C $installType
+  ./$installType/Setup --silent 1> $installType.out.log 2> $installType.err.log
+  binPaths="$binPaths:/usr/autodesk/maya/bin"
+  echo "Customize (End): Maya"
+fi
+
+if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
   echo "Customize (Start): Unreal Engine Setup"
   dnf -y install libicu
   versionInfo="5.1.1"
   installType="unreal-engine"
+  installPath="/usr/local/unreal"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
   downloadUrl="$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
-  mkdir $rendererPathUnreal
-  mv UnrealEngine-$versionInfo-release/* $rendererPathUnreal
-  $rendererPathUnreal/Setup.sh 1> $installType-setup.out.log 2> $installType-setup.err.log
+  mkdir -p $installPath
+  mv UnrealEngine-$versionInfo-release/* $installPath
+  $installPath/Setup.sh 1> $installType-setup.out.log 2> $installType-setup.err.log
   echo "Customize (End): Unreal Engine Setup"
 
   echo "Customize (Start): Unreal Project Files Generate"
-  $rendererPathUnreal/GenerateProjectFiles.sh 1> unreal-project-files-generate.out.log 2> unreal-project-files-generate.err.log
+  $installPath/GenerateProjectFiles.sh 1> unreal-project-files-generate.out.log 2> unreal-project-files-generate.err.log
   echo "Customize (End): Unreal Project Files Generate"
 
   echo "Customize (Start): Unreal Engine Build"
-  make -C $rendererPathUnreal 1> $installType-build.out.log 2> $installType-build.err.log
+  make -C $installPath 1> $installType-build.out.log 2> $installType-build.err.log
   echo "Customize (End): Unreal Engine Build"
 
-  if [[ $renderEngines == *Unreal.PixelStream* ]]; then
+  if [[ $renderEngines == *Unreal+PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
     installType="unreal-stream"
     git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 1> $installType-git.out.log 2> $installType-git.err.log
@@ -336,7 +387,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal.PixelStream*
     echo "Customize (End): Unreal Pixel Streaming"
   fi
 
-  binPaths="$binPaths:$rendererPathUnreal"
+  binPaths="$binPaths:$installPath"
 fi
 
 echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
