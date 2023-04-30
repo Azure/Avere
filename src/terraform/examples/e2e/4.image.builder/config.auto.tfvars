@@ -64,8 +64,8 @@ imageTemplates = [
     }
     build = {
       machineType = "Storage"
-      machineSize = "Standard_L16as_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                   # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineSize = "Standard_L8s_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
       outputVersion  = "0.0.0"
       timeoutMinutes = 120
@@ -74,6 +74,7 @@ imageTemplates = [
       ]
       customize = [
         "dnf -y install jq",
+        "dnf -y install bc",
         "dnf -y install lsof",
         "dnf -y upgrade --refresh"
       ]
@@ -107,15 +108,18 @@ imageTemplates = [
     }
     build = {
       machineType = "Farm"
-      machineSize = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize = "Standard_HB120rs_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      outputVersion  = "1.0.0"
+      outputVersion  = "2.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
+        "Maya",
         "PBRT",
-        "Blender"
+        "Houdini",
+        "Blender",
+        #"Unreal"
       ]
       customize = [
       ]
@@ -137,9 +141,11 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
+        "Maya",
         "PBRT",
+        "Houdini",
         "Blender",
-        # "Unreal"
+        #"Unreal"
       ]
       customize = [
       ]
@@ -161,9 +167,11 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
+        "Maya",
         "PBRT",
+        "Houdini",
         "Blender",
-        # "Unreal.PixelStream"
+        #"Unreal+PixelStream"
       ]
       customize = [
       ]
@@ -197,15 +205,18 @@ imageTemplates = [
     }
     build = {
       machineType = "Farm"
-      machineSize = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize = "Standard_HB120rs_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
-      outputVersion  = "1.0.0"
+      outputVersion  = "2.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
+        "Maya",
         "PBRT",
-        "Blender"
+        "Houdini",
+        "Blender",
+        #"Unreal"
       ]
       customize = [
       ]
@@ -227,9 +238,11 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
+        "Maya",
         "PBRT",
+        "Houdini",
         "Blender",
-        # "Unreal"
+        #"Unreal"
       ]
       customize = [
       ]
@@ -251,9 +264,11 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
+        "Maya",
         "PBRT",
+        "Houdini",
         "Blender",
-        # "Unreal.PixelStream"
+        #"Unreal+PixelStream"
       ]
       customize = [
       ]

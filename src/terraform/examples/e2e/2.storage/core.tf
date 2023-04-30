@@ -38,11 +38,6 @@ variable "storageAccounts" {
   ))
 }
 
-data "azurerm_storage_account" "blob" {
-  name                = local.blobStorageAccount.name
-  resource_group_name = azurerm_resource_group.storage.name
-}
-
 locals {
   serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
   blobStorageAccount     = [for storageAccount in var.storageAccounts : storageAccount if storageAccount.type == "StorageV2" || storageAccount.type == "BlockBlobStorage"][0]

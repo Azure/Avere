@@ -97,6 +97,12 @@ variable "weka" {
   )
 }
 
+data "azurerm_storage_account" "blob" {
+  count               = var.weka.name.resource != "" ? 1 : 0
+  name                = local.blobStorageAccount.name
+  resource_group_name = azurerm_resource_group.storage.name
+}
+
 data "azurerm_virtual_machine_scale_set" "weka" {
   count               = var.weka.name.resource != "" ? 1 : 0
   name                = azurerm_linux_virtual_machine_scale_set.weka[0].name
@@ -113,8 +119,8 @@ locals {
   })
   wekaObjectTier = merge(var.weka.objectTier, {
     storage = {
-      accountName   = var.weka.objectTier.storage.accountName != "" ? var.weka.objectTier.storage.accountName : data.azurerm_storage_account.blob.name
-      accountKey    = var.weka.objectTier.storage.accountKey != "" ? var.weka.objectTier.storage.accountKey : data.azurerm_storage_account.blob.secondary_access_key
+      accountName   = var.weka.objectTier.storage.accountName != "" ? var.weka.objectTier.storage.accountName : try(data.azurerm_storage_account.blob[0].name, "")
+      accountKey    = var.weka.objectTier.storage.accountKey != "" ? var.weka.objectTier.storage.accountKey : try(data.azurerm_storage_account.blob[0].secondary_access_key, "")
       containerName = var.weka.objectTier.storage.containerName != "" ? var.weka.objectTier.storage.containerName : "weka"
     }
   })

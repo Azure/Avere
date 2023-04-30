@@ -3,7 +3,7 @@
 ####################
 
 variable "regionName" {
-  default = "WestUS2" # Set default Azure region name (az account list-locations --query [].name)
+  default = "WestUS3" # Set default Azure region name (az account list-locations --query [].name)
 }
 
 variable "resourceGroupName" {
