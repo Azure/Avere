@@ -159,6 +159,7 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "Customize (End): Deadline Client"
   fi
 
+  unzip $schedulerBinPath/bin.zip -d $schedulerBinPath
   binPaths="$binPaths:$schedulerBinPath"
 fi
 
