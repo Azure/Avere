@@ -120,6 +120,7 @@ if [[ $renderManager == *Deadline* ]]; then
     sed -i "/bindIp: 0.0.0.0/a\  tls:" $serviceConfigFile
     sed -i "/tls:/a\    mode: disabled" $serviceConfigFile
     systemctl --now enable mongod
+    sleep 5s
     echo "Customize (End): Mongo DB Service"
 
     echo "Customize (Start): Mongo DB User"
