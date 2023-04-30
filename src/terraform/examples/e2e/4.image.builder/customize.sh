@@ -147,7 +147,7 @@ if [[ $renderManager == *Deadline* ]]; then
   else
     echo "Customize (Start): Deadline Client"
     installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-    installArgs="--mode unattended --prefix $schedulerInstallRoot"
+    installArgs="--mode unattended --prefix $schedulerInstallRoot --repositorydir $schedulerInstallRoot"
     if [ $machineType == "Scheduler" ]; then
       installArgs="$installArgs --slavestartup false --launcherdaemon false"
     else
