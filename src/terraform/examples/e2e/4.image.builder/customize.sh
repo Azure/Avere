@@ -156,7 +156,6 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     $installPath/$installFile $installArgs
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    $schedulerBinPath/deadlinecommand -UpdateDatabaseSettings $schedulerServerMount MongoDB $schedulerDatabaseHost $schedulerDatabaseName $schedulerDatabasePort 0 false true $schedulerDatabaseUser env:DB_PASSWORD "" false
     $schedulerBinPath/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser env:DB_PASSWORD
     echo "Customize (End): Deadline Client"
   fi
