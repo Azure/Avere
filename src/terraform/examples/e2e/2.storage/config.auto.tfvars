@@ -158,8 +158,14 @@ weka = {
       disable = false
     }
   }
-  supportCloudUrl = ""
-  classicLicense  = ""
+  supportUrl = ""
+  license = {
+    key = ""
+    payg = {
+      planId    = ""
+      secretKey = ""
+    }
+  }
 }
 
 #######################################################################################################

@@ -91,8 +91,18 @@ variable "weka" {
           )
         }
       )
-      supportCloudUrl = string
-      classicLicense  = string
+      supportUrl = string
+      license = object(
+        {
+          key = string
+          payg = object(
+            {
+              planId    = string
+              secretKey = string
+            }
+          )
+        }
+      )
     }
   )
 }
@@ -101,6 +111,9 @@ data "azurerm_storage_account" "blob" {
   count               = var.weka.name.resource != "" ? 1 : 0
   name                = local.blobStorageAccount.name
   resource_group_name = azurerm_resource_group.storage.name
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
 }
 
 data "azurerm_virtual_machine_scale_set" "weka" {
@@ -323,9 +336,11 @@ resource "terraform_data" "weka_cluster_start" {
     inline = [
       "weka cluster update --cluster-name='${var.weka.name.display}' --data-drives ${var.weka.dataProtection.stripeWidth} --parity-drives ${var.weka.dataProtection.parityLevel}",
       "weka cluster hot-spare ${var.weka.dataProtection.hotSpare}",
-      "weka cloud enable ${var.weka.supportCloudUrl != "" ? "--cloud-url=${var.weka.supportCloudUrl}" : ""}",
-      "if [ \"${var.weka.classicLicense}\" != \"\" ]; then",
-      "  weka cluster license set ${var.weka.classicLicense}",
+      "weka cloud enable ${var.weka.supportUrl != "" ? "--cloud-url=${var.weka.supportUrl}" : ""}",
+      "if [ \"${var.weka.license.key}\" != \"\" ]; then",
+      "  weka cluster license set ${var.weka.license.key}",
+      "elif [ \"${var.weka.license.payg.planId}\" != \"\" ]; then",
+      "  weka cluster license payg ${var.weka.license.payg.planId} ${var.weka.license.payg.secretKey}",
       "fi",
       "weka cluster start-io",
     ]
@@ -382,29 +397,31 @@ resource "terraform_data" "weka_file_system" {
     ]
   }
   depends_on = [
-    terraform_data.weka_container_frontend
+    terraform_data.weka_container_frontend,
+    azurerm_storage_container.core
   ]
 }
 
-# resource "terraform_data" "weka_data" {
-#   count = var.weka.name.resource != "" && var.dataLoadSource.accountName != "" ? 1 : 0
-#   connection {
-#     type     = "ssh"
-#     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
-#     user     = var.weka.adminLogin.userName
-#     password = var.weka.adminLogin.userPassword
-#   }
-#   provisioner "remote-exec" {
-#     inline = [
-#       "mountPath=/mnt/data",
-#       "mkdir -p $mountPath",
-#       "mount -t wekafs ${var.weka.fileSystem.name} $mountPath"
-#     ]
-#   }
-#   depends_on = [
-#     terraform_data.weka_file_system
-#   ]
-# }
+resource "terraform_data" "weka_data" {
+  count = var.weka.name.resource != "" ? 1 : 0 # && var.dataLoadSource.accountName != "" ? 1 : 0
+  connection {
+    type     = "ssh"
+    host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
+    user     = var.weka.adminLogin.userName
+    password = var.weka.adminLogin.userPassword
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "sudo weka agent install-agent",
+      "mountPath=/mnt/data",
+      "sudo mkdir -p $mountPath",
+      "sudo mount -t wekafs ${var.weka.fileSystem.name} $mountPath"
+    ]
+  }
+  depends_on = [
+    terraform_data.weka_file_system
+  ]
+}
 
 output "resourceGroupNameWeka" {
   value = var.weka.name.resource != "" ? azurerm_resource_group.weka[0].name : ""

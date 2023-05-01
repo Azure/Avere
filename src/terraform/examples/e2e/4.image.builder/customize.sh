@@ -105,7 +105,6 @@ if [[ $renderManager == *Deadline* ]]; then
   tar -xzf $installFile -C $installPath
   echo "Customize (End): Deadline Download"
 
-  export DB_PASSWORD=$servicePassword
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Mongo DB Service"
     repoPath="/etc/yum.repos.d/mongodb.repo"
@@ -138,6 +137,7 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "Customize (End): Mongo DB User"
 
     echo "Customize (Start): Deadline Server"
+    export DB_PASSWORD=$servicePassword
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
     $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword env:DB_PASSWORD
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
@@ -156,7 +156,6 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     $installPath/$installFile $installArgs
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    $schedulerBinPath/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser env:DB_PASSWORD
     echo "Customize (End): Deadline Client"
   fi
 
