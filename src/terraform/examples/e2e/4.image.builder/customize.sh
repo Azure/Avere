@@ -4,6 +4,9 @@ binPaths=""
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
+aaaProfile="/etc/profile.d/aaa.sh"
+touch $aaaProfile
+
 echo "Customize (Start): Image Build Parameters"
 dnf -y install jq
 buildConfig=$(echo $buildConfigEncoded | base64 -d)
@@ -156,6 +159,7 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     $installPath/$installFile $installArgs
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+    echo "$schedulerBinPath/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser $servicePassword" >> $aaaProfile
     echo "Customize (End): Deadline Client"
   fi
 
@@ -394,7 +398,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
   binPaths="$binPaths:$installPath"
 fi
 
-echo "PATH=$PATH$binPaths" > /etc/profile.d/aaa.sh
+echo "PATH=$PATH$binPaths" >> $aaaProfile
 
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Teradici PCoIP"
