@@ -21,9 +21,6 @@ function AddMount {
 function EnableRenderClient {
   renderManager="$1"
   servicePassword="$2"
-  if [[ $renderManager == *Deadline* ]]; then
-    deadlinecommand -ChangeRepository Direct /Deadline "" ""
-  fi
   # if [[ $renderManager == *RoyalRender* ]]; then
   #   installType="royal-render-client"
 

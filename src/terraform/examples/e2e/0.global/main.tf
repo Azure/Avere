@@ -133,7 +133,7 @@ resource "azurerm_storage_account" "storage" {
   }
 }
 
-resource "time_sleep" "storage_data" {
+resource "time_sleep" "storage" {
   create_duration = "30s"
   depends_on = [
     azurerm_storage_account.storage
@@ -144,7 +144,7 @@ resource "azurerm_storage_container" "terraform" {
   name                 = module.global.rootStorage.containerName.terraform
   storage_account_name = azurerm_storage_account.storage.name
   depends_on = [
-    time_sleep.storage_data
+    time_sleep.storage
   ]
 }
 

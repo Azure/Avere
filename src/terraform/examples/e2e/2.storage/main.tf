@@ -41,6 +41,16 @@ variable "resourceGroupName" {
   type = string
 }
 
+variable "dataLoadSource" {
+  type = object(
+    {
+      accountName   = string
+      accountKey    = string
+      containerName = string
+    }
+  )
+}
+
 variable "storageNetwork" {
   type = object(
     {

@@ -27,13 +27,6 @@ variable "storageAccounts" {
           protocol = string
         }
       ))
-      dataSource = object(
-        {
-          accountName   = string
-          accountKey    = string
-          containerName = string
-        }
-      )
     }
   ))
 }
@@ -48,7 +41,6 @@ locals {
         rootAcl            = blobContainer.rootAcl
         rootAclDefault     = blobContainer.rootAclDefault
         storageAccountName = storageAccount.name
-        dataSource         = storageAccount.dataSource
       }
     ]
   ])
@@ -60,7 +52,6 @@ locals {
         size               = fileShare.sizeGiB
         accessProtocol     = fileShare.protocol
         storageAccountName = storageAccount.name
-        dataSource         = storageAccount.dataSource
       }
     ]
   ])
@@ -93,7 +84,7 @@ resource "azurerm_storage_account" "storage" {
   }
 }
 
-resource "time_sleep" "storage_data" {
+resource "time_sleep" "storage" {
   for_each = {
     for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
   }
@@ -103,27 +94,18 @@ resource "time_sleep" "storage_data" {
   ]
 }
 
-resource "azurerm_storage_container" "containers" {
+resource "azurerm_storage_container" "core" {
   for_each = {
     for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer
   }
   name                 = each.value.name
   storage_account_name = each.value.storageAccountName
-  provisioner "local-exec" {
-    command = "az storage fs access set --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.rootAcl}"
-  }
-  provisioner "local-exec" {
-    command = "az storage fs access set --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.rootAclDefault}"
-  }
-  provisioner "local-exec" {
-    command = each.value.dataSource.accountName == "" ? "az storage container show --account-name ${each.value.storageAccountName} --name ${each.value.name}" : "az storage copy --source-account-name ${each.value.dataSource.accountName} --source-account-key ${each.value.dataSource.accountKey} --source-container ${each.value.dataSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name}"
-  }
   depends_on = [
-    time_sleep.storage_data
+    time_sleep.storage
   ]
 }
 
-resource "azurerm_storage_share" "shares" {
+resource "azurerm_storage_share" "core" {
   for_each = {
     for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare
   }
@@ -132,10 +114,46 @@ resource "azurerm_storage_share" "shares" {
   storage_account_name = each.value.storageAccountName
   enabled_protocol     = each.value.accessProtocol
   quota                = each.value.size
+  depends_on = [
+    time_sleep.storage
+  ]
+}
+
+resource "terraform_data" "storage_container_permission" {
+  for_each = {
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer
+  }
   provisioner "local-exec" {
-    command = each.value.dataSource.accountName == "" ? "az storage share show --account-name ${each.value.storageAccountName} --name ${each.value.name}" : "az storage copy --source-account-name ${each.value.dataSource.accountName} --source-account-key ${each.value.dataSource.accountKey} --source-container ${each.value.dataSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-share ${each.value.name}"
+    command = "az storage fs access set --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.rootAcl}"
+  }
+  provisioner "local-exec" {
+    command = "az storage fs access set --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.rootAclDefault}"
   }
   depends_on = [
-    time_sleep.storage_data
-  ]
+    azurerm_storage_container.core
+   ]
+}
+
+resource "terraform_data" "storage_container_data" {
+  for_each = {
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer if blobContainer.name == "data" && var.dataLoadSource.accountName != ""
+  }
+  provisioner "local-exec" {
+    command = "az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name}"
+  }
+  depends_on = [
+    azurerm_storage_container.core
+   ]
+}
+
+resource "terraform_data" "storage_share_data" {
+  for_each = {
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare if fileShare.name == "data" && var.dataLoadSource.accountName != ""
+  }
+  provisioner "local-exec" {
+    command = "az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-share ${each.value.name}"
+  }
+  depends_on = [
+    azurerm_storage_share.core
+   ]
 }

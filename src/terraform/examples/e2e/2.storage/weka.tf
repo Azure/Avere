@@ -386,6 +386,26 @@ resource "terraform_data" "weka_file_system" {
   ]
 }
 
+# resource "terraform_data" "weka_data" {
+#   count = var.weka.name.resource != "" && var.dataLoadSource.accountName != "" ? 1 : 0
+#   connection {
+#     type     = "ssh"
+#     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
+#     user     = var.weka.adminLogin.userName
+#     password = var.weka.adminLogin.userPassword
+#   }
+#   provisioner "remote-exec" {
+#     inline = [
+#       "mountPath=/mnt/data",
+#       "mkdir -p $mountPath",
+#       "mount -t wekafs ${var.weka.fileSystem.name} $mountPath"
+#     ]
+#   }
+#   depends_on = [
+#     terraform_data.weka_file_system
+#   ]
+# }
+
 output "resourceGroupNameWeka" {
   value = var.weka.name.resource != "" ? azurerm_resource_group.weka[0].name : ""
 }

@@ -27,7 +27,6 @@ dnf -y install dkms
 dnf -y install gcc gcc-c++
 dnf -y install unzip
 dnf -y install cmake
-dnf -y install make
 dnf -y install lsof
 dnf -y install git
 dnf -y install bc

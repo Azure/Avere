@@ -50,7 +50,7 @@ virtualMachines = [
           storageReadCache  = "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
           storageWrite      = "azstudio1.blob.core.windows.net:/azstudio1/data /mnt/data/write nfs sec=sys,vers=3,proto=tcp,nolock 0 0"
           storageWriteCache = "cache.content.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          schedulerDeadline = "scheduler.content.studio:/Deadline /Deadline nfs defaults 0 0"
+          schedulerDeadline = "scheduler.content.studio:/Deadline /DeadlineServer nfs defaults 0 0"
         }
         teradiciLicenseKey = ""
       }

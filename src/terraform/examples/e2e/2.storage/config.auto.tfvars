@@ -1,5 +1,11 @@
 resourceGroupName = "ArtistAnywhere.Storage" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
+dataLoadSource = {
+  accountName   = ""
+  accountKey    = ""
+  containerName = ""
+}
+
 ###################################################################################
 # Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction) #
 ###################################################################################
@@ -25,13 +31,8 @@ storageAccounts = [
         rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
       }
     ]
-    fileShares = [                            # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
+    fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
     ]
-    dataSource = {
-      accountName   = ""
-      accountKey    = ""
-      containerName = ""
-    }
   },
   {
     name                 = "azstudio2"   # Name must be globally unique (lowercase alphanumeric)
@@ -43,7 +44,7 @@ storageAccounts = [
     enableLargeFileShare = true          # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
     blobContainers = [                   # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
     ]
-    fileShares = [                       # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
+    fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
         name     = "data"
         tier     = "Premium"
@@ -51,11 +52,6 @@ storageAccounts = [
         protocol = "SMB"
       }
     ]
-    dataSource = {
-      accountName   = ""
-      accountKey    = ""
-      containerName = ""
-    }
   }
 ]
 
