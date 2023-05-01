@@ -89,12 +89,13 @@ fi
 
 if [[ $renderManager == *Deadline* ]]; then
   schedulerVersion="10.2.1.0"
-  schedulerInstallRoot="/Deadline"
+  schedulerInstallPath="/Deadline"
+  schedulerServerMount="/DeadlineServer"
   schedulerDatabaseHost=$(hostname)
   schedulerDatabasePort=27017
   schedulerDatabaseUser="dbService"
   schedulerDatabaseName="deadline10db"
-  schedulerBinPath="$schedulerInstallRoot/bin/Linux"
+  schedulerBinPath="$schedulerInstallPath/bin"
 
   echo "Customize (Start): Deadline Download"
   installFile="Deadline-$schedulerVersion-linux-installers.tar"
@@ -139,15 +140,15 @@ if [[ $renderManager == *Deadline* ]]; then
 
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallRoot --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword env:DB_PASSWORD
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword env:DB_PASSWORD
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
-    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
+    echo "$schedulerInstallPath *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Deadline Server"
   else
     echo "Customize (Start): Deadline Client"
     installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-    installArgs="--mode unattended --prefix $schedulerInstallRoot --repositorydir $schedulerInstallRoot"
+    installArgs="--mode unattended --prefix $schedulerInstallPath --repositorydir $schedulerServerMount"
     if [ $machineType == "Scheduler" ]; then
       installArgs="$installArgs --slavestartup false --launcherdaemon false"
     else
@@ -156,13 +157,9 @@ if [[ $renderManager == *Deadline* ]]; then
     fi
     $installPath/$installFile $installArgs
     cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    echo "Customize (End): Deadline Client"
-  fi
-
-  unzip $schedulerBinPath/bin.zip -d $schedulerBinPath
-  if [ $machineType != "Scheduler" ]; then
-    $schedulerBinPath/deadlinecommand -UpdateDatabaseSettings $schedulerInstallRoot MongoDB $schedulerDatabaseHost $schedulerDatabaseName $schedulerDatabasePort 0 false true $schedulerDatabaseUser env:DB_PASSWORD "" false
+    $schedulerBinPath/deadlinecommand -UpdateDatabaseSettings $schedulerServerMount MongoDB $schedulerDatabaseHost $schedulerDatabaseName $schedulerDatabasePort 0 false true $schedulerDatabaseUser env:DB_PASSWORD "" false
     $schedulerBinPath/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser env:DB_PASSWORD
+    echo "Customize (End): Deadline Client"
   fi
 
   binPaths="$binPaths:$schedulerBinPath"
@@ -170,8 +167,8 @@ fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
   schedulerVersion="9.0.04"
-  schedulerInstallRoot="/RoyalRender"
-  schedulerBinPath="$schedulerInstallRoot/bin/lx64"
+  schedulerInstallPath="/RoyalRender"
+  schedulerBinPath="$schedulerInstallPath/bin/lx64"
 
   echo "Customize (Start): Royal Render Download"
   installFile="RoyalRender__${schedulerVersion}__installer.zip"
@@ -191,9 +188,9 @@ if [[ $renderManager == *RoyalRender* ]]; then
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Royal Render Server"
     installType="royal-render"
-    mkdir $schedulerInstallRoot
-    ./$installPath/$installFile -console -rrRoot $schedulerInstallRoot 1> $installType.out.log 2> $installType.err.log
-    echo "$schedulerInstallRoot *(rw,no_root_squash)" >> /etc/exports
+    mkdir $schedulerInstallPath
+    ./$installPath/$installFile -console -rrRoot $schedulerInstallPath 1> $installType.out.log 2> $installType.err.log
+    echo "$schedulerInstallPath *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Royal Render Server"
   fi
@@ -204,8 +201,8 @@ fi
 if [[ $renderManager == *Qube* ]]; then
   schedulerVersion="8.0-0"
   schedulerConfigFile="/etc/qb.conf"
-  schedulerInstallRoot="/usr/local/pfx/qube"
-  schedulerBinPath="$schedulerInstallRoot/bin"
+  schedulerInstallPath="/usr/local/pfx/qube"
+  schedulerBinPath="$schedulerInstallPath/bin"
 
   echo "Customize (Start): Qube Core"
   dnf -y install perl
@@ -254,7 +251,7 @@ if [[ $renderManager == *Qube* ]]; then
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
   fi
 
-  binPaths="$binPaths:$schedulerBinPath:$schedulerInstallRoot/sbin"
+  binPaths="$binPaths:$schedulerBinPath:$schedulerInstallPath/sbin"
 fi
 
 if [[ $renderEngines == *Maya* ]]; then

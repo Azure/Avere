@@ -136,11 +136,11 @@ if ($machineType -eq "Scheduler") {
 
 if ("$renderManager" -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
-  $schedulerInstallRoot = "C:\Deadline"
+  $schedulerInstallPath = "C:\Deadline"
   $schedulerDatabaseHost = $(hostname)
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"
-  $schedulerBinPath = "$schedulerInstallRoot\bin"
+  $schedulerBinPath = "$schedulerInstallPath\bin"
 
   Write-Host "Customize (Start): Deadline Download"
   $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
@@ -155,10 +155,10 @@ if ("$renderManager" -like "*Deadline*") {
     netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=27100
     $installType = "deadline-repository"
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallRoot --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --installmongodb true" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --installmongodb true" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
     Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
-    Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallRoot\$schedulerCertificateFile
-    New-NfsShare -Name "Deadline" -Path $schedulerInstallRoot -Permission ReadWrite
+    Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallPath\$schedulerCertificateFile
+    New-NfsShare -Name "Deadline" -Path $schedulerInstallPath -Permission ReadWrite
     Write-Host "Customize (End): Deadline Server"
   } else {
     Write-Host "Customize (Start): Deadline Client"
@@ -166,7 +166,7 @@ if ("$renderManager" -like "*Deadline*") {
     netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerBinPath\deadlinemonitor.exe"
     netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerBinPath\deadlinelauncher.exe"
     $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-    $installArgs = "--mode unattended --prefix $schedulerInstallRoot"
+    $installArgs = "--mode unattended --prefix $schedulerInstallPath"
     if ($machineType -eq "Scheduler") {
       $installArgs = "$installArgs --slavestartup false --launcherservice false"
     } else {
@@ -197,8 +197,8 @@ if ("$renderManager" -like "*Deadline*") {
 
 if ("$renderManager" -like "*RoyalRender*") {
   $schedulerVersion = "9.0.04"
-  $schedulerInstallRoot = "\RoyalRender"
-  $schedulerBinPath = "C:$schedulerInstallRoot\bin\win64"
+  $schedulerInstallPath = "\RoyalRender"
+  $schedulerBinPath = "C:$schedulerInstallPath\bin\win64"
 
   Write-Host "Customize (Start): Royal Render Download"
   $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
@@ -212,13 +212,13 @@ if ("$renderManager" -like "*RoyalRender*") {
     $installType = "royal-render"
     $installPath = "RoyalRender*"
     $installFile = "rrSetup_win.exe"
-    $rrShareName = $schedulerInstallRoot.TrimStart("\")
-    $rrRootShare = "\\$(hostname)$schedulerInstallRoot"
-    New-Item -ItemType Directory -Path $schedulerInstallRoot
-    New-SmbShare -Name $rrShareName -Path "C:$schedulerInstallRoot" -FullAccess "Everyone"
+    $rrShareName = $schedulerInstallPath.TrimStart("\")
+    $rrRootShare = "\\$(hostname)$schedulerInstallPath"
+    New-Item -ItemType Directory -Path $schedulerInstallPath
+    New-SmbShare -Name $rrShareName -Path "C:$schedulerInstallPath" -FullAccess "Everyone"
     Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot $rrRootShare" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
     Remove-SmbShare -Name $rrShareName -Force
-    New-NfsShare -Name "RoyalRender" -Path C:$schedulerInstallRoot -Permission ReadWrite
+    New-NfsShare -Name "RoyalRender" -Path C:$schedulerInstallPath -Permission ReadWrite
     Write-Host "Customize (End): Royal Render Server"
   }
 
@@ -237,8 +237,8 @@ if ("$renderManager" -like "*RoyalRender*") {
 if ("$renderManager" -like "*Qube*") {
   $schedulerVersion = "8.0-0"
   $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
-  $schedulerInstallRoot = "C:\Program Files\pfx\qube"
-  $schedulerBinPath = "$schedulerInstallRoot\bin"
+  $schedulerInstallPath = "C:\Program Files\pfx\qube"
+  $schedulerBinPath = "$schedulerInstallPath\bin"
 
   Write-Host "Customize (Start): Strawberry Perl"
   $installType = "strawberryperl"
@@ -295,9 +295,9 @@ if ("$renderManager" -like "*Qube*") {
     $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$schedulerInstallRoot\QubeUI"
-    $shortcut.TargetPath = "$schedulerInstallRoot\QubeUI\QubeUI.bat"
-    $shortcut.IconLocation = "$schedulerInstallRoot\lib\install\qube_icon.ico"
+    $shortcut.WorkingDirectory = "$schedulerInstallPath\QubeUI"
+    $shortcut.TargetPath = "$schedulerInstallPath\QubeUI\QubeUI.bat"
+    $shortcut.IconLocation = "$schedulerInstallPath\lib\install\qube_icon.ico"
     $shortcut.Save()
     Write-Host "Customize (End): Qube Client"
 
@@ -307,7 +307,7 @@ if ("$renderManager" -like "*Qube*") {
     Set-Content -Path $schedulerConfigFile -Value $configFileText
   }
 
-  $binPaths += ";$schedulerBinPath;$schedulerInstallRoot\sbin"
+  $binPaths += ";$schedulerBinPath;$schedulerInstallPath\sbin"
 }
 
 if ($renderEngines -contains "*Maya*") {
