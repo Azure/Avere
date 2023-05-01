@@ -2,7 +2,7 @@
 
 source /etc/profile.d/aaa.sh
 
-cd "/usr/local/bin"
+cd /usr/local/bin
 
 functionsCode="functions.sh"
 functionsData="${filebase64("../0.global/functions.sh")}"

@@ -2,7 +2,7 @@
 
 source /etc/profile.d/aaa.sh
 
-cd "/usr/local/bin"
+cd /usr/local/bin
 
 if [[ ${renderManager} == *RoyalRender* ]]; then
   installType="royal-render-server"

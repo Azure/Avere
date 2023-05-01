@@ -21,10 +21,6 @@ function AddMount {
 function EnableRenderClient {
   renderManager="$1"
   servicePassword="$2"
-  if [[ $renderManager == *Deadline* ]]; then
-    serviceUser="dbService"
-    deadlinecommand -StoreDatabaseCredentials $serviceUser $servicePassword
-  fi
   # if [[ $renderManager == *RoyalRender* ]]; then
   #   installType="royal-render-client"
 

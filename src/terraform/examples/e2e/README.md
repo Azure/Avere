@@ -25,11 +25,19 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 For example, the following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via the Azure Artist Anywhere (AAA) solution deployment framework.
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.4.png" width="1024" />
+  <img src=".github/images/blender-splash-3.5.png" />
 </p>
 
 <p align="center">
-  <img src=".github/images/moana-island.png" width="1024" />
+  <img src=".github/images/blender-splash-3.4.png" />
+</p>
+
+<p align="center">
+  <img src=".github/images/blender-splash-3.3.png" />
+</p>
+
+<p align="center">
+  <img src=".github/images/moana-island.png" />
 </p>
 
 ## Installation Prerequisites
@@ -195,28 +203,28 @@ To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure 
 
 Now that deployment of the AAA solution framework is complete, this final section provides render job submission examples for multiple render engines (Blender, Physically-Based Ray Tracer).
 
-### 9.1 [Blender](https://www.blender.org) [Splash Screen (3.4)](https://www.blender.org/download/demo-files/#splash)
+### 9.1 [Blender](https://www.blender.org) [Splash Screen (3.5)](https://www.blender.org/download/demo-files/#splash)
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.4.png" width="1024" />
+  <img src=".github/images/blender-splash-3.5.png" />
 </p>
 
 #### 9.1.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.5/splash.blend --render-output /mnt/data/write/blender/3.5/splash --enable-autoexec --render-frame 1"```
 
 #### 9.1.2 Azure *Windows* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1"```
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background R:\blender\3.5\splash.blend --render-output W:\blender\3.5\splash --enable-autoexec --render-frame 1"```
 
 ### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
 
 <p align="center">
-  <img src=".github/images/moana-island.png" width="1024" />
+  <img src=".github/images/moana-island.png" />
 </p>
 
 #### 9.2.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
@@ -242,25 +250,31 @@ The following splash screens from previous Blender versions were rendered in Azu
 ### 10.1 Blender 3.0 Splash Screen
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.0.png" width="1024" />
+  <img src=".github/images/blender-splash-3.0.png" />
 </p>
 
 ### 10.2 Blender 3.1 Splash Screen
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.1.jpg" width="1024" />
+  <img src=".github/images/blender-splash-3.1.jpg" />
 </p>
 
 ### 10.3 Blender 3.2 Splash Screen
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.2.png" width="1024" />
+  <img src=".github/images/blender-splash-3.2.png" />
 </p>
 
 ### 10.4 Blender 3.3 Splash Screen
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.3.png" width="1024" />
+  <img src=".github/images/blender-splash-3.3.png" />
+</p>
+
+### 10.5 Blender 3.4 Splash Screen
+
+<p align="center">
+  <img src=".github/images/blender-splash-3.4.png" />
 </p>
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

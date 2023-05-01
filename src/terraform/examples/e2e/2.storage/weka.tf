@@ -403,7 +403,7 @@ resource "terraform_data" "weka_file_system" {
 }
 
 resource "terraform_data" "weka_data" {
-  count = var.weka.name.resource != "" ? 1 : 0 # && var.dataLoadSource.accountName != "" ? 1 : 0
+  count = var.weka.name.resource != "" && var.dataLoadSource.accountName != "" ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address

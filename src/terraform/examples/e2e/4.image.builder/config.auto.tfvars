@@ -73,9 +73,7 @@ imageTemplates = [
       renderEngines = [
       ]
       customize = [
-        "dnf -y install jq",
-        "dnf -y install bc",
-        "dnf -y install lsof",
+        "dnf -y install jq bc lsof",
         "dnf -y upgrade --refresh"
       ]
     }
