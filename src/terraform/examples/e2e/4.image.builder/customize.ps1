@@ -138,6 +138,7 @@ if ("$renderManager" -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
   $schedulerInstallPath = "C:\Deadline"
   $schedulerDatabaseHost = $(hostname)
+  $schedulerDatabasePort = 27100
   $schedulerDatabasePath = "C:\DeadlineDatabase"
   $schedulerCertificateFile = "Deadline10Client.pfx"
   $schedulerBinPath = "$schedulerInstallPath\bin"
@@ -152,7 +153,7 @@ if ("$renderManager" -like "*Deadline*") {
   Set-Location -Path "Deadline*"
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Deadline Server"
-    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=27100
+    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$schedulerDatabasePort
     $installType = "deadline-repository"
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
     Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --installmongodb true" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"

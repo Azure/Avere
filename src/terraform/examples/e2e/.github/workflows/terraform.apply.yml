@@ -16,7 +16,8 @@ on:
         - 4.image.builder
         - 5.render.manager
         - 6.render.farm
-        - 7.artist.workstation
+        - 7.render.ai
+        - 8.artist.workstation
         required: true
       logLevel:
         description: 'Log Level'

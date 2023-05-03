@@ -73,7 +73,20 @@ imageTemplates = [
       renderEngines = [
       ]
       customize = [
-        "dnf -y install jq bc lsof",
+        "cd /usr/local/bin",
+        "dnf -y install perl jq bc lsof",
+        "installType=mellanox-ofed",
+        "installFile=MLNX_OFED_LINUX-5.9-0.5.6.0-rhel8.6-x86_64.tgz",
+        "binStorageHost=https://azstudio.blob.core.windows.net/bin",
+        "binStorageAuth='?sv=2021-10-04&st=2022-01-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=SyE2RuK0C7M9nNQSJfiw4SenqqV8O6DYulr24ZJapFw%3D'",
+        "downloadUrl=$binStorageHost/Weka/$installFile$binStorageAuth",
+        "curl -o $installFile -L $downloadUrl",
+        "tar -xzf $installFile",
+        # "./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --force 1> $installType.out.log 2> $installType.err.log",
+        "installType=az-cli",
+        "rpm --import https://packages.microsoft.com/keys/microsoft.asc",
+        "dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm",
+        "dnf -y install azure-cli 1> $installType.out.log 2> $installType.err.log",
         "dnf -y upgrade --refresh"
       ]
     }

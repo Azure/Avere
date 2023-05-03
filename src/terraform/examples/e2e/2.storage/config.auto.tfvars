@@ -117,10 +117,6 @@ weka = {
     }
   }
   network = {
-    subnet = {
-      range = "10.1.192.64-127"
-      mask  = 26
-    }
     enableAcceleration = false
   }
   objectTier = {

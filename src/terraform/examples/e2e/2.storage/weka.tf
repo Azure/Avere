@@ -31,12 +31,6 @@ variable "weka" {
       )
       network = object(
         {
-          subnet = object(
-            {
-              range = string
-              mask  = number
-            }
-          )
           enableAcceleration = bool
         }
       )
@@ -286,7 +280,6 @@ resource "terraform_data" "weka_cluster_create" {
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
       "weka cluster create ${azurerm_linux_virtual_machine_scale_set.weka[0].name}{000000..${format("%06d", var.weka.machine.count - 1)}} --admin-password ${var.weka.adminLogin.userPassword}",
       "weka user login admin ${var.weka.adminLogin.userPassword}",
-      "weka cluster default-net set --range ${var.weka.network.subnet.range} --netmask-bits ${var.weka.network.subnet.mask}",
       "for (( i=0; i<${var.weka.machine.count}; i++ )); do",
       "  containerId=$i",
       "  containerSize=${local.wekaContainerSize}",
@@ -295,10 +288,7 @@ resource "terraform_data" "weka_cluster_create" {
       "  for (( d=0; d<$nvmeDisk; d++ )); do",
       "    weka cluster drive add $containerId --HOST $hostName /dev/nvme$(echo $d)n1",
       "  done",
-      "  weka cluster container cores $containerId $(($coreCountDrives + $coreCountCompute + $coreCountFrontend)) --drives-dedicated-cores $coreCountDrives --compute-dedicated-cores $coreCountCompute --frontend-dedicated-cores $coreCountFrontend",
-      "done",
-      "weka cluster container apply --all --force",
-      "sleep 30s",
+      "done"
     ]
   }
 }
@@ -315,8 +305,8 @@ resource "terraform_data" "weka_container_compute" {
     inline = [
       "containerSize=${local.wekaContainerSize}",
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
-      #"sudo weka local setup container --name compute --base-port 15000 --join-ips $(hostname -i) --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
-      "sudo weka local setup container --name compute --base-port 15000 --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
+      "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
+      "sudo weka local setup container --name compute --base-port 15000 --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
     ]
   }
   depends_on = [
@@ -362,7 +352,8 @@ resource "terraform_data" "weka_container_frontend" {
     inline = [
       "containerSize=${local.wekaContainerSize}",
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
-      "sudo weka local setup container --name frontend --base-port 16000 --join-ips $(hostname -i) --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
+      "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
+      "sudo weka local setup container --name frontend --base-port 16000 --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
     ]
   }
   depends_on = [
@@ -415,7 +406,8 @@ resource "terraform_data" "weka_data" {
       "sudo weka agent install-agent",
       "mountPath=/mnt/data",
       "sudo mkdir -p $mountPath",
-      "sudo mount -t wekafs ${var.weka.fileSystem.name} $mountPath"
+      "sudo mount -t wekafs ${var.weka.fileSystem.name} $mountPath",
+      #"az storage copy"
     ]
   }
   depends_on = [

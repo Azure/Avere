@@ -18,9 +18,10 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 | [4 Image Builder](#4-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) image definitions and templates for custom images built via the [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, reference your custom render node *image.id* [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.render.farm/config.auto.tfvars#L14) | No, reference your custom render node *image.id* [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.render.farm/config.auto.tfvars#L14) |
 | [5 Render Manager](#5-render-manager) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for render job scheduling via your custom render farm management server image. | No, use your current render manager | No, use your current render manager |
 | [6 Render Farm](#6-render-farm) | Deploys [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) ([HPC Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc)) for scalable Linux and/or Windows render farm compute. | Yes | Yes |
-| [7&#160;Artist&#160;Workstation](#7-artist-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | Yes |
-| [8 GitOps](#8-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via<br>[GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
-| [9 Render](#9-render) | Sample render farm job submission from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [7 Render AI](#7-render-ai) | Deploys [Open AI](https://learn.microsoft.com/azure/cognitive-services/openai/overview) services, including [DALL-E 2](https://openai.com/product/dall-e-2) for text-to-image generation. | No | No |
+| [8&#160;Artist&#160;Workstation](#8-artist-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [9 GitOps](#9-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via<br>[GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
+| [10 Render](#10-render) | Sample render farm job submission from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
 For example, the following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via the Azure Artist Anywhere (AAA) solution deployment framework.
 
@@ -43,7 +44,7 @@ For example, the following sample images were [rendered on Azure](https://user-i
 ## Installation Prerequisites
 
 The following local installation prerequisites are required for the AAA solution deployment framework.<br>
-As an alternative deployment management approach option, sample [GitOps](#8-gitops) enablement is also provided.
+As an alternative deployment management approach option, sample [GitOps](#9-gitops) enablement is also provided.
 1. Make sure the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your PATH environment variable.
 1. Make sure the [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) is installed locally and accessible in your PATH environment variable.
 1. Download the AAA end-to-end (e2e) solution source files via the following GitHub download link.
@@ -160,11 +161,21 @@ As an alternative deployment management approach option, sample [GitOps](#8-gito
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 7 Artist Workstation
+## 7 Render AI
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/7.artist.workstation` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/7.render.ai` in a local shell (Bash or PowerShell)
+1. Review and edit the config values in `config.auto.tfvars` for your deployment.
+1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
+
+## 8 Artist Workstation
+
+### Deployment Steps
+
+1. Run `cd ~/e2e/8.artist.workstation` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
@@ -174,7 +185,7 @@ As an alternative deployment management approach option, sample [GitOps](#8-gito
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 8 GitOps
+## 9 GitOps
 
 The following [GitHub Actions](https://github.com/features/actions) workflow files can optionally be leveraged to enable a Pull Request-driven automated deployment worklow. Both Terraform Plan and Terraform Apply command outputs are captured as Comments in each Pull Request.
 
@@ -199,35 +210,35 @@ To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure 
 
 ```az ad sp create-for-rbac --name $servicePrincipalName --role $servicePrincipalRole --scope $servicePrincipalScope```
 
-## 9 Render
+## 10 Render
 
 Now that deployment of the AAA solution framework is complete, this final section provides render job submission examples for multiple render engines (Blender, Physically-Based Ray Tracer).
 
-### 9.1 [Blender](https://www.blender.org) [Splash Screen (3.5)](https://www.blender.org/download/demo-files/#splash)
+### 10.1 [Blender](https://www.blender.org) [Splash Screen (3.5)](https://www.blender.org/download/demo-files/#splash)
 
 <p align="center">
   <img src=".github/images/blender-splash-3.5.png" />
 </p>
 
-#### 9.1.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
+#### 10.1.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.5/splash.blend --render-output /mnt/data/write/blender/3.5/splash --enable-autoexec --render-frame 1"```
 
-#### 9.1.2 Azure *Windows* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
+#### 10.1.2 Azure *Windows* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background R:\blender\3.5\splash.blend --render-output W:\blender\3.5\splash --enable-autoexec --render-frame 1"```
 
-### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
+### 10.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
 
 <p align="center">
   <img src=".github/images/moana-island.png" />
 </p>
 
-#### 9.2.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
+#### 10.2.1 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
@@ -235,7 +246,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
-#### 9.2.2 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
+#### 10.2.2 Azure *Linux* Render Farm with [Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
@@ -243,35 +254,35 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"```
 
-## 10 Appendix
+## 11 Appendix
 
 The following splash screens from previous Blender versions were rendered in Azure using the AAA solution deployment framework.
 
-### 10.1 Blender 3.0 Splash Screen
+### 11.1 Blender 3.0 Splash Screen
 
 <p align="center">
   <img src=".github/images/blender-splash-3.0.png" />
 </p>
 
-### 10.2 Blender 3.1 Splash Screen
+### 11.2 Blender 3.1 Splash Screen
 
 <p align="center">
   <img src=".github/images/blender-splash-3.1.jpg" />
 </p>
 
-### 10.3 Blender 3.2 Splash Screen
+### 11.3 Blender 3.2 Splash Screen
 
 <p align="center">
   <img src=".github/images/blender-splash-3.2.png" />
 </p>
 
-### 10.4 Blender 3.3 Splash Screen
+### 11.4 Blender 3.3 Splash Screen
 
 <p align="center">
   <img src=".github/images/blender-splash-3.3.png" />
 </p>
 
-### 10.5 Blender 3.4 Splash Screen
+### 11.5 Blender 3.4 Splash Screen
 
 <p align="center">
   <img src=".github/images/blender-splash-3.4.png" />

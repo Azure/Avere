@@ -5,14 +5,6 @@ cd $binDirectory
 
 if [ "${wekaResourceName}" != "" ]; then
   dnf -y install kernel-devel-$(uname -r)
-  # dnf -y install gcc-gfortran make tk kernel-modules-extra tcl pciutils tcsh
-
-  # installType="mellanox-ofed"
-  # installFile="MLNX_OFED_LINUX-5.8-2.0.3.0-rhel8.7-x86_64.tgz"
-  # downloadUrl="${binStorageHost}/Weka/$installFile${binStorageAuth}"
-  # curl -o $installFile -L $downloadUrl
-  # tar -xzf $installFile
-  # ./MLNX_OFED*/mlnxofedinstall --force 1> $installType.out.log 2> $installType.err.log
 
   installDisk="/dev/$(lsblk | grep ${wekaDataDiskSize}G | awk '{print $1}')"
   installType="weka-mkfs"
