@@ -47,6 +47,7 @@ variable "dataLoadSource" {
       accountName   = string
       accountKey    = string
       containerName = string
+      blobName      = string
     }
   )
 }
@@ -58,6 +59,7 @@ variable "storageNetwork" {
       resourceGroupName   = string
       subnetNamePrimary   = string
       subnetNameSecondary = string
+      privateDnsZoneName  = string
       serviceEndpointSubnets = list(object(
         {
           name               = string
@@ -150,15 +152,21 @@ data "azurerm_subnet" "storage_primary" {
   virtual_network_name = data.azurerm_virtual_network.storage[0].name
 }
 
-data "azurerm_subnet" "storage_secondary" {
-  count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.secondary].name
-  resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.storage[0].name
+# data "azurerm_subnet" "storage_secondary" {
+#   count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
+#   name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.secondary].name
+#   resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
+#   virtual_network_name = data.azurerm_virtual_network.storage[0].name
+# }
+
+data "azurerm_private_dns_zone" "network" {
+  name                = !local.stateExistsNetwork ? var.storageNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
+  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 locals {
-  stateExistsNetwork = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  stateExistsNetwork   = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  virtualNetworkSubnet = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
 }
 
 resource "azurerm_resource_group" "storage" {

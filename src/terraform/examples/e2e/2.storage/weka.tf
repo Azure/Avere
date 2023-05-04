@@ -85,7 +85,6 @@ variable "weka" {
           )
         }
       )
-      supportUrl = string
       license = object(
         {
           key = string
@@ -97,6 +96,7 @@ variable "weka" {
           )
         }
       )
+      supportUrl = string
     }
   )
 }
@@ -131,44 +131,57 @@ locals {
       containerName = var.weka.objectTier.storage.containerName != "" ? var.weka.objectTier.storage.containerName : "weka"
     }
   })
-  wekaNetworkSubnet = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
-  wekaMachineSize   = trimsuffix(trimsuffix(trimprefix(var.weka.machine.size, "Standard_"), "as_v3"), "s_v3")
-  wekaContainerSize = local.wekaContainerSizes[local.wekaMachineSize]
-  wekaContainerSizes = {
+  wekaMachineSize  = trimsuffix(trimsuffix(trimprefix(var.weka.machine.size, "Standard_"), "as_v3"), "s_v3")
+  wekaMachineSpec  = local.wekaMachineSpecs[local.wekaMachineSize]
+  wekaMachineSpecs = {
     L8 = <<-json
       '{
-        "nvmeDisk"     : 1,
-        "coreDrives"   : 1,
-        "coreCompute"  : 1,
-        "coreFrontend" : 1,
-        "memory"       : "31GB"
+        "nvmeDisk"         : 1,
+        "coreDrives"       : 1,
+        "coreCompute"      : 1,
+        "coreFrontend"     : 1,
+        "networkInterface" : 4,
+        "computeMemory"    : "31GB"
       }'
     json
     L16 = <<-json
       '{
-        "nvmeDisk"     : 2,
-        "coreDrives"   : 2,
-        "coreCompute"  : 4,
-        "coreFrontend" : 1,
-        "memory"       : "72GB"
+        "nvmeDisk"         : 2,
+        "coreDrives"       : 2,
+        "coreCompute"      : 4,
+        "coreFrontend"     : 1,
+        "networkInterface" : 8,
+        "computeMemory"    : "72GB"
       }'
     json
     L32 = <<-json
       '{
-        "nvmeDisk"     : 4,
-        "coreDrives"   : 2,
-        "coreCompute"  : 4,
-        "coreFrontend" : 1,
-        "memory"       : "189GB"
+        "nvmeDisk"         : 4,
+        "coreDrives"       : 2,
+        "coreCompute"      : 4,
+        "coreFrontend"     : 1,
+        "networkInterface" : 8,
+        "computeMemory"    : "189GB"
       }'
     json
     L48 = <<-json
       '{
-        "nvmeDisk"     : 6,
-        "coreDrives"   : 3,
-        "coreCompute"  : 3,
-        "coreFrontend" : 1,
-        "memory"       : "306GB"
+        "nvmeDisk"         : 6,
+        "coreDrives"       : 3,
+        "coreCompute"      : 3,
+        "coreFrontend"     : 1,
+        "networkInterface" : 8,
+        "computeMemory"    : "306GB"
+      }'
+    json
+    L64 = <<-json
+      '{
+        "nvmeDisk"         : 8,
+        "coreDrives"       : 2,
+        "coreCompute"      : 4,
+        "coreFrontend"     : 1,
+        "networkInterface" : 8,
+        "computeMemory"    : "418GB"
       }'
     json
   }
@@ -203,12 +216,12 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   single_placement_group          = false
   overprovision                   = false
   network_interface {
-    name    = "primary"
+    name    = "nic1"
     primary = true
     ip_configuration {
       name      = "ipConfig"
       primary   = true
-      subnet_id = local.wekaNetworkSubnet.id
+      subnet_id = local.virtualNetworkSubnet.id
     }
     enable_accelerated_networking = var.weka.network.enableAcceleration
   }
@@ -241,7 +254,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
           {wekaVersion       = "4.1.0.77"},
           {wekaResourceName  = var.weka.name.resource},
           {wekaDataDiskSize  = var.weka.dataDisk.sizeGB},
-          {wekaContainerSize = local.wekaContainerSize},
+          {wekaMachineSpec   = local.wekaMachineSpec},
           {wekaCoreIdsScript = local.wekaCoreIdsScript},
           {binStorageHost    = module.global.binStorage.host},
           {binStorageAuth    = module.global.binStorage.auth}
@@ -266,6 +279,15 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   }
 }
 
+resource "azurerm_private_dns_a_record" "data" {
+  count               = var.weka.name.resource != "" ? 1 : 0
+  name                = "data"
+  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
+  zone_name           = data.azurerm_private_dns_zone.network.name
+  records             = [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address]
+  ttl                 = 300
+}
+
 resource "terraform_data" "weka_cluster_create" {
   count = var.weka.name.resource != "" ? 1 : 0
   connection {
@@ -276,18 +298,17 @@ resource "terraform_data" "weka_cluster_create" {
   }
   provisioner "remote-exec" {
     inline = [
-      "containerSize=${local.wekaContainerSize}",
-      "source /usr/local/bin/${local.wekaCoreIdsScript}",
+      "machineSpec=${local.wekaMachineSpec}",
+      "nvmeDisk=$(echo $machineSpec | jq -r .nvmeDisk)",
+      "nvmeDisks=/dev/nvme0n1",
+      "for (( d=1; d<$nvmeDisk; d++ )); do",
+      "  nvmeDisks=\"$nvmeDisks /dev/nvme$(echo $d)n1\"",
+      "done",
       "weka cluster create ${azurerm_linux_virtual_machine_scale_set.weka[0].name}{000000..${format("%06d", var.weka.machine.count - 1)}} --admin-password ${var.weka.adminLogin.userPassword}",
       "weka user login admin ${var.weka.adminLogin.userPassword}",
       "for (( i=0; i<${var.weka.machine.count}; i++ )); do",
-      "  containerId=$i",
-      "  containerSize=${local.wekaContainerSize}",
-      "  nvmeDisk=$(echo $containerSize | jq -r .nvmeDisk)",
       "  hostName=${azurerm_linux_virtual_machine_scale_set.weka[0].name}$(printf %06d $i)",
-      "  for (( d=0; d<$nvmeDisk; d++ )); do",
-      "    weka cluster drive add $containerId --HOST $hostName /dev/nvme$(echo $d)n1",
-      "  done",
+      "  weka cluster drive add $i --HOST $hostName $nvmeDisks",
       "done"
     ]
   }
@@ -303,10 +324,10 @@ resource "terraform_data" "weka_container_compute" {
   }
   provisioner "remote-exec" {
     inline = [
-      "containerSize=${local.wekaContainerSize}",
+      "machineSpec=${local.wekaMachineSpec}",
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
       "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
-      "sudo weka local setup container --name compute --base-port 15000 --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $memory --no-frontends"
+      "sudo weka local setup container --name compute --base-port 15000 --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends"
     ]
   }
   depends_on = [
@@ -350,7 +371,7 @@ resource "terraform_data" "weka_container_frontend" {
   }
   provisioner "remote-exec" {
     inline = [
-      "containerSize=${local.wekaContainerSize}",
+      "machineSpec=${local.wekaMachineSpec}",
       "source /usr/local/bin/${local.wekaCoreIdsScript}",
       "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
       "sudo weka local setup container --name frontend --base-port 16000 --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
@@ -404,10 +425,14 @@ resource "terraform_data" "weka_data" {
   provisioner "remote-exec" {
     inline = [
       "sudo weka agent install-agent",
-      "mountPath=/mnt/data",
+      "mountPath=/mnt/${var.dataLoadSource.containerName}",
       "sudo mkdir -p $mountPath",
       "sudo mount -t wekafs ${var.weka.fileSystem.name} $mountPath",
-      #"az storage copy"
+      "if [ \"${var.dataLoadSource.blobName}\" != \"\" ]; then",
+      "  sudo az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --source-blob ${var.dataLoadSource.blobName} --recursive --destination /mnt/${var.dataLoadSource.containerName}/${var.dataLoadSource.blobName}",
+      "else",
+      "  sudo az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --recursive --destination /mnt",
+      "fi"
     ]
   }
   depends_on = [

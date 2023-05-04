@@ -4,6 +4,7 @@ dataLoadSource = {
   accountName   = ""
   accountKey    = ""
   containerName = ""
+  blobName      = ""
 }
 
 ###################################################################################
@@ -24,11 +25,13 @@ storageAccounts = [
         name           = "data"
         rootAcl        = "user::rwx,group::rwx,other::rwx"
         rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
+        enableDataLoad = false
       },
       {
         name           = "weka"
         rootAcl        = "user::rwx,group::rwx,other::rwx"
         rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
+        enableDataLoad = false
       }
     ]
     fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
@@ -46,54 +49,15 @@ storageAccounts = [
     ]
     fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
-        name     = "data"
-        tier     = "Premium"
-        sizeGiB  = 5120
-        protocol = "SMB"
+        name           = "data"
+        tier           = "Premium"
+        sizeGiB        = 5120
+        protocol       = "SMB"
+        enableDataLoad = false
       }
     ]
   }
 ]
-
-#######################################################################################################
-# NetApp Files (https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
-#######################################################################################################
-
-netAppAccount = {
-  name = ""
-  capacityPools = [
-    {
-      name         = "CapacityPool"
-      sizeTiB      = 4
-      serviceLevel = "Standard"
-      volumes = [
-        {
-          name         = "Data"
-          sizeGiB      = 4096
-          serviceLevel = "Standard"
-          mountPath    = "data"
-          protocols = [
-            "NFSv3"
-          ]
-          exportPolicies = [
-            {
-              ruleIndex  = 1
-              readOnly   = false
-              readWrite  = true
-              rootAccess = true
-              protocols = [
-                "NFSv3"
-              ]
-              allowedClients = [
-                "0.0.0.0/0"
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
 
 #######################################################################################################
 # Weka (https://azuremarketplace.microsoft.com/marketplace/apps/weka1652213882079.weka_data_platform) #
@@ -101,8 +65,8 @@ netAppAccount = {
 
 weka = {
   name = {
-    resource = ""
-    display  = "Azure Artist Anywhere"
+    resource = "weka"
+    display  = "Weka"
   }
   machine = {
     size  = "Standard_L8s_v3"
@@ -154,7 +118,6 @@ weka = {
       disable = false
     }
   }
-  supportUrl = ""
   license = {
     key = ""
     payg = {
@@ -162,6 +125,47 @@ weka = {
       secretKey = ""
     }
   }
+  supportUrl = ""
+}
+
+#######################################################################################################
+# NetApp Files (https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction) #
+#######################################################################################################
+
+netAppAccount = {
+  name = ""
+  capacityPools = [
+    {
+      name         = "CapacityPool"
+      sizeTiB      = 4
+      serviceLevel = "Standard"
+      volumes = [
+        {
+          name         = "Data"
+          sizeGiB      = 4096
+          serviceLevel = "Standard"
+          mountPath    = "data"
+          protocols = [
+            "NFSv3"
+          ]
+          exportPolicies = [
+            {
+              ruleIndex  = 1
+              readOnly   = false
+              readWrite  = true
+              rootAccess = true
+              protocols = [
+                "NFSv3"
+              ]
+              allowedClients = [
+                "0.0.0.0/0"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
 
 #######################################################################################################
@@ -196,6 +200,7 @@ storageNetwork = {
   resourceGroupName   = ""
   subnetNamePrimary   = ""
   subnetNameSecondary = ""
+  privateDnsZoneName  = ""
   serviceEndpointSubnets = [ # https://learn.microsoft.com/azure/storage/common/storage-network-security#grant-access-from-a-virtual-network
     {
       name               = ""

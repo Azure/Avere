@@ -119,8 +119,8 @@ imageTemplates = [
     }
     build = {
       machineType = "Farm"
-      machineSize = "Standard_HB120rs_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineSize = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                    # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
@@ -216,8 +216,8 @@ imageTemplates = [
     }
     build = {
       machineType = "Farm"
-      machineSize = "Standard_HB120rs_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                     # GRID, AMD, CUDA and/or CUDA.OptiX
+      machineSize = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuPlatform = [                    # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
       outputVersion  = "2.0.0"
       timeoutMinutes = 420

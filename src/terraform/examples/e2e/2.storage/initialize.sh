@@ -25,10 +25,10 @@ if [ "${wekaResourceName}" != "" ]; then
   cd $binDirectory
 
   coreIdsScript="${wekaCoreIdsScript}"
-  echo 'coreCountDrives=$(echo $containerSize | jq -r .coreDrives)' > $coreIdsScript
-  echo 'coreCountCompute=$(echo $containerSize | jq -r .coreCompute)' >> $coreIdsScript
-  echo 'coreCountFrontend=$(echo $containerSize | jq -r .coreFrontend)' >> $coreIdsScript
-  echo 'memory=$(echo $containerSize | jq -r .memory)' >> $coreIdsScript
+  echo 'coreCountDrives=$(echo $machineSpec | jq -r .coreDrives)' > $coreIdsScript
+  echo 'coreCountCompute=$(echo $machineSpec | jq -r .coreCompute)' >> $coreIdsScript
+  echo 'coreCountFrontend=$(echo $machineSpec | jq -r .coreFrontend)' >> $coreIdsScript
+  echo 'computeMemory=$(echo $machineSpec | jq -r .computeMemory)' >> $coreIdsScript
   echo '' >> $coreIdsScript
   echo 'coreIds="$(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | cut --delimiter - --fields 1 | sort --unique | tr \\n -)"' >> $coreIdsScript
   echo 'coreIds="$${coreIds:2}"' >> $coreIdsScript
@@ -52,12 +52,8 @@ if [ "${wekaResourceName}" != "" ]; then
   echo 'coreIdsCompute=$(GetCoreIds $coreCountCompute $coreCountDrives)' >> $coreIdsScript
   echo 'coreIdsFrontend=$(GetCoreIds $coreCountFrontend $(($coreCountDrives + $coreCountCompute)))' >> $coreIdsScript
 
-  containerSize=${wekaContainerSize}
+  machineSpec=${wekaMachineSpec}
   source $coreIdsScript
-
-  echo $coreIdsDrives > core-ids-drives.log
-  echo $coreIdsCompute > core-ids-compute.log
-  echo $coreIdsFrontend > core-ids-frontend.log
 
   containerName="default"
   weka local stop --force $containerName

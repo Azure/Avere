@@ -58,20 +58,17 @@ resource "azurerm_hpc_cache" "cache" {
   cache_size_in_gb    = var.hpcCache.size
   mtu                 = var.hpcCache.mtuSize
   ntp_server          = var.hpcCache.ntpHost != "" ? var.hpcCache.ntpHost : null
-  dynamic "dns" {
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.studio.id
+    ]
+  }
+  dynamic dns {
     for_each = length(var.hpcCache.dns.ipAddresses) > 0 || var.hpcCache.dns.searchDomain != "" ? [1] : []
     content {
       servers       = var.hpcCache.dns.ipAddresses
       search_domain = var.hpcCache.dns.searchDomain != "" ? var.hpcCache.dns.searchDomain : null
-    }
-  }
-  dynamic "identity" {
-    for_each = try(data.azurerm_user_assigned_identity.studio.id, "") != "" ? [1] : []
-    content {
-      type = "UserAssigned"
-      identity_ids = [
-        data.azurerm_user_assigned_identity.studio.id
-      ]
     }
   }
   key_vault_key_id                           = var.hpcCache.encryption.keyName != "" ? data.azurerm_key_vault_key.cache_encryption[0].id : null
