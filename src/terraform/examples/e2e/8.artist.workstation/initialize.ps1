@@ -6,12 +6,15 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
-SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
-if ("${renderManager}" -like "*Deadline*") {
-  AddMount "${fsMount.schedulerDeadline}"
+if ("${fsMount.enable}" -eq "true") {
+  SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
+  SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
+  if ("${renderManager}" -like "*Deadline*") {
+    AddMount "${fsMount.schedulerDeadline}"
+  }
+  $installType = "fs-mount"
+  Start-Process -FilePath $fsMountPath -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
 }
-RegisterMounts
 
 EnableRenderClient "${renderManager}" "${servicePassword}"
 

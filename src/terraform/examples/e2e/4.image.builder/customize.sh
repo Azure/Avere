@@ -143,25 +143,25 @@ if [[ $renderManager == *Deadline* ]]; then
     export DB_PASSWORD=$servicePassword
     installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
     $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword env:DB_PASSWORD
-    cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
+    mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
     echo "$schedulerInstallPath *(rw,no_root_squash)" >> /etc/exports
     exportfs -a
     echo "Customize (End): Deadline Server"
-  else
-    echo "Customize (Start): Deadline Client"
-    installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-    installArgs="--mode unattended --prefix $schedulerInstallPath --repositorydir $schedulerServerMount"
-    if [ $machineType == "Scheduler" ]; then
-      installArgs="$installArgs --slavestartup false --launcherdaemon false"
-    else
-      [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
-      installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
-    fi
-    $installPath/$installFile $installArgs
-    cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    echo "$schedulerBinPath/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser $servicePassword" >> $aaaProfile
-    echo "Customize (End): Deadline Client"
   fi
+
+  echo "Customize (Start): Deadline Client"
+  installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
+  installArgs="--mode unattended --prefix $schedulerInstallPath --repositorydir $schedulerServerMount"
+  if [ $machineType == "Scheduler" ]; then
+    installArgs="$installArgs --slavestartup false --launcherdaemon false"
+  else
+    [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
+    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+  fi
+  $installPath/$installFile $installArgs
+  cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+  echo "$schedulerBinPath/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser $servicePassword" >> $aaaProfile
+  echo "Customize (End): Deadline Client"
 
   binPaths="$binPaths:$schedulerBinPath"
 fi

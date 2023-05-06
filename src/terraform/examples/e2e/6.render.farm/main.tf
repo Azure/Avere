@@ -103,6 +103,7 @@ variable "virtualMachineScaleSets" {
               )
               fsMount = object(
                 {
+                  enable            = bool
                   storageRead       = string
                   storageReadCache  = string
                   storageWrite      = string

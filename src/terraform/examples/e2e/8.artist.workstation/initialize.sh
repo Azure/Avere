@@ -9,12 +9,14 @@ functionsData="${filebase64("../0.global/functions.sh")}"
 echo $functionsData | base64 --decode > $functionsCode
 source $functionsCode
 
-SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
-SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
-if [[ ${renderManager} == *Deadline* ]]; then
-  AddMount "${fsMount.schedulerDeadline}"
+if [ "${fsMount.enable}" == "true" ]; then
+  SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
+  SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
+  if [[ ${renderManager} == *Deadline* ]]; then
+    AddMount "${fsMount.schedulerDeadline}"
+  fi
+  mount -a
 fi
-mount -a
 
 EnableRenderClient "${renderManager}" "${servicePassword}"
 

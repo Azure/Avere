@@ -65,8 +65,8 @@ storageAccounts = [
 
 weka = {
   name = {
-    resource = "weka"
-    display  = "Weka"
+    resource = "aaa"
+    display  = "Azure Artist Anywhere"
   }
   machine = {
     size  = "Standard_L8s_v3"

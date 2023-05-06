@@ -371,7 +371,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[concat('hostname ', parameters('imageTemplate').name)]"
+                      "[concat('hostname ', parameters('imageTemplate').name)]",
+                      "dnf -y upgrade --refresh"
                     ]
                   },
                   {
@@ -431,17 +432,17 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "File",
                     "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/customize.ps1",
-                    "destination": "C:\\Windows\\customize.ps1"
+                    "destination": "C:\\AzureData\\customize.ps1"
                   },
                   {
                     "type": "File",
                     "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/terminate.ps1",
-                    "destination": "C:\\Windows\\terminate.ps1"
+                    "destination": "C:\\AzureData\\terminate.ps1"
                   },
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[concat('C:\\Windows\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
+                      "[concat('C:\\AzureData\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
                   },

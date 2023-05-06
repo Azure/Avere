@@ -19,15 +19,14 @@ if [ "${qubeLicense.userName}" != "" ]; then
   systemctl restart dra.service
 fi
 
-serviceType="aaa-scale"
-serviceName="AAA Auto Scale"
-
+serviceFile="aaaScaler"
 dataFilePath="/var/lib/waagent/ovf-env.xml"
 dataFileText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $dataFilePath)
-codeFilePath="/var/lib/waagent/$serviceType.sh"
+codeFilePath="/usr/local/bin/$serviceFile.sh"
 echo $dataFileText | base64 -d > $codeFilePath
 
-servicePath="/etc/systemd/system/$serviceType.service"
+serviceName="AAA Auto Scaler"
+servicePath="/etc/systemd/system/$serviceFile.service"
 echo "[Unit]" > $servicePath
 echo "Description=$serviceName Service" >> $servicePath
 echo "After=network-online.target" >> $servicePath
@@ -40,7 +39,7 @@ echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" 
 echo "ExecStart=/bin/bash $codeFilePath" >> $servicePath
 echo "" >> $servicePath
 
-timerPath="/etc/systemd/system/$serviceType.timer"
+timerPath="/etc/systemd/system/$serviceFile.timer"
 echo "[Unit]" > $timerPath
 echo "Description=$serviceName Timer" >> $timerPath
 echo "" >> $timerPath
@@ -52,5 +51,5 @@ echo "[Install]" >> $timerPath
 echo "WantedBy=timers.target" >> $timerPath
 
 if [ ${autoScale.enable} == true ]; then
-  systemctl --now enable $serviceType
+  systemctl --now enable $serviceFile
 fi

@@ -33,10 +33,10 @@ if ("${qubeLicense.userName}" -ne "") {
   Restart-Service -Name "qubedra"
 }
 
-$scriptFile = "C:\AzureData\scale.ps1"
+$scriptFile = "C:\AzureData\aaaScaler.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 
-$taskName = "AAA Auto Scale"
+$taskName = "AAA Auto Scaler"
 $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
 $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $scriptFile -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds}"

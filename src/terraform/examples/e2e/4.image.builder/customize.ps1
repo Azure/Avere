@@ -157,41 +157,41 @@ if ("$renderManager" -like "*Deadline*") {
     $installType = "deadline-repository"
     $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
     Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --installmongodb true" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-    Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
+    Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
     Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallPath\$schedulerCertificateFile
     New-NfsShare -Name "Deadline" -Path $schedulerInstallPath -Permission ReadWrite
     Write-Host "Customize (End): Deadline Server"
-  } else {
-    Write-Host "Customize (Start): Deadline Client"
-    netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerBinPath\deadlineworker.exe"
-    netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerBinPath\deadlinemonitor.exe"
-    netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerBinPath\deadlinelauncher.exe"
-    $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-    $installArgs = "--mode unattended --prefix $schedulerInstallPath"
-    if ($machineType -eq "Scheduler") {
-      $installArgs = "$installArgs --slavestartup false --launcherservice false"
-    } else {
-      if ($machineType -eq "Farm") {
-        $workerStartup = "true"
-      } else {
-        $workerStartup = "false"
-      }
-      $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
-    }
-    Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-    Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log
-    Set-Location -Path $binDirectory
-    Write-Host "Customize (End): Deadline Client"
-
-    Write-Host "Customize (Start): Deadline Monitor"
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = $schedulerBinPath
-    $shortcut.TargetPath = "$schedulerBinPath\deadlinemonitor.exe"
-    $shortcut.Save()
-    Write-Host "Customize (End): Deadline Monitor"
   }
+
+  Write-Host "Customize (Start): Deadline Client"
+  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerBinPath\deadlineworker.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerBinPath\deadlinemonitor.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerBinPath\deadlinelauncher.exe"
+  $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
+  $installArgs = "--mode unattended --prefix $schedulerInstallPath"
+  if ($machineType -eq "Scheduler") {
+    $installArgs = "$installArgs --slavestartup false --launcherservice false"
+  } else {
+    if ($machineType -eq "Farm") {
+      $workerStartup = "true"
+    } else {
+      $workerStartup = "false"
+    }
+    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+  }
+  Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
+  Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): Deadline Client"
+
+  Write-Host "Customize (Start): Deadline Monitor"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $schedulerBinPath
+  $shortcut.TargetPath = "$schedulerBinPath\deadlinemonitor.exe"
+  $shortcut.Save()
+  Write-Host "Customize (End): Deadline Monitor"
 
   $binPaths += ";$schedulerBinPath"
 }

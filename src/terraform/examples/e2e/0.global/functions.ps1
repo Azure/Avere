@@ -1,4 +1,4 @@
-$fsMountsFile = "C:\Windows\fs-mounts.bat"
+$fsMountPath = "C:\AzureData\fsMount.bat"
 
 function SetMount ($storageMount, $storageCacheMount, $enableStorageCache) {
   if ($enableStorageCache -eq "true") {
@@ -9,30 +9,18 @@ function SetMount ($storageMount, $storageCacheMount, $enableStorageCache) {
 }
 
 function AddMount ($fsMount) {
-  if (!(Test-Path -PathType Leaf -Path $fsMountsFile)) {
-    New-Item -ItemType File -Path $fsMountsFile
+  if (!(Test-Path -PathType Leaf -Path $fsMountPath)) {
+    New-Item -ItemType File -Path $fsMountPath
   }
-  $fsMountsFileText = Get-Content -Path $fsMountsFile
-  if ($fsMountsFileText -eq $null -or $fsMountsFileText -notlike "*$fsMount*") {
-    Add-Content -Path $fsMountsFile -Value $fsMount
-  }
-}
-
-function RegisterMounts () {
-  $installType = "fs-mounts"
-  $fsMountsFileSize = (Get-Item -Path $fsMountsFile).Length
-  if ($fsMountsFileSize -gt 0) {
-    $taskName = "AAA File System Mounts"
-    $taskAction = New-ScheduledTaskAction -Execute $fsMountsFile
-    $taskTrigger = New-ScheduledTaskTrigger -AtStartup
-    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
-    Start-Process -FilePath $fsMountsFile -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  $fsMountScript = Get-Content -Path $fsMountPath
+  if ($fsMountScript -eq $null -or $fsMountScript -notlike "*$fsMount*") {
+    Add-Content -Path $fsMountPath -Value $fsMount
   }
 }
 
 function EnableRenderClient ($renderManager, $servicePassword) {
   if ("$renderManager" -like "*Deadline*") {
-    Start-Process -FilePath "deadlinecommand.exe" -ArgumentList "-ChangeRepository Direct X:\ X:\Deadline10Client.pfx ''" -Wait
+    Start-Process -FilePath "deadlinecommand.exe" -ArgumentList "-ChangeRepository Direct S:\ S:\Deadline10Client.pfx ''" -Wait
   }
   # if ("$renderManager" -like "*RoyalRender*") {
   #   $installType = "royal-render-client"

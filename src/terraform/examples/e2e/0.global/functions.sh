@@ -1,4 +1,4 @@
-#curl http://data.content.studio:14000/dist/v1/install | sh
+curl http://data.content.studio:14000/dist/v1/install | sh
 
 function SetMount {
   storageMount="$1"
