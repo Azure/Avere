@@ -177,9 +177,65 @@ netAppAccount = {
 #######################################################################################################
 
 hammerspace = {
-  name = {
-    resource = ""
-    display  = "Azure Artist Anywhere"
+  namePrefix = ""
+  domainName = ""
+  metadata = {
+    machine = {
+      namePrefix = "Anvil"
+      size       = "Standard_E4as_v4"
+      count      = 1 # Set to 2 (or more) to enable high availability
+    }
+    network = {
+      enableAcceleration = true
+    }
+    osDisk = {
+      sizeGB      = 128
+      storageType = "Premium_LRS"
+      cachingType = "ReadWrite"
+    }
+    dataDisk = {
+      sizeGB      = 256
+      storageType = "Premium_LRS"
+      cachingType = "None"
+    }
+    adminLogin = {
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
+    }
+  }
+  data = {
+    machine = {
+      namePrefix = "DSX"
+      size       = "Standard_F2s_v2"
+      count      = 2
+    }
+    network = {
+      enableAcceleration = true
+    }
+    osDisk = {
+      sizeGB      = 128
+      storageType = "Premium_LRS"
+      cachingType = "ReadWrite"
+    }
+    dataDisk = {
+      count       = 2
+      sizeGB      = 256
+      storageType = "Premium_LRS"
+      cachingType = "None"
+      enableRaid0 = false
+    }
+    adminLogin = {
+      userName     = "azadmin"
+      userPassword = "P@ssword1234"
+      sshPublicKey = "" # "ssh-rsa ..."
+      passwordAuth = {
+        disable = false
+      }
+    }
   }
 }
 
