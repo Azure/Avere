@@ -83,6 +83,10 @@ weka = {
   network = {
     enableAcceleration = false
   }
+  terminationNotification = {
+    enable  = true
+    timeout = "PT5M"
+  }
   objectTier = {
     percent = 80
     storage = {

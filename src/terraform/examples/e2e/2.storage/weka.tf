@@ -34,6 +34,12 @@ variable "weka" {
           enableAcceleration = bool
         }
       )
+      terminationNotification = object(
+        {
+          enable  = bool
+          timeout = string
+        }
+      )
       objectTier = object(
         {
           percent = number
@@ -194,6 +200,20 @@ resource "azurerm_resource_group" "weka" {
   location = azurerm_resource_group.storage.location
 }
 
+resource "azurerm_role_assignment" "weka_virtual_machine_contributor" {
+  count                = var.weka.name.resource != "" ? 1 : 0
+  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
+  principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
+  scope                = azurerm_resource_group.weka[0].id
+}
+
+resource "azurerm_role_assignment" "weka_private_dns_zone_contributor" {
+  count                = var.weka.name.resource != "" ? 1 : 0
+  role_definition_name = "Private DNS Zone Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#private-dns-zone-contributor
+  principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
+  scope                = data.azurerm_resource_group.network.id
+}
+
 resource "azurerm_proximity_placement_group" "weka" {
   count               = var.weka.name.resource != "" ? 1 : 0
   name                = var.weka.name.resource
@@ -215,6 +235,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   single_placement_group          = false
   overprovision                   = false
+  custom_data                     = base64encode(templatefile("terminate.sh", merge(
+    {dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name},
+    {dnsZoneName          = data.azurerm_private_dns_zone.network.name},
+    {dnsRecordSetName     = local.privateDnsRecordSetName},
+  )))
   network_interface {
     name    = "nic1"
     primary = true
@@ -251,16 +276,26 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     settings = jsonencode({
       "script": "${base64encode(
         templatefile("initialize.sh", merge(
-          {wekaVersion       = "4.1.0.77"},
-          {wekaResourceName  = var.weka.name.resource},
-          {wekaDataDiskSize  = var.weka.dataDisk.sizeGB},
-          {wekaMachineSpec   = local.wekaMachineSpec},
-          {wekaCoreIdsScript = local.wekaCoreIdsScript},
-          {binStorageHost    = module.global.binStorage.host},
-          {binStorageAuth    = module.global.binStorage.auth}
+          {wekaVersion           = "4.1.0.77"},
+          {wekaResourceName      = var.weka.name.resource},
+          {wekaDataDiskSize      = var.weka.dataDisk.sizeGB},
+          {wekaMachineSpec       = local.wekaMachineSpec},
+          {wekaCoreIdsScript     = local.wekaCoreIdsScript},
+          {wekaResourceGroupName = azurerm_resource_group.weka[0].name},
+          {wekaVMScaleSetName    = var.weka.name.resource},
+          {wekaAdminPassword     = var.weka.adminLogin.userPassword},
+          {dnsResourceGroupName  = data.azurerm_private_dns_zone.network.resource_group_name},
+          {dnsZoneName           = data.azurerm_private_dns_zone.network.name},
+          {dnsRecordSetName      = local.privateDnsRecordSetName},
+          {binStorageHost        = module.global.binStorage.host},
+          {binStorageAuth        = module.global.binStorage.auth}
         ))
       )}"
     })
+  }
+  termination_notification {
+    enabled = var.weka.terminationNotification.enable
+    timeout = var.weka.terminationNotification.timeout
   }
   dynamic plan {
     for_each = local.wekaImage.plan.name != "" ? [1] : []
@@ -277,11 +312,15 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
       public_key = var.weka.adminLogin.sshPublicKey
     }
   }
+  depends_on = [
+    azurerm_role_assignment.weka_virtual_machine_contributor,
+    azurerm_role_assignment.weka_private_dns_zone_contributor
+  ]
 }
 
 resource "azurerm_private_dns_a_record" "data" {
   count               = var.weka.name.resource != "" ? 1 : 0
-  name                = "data"
+  name                = local.privateDnsRecordSetName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
   records             = [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address]
@@ -299,9 +338,8 @@ resource "terraform_data" "weka_cluster_create" {
   provisioner "remote-exec" {
     inline = [
       "machineSpec=${local.wekaMachineSpec}",
-      "nvmeDisk=$(echo $machineSpec | jq -r .nvmeDisk)",
       "nvmeDisks=/dev/nvme0n1",
-      "for (( d=1; d<$nvmeDisk; d++ )); do",
+      "for (( d=1; d<$(echo $machineSpec | jq -r .nvmeDisk); d++ )); do",
       "  nvmeDisks=\"$nvmeDisks /dev/nvme$(echo $d)n1\"",
       "done",
       "weka cluster create ${azurerm_linux_virtual_machine_scale_set.weka[0].name}{000000..${format("%06d", var.weka.machine.count - 1)}} --admin-password ${var.weka.adminLogin.userPassword}",
@@ -325,7 +363,7 @@ resource "terraform_data" "weka_container_compute" {
   provisioner "remote-exec" {
     inline = [
       "machineSpec=${local.wekaMachineSpec}",
-      "source /usr/local/bin/${local.wekaCoreIdsScript}",
+      "source ${local.localBinDirectoryPath}/${local.wekaCoreIdsScript}",
       "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
       "sudo weka local setup container --name compute --base-port 15000 --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends"
     ]
@@ -372,7 +410,7 @@ resource "terraform_data" "weka_container_frontend" {
   provisioner "remote-exec" {
     inline = [
       "machineSpec=${local.wekaMachineSpec}",
-      "source /usr/local/bin/${local.wekaCoreIdsScript}",
+      "source ${local.localBinDirectoryPath}/${local.wekaCoreIdsScript}",
       "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
       "sudo weka local setup container --name frontend --base-port 16000 --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
     ]
