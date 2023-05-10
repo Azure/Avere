@@ -60,15 +60,16 @@ if [ "${wekaResourceName}" != "" ]; then
   weka local rm --force $containerName
 
   az login --identity
-  vmssState=$(az vmss show --resource-group ${wekaResourceGroupName} --name ${wekaVMScaleSetName} --query provisioningState --output tsv)
-  if [ "$vmssState" == "Updating" ]; then
+  failureDomain=$(hostname)
+  vmScaleSetState=$(az vmss show --resource-group ${wekaResourceGroupName} --name ${wekaVMScaleSetName} --query provisioningState --output tsv)
+  if [ "$vmScaleSetState" == "Updating" ]; then
     joinIps=$(az vmss nic list --resource-group ${wekaResourceGroupName} --vmss-name ${wekaVMScaleSetName} --query [].ipConfigurations[0].privateIPAddress --output tsv | tr \\n ',')
     installType="weka-local-setup-drives"
-    weka local setup container --name drives --base-port 14000 --join-ips $${joinIps::-1} --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
+    weka local setup container --name drives0 --base-port 14000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
     installType="weka-local-setup-compute"
-    weka local setup container --name compute --base-port 15000 --join-ips $${joinIps::-1} --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends 1> $installType.out.log 2> $installType.err.log
+    weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends 1> $installType.out.log 2> $installType.err.log
     installType="weka-local-setup-frontend"
-    weka local setup container --name frontend --base-port 16000 --join-ips $${joinIps::-1} --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate 1> $installType.out.log 2> $installType.err.log
+    weka local setup container --name frontend0 --base-port 16000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate 1> $installType.out.log 2> $installType.err.log
     weka user login admin ${wekaAdminPassword}
     nvmeDisks=/dev/nvme0n1
     for (( d=1; d<$(echo $machineSpec | jq -r .nvmeDisk); d++ )); do
@@ -80,7 +81,7 @@ if [ "${wekaResourceName}" != "" ]; then
     az network private-dns record-set a add-record --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --record-set-name ${dnsRecordSetName} --ipv4-address $(hostname -i)
   else
     installType="weka-local-setup-drives"
-    weka local setup container --name drives --base-port 14000 --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
+    weka local setup container --name drives0 --base-port 14000 --failure-domain $failureDomain --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
   fi
 
   dataFilePath="/var/lib/waagent/ovf-env.xml"

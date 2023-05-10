@@ -352,7 +352,7 @@ resource "terraform_data" "weka_cluster_create" {
   }
 }
 
-resource "terraform_data" "weka_container_compute" {
+resource "terraform_data" "weka_container_setup" {
   count = var.weka.name.resource != "" ? var.weka.machine.count : 0
   connection {
     type     = "ssh"
@@ -362,10 +362,12 @@ resource "terraform_data" "weka_container_compute" {
   }
   provisioner "remote-exec" {
     inline = [
+      "failureDomain=$(hostname)",
       "machineSpec=${local.wekaMachineSpec}",
-      "source ${local.localBinDirectoryPath}/${local.wekaCoreIdsScript}",
+      "source /usr/local/bin/${local.wekaCoreIdsScript}",
       "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
-      "sudo weka local setup container --name compute --base-port 15000 --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends"
+      "sudo weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends",
+      "sudo weka local setup container --name frontend0 --base-port 16000 --failure-domain $failureDomain --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
     ]
   }
   depends_on = [
@@ -395,28 +397,7 @@ resource "terraform_data" "weka_cluster_start" {
     ]
   }
   depends_on = [
-    terraform_data.weka_container_compute
-  ]
-}
-
-resource "terraform_data" "weka_container_frontend" {
-  count = var.weka.name.resource != "" ? var.weka.machine.count : 0
-  connection {
-    type     = "ssh"
-    host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[count.index].private_ip_address
-    user     = var.weka.adminLogin.userName
-    password = var.weka.adminLogin.userPassword
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "machineSpec=${local.wekaMachineSpec}",
-      "source ${local.localBinDirectoryPath}/${local.wekaCoreIdsScript}",
-      "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
-      "sudo weka local setup container --name frontend --base-port 16000 --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
-    ]
-  }
-  depends_on = [
-    terraform_data.weka_cluster_start
+    terraform_data.weka_container_setup
   ]
 }
 
@@ -447,8 +428,8 @@ resource "terraform_data" "weka_file_system" {
     ]
   }
   depends_on = [
-    terraform_data.weka_container_frontend,
-    azurerm_storage_container.core
+    azurerm_storage_container.core,
+    terraform_data.weka_cluster_start
   ]
 }
 
