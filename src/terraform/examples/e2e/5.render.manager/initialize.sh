@@ -33,9 +33,11 @@ echo "After=network-online.target" >> $servicePath
 echo "" >> $servicePath
 echo "[Service]" >> $servicePath
 echo "Environment=renderManager=${renderManager}" >> $servicePath
-echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
 echo "Environment=resourceGroupName=${autoScale.resourceGroupName}" >> $servicePath
+echo "Environment=scaleSetName=${autoScale.scaleSetName}" >> $servicePath
+echo "Environment=scaleSetMachineCountMax=${autoScale.scaleSetMachineCountMax}" >> $servicePath
 echo "Environment=jobWaitThresholdSeconds=${autoScale.jobWaitThresholdSeconds}" >> $servicePath
+echo "Environment=workerIdleDeleteSeconds=${autoScale.workerIdleDeleteSeconds}" >> $servicePath
 echo "ExecStart=/bin/bash $codeFilePath" >> $servicePath
 echo "" >> $servicePath
 

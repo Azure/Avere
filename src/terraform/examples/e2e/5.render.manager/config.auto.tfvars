@@ -41,17 +41,19 @@ virtualMachines = [
       name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
-        qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
-          userName     = ""
-          userPassword = ""
-        }
         autoScale = {
           enable                   = false
           fileName                 = "scale.sh"
-          scaleSetName             = "LnxFarmC"
           resourceGroupName        = "ArtistAnywhere.Farm"
+          scaleSetName             = "LnxFarmC"
+          scaleSetMachineCountMax  = 100
           jobWaitThresholdSeconds  = 300
+          workerIdleDeleteSeconds  = 600
           detectionIntervalSeconds = 60
+        }
+        qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
+          userName     = ""
+          userPassword = ""
         }
       }
     }
@@ -95,17 +97,19 @@ virtualMachines = [
       name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
-        qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
-          userName     = ""
-          userPassword = ""
-        }
         autoScale = {
           enable                   = false
           fileName                 = "scale.ps1"
-          scaleSetName             = "WinFarmC"
           resourceGroupName        = "ArtistAnywhere.Farm"
+          scaleSetName             = "WinFarmC"
+          scaleSetMachineCountMax  = 100
           jobWaitThresholdSeconds  = 300
+          workerIdleDeleteSeconds  = 600
           detectionIntervalSeconds = 60
+        }
+        qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
+          userName     = ""
+          userPassword = ""
         }
       }
     }

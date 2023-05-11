@@ -2,7 +2,9 @@ param (
   [string] $renderManager,
   [string] $resourceGroupName,
   [string] $scaleSetName,
+  [int] $scaleSetMachineCountMax
   [int] $jobWaitThresholdSeconds
+  [int] $workerIdleDeleteSeconds
 )
 
 $ErrorActionPreference = "Stop"
@@ -10,8 +12,6 @@ $ErrorActionPreference = "Stop"
 az login --identity
 
 $queuedTasks = 0
-$workerIdleDeleteSeconds = 900
-
 if ("$renderManager" -like "*Deadline*") {
   $activeJobIds = deadlinecommand -GetJobIdsFilter Status=Active
   foreach ($jobId in $activeJobIds) {
@@ -30,31 +30,14 @@ if ("$renderManager" -like "*Deadline*") {
   }
 }
 
-if ("$renderManager" -like "*RoyalRender*") {
-}
-
-if ("$renderManager" -like "*Qube*") {
-  $qbDelimiter = ";"
-  $pendingJobs = qbjobs --pending --delimit $qbDelimiter --fields id,reason,timesubmit
-  foreach ($pendingJob in $pendingJobs) {
-    if (!$pendingJob.StartsWith("total") -and !$pendingJob.StartsWith("id")) {
-      $jobReason = $pendingJob.Split($qbDelimiter)[1]
-      if ($jobReason -eq "no available hosts to run job.") {
-        $jobTimeSubmitStart = $pendingJob.Split($qbDelimiter)[2]
-        $jobTimeSubmitEnd = Get-Date -UFormat %s
-        $jobWaitSeconds = $jobTimeSubmitEnd - $jobTimeSubmitStart
-        if ($jobWaitSeconds -gt $jobWaitThresholdSeconds) {
-          $queuedTasks++
-        }
-      }
-    }
-  }
-}
-
 if ($queuedTasks -gt 0) { # Scale Up
-  $nodeCount = az vmss show --resource-group $resourceGroupName --name $scaleSetName --query "sku.capacity"
-  $nodeCount = [int] $nodeCount + $queuedTasks
-  az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $nodeCount
+  $scaleSetNodeCount = az vmss show --resource-group $resourceGroupName --name $scaleSetName --query "sku.capacity"
+  if ($scaleSetMachineCountMax -ge 1 -and $scaleSetNodeCount + $queuedTasks -gt $scaleSetMachineCountMax) {
+    $scaleSetNodeCount = $scaleSetMachineCountMax
+  } else {
+    $scaleSetNodeCount += $queuedTasks
+  }
+  az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $scaleSetNodeCount
 } else { # Scale Down
   if ("$renderManager" -like "*Deadline*") {
     $workerNames = deadlinecommand -GetSlaveNames
@@ -68,20 +51,6 @@ if ($queuedTasks -gt 0) { # Scale Up
           $instanceId = az vmss list-instances --resource-group $resourceGroupName --name $scaleSetName --query "[?osProfile.computerName=='$workerName'].instanceId" --output tsv
           az vmss delete-instances --resource-group $resourceGroupName --name $scaleSetName --instance-ids $instanceId
         }
-      }
-    }
-  }
-
-  if ("$renderManager" -like "*RoyalRender*") {
-  }
-
-  if ("$renderManager" -like "*Qube*") {
-    $qbDelimiter = ";"
-    $activeHosts = qbhosts --active --delimit $qbDelimiter
-    foreach ($activeHost in $activeHosts) {
-      if (!$activeHost.StartsWith("total") -and !$activeHost.StartsWith("name")) {
-        $hostName = $activeHost.Split($qbDelimiter)[0]
-        $hostInfo = qbhosts --long $hostName
       }
     }
   }

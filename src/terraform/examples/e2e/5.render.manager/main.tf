@@ -92,20 +92,22 @@ variable "virtualMachines" {
           fileName = string
           parameters = object(
             {
-              qubeLicense = object(
-                {
-                  userName     = string
-                  userPassword = string
-                }
-              )
               autoScale = object(
                 {
                   enable                   = bool
                   fileName                 = string
-                  scaleSetName             = string
                   resourceGroupName        = string
+                  scaleSetName             = string
+                  scaleSetMachineCountMax  = number
                   jobWaitThresholdSeconds  = number
+                  workerIdleDeleteSeconds  = number
                   detectionIntervalSeconds = number
+                }
+              )
+              qubeLicense = object(
+                {
+                  userName     = string
+                  userPassword = string
                 }
               )
             }
