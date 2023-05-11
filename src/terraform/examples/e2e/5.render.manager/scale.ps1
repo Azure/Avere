@@ -32,7 +32,7 @@ if ("$renderManager" -like "*Deadline*") {
 
 if ($queuedTasks -gt 0) { # Scale Up
   $scaleSetNodeCount = az vmss show --resource-group $resourceGroupName --name $scaleSetName --query "sku.capacity"
-  if ($scaleSetMachineCountMax -ge 1 -and $scaleSetNodeCount + $queuedTasks -gt $scaleSetMachineCountMax) {
+  if ($scaleSetMachineCountMax -gt 0 -and $scaleSetNodeCount + $queuedTasks -gt $scaleSetMachineCountMax) {
     $scaleSetNodeCount = $scaleSetMachineCountMax
   } else {
     $scaleSetNodeCount += $queuedTasks

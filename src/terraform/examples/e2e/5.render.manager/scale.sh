@@ -29,7 +29,7 @@ fi
 
 if [ $queuedTasks -gt 0 ]; then # Scale Up
   scaleSetNodeCount=$(az vmss show --resource-group $resourceGroupName --name $scaleSetName --query "sku.capacity")
-  if [[ $scaleSetMachineCountMax > 1 && $(($scaleSetNodeCount + $queuedTasks)) > $scaleSetMachineCountMax ]]; then
+  if [[ $scaleSetMachineCountMax > 0 && $(($scaleSetNodeCount + $queuedTasks)) > $scaleSetMachineCountMax ]]; then
     scaleSetNodeCount=$scaleSetMachineCountMax
   else
     scaleSetNodeCount=$(($farmNodeCount + $queuedTasks))
