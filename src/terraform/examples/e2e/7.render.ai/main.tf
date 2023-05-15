@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.54.0"
+      version = "~>3.56.0"
     }
   }
   backend "azurerm" {
@@ -33,10 +33,11 @@ variable "resourceGroupName" {
 variable "openAI" {
   type = object(
     {
-      regionName  = string
-      accountName = string
-      domainName = string
-      serviceTier = string
+      regionName    = string
+      accountName   = string
+      domainName    = string
+      serviceTier   = string
+      enableStorage = bool
     }
   )
 }
@@ -79,6 +80,11 @@ data "azurerm_subnet" "farm" {
   name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
+}
+
+data "azurerm_storage_account" "studio" {
+  name                = module.global.rootStorage.accountName
+  resource_group_name = module.global.resourceGroupName
 }
 
 locals {
@@ -157,13 +163,14 @@ resource "azurerm_private_dns_zone_virtual_network_link" "open_ai" {
 # }
 
 resource "azurerm_cognitive_account" "open_ai" {
-  name                          = var.openAI.accountName
-  resource_group_name           = azurerm_resource_group.ai.name
-  location                      = azurerm_resource_group.ai.location
-  custom_subdomain_name         = var.openAI.domainName != "" ? var.openAI.domainName : null
-  sku_name                      = var.openAI.serviceTier
-  kind                          = "OpenAI"
-  public_network_access_enabled = false
+  name                               = var.openAI.accountName
+  resource_group_name                = azurerm_resource_group.ai.name
+  location                           = azurerm_resource_group.ai.location
+  custom_subdomain_name              = var.openAI.domainName != "" ? var.openAI.domainName : null
+  sku_name                           = var.openAI.serviceTier
+  kind                               = "OpenAI"
+  public_network_access_enabled      = false
+  outbound_network_access_restricted = false
   identity {
     type = "UserAssigned"
     identity_ids = [
@@ -178,6 +185,12 @@ resource "azurerm_cognitive_account" "open_ai" {
     ip_rules = [
       jsondecode(data.http.client_address.response_body).ip
     ]
+  }
+  dynamic storage {
+    for_each = var.openAI.enableStorage ? [1] : []
+    content {
+      storage_account_id = data.azurerm_storage_account.studio.id
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-$fsMountPath = "C:\AzureData\fsMount.bat"
+$fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
 function SetMount ($storageMount, $storageCacheMount, $enableStorageCache) {
   if ($enableStorageCache -eq "true") {
@@ -8,13 +8,13 @@ function SetMount ($storageMount, $storageCacheMount, $enableStorageCache) {
   }
 }
 
-function AddMount ($fsMount) {
-  if (!(Test-Path -PathType Leaf -Path $fsMountPath)) {
-    New-Item -ItemType File -Path $fsMountPath
+function AddMount ($fileSystemMount) {
+  if (!(Test-Path -PathType Leaf -Path $fileSystemMountPath)) {
+    New-Item -ItemType File -Path $fileSystemMountPath
   }
-  $fsMountScript = Get-Content -Path $fsMountPath
-  if ($fsMountScript -eq $null -or $fsMountScript -notlike "*$fsMount*") {
-    Add-Content -Path $fsMountPath -Value $fsMount
+  $mountScript = Get-Content -Path $fileSystemMountPath
+  if ($mountScript -eq $null -or $mountScript -notlike "*$fileSystemMount*") {
+    Add-Content -Path $fileSystemMountPath -Value $fileSystemMount
   }
 }
 

@@ -42,10 +42,10 @@ virtualMachines = [
       fileName = "initialize.sh"
       parameters = {
         storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache file system mount (fsMount)
-          enableWrite = false # Set to true to enable storageWriteCache file system mount (fsMount)
+          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
+          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
         }
-        fsMount = {
+        fileSystemMount = {
           enable            = false
           storageRead       = "data.content.studio/default /mnt/data wekafs net=udp 0 0"
           storageReadCache  = "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
@@ -97,10 +97,10 @@ virtualMachines = [
       fileName = "initialize.ps1"
       parameters = {
         storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache file system mount (fsMount)
-          enableWrite = false # Set to true to enable storageWriteCache file system mount (fsMount)
+          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
+          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
         }
-        fsMount = {
+        fileSystemMount = {
           enable            = false
           storageRead       = "net use R: \\\\data.content.studio\\default /persistent:yes"
           storageReadCache  = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"

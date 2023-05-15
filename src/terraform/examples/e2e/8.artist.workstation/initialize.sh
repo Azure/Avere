@@ -2,18 +2,19 @@
 
 source /etc/profile.d/aaa.sh
 
-cd /usr/local/bin
+binDirectory="/usr/local/bin"
+cd $binDirectory
 
 functionsCode="functions.sh"
 functionsData="${filebase64("../0.global/functions.sh")}"
 echo $functionsData | base64 --decode > $functionsCode
 source $functionsCode
 
-if [ "${fsMount.enable}" == "true" ]; then
-  SetMount "${fsMount.storageRead}" "${fsMount.storageReadCache}" "${storageCache.enableRead}"
-  SetMount "${fsMount.storageWrite}" "${fsMount.storageWriteCache}" "${storageCache.enableWrite}"
+if [ "${fileSystemMount.enable}" == "true" ]; then
+  SetMount "${fileSystemMount.storageRead}" "${fileSystemMount.storageReadCache}" "${storageCache.enableRead}"
+  SetMount "${fileSystemMount.storageWrite}" "${fileSystemMount.storageWriteCache}" "${storageCache.enableWrite}"
   if [[ ${renderManager} == *Deadline* ]]; then
-    AddMount "${fsMount.schedulerDeadline}"
+    AddMount "${fileSystemMount.schedulerDeadline}"
   fi
   mount -a
 fi
@@ -21,7 +22,5 @@ fi
 EnableRenderClient "${renderManager}" "${servicePassword}"
 
 if [ "${teradiciLicenseKey}" != "" ]; then
-  installType="pcoip-agent-license"
-  installFile="/sbin/pcoip-register-host"
-  ./$installFile --registration-code=${teradiciLicenseKey} 1> $installType.out.log 2> $installType.err.log
+  /sbin/pcoip-register-host --registration-code=${teradiciLicenseKey} &> pcoip-agent-license.log
 fi

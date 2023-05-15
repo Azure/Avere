@@ -65,7 +65,7 @@ storageAccounts = [
 
 weka = {
   name = {
-    resource = "aaa"
+    resource = ""
     display  = "Azure Artist Anywhere"
   }
   machine = {
@@ -83,9 +83,9 @@ weka = {
   network = {
     enableAcceleration = false
   }
-  terminationNotification = {
-    enable  = true
-    timeout = "PT5M"
+  terminateNotification = {
+    enable       = true
+    delayTimeout = "PT15M"
   }
   objectTier = {
     percent = 80
@@ -121,6 +121,12 @@ weka = {
     passwordAuth = {
       disable = false
     }
+  }
+  healthExtension = {
+    enable      = true
+    protocol    = "http"
+    port        = 14000
+    requestPath = "/ui"
   }
   license = {
     key = ""

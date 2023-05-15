@@ -478,8 +478,6 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $binPaths += ";$installPath"
 }
 
-setx PATH "$env:PATH$binPaths" /m
-
 if ($machineType -eq "Farm") {
   Write-Host "Customize (Start): Privacy Experience"
   $registryKeyPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
@@ -498,3 +496,5 @@ if ($machineType -eq "Workstation") {
   Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
   Write-Host "Customize (End): Teradici PCoIP"
 }
+
+setx PATH "$env:PATH$binPaths" /m

@@ -47,10 +47,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache file system mount (fsMount)
-          enableWrite = false # Set to true to enable storageWriteCache file system mount (fsMount)
+          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
+          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
         }
-        fsMount = {
+        fileSystemMount = {
           enable            = false
           storageRead       = "data.content.studio/default /mnt/data wekafs net=udp 0 0"
           storageReadCache  = "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
@@ -58,7 +58,17 @@ virtualMachineScaleSets = [
           storageWriteCache = "cache.content.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
           schedulerDeadline = "scheduler.content.studio:/Deadline /DeadlineServer nfs defaults 0 0"
         }
+        terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+          enable       = true
+          delayTimeout = "PT5M"
+        }
       }
+    }
+    healthExtension = {
+      enable      = true
+      protocol    = "tcp"
+      port        = 111
+      requestPath = ""
     }
     monitorExtension = {
       enable = false
@@ -66,11 +76,6 @@ virtualMachineScaleSets = [
     spot = {
       enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-    }
-    terminateNotification = {   # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable                   = true
-      timeoutDelay             = "PT5M"
-      detectionIntervalSeconds = 5
     }
   },
   {
@@ -115,10 +120,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.sh"
       parameters = {
         storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache file system mount (fsMount)
-          enableWrite = false # Set to true to enable storageWriteCache file system mount (fsMount)
+          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
+          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
         }
-        fsMount = {
+        fileSystemMount = {
           enable            = false
           storageRead       = "data.content.studio/default /mnt/data wekafs net=udp 0 0"
           storageReadCache  = "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
@@ -126,7 +131,17 @@ virtualMachineScaleSets = [
           storageWriteCache = "cache.content.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
           schedulerDeadline = "scheduler.content.studio:/Deadline /DeadlineServer nfs defaults 0 0"
         }
+        terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+          enable       = true
+          delayTimeout = "PT5M"
+        }
       }
+    }
+    healthExtension = {
+      enable      = true
+      protocol    = "tcp"
+      port        = 111
+      requestPath = ""
     }
     monitorExtension = {
       enable = false
@@ -134,11 +149,6 @@ virtualMachineScaleSets = [
     spot = {
       enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-    }
-    terminateNotification = {   # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable                   = true
-      timeoutDelay             = "PT5M"
-      detectionIntervalSeconds = 5
     }
   },
   {
@@ -183,10 +193,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache file system mount (fsMount)
-          enableWrite = false # Set to true to enable storageWriteCache file system mount (fsMount)
+          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
+          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
         }
-        fsMount = {
+        fileSystemMount = {
           enable            = false
           storageRead       = "net use R: \\\\data.content.studio\\default /persistent:yes"
           storageReadCache  = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
@@ -194,7 +204,17 @@ virtualMachineScaleSets = [
           storageWriteCache = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data W:"
           schedulerDeadline = "net use S: \\\\scheduler.content.studio\\Deadline /persistent:yes"
         }
+        terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+          enable       = true
+          delayTimeout = "PT5M"
+        }
       }
+    }
+    healthExtension = {
+      enable      = true
+      protocol    = "tcp"
+      port        = 445
+      requestPath = ""
     }
     monitorExtension = {
       enable = false
@@ -202,11 +222,6 @@ virtualMachineScaleSets = [
     spot = {
       enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-    }
-    terminateNotification = {   # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable                   = true
-      timeoutDelay             = "PT5M"
-      detectionIntervalSeconds = 5
     }
   },
   {
@@ -251,10 +266,10 @@ virtualMachineScaleSets = [
       fileName = "initialize.ps1"
       parameters = {
         storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache file system mount (fsMount)
-          enableWrite = false # Set to true to enable storageWriteCache file system mount (fsMount)
+          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
+          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
         }
-        fsMount = {
+        fileSystemMount = {
           enable            = false
           storageRead       = "net use R: \\\\data.content.studio\\default /persistent:yes"
           storageReadCache  = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
@@ -262,7 +277,17 @@ virtualMachineScaleSets = [
           storageWriteCache = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data W:"
           schedulerDeadline = "net use S: \\\\scheduler.content.studio\\Deadline /persistent:yes"
         }
+        terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
+          enable       = true
+          delayTimeout = "PT5M"
+        }
       }
+    }
+    healthExtension = {
+      enable      = true
+      protocol    = "tcp"
+      port        = 445
+      requestPath = ""
     }
     monitorExtension = {
       enable = false
@@ -270,11 +295,6 @@ virtualMachineScaleSets = [
     spot = {
       enable         = true     # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot
       evictionPolicy = "Delete" # https://learn.microsoft.com/azure/virtual-machine-scale-sets/use-spot#eviction-policy
-    }
-    terminateNotification = {   # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
-      enable                   = true
-      timeoutDelay             = "PT5M"
-      detectionIntervalSeconds = 5
     }
   }
 ]

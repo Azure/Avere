@@ -34,10 +34,10 @@ variable "weka" {
           enableAcceleration = bool
         }
       )
-      terminationNotification = object(
+      terminateNotification = object(
         {
-          enable  = bool
-          timeout = string
+          enable       = bool
+          delayTimeout = string
         }
       )
       objectTier = object(
@@ -89,6 +89,14 @@ variable "weka" {
               disable = bool
             }
           )
+        }
+      )
+      healthExtension = object(
+        {
+          enable      = bool
+          protocol    = string
+          port        = number
+          requestPath = string
         }
       )
       license = object(
@@ -191,7 +199,8 @@ locals {
       }'
     json
   }
-  wekaCoreIdsScript = "weka-core-ids.sh"
+  wekaCoreIdsScript    = "/usr/local/bin/weka-core-ids.sh"
+  wekaFileSystemScript = "/usr/local/bin/weka-file-system.sh"
 }
 
 resource "azurerm_resource_group" "weka" {
@@ -235,11 +244,14 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   single_placement_group          = false
   overprovision                   = false
-  custom_data                     = base64encode(templatefile("terminate.sh", merge(
-    {dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name},
-    {dnsZoneName          = data.azurerm_private_dns_zone.network.name},
-    {dnsRecordSetName     = local.privateDnsRecordSetName},
-  )))
+  custom_data                     = base64encode(templatefile("terminate.sh", {
+    wekaClusterName      = var.weka.name.resource
+    wekaAdminPassword    = var.weka.adminLogin.userPassword
+    wekaFileSystemScript = local.wekaFileSystemScript
+    dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name
+    dnsZoneName          = data.azurerm_private_dns_zone.network.name
+    dnsRecordSetName     = local.privateDnsRecordSetName
+  }))
   network_interface {
     name    = "nic1"
     primary = true
@@ -267,6 +279,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
       data.azurerm_user_assigned_identity.studio.id
     ]
   }
+  termination_notification {
+    enabled = var.weka.terminateNotification.enable
+    timeout = var.weka.terminateNotification.delayTimeout
+  }
   extension {
     name                       = "Initialize"
     type                       = "CustomScript"
@@ -274,28 +290,43 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     type_handler_version       = "2.1"
     auto_upgrade_minor_version = true
     settings = jsonencode({
-      "script": "${base64encode(
-        templatefile("initialize.sh", merge(
-          {wekaVersion           = "4.1.0.77"},
-          {wekaResourceName      = var.weka.name.resource},
-          {wekaDataDiskSize      = var.weka.dataDisk.sizeGB},
-          {wekaMachineSpec       = local.wekaMachineSpec},
-          {wekaCoreIdsScript     = local.wekaCoreIdsScript},
-          {wekaResourceGroupName = azurerm_resource_group.weka[0].name},
-          {wekaVMScaleSetName    = var.weka.name.resource},
-          {wekaAdminPassword     = var.weka.adminLogin.userPassword},
-          {dnsResourceGroupName  = data.azurerm_private_dns_zone.network.resource_group_name},
-          {dnsZoneName           = data.azurerm_private_dns_zone.network.name},
-          {dnsRecordSetName      = local.privateDnsRecordSetName},
-          {binStorageHost        = module.global.binStorage.host},
-          {binStorageAuth        = module.global.binStorage.auth}
-        ))
+      script = "${base64encode(
+        templatefile("initialize.sh", {
+          wekaVersion               = "4.1.0.77"
+          wekaClusterName           = var.weka.name.resource
+          wekaDataDiskSize          = var.weka.dataDisk.sizeGB
+          wekaMachineSpec           = local.wekaMachineSpec
+          wekaCoreIdsScript         = local.wekaCoreIdsScript
+          wekaFileSystemName        = var.weka.fileSystem.name
+          wekaFileSystemScript      = local.wekaFileSystemScript
+          wekaObjectTierPercent     = local.wekaObjectTier.percent
+          wekaResourceGroupName     = azurerm_resource_group.weka[0].name
+          wekaVMScaleSetName        = var.weka.name.resource
+          wekaTerminateNotification = var.weka.terminateNotification
+          wekaAdminPassword         = var.weka.adminLogin.userPassword
+          dnsResourceGroupName      = data.azurerm_private_dns_zone.network.resource_group_name
+          dnsZoneName               = data.azurerm_private_dns_zone.network.name
+          dnsRecordSetName          = local.privateDnsRecordSetName
+          binStorageHost            = module.global.binStorage.host
+          binStorageAuth            = module.global.binStorage.auth
+        })
       )}"
     })
   }
-  termination_notification {
-    enabled = var.weka.terminationNotification.enable
-    timeout = var.weka.terminationNotification.timeout
+  dynamic extension {
+    for_each = var.weka.healthExtension.enable ? [1] : []
+    content {
+      name                       = "Health"
+      type                       = "ApplicationHealthLinux"
+      publisher                  = "Microsoft.ManagedServices"
+      type_handler_version       = "1.0"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        protocol    = var.weka.healthExtension.protocol
+        port        = var.weka.healthExtension.port
+        requestPath = var.weka.healthExtension.requestPath
+      })
+    }
   }
   dynamic plan {
     for_each = local.wekaImage.plan.name != "" ? [1] : []
@@ -342,10 +373,10 @@ resource "terraform_data" "weka_cluster_create" {
       "for (( d=1; d<$(echo $machineSpec | jq -r .nvmeDisk); d++ )); do",
       "  nvmeDisks=\"$nvmeDisks /dev/nvme$(echo $d)n1\"",
       "done",
-      "weka cluster create ${azurerm_linux_virtual_machine_scale_set.weka[0].name}{000000..${format("%06d", var.weka.machine.count - 1)}} --admin-password ${var.weka.adminLogin.userPassword}",
+      "weka cluster create ${join(" ", data.azurerm_virtual_machine_scale_set.weka[0].instances[*].private_ip_address)} --admin-password ${var.weka.adminLogin.userPassword} &> weka-cluster-create.log",
       "weka user login admin ${var.weka.adminLogin.userPassword}",
       "for (( i=0; i<${var.weka.machine.count}; i++ )); do",
-      "  hostName=${azurerm_linux_virtual_machine_scale_set.weka[0].name}$(printf %06d $i)",
+      "  hostName=${azurerm_linux_virtual_machine_scale_set.weka[0].name}$(printf %06X $i)",
       "  weka cluster drive add $i --HOST $hostName $nvmeDisks",
       "done"
     ]
@@ -364,10 +395,10 @@ resource "terraform_data" "weka_container_setup" {
     inline = [
       "failureDomain=$(hostname)",
       "machineSpec=${local.wekaMachineSpec}",
-      "source /usr/local/bin/${local.wekaCoreIdsScript}",
+      "source ${local.wekaCoreIdsScript}",
       "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
-      "sudo weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends",
-      "sudo weka local setup container --name frontend0 --base-port 16000 --failure-domain $failureDomain --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate"
+      "sudo weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends &> weka-container-compute0.log",
+      "sudo weka local setup container --name frontend0 --base-port 16000 --failure-domain $failureDomain --join-ips $joinIps --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate &> weka-container-frontend0.log"
     ]
   }
   depends_on = [
@@ -389,11 +420,11 @@ resource "terraform_data" "weka_cluster_start" {
       "weka cluster hot-spare ${var.weka.dataProtection.hotSpare}",
       "weka cloud enable ${var.weka.supportUrl != "" ? "--cloud-url=${var.weka.supportUrl}" : ""}",
       "if [ \"${var.weka.license.key}\" != \"\" ]; then",
-      "  weka cluster license set ${var.weka.license.key}",
+      "  weka cluster license set ${var.weka.license.key} &> weka-cluster-license.log",
       "elif [ \"${var.weka.license.payg.planId}\" != \"\" ]; then",
-      "  weka cluster license payg ${var.weka.license.payg.planId} ${var.weka.license.payg.secretKey}",
+      "  weka cluster license payg ${var.weka.license.payg.planId} ${var.weka.license.payg.secretKey} &> weka-cluster-license.log",
       "fi",
-      "weka cluster start-io",
+      "weka cluster start-io &> weka-cluster-start.log"
     ]
   }
   depends_on = [
@@ -413,18 +444,15 @@ resource "terraform_data" "weka_file_system" {
     inline = [
       "ioStatus=$(weka status --json | jq -r .io_status)",
       "if [ \"$ioStatus\" == \"STARTED\" ]; then",
-      "  fsName=${var.weka.fileSystem.name}",
+      "  source ${local.wekaFileSystemScript}",
       "  fsGroupName=${var.weka.fileSystem.groupName}",
       "  fsAuthRequired=${var.weka.fileSystem.authRequired ? "yes" : "no"}",
       "  fsContainerName=${local.wekaObjectTier.storage.containerName}",
-      "  fsDriveBytes=$(weka status --json | jq -r .capacity.unprovisioned_bytes)",
-      "  fsTotalBytes=$(($fsDriveBytes * 100 / (100 - ${local.wekaObjectTier.percent})))",
-      "  weka fs tier s3 add $fsContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
-      "  weka fs group create $fsGroupName",
-      "  weka fs create $fsName $fsGroupName \"$fsTotalBytes\"B --obs-name $fsContainerName --ssd-capacity \"$fsDriveBytes\"B --auth-required $fsAuthRequired",
+      "  weka fs tier s3 add $fsContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443 &> weka-fs-tier.log",
+      "  weka fs group create $fsGroupName &> weka-fs-group-create.log",
+      "  weka fs create $fsName $fsGroupName \"$fsTotalCapacityBytes\"B --obs-name $fsContainerName --ssd-capacity \"$fsDriveCapacityBytes\"B --auth-required $fsAuthRequired &> weka-fs-create.log",
       "fi",
-      "weka status",
-      "weka alerts"
+      "weka status"
     ]
   }
   depends_on = [

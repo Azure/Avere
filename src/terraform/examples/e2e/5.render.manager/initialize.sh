@@ -2,14 +2,15 @@
 
 source /etc/profile.d/aaa.sh
 
-cd /usr/local/bin
+binDirectory="/usr/local/bin"
+cd $binDirectory
 
 if [[ ${renderManager} == *RoyalRender* ]]; then
   installType="royal-render-server"
   serviceUser="rrService"
   useradd -r $serviceUser -p "${servicePassword}"
-  rrServerconsole -initAndClose > $installType-init.log
-  rrWorkstation_installer -serviceServer -rrUser $serviceUser -rrUserPW "${servicePassword}" 1> $installType-service.out.log 2> $installType-service.err.log
+  rrServerconsole -initAndClose &> $installType-init.log
+  rrWorkstation_installer -serviceServer -rrUser $serviceUser -rrUserPW "${servicePassword}" &> $installType-service.log
 fi
 
 if [ "${qubeLicense.userName}" != "" ]; then
@@ -19,11 +20,12 @@ if [ "${qubeLicense.userName}" != "" ]; then
   systemctl restart dra.service
 fi
 
-serviceFile="aaaScaler"
+serviceFile="aaaAutoScaler"
 dataFilePath="/var/lib/waagent/ovf-env.xml"
 dataFileText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $dataFilePath)
-codeFilePath="/usr/local/bin/$serviceFile.sh"
+codeFilePath="$binDirectory/$serviceFile.sh"
 echo $dataFileText | base64 -d > $codeFilePath
+chmod +x $codeFilePath
 
 serviceName="AAA Auto Scaler"
 servicePath="/etc/systemd/system/$serviceFile.service"

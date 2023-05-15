@@ -3,13 +3,12 @@
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-if [ "${wekaResourceName}" != "" ]; then
+if [ "${wekaClusterName}" != "" ]; then
   dnf -y install kernel-devel-$(uname -r)
 
-  installDisk="/dev/$(lsblk | grep ${wekaDataDiskSize}G | awk '{print $1}')"
-  installType="weka-mkfs"
   volumeLabel="weka-iosw"
-  mkfs.ext4 -L $volumeLabel $installDisk 1> $installType.out.log 2> $installType.err.log
+  installDisk="/dev/$(lsblk | grep ${wekaDataDiskSize}G | awk '{print $1}')"
+  mkfs.ext4 -L $volumeLabel $installDisk &> weka-mkfs.log
   installPath="/opt/weka"
   mkdir -p $installPath
   echo "LABEL=$volumeLabel $installPath ext4 defaults 0 2" >> /etc/fstab
@@ -21,7 +20,7 @@ if [ "${wekaResourceName}" != "" ]; then
   curl -o $installFile -L $downloadUrl
   tar -xf $installFile
   cd weka-$versionInfo
-  ./install.sh 1> ../$volumeLabel.out.log 2> ../$volumeLabel.err.log
+  ./install.sh &> ../$volumeLabel.log
   cd $binDirectory
 
   coreIdsScript="${wekaCoreIdsScript}"
@@ -55,59 +54,54 @@ if [ "${wekaResourceName}" != "" ]; then
   machineSpec=${wekaMachineSpec}
   source $coreIdsScript
 
+  fileSystemScript="${wekaFileSystemScript}"
+  echo "fsName=${wekaFileSystemName}" > $fileSystemScript
+  echo 'fsDriveCapacityBytes=$(weka status --json | jq -r .capacity.total_bytes)' >> $fileSystemScript
+  echo 'fsTotalCapacityBytes=$(($fsDriveCapacityBytes * 100 / (100 - ${wekaObjectTierPercent})))' >> $fileSystemScript
+
   containerName="default"
   weka local stop --force $containerName
   weka local rm --force $containerName
 
   az login --identity
   failureDomain=$(hostname)
+  drivesContainerName="drives0"
   vmScaleSetState=$(az vmss show --resource-group ${wekaResourceGroupName} --name ${wekaVMScaleSetName} --query provisioningState --output tsv)
   if [ "$vmScaleSetState" == "Updating" ]; then
+    az network private-dns record-set a add-record --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --record-set-name ${dnsRecordSetName} --ipv4-address $(hostname -i)
     joinIps=$(az vmss nic list --resource-group ${wekaResourceGroupName} --vmss-name ${wekaVMScaleSetName} --query [].ipConfigurations[0].privateIPAddress --output tsv | tr \\n ',')
-    installType="weka-local-setup-drives"
-    weka local setup container --name drives0 --base-port 14000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
-    installType="weka-local-setup-compute"
-    weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends 1> $installType.out.log 2> $installType.err.log
-    installType="weka-local-setup-frontend"
-    weka local setup container --name frontend0 --base-port 16000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate 1> $installType.out.log 2> $installType.err.log
+    weka local setup container --name $drivesContainerName --base-port 14000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends &> weka-container-$drivesContainerName.log
+    weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends &> weka-container-compute0.log
+    weka local setup container --name frontend0 --base-port 16000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate &> weka-container-frontend0.log
     weka user login admin ${wekaAdminPassword}
     nvmeDisks=/dev/nvme0n1
     for (( d=1; d<$(echo $machineSpec | jq -r .nvmeDisk); d++ )); do
       nvmeDisks="$nvmeDisks /dev/nvme$(echo $d)n1"
     done
-    installType="weka-cluster-drives-add"
-    containerId=$(weka cluster container --filter container=drives,ips=$(hostname -i) --output id --no-header)
-    weka cluster drive add $containerId --HOST $(hostname) $nvmeDisks 1> $installType.out.log 2> $installType.err.log
-    az network private-dns record-set a add-record --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --record-set-name ${dnsRecordSetName} --ipv4-address $(hostname -i)
+    containerId=$(weka cluster container --filter container=$drivesContainerName,ips=$(hostname -i) --output id --no-header)
+    weka cluster drive add $containerId --HOST $(hostname) $nvmeDisks &> weka-cluster-drive.log
+    source $fileSystemScript
+    weka fs update $fsName --ssd-capacity "$fsDriveCapacityBytes"B --total-capacity "$fsTotalCapacityBytes"B &> weka-fs-update.log
   else
-    installType="weka-local-setup-drives"
-    weka local setup container --name drives0 --base-port 14000 --failure-domain $failureDomain --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends 1> $installType.out.log 2> $installType.err.log
+    weka local setup container --name $drivesContainerName --base-port 14000 --failure-domain $failureDomain --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends &> weka-container-$drivesContainerName.log
+  fi
+
+  if [ $(hostname) == "${wekaClusterName}000000" ]; then
+    systemctl --now enable nfs-server
+    mkdir -p $binDirectory/log
+    echo "$binDirectory/log *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+    exportfs -r
   fi
 
   dataFilePath="/var/lib/waagent/ovf-env.xml"
   dataFileText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $dataFilePath)
-  codeFilePath="/usr/local/bin/terminate.sh"
+  codeFilePath="$binDirectory/terminate.sh"
   echo $dataFileText | base64 -d > $codeFilePath
+  chmod +x $codeFilePath
 
-  serviceFile="aaaEventHandler"
-  serviceName="AAA Scheduled Event Handler"
-  servicePath="/etc/systemd/system/$serviceFile.service"
-  echo "[Unit]" > $servicePath
-  echo "Description=$serviceName Service" >> $servicePath
-  echo "After=network-online.target" >> $servicePath
-  echo "" >> $servicePath
-  echo "[Service]" >> $servicePath
-  echo "ExecStart=/bin/bash $codeFilePath" >> $servicePath
-  echo "" >> $servicePath
-  timerPath="/etc/systemd/system/$serviceFile.timer"
-  echo "[Unit]" > $timerPath
-  echo "Description=$serviceName Timer" >> $timerPath
-  echo "" >> $timerPath
-  echo "[Timer]" >> $timerPath
-  echo "OnUnitActiveSec=30" >> $timerPath
-  echo "AccuracySec=1us" >> $timerPath
-  echo "" >> $timerPath
-  echo "[Install]" >> $timerPath
-  echo "WantedBy=timers.target" >> $timerPath
-  systemctl --now enable $serviceFile
+  if [ "${wekaTerminateNotification.enable}" == "true" ]; then
+    cronFilePath="/tmp/crontab"
+    echo "* * * * * $codeFilePath" > $cronFilePath
+    crontab $cronFilePath
+  fi
 fi

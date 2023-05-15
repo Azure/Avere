@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.54.0"
+      version = "~>3.56.0"
     }
   }
   backend "azurerm" {
@@ -258,28 +258,28 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
   resource_group_name = azurerm_resource_group.image.name
   deployment_mode     = "Incremental"
   parameters_content  = jsonencode({
-    "binStorageHost" = {
+    binStorageHost = {
       value = module.global.binStorage.host
     }
-    "binStorageAuth" = {
+    binStorageAuth = {
       value = module.global.binStorage.auth
     }
-    "renderManager" = {
+    renderManager = {
       value = module.global.renderManager
     }
-    "managedIdentityName" = {
+    managedIdentityName = {
       value = module.global.managedIdentity.name
     }
-    "managedIdentityResourceGroupName" = {
+    managedIdentityResourceGroupName = {
       value = module.global.resourceGroupName
     }
-    "imageGalleryName" = {
+    imageGalleryName = {
       value = var.imageGallery.name
     }
-    "imageTemplates" = {
+    imageTemplates = {
       value = var.imageTemplates
     }
-    "servicePassword" = {
+    servicePassword = {
       value = local.servicePassword
     }
   })
@@ -445,9 +445,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                       "[concat('C:\\AzureData\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorageHost', parameters('binStorageHost')), createObject('binStorageAuth', parameters('binStorageAuth')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
-                  },
-                  {
-                    "type": "WindowsRestart"
                   }
                 ]
               }

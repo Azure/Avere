@@ -376,9 +376,9 @@ resource "azurerm_virtual_machine_data_disk_attachment" "storage_data" {
 #   virtual_machine_id         = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
 #   settings = jsonencode({
 #     "script": "${base64encode(
-#       templatefile("initialize.sh", merge(
-#         {adminPassword = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword}
-#       ))
+#       templatefile("initialize.sh", {
+#         adminPassword = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+#       })
 #     )}"
 #   })
 #   depends_on = [

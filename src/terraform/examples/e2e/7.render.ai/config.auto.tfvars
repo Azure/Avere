@@ -5,10 +5,11 @@ resourceGroupName = "ArtistAnywhere.AI" # Alphanumeric, underscores, hyphens, pe
 ##################################################################################
 
 openAI = {
-  regionName  = "EastUS"
-  accountName = "azstudio"
-  domainName  = "azstudio"
-  serviceTier = "S0"
+  regionName    = "EastUS"
+  accountName   = "azstudio"
+  domainName    = "azstudio"
+  serviceTier   = "S0"
+  enableStorage = false
 }
 
 #######################################################################

@@ -156,7 +156,7 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
    * Make sure you have sufficient compute (*Spot*) cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
    * Make sure the **storageCache** read and write boolean switches are set properly for your environment.
-   * Make sure the **fsMount** config has the correct values for your environment (e.g., storage account name).
+   * Make sure the **fileSystemMount** config has the correct values for your environment (e.g., storage account name).
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
@@ -180,7 +180,7 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
    * Make sure the **storageCache** read and write boolean switches are set properly for your environment.
-   * Make sure the **fsMount** config has the correct values for your environment (e.g., storage cache mount).
+   * Make sure the **fileSystemMount** config has the correct values for your environment (e.g., storage cache mount).
 1. Run `terraform init -backend-config ../0.global/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming

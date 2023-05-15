@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.54.0"
+      version = "~>3.56.0"
     }
   }
   backend "azurerm" {
@@ -101,7 +101,7 @@ variable "virtualMachineScaleSets" {
                   enableWrite = bool
                 }
               )
-              fsMount = object(
+              fileSystemMount = object(
                 {
                   enable            = bool
                   storageRead       = string
@@ -111,8 +111,22 @@ variable "virtualMachineScaleSets" {
                   schedulerDeadline = string
                 }
               )
+              terminateNotification = object(
+                {
+                  enable       = bool
+                  delayTimeout = string
+                }
+              )
             }
           )
+        }
+      )
+      healthExtension = object(
+        {
+          enable      = bool
+          protocol    = string
+          port        = number
+          requestPath = string
         }
       )
       monitorExtension = object(
@@ -124,13 +138,6 @@ variable "virtualMachineScaleSets" {
         {
           enable         = bool
           evictionPolicy = string
-        }
-      )
-      terminateNotification = object(
-        {
-          enable                   = bool
-          timeoutDelay             = string
-          detectionIntervalSeconds = number
         }
       )
     }
@@ -316,13 +323,27 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type_handler_version       = "2.1"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        "script": "${base64encode(
-          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            {renderManager                                 = module.global.renderManager},
-            {servicePassword                               = local.servicePassword},
-            {terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds}
-          ))
+        script: "${base64encode(
+          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
+            renderManager   = module.global.renderManager
+            servicePassword = local.servicePassword
+          }))
         )}"
+      })
+    }
+  }
+  dynamic extension {
+    for_each = each.value.healthExtension.enable ? [1] : []
+    content {
+      name                       = "Health"
+      type                       = "ApplicationHealthLinux"
+      publisher                  = "Microsoft.ManagedServices"
+      type_handler_version       = "1.0"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        protocol    = each.value.healthExtension.protocol
+        port        = each.value.healthExtension.port
+        requestPath = each.value.healthExtension.requestPath
       })
     }
   }
@@ -335,18 +356,18 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.21"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        "workspaceId": data.azurerm_log_analytics_workspace.monitor[0].workspace_id
+        workspaceId = data.azurerm_log_analytics_workspace.monitor[0].workspace_id
       })
       protected_settings = jsonencode({
-        "workspaceKey": data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
+        workspaceKey = data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
       })
     }
   }
   dynamic termination_notification {
-    for_each = each.value.terminateNotification.enable ? [1] : []
+    for_each = each.value.customExtension.parameters.terminateNotification.enable ? [1] : []
     content {
-      enabled = each.value.terminateNotification.enable
-      timeout = each.value.terminateNotification.timeoutDelay
+      enabled = each.value.customExtension.parameters.terminateNotification.enable
+      timeout = each.value.customExtension.parameters.terminateNotification.delayTimeout
     }
   }
 }
@@ -404,13 +425,27 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.10"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        "commandToExecute": "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters,
-            {renderManager                                 = module.global.renderManager},
-            {servicePassword                               = local.servicePassword},
-            {terminateNotificationDetectionIntervalSeconds = each.value.terminateNotification.detectionIntervalSeconds}
-          )), "UTF-16LE"
+        commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
+          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
+            renderManager   = module.global.renderManager
+            servicePassword = local.servicePassword
+          })), "UTF-16LE"
         )}"
+      })
+    }
+  }
+  dynamic extension {
+    for_each = each.value.healthExtension.enable ? [1] : []
+    content {
+      name                       = "Health"
+      type                       = "ApplicationHealthWindows"
+      publisher                  = "Microsoft.ManagedServices"
+      type_handler_version       = "1.0"
+      auto_upgrade_minor_version = true
+      settings = jsonencode({
+        protocol    = each.value.healthExtension.protocol
+        port        = each.value.healthExtension.port
+        requestPath = each.value.healthExtension.requestPath
       })
     }
   }
@@ -423,18 +458,18 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.7"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        "workspaceId": data.azurerm_log_analytics_workspace.monitor[0].workspace_id
+        workspaceId = data.azurerm_log_analytics_workspace.monitor[0].workspace_id
       })
       protected_settings = jsonencode({
-        "workspaceKey": data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
+        workspaceKey = data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
       })
     }
   }
   dynamic termination_notification {
-    for_each = each.value.terminateNotification.enable ? [1] : []
+    for_each = each.value.customExtension.parameters.terminateNotification.enable ? [1] : []
     content {
-      enabled = each.value.terminateNotification.enable
-      timeout = each.value.terminateNotification.timeoutDelay
+      enabled = each.value.customExtension.parameters.terminateNotification.enable
+      timeout = each.value.customExtension.parameters.terminateNotification.delayTimeout
     }
   }
 }

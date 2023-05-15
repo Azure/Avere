@@ -12,11 +12,11 @@ function SetMount {
 }
 
 function AddMount {
-  fsMount="$1"
-  fsMountPoint=$(cut -d " " -f 2 <<< "$fsMount")
-  if [ $(grep -c $fsMountPoint /etc/fstab) ]; then
-    mkdir -p $fsMountPoint
-    echo "$fsMount" >> /etc/fstab
+  fileSystemMount="$1"
+  mountDirectory=$(cut -d " " -f 2 <<< "$fileSystemMount")
+  if [ $(grep -c $mountDirectory /etc/fstab) ]; then
+    mkdir -p $mountDirectory
+    echo "$fileSystemMount" >> /etc/fstab
   fi
 }
 
@@ -29,10 +29,10 @@ function EnableRenderClient {
   #   installPath="RoyalRender*"
   #   installFile="rrSetup_linux"
   #   rrRootShare="\\scheduler.content.studio\RoyalRender"
-  #   ./$installPath/$installFile -console -rrRoot $rrRootShare 1> $installType.out.log 2> $installType.err.log
+  #   ./$installPath/$installFile -console -rrRoot $rrRootShare &> $installType.log
 
   #   serviceUser="rrService"
   #   useradd -r $serviceUser -p "$servicePassword"
-  #   rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "$servicePassword" -fwOut 1> $installType-service.out.log 2> $installType-service.err.log
+  #   rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "$servicePassword" -fwOut &> $installType-service.log
   # fi
 }
