@@ -5,7 +5,7 @@ rootHost=${wekaClusterName}000000
 logDirectory=/mnt/log
 if ! mountpoint -q $logDirectory; then
   mkdir -p $logDirectory
-  mount $rootHost:/usr/local/bin/log $logDirectory
+  mount $rootHost:${binDirectoryPath}/log $logDirectory
 fi
 
 eventsUrl="http://169.254.169.254/metadata/scheduledevents?api-version=2020-07-01"
@@ -18,7 +18,7 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
   }
   eventType=$(_jq .EventType)
 
-  if [[ $eventType == "Terminate" ]]; then
+  if [ $eventType == "Terminate" ]; then
     eventScope=$(_jq .Resources[0])
     instanceName=$(curl --header Metadata:true $vmNameUrl)
 
@@ -63,7 +63,7 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
 
       eventId=$(_jq .EventId)
       eventData="{\"StartRequests\":[{\"EventId\":\"$eventId\"}]}"
-      curl --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl
+      curl --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl &> $logDirectory/$instanceName-curl-event-$eventId.log
     fi
   fi
 done

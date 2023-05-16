@@ -64,6 +64,7 @@ storageAccounts = [
 #######################################################################################################
 
 weka = {
+  apiToken = ""
   name = {
     resource = ""
     display  = "Azure Artist Anywhere"
@@ -114,6 +115,12 @@ weka = {
     parityLevel = 2
     hotSpare    = 1
   }
+  healthExtension = {
+    enable      = true
+    protocol    = "http"
+    port        = 14000
+    requestPath = "/ui"
+  }
   adminLogin = {
     userName     = "azadmin"
     userPassword = "P@ssword1234"
@@ -121,12 +128,6 @@ weka = {
     passwordAuth = {
       disable = false
     }
-  }
-  healthExtension = {
-    enable      = true
-    protocol    = "http"
-    port        = 14000
-    requestPath = "/ui"
   }
   license = {
     key = ""

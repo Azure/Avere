@@ -165,9 +165,10 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
-  stateExistsNetwork      = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
-  virtualNetworkSubnet    = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
-  privateDnsRecordSetName = "data"
+  stateExistsNetwork   = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  virtualNetworkSubnet = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
+  binDirectoryPath     = "/usr/local/bin"
+  dnsRecordSetName     = "data"
 }
 
 resource "azurerm_resource_group" "storage" {
