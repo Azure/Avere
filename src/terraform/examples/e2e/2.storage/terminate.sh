@@ -1,9 +1,11 @@
 #!/bin/bash -ex
 
+rootHost=${wekaClusterName}000000
+
 logDirectory=/mnt/log
 if ! mountpoint -q $logDirectory; then
   mkdir -p $logDirectory
-  mount ${wekaClusterName}000000:/usr/local/bin/log $logDirectory
+  mount $rootHost:/usr/local/bin/log $logDirectory
 fi
 
 eventsUrl="http://169.254.169.254/metadata/scheduledevents?api-version=2020-07-01"
@@ -35,7 +37,7 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
       for (( i=0; i<$${#driveIds[@]}; i++ )); do
         driveId=$${driveIds[i]}
         until [ "$driveStatus" == "INACTIVE" ]; do
-          sleep 5s
+          sleep 3s
           driveStatus=$(weka cluster drive --filter uuid=$driveId --output status --no-header)
         done
         weka cluster drive remove --force $driveId &> $logDirectory/$instanceName-weka-cluster-drive-remove-$driveId.log
@@ -47,17 +49,21 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
       containerIds=$(weka cluster container --filter ips=$(hostname -i) --output id --no-header | tr \\n ' ')
       containerIds=$${containerIds::-1}
       echo $containerIds &> $logDirectory/$instanceName-weka-cluster-container-ids.log
-      weka cluster container deactivate --allow-unavailable $containerIds &> $logDirectory/$instanceName-weka-cluster-container-deactivate.log
+      weka cluster container deactivate $containerIds &> $logDirectory/$instanceName-weka-cluster-container-deactivate.log
 
-      # read -a containerIds <<< "$containerIds"
-      # for (( i=0; i<$${#containerIds[@]}; i++ )); do
-      #   containerId=$${containerIds[i]}
-      #   weka cluster container remove $containerId &> $logDirectory/$instanceName-weka-cluster-container-remove-$containerId.log
-      # done
+      read -a containerIds <<< "$containerIds"
+      for (( i=0; i<$${#containerIds[@]}; i++ )); do
+        containerId=$${containerIds[i]}
+        until [ "$containerStatus" == "INACTIVE" ]; do
+          sleep 3s
+          containerStatus=$(weka cluster container --HOST $rootHost --filter id=$containerId --output status --no-header)
+        done
+        weka cluster container remove $containerId --HOST $rootHost &> $logDirectory/$instanceName-weka-cluster-container-remove-$containerId.log
+      done
 
       eventId=$(_jq .EventId)
       eventData="{\"StartRequests\":[{\"EventId\":\"$eventId\"}]}"
-      curl --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl &> $logDirectory/$instanceName-curl-event-$eventId.log
+      curl --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl
     fi
   fi
 done
