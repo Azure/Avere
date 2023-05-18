@@ -99,6 +99,7 @@ weka = {
   fileSystem = {
     name         = "default"
     groupName    = "default"
+    autoScale    = false
     authRequired = false
   }
   osDisk = {

@@ -10,7 +10,7 @@ functionsData="${filebase64("../0.global/functions.sh")}"
 echo $functionsData | base64 --decode > $functionsCode
 source $functionsCode
 
-if [ "${fileSystemMount.enable}" == "true" ]; then
+if [ "${fileSystemMount.enable}" == true ]; then
   SetMount "${fileSystemMount.storageRead}" "${fileSystemMount.storageReadCache}" "${storageCache.enableRead}"
   SetMount "${fileSystemMount.storageWrite}" "${fileSystemMount.storageWriteCache}" "${storageCache.enableWrite}"
   if [[ ${renderManager} == *Deadline* ]]; then

@@ -1,7 +1,7 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
 function SetMount ($storageMount, $storageCacheMount, $enableStorageCache) {
-  if ($enableStorageCache -eq "true") {
+  if ($enableStorageCache -eq $true) {
     AddMount $storageCacheMount
   } else {
     AddMount $storageMount

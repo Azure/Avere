@@ -57,6 +57,7 @@ variable "weka" {
         {
           name         = string
           groupName    = string
+          autoScale    = bool
           authRequired = bool
         }
       )
@@ -249,7 +250,6 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   custom_data                     = base64encode(templatefile("terminate.sh", {
     wekaClusterName      = var.weka.name.resource
     wekaAdminPassword    = var.weka.adminLogin.userPassword
-    wekaFileSystemScript = local.wekaFileSystemScript
     dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name
     dnsZoneName          = data.azurerm_private_dns_zone.network.name
     dnsRecordSetName     = local.dnsRecordSetName
@@ -302,13 +302,13 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
           wekaMachineSpec           = local.wekaMachineSpec
           wekaCoreIdsScript         = local.wekaCoreIdsScript
           wekaDriveDisksScript      = local.wekaDriveDisksScript
-          wekaFileSystemName        = var.weka.fileSystem.name
           wekaFileSystemScript      = local.wekaFileSystemScript
+          wekaFileSystemName        = var.weka.fileSystem.name
+          wekaFileSystemAutoScale   = var.weka.fileSystem.autoScale
           wekaObjectTierPercent     = local.wekaObjectTier.percent
-          wekaResourceGroupName     = azurerm_resource_group.weka[0].name
-          wekaVMScaleSetName        = var.weka.name.resource
           wekaTerminateNotification = var.weka.terminateNotification
           wekaAdminPassword         = var.weka.adminLogin.userPassword
+          wekaResourceGroupName     = azurerm_resource_group.weka[0].name
           dnsResourceGroupName      = data.azurerm_private_dns_zone.network.resource_group_name
           dnsZoneName               = data.azurerm_private_dns_zone.network.name
           dnsRecordSetName          = local.dnsRecordSetName
@@ -446,12 +446,12 @@ resource "terraform_data" "weka_file_system" {
       "ioStatus=$(weka status --json | jq -r .io_status)",
       "if [ \"$ioStatus\" == \"STARTED\" ]; then",
       "  source ${local.wekaFileSystemScript}",
-      "  fsGroupName=${var.weka.fileSystem.groupName}",
-      "  fsAuthRequired=${var.weka.fileSystem.authRequired ? "yes" : "no"}",
-      "  fsContainerName=${local.wekaObjectTier.storage.containerName}",
-      "  weka fs tier s3 add $fsContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
-      "  weka fs group create $fsGroupName",
-      "  weka fs create $fsName $fsGroupName \"$fsTotalCapacityBytes\"B --obs-name $fsContainerName --ssd-capacity \"$fsDriveCapacityBytes\"B --auth-required $fsAuthRequired",
+      "  fileSystemGroupName=${var.weka.fileSystem.groupName}",
+      "  fileSystemAuthRequired=${var.weka.fileSystem.authRequired ? "yes" : "no"}",
+      "  fileSystemContainerName=${local.wekaObjectTier.storage.containerName}",
+      "  weka fs tier s3 add $fileSystemContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
+      "  weka fs group create $fileSystemGroupName",
+      "  weka fs create $fileSystemName $fileSystemGroupName \"$fileSystemTotalBytes\"B --obs-name $fileSystemContainerName --ssd-capacity \"$fileSystemDriveBytes\"B --auth-required $fileSystemAuthRequired",
       "fi",
       "weka status"
     ]

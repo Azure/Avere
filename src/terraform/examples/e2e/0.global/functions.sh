@@ -4,7 +4,7 @@ function SetMount {
   storageMount="$1"
   storageCacheMount="$2"
   enableStorageCache=$3
-  if [ "$enableStorageCache" == "true" ]; then
+  if [ "$enableStorageCache" == true ]; then
     AddMount "$storageCacheMount"
   else
     AddMount "$storageMount"

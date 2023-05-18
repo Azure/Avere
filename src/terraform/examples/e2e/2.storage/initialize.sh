@@ -53,9 +53,9 @@ if [ "${wekaClusterName}" != "" ]; then
   echo 'done' >> $driveDisksScript
 
   fileSystemScript=${wekaFileSystemScript}
-  echo "fsName=${wekaFileSystemName}" > $fileSystemScript
-  echo 'fsDriveCapacityBytes=$(weka status --json | jq -r .capacity.total_bytes)' >> $fileSystemScript
-  echo 'fsTotalCapacityBytes=$(($fsDriveCapacityBytes * 100 / (100 - ${wekaObjectTierPercent})))' >> $fileSystemScript
+  echo "fileSystemName=${wekaFileSystemName}" > $fileSystemScript
+  echo 'fileSystemDriveBytes=$(weka status --json | jq -r .capacity.total_bytes)' >> $fileSystemScript
+  echo 'fileSystemTotalBytes=$(echo "$fileSystemDriveBytes * 100 / (100 - ${wekaObjectTierPercent})" | bc)' >> $fileSystemScript
 
   containerName="default"
   weka local stop --force $containerName
@@ -64,9 +64,9 @@ if [ "${wekaClusterName}" != "" ]; then
   az login --identity
   failureDomain=$(hostname)
   drivesContainerName=drives0
-  vmScaleSetState=$(az vmss show --resource-group ${wekaResourceGroupName} --name ${wekaVMScaleSetName} --query provisioningState --output tsv)
+  vmScaleSetState=$(az vmss show --resource-group ${wekaResourceGroupName} --name ${wekaClusterName} --query provisioningState --output tsv)
   if [ "$vmScaleSetState" == "Updating" ]; then
-    joinIps=$(az vmss nic list --resource-group ${wekaResourceGroupName} --vmss-name ${wekaVMScaleSetName} --query [].ipConfigurations[0].privateIPAddress --output tsv | tr \\n ',')
+    joinIps=$(az vmss nic list --resource-group ${wekaResourceGroupName} --vmss-name ${wekaClusterName} --query [].ipConfigurations[0].privateIPAddress --output tsv | tr \\n ',')
     weka local setup container --name $drivesContainerName --base-port 14000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends &> weka-container-setup-$drivesContainerName.log
     weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends &> weka-container-setup-compute0.log
     weka local setup container --name frontend0 --base-port 16000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountFrontend --frontend-dedicated-cores $coreCountFrontend --core-ids $coreIdsFrontend --dedicate &> weka-container-setup-frontend0.log
@@ -74,8 +74,10 @@ if [ "${wekaClusterName}" != "" ]; then
     source $driveDisksScript
     containerId=$(weka cluster container --filter container=$drivesContainerName,ips=$(hostname -i) --output id --no-header)
     weka cluster drive add $containerId $nvmeDisks &> weka-cluster-drive-add.log
-    source $fileSystemScript
-    weka fs update $fsName --ssd-capacity "$fsDriveCapacityBytes"B --total-capacity "$fsTotalCapacityBytes"B &> weka-fs-update.log
+    if [ ${wekaFileSystemAutoScale} == true ]; then
+      source $fileSystemScript
+      weka fs update $fileSystemName --ssd-capacity "$fileSystemDriveBytes"B --total-capacity "$fileSystemTotalBytes"B &> weka-fs-update.log
+    fi
     az network private-dns record-set a add-record --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --record-set-name ${dnsRecordSetName} --ipv4-address $(hostname -i)
   else
     weka local setup container --name $drivesContainerName --base-port 14000 --failure-domain $failureDomain --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends &> weka-container-setup-$drivesContainerName.log
@@ -94,7 +96,7 @@ if [ "${wekaClusterName}" != "" ]; then
   echo $dataFileText | base64 -d > $codeFilePath
   chmod +x $codeFilePath
 
-  if [ "${wekaTerminateNotification.enable}" == "true" ]; then
+  if [ "${wekaTerminateNotification.enable}" == true ]; then
     cronFilePath="/tmp/crontab"
     echo "* * * * * $codeFilePath" > $cronFilePath
     crontab $cronFilePath

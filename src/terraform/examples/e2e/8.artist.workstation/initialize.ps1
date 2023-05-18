@@ -6,7 +6,7 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-if ("${fileSystemMount.enable}" -eq "true") {
+if ("${fileSystemMount.enable}" -eq $true) {
   SetMount "${fileSystemMount.storageRead}" "${fileSystemMount.storageReadCache}" "${storageCache.enableRead}"
   SetMount "${fileSystemMount.storageWrite}" "${fileSystemMount.storageWriteCache}" "${storageCache.enableWrite}"
   if ("${renderManager}" -like "*Deadline*") {
