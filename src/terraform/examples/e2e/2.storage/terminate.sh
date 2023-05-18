@@ -69,7 +69,7 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
       if [[ $drivesRemoved == true && $containersRemoved == true ]]; then
         eventId=$(_jq .EventId)
         eventData="{\"StartRequests\":[{\"EventId\":\"$eventId\"}]}"
-        curl --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl &> $logDirectory/$instanceName-curl-event-$eventId.log
+        curl --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl &> $logDirectory/$instanceName-post-event-$eventId.log
       fi
     fi
   fi
