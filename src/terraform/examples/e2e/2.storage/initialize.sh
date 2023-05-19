@@ -78,7 +78,12 @@ if [ "${wekaClusterName}" != "" ]; then
       source $fileSystemScript
       weka fs update $fileSystemName --ssd-capacity "$fileSystemDriveBytes"B --total-capacity "$fileSystemTotalBytes"B &> weka-fs-update.log
     fi
-    az network private-dns record-set a add-record --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --record-set-name ${dnsRecordSetName} --ipv4-address $(hostname -i)
+    dnsRecordQuery="aRecords[?ipv4Address=='$(hostname -i)']"
+    while [ -z $dnsRecordAddress ]; do
+      az network private-dns record-set a add-record --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --record-set-name ${dnsRecordSetName} --ipv4-address $(hostname -i)
+      sleep 5s
+      dnsRecordAddress=$(az network private-dns record-set a show --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --name ${dnsRecordSetName} --query $dnsRecordQuery --output tsv)
+    done
   else
     weka local setup container --name $drivesContainerName --base-port 14000 --failure-domain $failureDomain --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends &> weka-container-setup-$drivesContainerName.log
   fi
@@ -96,7 +101,7 @@ if [ "${wekaClusterName}" != "" ]; then
   echo $dataFileText | base64 -d > $codeFilePath
   chmod +x $codeFilePath
 
-  if [ "${wekaTerminateNotification.enable}" == true ]; then
+  if [ ${wekaTerminateNotification.enable} == true ]; then
     cronFilePath="/tmp/crontab"
     echo "* * * * * $codeFilePath" > $cronFilePath
     crontab $cronFilePath

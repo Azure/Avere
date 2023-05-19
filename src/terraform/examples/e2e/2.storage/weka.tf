@@ -32,6 +32,12 @@ variable "weka" {
       )
       network = object(
         {
+          privateDnsZone = object(
+            {
+              recordSetName    = string
+              recordTtlSeconds = number
+            }
+          )
           enableAcceleration = bool
         }
       )
@@ -252,7 +258,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     wekaAdminPassword    = var.weka.adminLogin.userPassword
     dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name
     dnsZoneName          = data.azurerm_private_dns_zone.network.name
-    dnsRecordSetName     = local.dnsRecordSetName
+    dnsRecordSetName     = var.weka.network.privateDnsZone.recordSetName
     binDirectoryPath     = local.binDirectoryPath
   }))
   network_interface {
@@ -311,7 +317,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
           wekaResourceGroupName     = azurerm_resource_group.weka[0].name
           dnsResourceGroupName      = data.azurerm_private_dns_zone.network.resource_group_name
           dnsZoneName               = data.azurerm_private_dns_zone.network.name
-          dnsRecordSetName          = local.dnsRecordSetName
+          dnsRecordSetName          = var.weka.network.privateDnsZone.recordSetName
           binDirectoryPath          = local.binDirectoryPath
         })
       )}"
@@ -355,11 +361,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
 
 resource "azurerm_private_dns_a_record" "data" {
   count               = var.weka.name.resource != "" ? 1 : 0
-  name                = local.dnsRecordSetName
+  name                = var.weka.network.privateDnsZone.recordSetName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
   records             = [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address]
-  ttl                 = 300
+  ttl                 = var.weka.network.privateDnsZone.recordTtlSeconds
 }
 
 resource "terraform_data" "weka_cluster_create" {

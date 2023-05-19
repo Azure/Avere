@@ -82,6 +82,10 @@ weka = {
     }
   }
   network = {
+    privateDnsZone = {
+      recordSetName    = "data"
+      recordTtlSeconds = 300
+    }
     enableAcceleration = false
   }
   terminateNotification = {
