@@ -371,8 +371,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[concat('hostname ', parameters('imageTemplate').name)]",
-                      "dnf -y upgrade --refresh"
+                      "[concat('hostname ', parameters('imageTemplate').name)]"
                     ]
                   },
                   {

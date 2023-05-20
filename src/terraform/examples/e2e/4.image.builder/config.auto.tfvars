@@ -68,24 +68,29 @@ imageTemplates = [
       gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
       ]
       outputVersion  = "0.0.0"
-      timeoutMinutes = 120
-      osDiskSizeGB   = 0
+      timeoutMinutes = 60
+      osDiskSizeGB   = 64
       renderEngines = [
       ]
       customize = [
         "cd /usr/local/bin",
-        "dnf -y install perl jq bc lsof",
-        "installFile=MLNX_OFED_LINUX-5.8-2.0.3.0-rhel8.6-x86_64.tgz",
+        "dnf -y install jq bc lsof",
+        "dnf -y install perl gcc-gfortran python36-devel elfutils-libelf-devel",
+        "dnf -y install kernel-rpm-macros rpm-build libtool pciutils tcl tk tcsh",
         "binStorageHost=https://azstudio.blob.core.windows.net/bin",
         "binStorageAuth='?sv=2021-10-04&st=2022-01-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=SyE2RuK0C7M9nNQSJfiw4SenqqV8O6DYulr24ZJapFw%3D'",
+        "installFile=kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm",
+        "downloadUrl=$binStorageHost/Linux/$installFile$binStorageAuth",
+        "curl -o $installFile -L $downloadUrl",
+        "rpm -i $installFile",
+        "installFile=MLNX_OFED_LINUX-5.8-2.0.3.0-rhel8.6-x86_64.tgz",
         "downloadUrl=$binStorageHost/NVIDIA/OFED/$installFile$binStorageAuth",
         "curl -o $installFile -L $downloadUrl",
         "tar -xzf $installFile",
-        #"./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --force &> mellanox-ofed.log",
+        "./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --skip-repo --force &> mellanox-ofed.log",
         "rpm --import https://packages.microsoft.com/keys/microsoft.asc",
         "dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm",
-        "dnf -y install azure-cli &> azure-cli.log",
-        "dnf -y upgrade --refresh"
+        "dnf -y install azure-cli &> azure-cli.log"
       ]
     }
   },

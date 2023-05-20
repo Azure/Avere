@@ -37,7 +37,10 @@ echo "Customize (End): Image Build Platform"
 
 if [[ $gpuPlatform == *GRID* ]]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
-  dnf -y install kernel-devel-$(uname -r)
+  installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
+  downloadUrl="$binStorageHost/Linux/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  rpm -i $installFile
   installType="nvidia-gpu-grid"
   installFile="$installType.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
