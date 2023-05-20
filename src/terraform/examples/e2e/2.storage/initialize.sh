@@ -3,8 +3,6 @@
 cd ${binDirectoryPath}
 
 if [ "${wekaClusterName}" != "" ]; then
-  dnf -y install kernel-devel-$(uname -r)
-
   volumeLabel="weka-iosw"
   installDisk="/dev/$(lsblk | grep ${wekaDataDiskSize}G | awk '{print $1}')"
   mkfs.ext4 -L $volumeLabel $installDisk &> weka-mkfs.log
@@ -79,7 +77,7 @@ if [ "${wekaClusterName}" != "" ]; then
       weka fs update $fileSystemName --ssd-capacity "$fileSystemDriveBytes"B --total-capacity "$fileSystemTotalBytes"B &> weka-fs-update.log
     fi
     dnsRecordQuery="aRecords[?ipv4Address=='$(hostname -i)']"
-    while [ -z $dnsRecordAddress ]; do
+    while [ -z "$dnsRecordAddress" ]; do
       az network private-dns record-set a add-record --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --record-set-name ${dnsRecordSetName} --ipv4-address $(hostname -i)
       sleep 5s
       dnsRecordAddress=$(az network private-dns record-set a show --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --name ${dnsRecordSetName} --query $dnsRecordQuery --output tsv)
