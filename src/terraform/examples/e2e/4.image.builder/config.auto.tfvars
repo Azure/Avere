@@ -11,9 +11,9 @@ imageGallery = {
       name       = "Linux"
       type       = "Linux"
       generation = "V2"
-      publisher  = "CIQ"
-      offer      = "Rocky"
-      sku        = "Rocky-8-6-Free"
+      publisher  = "AlmaLinux"
+      offer      = "AlmaLinux"
+      sku        = "9-Gen2"
     },
     {
       name       = "WinScheduler"
@@ -60,7 +60,7 @@ imageTemplates = [
     name = "LnxStorage"
     image = {
       definitionName = "Linux"
-      inputVersion   = "Latest"
+      inputVersion   = "9.1.2022122801"
     }
     build = {
       machineType    = "Storage"
@@ -74,21 +74,21 @@ imageTemplates = [
       customize = [
         "cd /usr/local/bin",
         "dnf -y install jq bc lsof",
-        "dnf -y install perl gcc-gfortran python36-devel elfutils-libelf-devel",
-        "dnf -y install kernel-rpm-macros rpm-build libtool pciutils tcl tk tcsh",
         "binStorageHost=https://azstudio.blob.core.windows.net/bin",
         "binStorageAuth='?sv=2021-10-04&st=2022-01-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=SyE2RuK0C7M9nNQSJfiw4SenqqV8O6DYulr24ZJapFw%3D'",
-        "installFile=kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm",
+        "dnf -y install gcc perl flex bison elfutils-libelf-devel openssl-devel",
+        "installFile=kernel-devel-5.14.0-162.6.1.el9_1.x86_64.rpm",
         "downloadUrl=$binStorageHost/Linux/$installFile$binStorageAuth",
         "curl -o $installFile -L $downloadUrl",
         "rpm -i $installFile",
-        "installFile=MLNX_OFED_LINUX-5.8-2.0.3.0-rhel8.6-x86_64.tgz",
+        "dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk tcsh",
+        "installFile=MLNX_OFED_LINUX-5.8-2.0.3.0-rhel9.1-x86_64.tgz",
         "downloadUrl=$binStorageHost/NVIDIA/OFED/$installFile$binStorageAuth",
         "curl -o $installFile -L $downloadUrl",
         "tar -xzf $installFile",
         "./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --skip-repo --force &> mellanox-ofed.log",
         "rpm --import https://packages.microsoft.com/keys/microsoft.asc",
-        "dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm",
+        "dnf -y install https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm",
         "dnf -y install azure-cli &> azure-cli.log"
       ]
     }
@@ -97,7 +97,7 @@ imageTemplates = [
     name = "LnxScheduler"
     image = {
       definitionName = "Linux"
-      inputVersion   = "Latest"
+      inputVersion   = "9.1.2022122801"
     }
     build = {
       machineType    = "Scheduler"
@@ -116,7 +116,7 @@ imageTemplates = [
     name = "LnxFarmCPU"
     image = {
       definitionName = "Linux"
-      inputVersion   = "Latest"
+      inputVersion   = "9.1.2022122801"
     }
     build = {
       machineType    = "Farm"
@@ -141,7 +141,7 @@ imageTemplates = [
     name = "LnxFarmGPU"
     image = {
       definitionName = "Linux"
-      inputVersion   = "Latest"
+      inputVersion   = "9.1.2022122801"
     }
     build = {
       machineType    = "Farm"
@@ -166,7 +166,7 @@ imageTemplates = [
     name = "LnxArtist"
     image = {
       definitionName = "Linux"
-      inputVersion   = "Latest"
+      inputVersion   = "9.1.2022122801"
     }
     build = {
       machineType    = "Workstation"

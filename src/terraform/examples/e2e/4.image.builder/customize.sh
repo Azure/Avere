@@ -25,10 +25,13 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
+dnf -y install gcc perl flex bison elfutils-libelf-devel openssl-devel
+installFile="kernel-devel-5.14.0-162.6.1.el9_1.x86_64.rpm"
+downloadUrl="$binStorageHost/Linux/$installFile$binStorageAuth"
+curl -o $installFile -L $downloadUrl
+rpm -i $installFile
 dnf -y install epel-release
-dnf -y install dkms unzip lsof git bc
-dnf -y install gcc-toolset-9 python3-devel
-source /opt/rh/gcc-toolset-9/enable
+dnf -y install dkms python3-devel bc git lsof unzip
 
 versionInfo="3.26.4"
 installType="cmake"
@@ -44,10 +47,6 @@ echo "Customize (End): Image Build Platform"
 
 if [ "$gpuProvider" == "NVIDIA" ]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
-  installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
-  downloadUrl="$binStorageHost/Linux/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  rpm -i $installFile
   installType="nvidia-gpu-grid"
   installFile="$installType.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
@@ -59,7 +58,7 @@ fi
 
 echo "Customize (Start): NVIDIA GPU (CUDA)"
 installType="nvidia-cuda"
-dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
 dnf -y module install nvidia-driver:latest-dkms &> $installType-dkms.log
 dnf -y install cuda &> $installType.log
 echo "Customize (End): NVIDIA GPU (CUDA)"
@@ -70,7 +69,7 @@ dnf -y install mesa-libGL-devel
 dnf -y install libXrandr-devel
 dnf -y install libXinerama-devel
 dnf -y install libXcursor-devel
-versionInfo="7.3.0"
+versionInfo="7.7.0"
 installType="nvidia-optix"
 installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
 downloadUrl="$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
@@ -88,7 +87,7 @@ echo "Customize (End): NVIDIA OptiX"
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+  dnf -y install https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm
   dnf -y install azure-cli &> azure-cli.log
   echo "Customize (End): Azure CLI"
 
@@ -177,7 +176,7 @@ if [[ $renderManager == *Deadline* ]]; then
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="9.0.04"
+  schedulerVersion="9.0.05"
   schedulerInstallPath="/RoyalRender"
   schedulerBinPath="$schedulerInstallPath/bin/lx64"
 
@@ -389,11 +388,8 @@ if [[ $renderEngines == *MoonRay* ]]; then
   cd /openmoonray/build
   installType="openmoonray-prereq"
   $binPathCMake/cmake ../building &> $installType-cmake.log
-
-  # dnf -y install python2
-  # ln -s /bin/python2 /bin/python
-  # $binPathCMake/cmake --build . -- -j 64 &> $installType-cmake-build.log
-  # rm -rf /build/*
+  #$binPathCMake/cmake --build . -- -j 64 &> $installType-cmake-build.log
+  #rm -rf /build/*
 
   # cd /openmoonray
   # $binPathCMake/cmake --preset container-release

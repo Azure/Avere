@@ -112,13 +112,13 @@ if ($gpuProvider -eq "AMD") {
 
 if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): Azure CLI"
-  $installFile = "az-cli.msi"
+  $installFile = "azure-cli.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log az-cli.log" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log azure-cli.log" -Wait
   Write-Host "Customize (End): Azure CLI"
 
-  if ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*") {
+  if ($renderManager -like "*Deadline*" -or $renderManager -like "*RoyalRender*") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"
     Write-Host "Customize (End): NFS Server"
@@ -130,7 +130,7 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-if ("$renderManager" -like "*Deadline*") {
+if ($renderManager -like "*Deadline*") {
   $schedulerVersion = "10.2.1.0"
   $schedulerInstallPath = "C:\Deadline"
   $schedulerDatabaseHost = $(hostname)
@@ -192,8 +192,8 @@ if ("$renderManager" -like "*Deadline*") {
   $binPaths += ";$schedulerBinPath"
 }
 
-if ("$renderManager" -like "*RoyalRender*") {
-  $schedulerVersion = "9.0.04"
+if ($renderManager -like "*RoyalRender*") {
+  $schedulerVersion = "9.0.05"
   $schedulerInstallPath = "\RoyalRender"
   $schedulerBinPath = "C:$schedulerInstallPath\bin\win64"
 
@@ -231,7 +231,7 @@ if ("$renderManager" -like "*RoyalRender*") {
   $binPaths += ";$schedulerBinPath"
 }
 
-if ("$renderManager" -like "*Qube*") {
+if ($renderManager -like "*Qube*") {
   $schedulerVersion = "8.0-0"
   $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
   $schedulerInstallPath = "C:\Program Files\pfx\qube"

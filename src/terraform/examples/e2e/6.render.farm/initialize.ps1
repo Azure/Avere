@@ -6,10 +6,10 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-if ("${fileSystemMount.enable}" -eq $true) {
+if (${fileSystemMount.enable} -eq $true) {
   SetMount "${fileSystemMount.storageRead}" "${fileSystemMount.storageReadCache}" "${storageCache.enableRead}"
   SetMount "${fileSystemMount.storageWrite}" "${fileSystemMount.storageWriteCache}" "${storageCache.enableWrite}"
-  if ("${renderManager}" -like "*Deadline*") {
+  if (${renderManager} -like "*Deadline*") {
     AddMount "${fileSystemMount.schedulerDeadline}"
   }
   $installType = "file-system-mount"
@@ -18,7 +18,7 @@ if ("${fileSystemMount.enable}" -eq $true) {
 
 EnableRenderClient "${renderManager}" "${servicePassword}"
 
-if ("${terminateNotification.enable}" -eq $true) {
+if (${terminateNotification.enable} -eq $true) {
   $taskName = "AAA Terminate Event Handler"
   $taskInterval = New-TimeSpan -Minutes 1
   $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File C:\AzureData\terminate.ps1"

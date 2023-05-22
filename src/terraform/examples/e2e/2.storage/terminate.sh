@@ -12,14 +12,14 @@ metadataUrl="http://169.254.169.254/metadata"
 eventsUrl="$metadataUrl/scheduledevents?api-version=2020-07-01"
 vmNameUrl="$metadataUrl/instance/compute/name?api-version=2021-12-13&format=text"
 
+instanceName=$(curl --silent --header Metadata:true $vmNameUrl)
 scheduledEvents=$(curl --silent --header Metadata:true $eventsUrl | jq -c .Events)
 for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
   _jq() {
-    echo $scheduledEvent | base64 -d | jq -r $1
+    echo $scheduledEvent | base64 -d | tee -a $logDirectory/$instanceName-scheduled-event.log | jq -r $1
   }
   eventType=$(_jq .EventType)
   eventScope=$(_jq .Resources[0])
-  instanceName=$(curl --silent --header Metadata:true $vmNameUrl)
 
   if [[ $eventType == "Terminate" && $eventScope == $instanceName ]]; then
     az login --identity
@@ -30,10 +30,10 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
     fi
 
     weka user login admin ${wekaAdminPassword}
+    instanceName="$instanceName-$(date +%T)"
 
     driveIds=$(weka cluster drive --filter hostname=$(hostname) --output uuid --no-header | tr \\n ' ')
     driveIds=$${driveIds::-1}
-    echo $driveIds &> $logDirectory/$instanceName-weka-cluster-drive-ids.log
     weka cluster drive deactivate --force $driveIds &> $logDirectory/$instanceName-weka-cluster-drive-deactivate.log
 
     drivesRemoved=true
@@ -41,7 +41,6 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
     for (( i=0; i<$${#driveIds[@]}; i++ )); do
       driveId=$${driveIds[i]}
       driveStatus=$(weka cluster drive --filter uuid=$driveId --output status --no-header)
-      echo $driveStatus &> $logDirectory/$instanceName-weka-cluster-drive-status.log
       if [ $driveStatus == INACTIVE ]; then
         weka cluster drive remove --force $driveId &> $logDirectory/$instanceName-weka-cluster-drive-remove-$driveId.log
       elif [ -n "$driveStatus" ]; then
@@ -52,7 +51,6 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
     if [ $drivesRemoved == true ]; then
       containerIds=$(weka cluster container --filter ips=$(hostname -i) --output id --no-header | tr \\n ' ')
       containerIds=$${containerIds::-1}
-      echo $containerIds &> $logDirectory/$instanceName-weka-cluster-container-ids.log
       weka cluster container deactivate $containerIds &> $logDirectory/$instanceName-weka-cluster-container-deactivate.log
 
       containersRemoved=true
@@ -60,7 +58,6 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
       for (( i=0; i<$${#containerIds[@]}; i++ )); do
         containerId=$${containerIds[i]}
         containerStatus=$(weka cluster container --HOST $rootHost --filter id=$containerId --output status --no-header)
-        echo $containerStatus &> $logDirectory/$instanceName-weka-cluster-container-status.log
         if [ $containerStatus == INACTIVE ]; then
           weka cluster container remove $containerId --HOST $rootHost &> $logDirectory/$instanceName-weka-cluster-container-remove-$containerId.log
         elif [ -n "$containerStatus" ]; then

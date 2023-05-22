@@ -19,10 +19,10 @@ function AddMount ($fileSystemMount) {
 }
 
 function EnableRenderClient ($renderManager, $servicePassword) {
-  if ("$renderManager" -like "*Deadline*") {
+  if ($renderManager -like "*Deadline*") {
     Start-Process -FilePath "deadlinecommand.exe" -ArgumentList "-ChangeRepository Direct S:\ S:\Deadline10Client.pfx ''" -Wait
   }
-  # if ("$renderManager" -like "*RoyalRender*") {
+  # if ($renderManager -like "*RoyalRender*") {
   #   $installType = "royal-render-client"
 
   #   $installPath = "RoyalRender*"
