@@ -71,7 +71,7 @@ variable "imageTemplates" {
         {
           machineType    = string
           machineSize    = string
-          gpuPlatform    = list(string)
+          gpuProvider    = string
           outputVersion  = string
           timeoutMinutes = number
           osDiskSizeGB   = number

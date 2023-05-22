@@ -11,14 +11,14 @@ echo "Customize (Start): Image Build Parameters"
 dnf -y install jq
 buildConfig=$(echo $buildConfigEncoded | base64 -d)
 machineType=$(echo $buildConfig | jq -r .machineType)
-gpuPlatform=$(echo $buildConfig | jq -c .gpuPlatform)
+gpuProvider=$(echo $buildConfig | jq -r .gpuProvider)
 renderManager=$(echo $buildConfig | jq -r .renderManager)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
 binStorageHost=$(echo $buildConfig | jq -r .binStorageHost)
 binStorageAuth=$(echo $buildConfig | jq -r .binStorageAuth)
 servicePassword=$(echo $buildConfig | jq -r .servicePassword)
 echo "Machine Type: $machineType"
-echo "GPU Platform: $gpuPlatform"
+echo "GPU Provider: $gpuProvider"
 echo "Render Manager: $renderManager"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
@@ -26,16 +26,23 @@ echo "Customize (End): Image Build Parameters"
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
 dnf -y install epel-release
-dnf -y install dkms
-dnf -y install gcc gcc-c++
-dnf -y install unzip
-dnf -y install cmake
-dnf -y install lsof
-dnf -y install git
-dnf -y install bc
+dnf -y install dkms unzip lsof git bc
+dnf -y install gcc-toolset-9 python3-devel
+source /opt/rh/gcc-toolset-9/enable
+
+versionInfo="3.26.4"
+installType="cmake"
+installFile="cmake-$versionInfo-linux-x86_64.sh"
+downloadUrl="https://github.com/Kitware/CMake/releases/download/v$versionInfo/cmake-$versionInfo-linux-x86_64.sh"
+curl -o $installFile -L $downloadUrl
+chmod +x $installFile
+mkdir -p $installType
+./$installFile --skip-license --prefix=$installType &> $installType.log
+binPathCMake="$binDirectory/$installType/bin"
+binPaths="$binPaths:$binPathCMake"
 echo "Customize (End): Image Build Platform"
 
-if [[ $gpuPlatform == *GRID* ]]; then
+if [ "$gpuProvider" == "NVIDIA" ]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
   installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
   downloadUrl="$binStorageHost/Linux/$installFile$binStorageAuth"
@@ -50,32 +57,33 @@ if [[ $gpuPlatform == *GRID* ]]; then
   echo "Customize (End): NVIDIA GPU (GRID)"
 fi
 
-if [[ $gpuPlatform == *CUDA* ]] || [[ $gpuPlatform == *CUDA.OptiX* ]]; then
-  echo "Customize (Start): NVIDIA GPU (CUDA)"
-  installType="nvidia-cuda"
-  dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-  dnf -y module install nvidia-driver:latest-dkms &> $installType-dkms.log
-  dnf -y install cuda &> $installType.log
-  echo "Customize (End): NVIDIA GPU (CUDA)"
-fi
+echo "Customize (Start): NVIDIA GPU (CUDA)"
+installType="nvidia-cuda"
+dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+dnf -y module install nvidia-driver:latest-dkms &> $installType-dkms.log
+dnf -y install cuda &> $installType.log
+echo "Customize (End): NVIDIA GPU (CUDA)"
 
-if [[ $gpuPlatform == *CUDA.OptiX* ]]; then
-  echo "Customize (Start): NVIDIA OptiX"
-  versionInfo="7.7.0"
-  installType="nvidia-optix"
-  installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
-  downloadUrl="$storageContainerUrl/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  chmod +x $installFile
-  mkdir -p $installType
-  ./$installFile --skip-license --prefix=$binDirectory/$installType &> $installType.log
-  buildDirectory="$binDirectory/$installType/build"
-  mkdir -p $buildDirectory
-  cmake -B $buildDirectory -S $binDirectory/$installType/SDK &> $installType-cmake.log
-  make -C $buildDirectory &> $installType-make.log
-  binPaths="$binPaths:$buildDirectory/bin"
-  echo "Customize (End): NVIDIA OptiX"
-fi
+echo "Customize (Start): NVIDIA OptiX"
+dnf -y install mesa-libGL
+dnf -y install mesa-libGL-devel
+dnf -y install libXrandr-devel
+dnf -y install libXinerama-devel
+dnf -y install libXcursor-devel
+versionInfo="7.3.0"
+installType="nvidia-optix"
+installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
+downloadUrl="$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
+curl -o $installFile -L $downloadUrl
+chmod +x $installFile
+mkdir -p $installType
+./$installFile --skip-license --prefix=$installType &> $installType.log
+buildDirectory="$binDirectory/$installType/build"
+mkdir -p $buildDirectory
+$binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installType/SDK &> $installType-cmake.log
+make -C $buildDirectory &> $installType-make.log
+binPaths="$binPaths:$buildDirectory/bin"
+echo "Customize (End): NVIDIA OptiX"
 
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
@@ -286,7 +294,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   installPathV3="$installPath/$versionInfo"
   git clone --recursive https://github.com/mmp/$installType.git &> $installType-git.log
   mkdir -p $installPathV3
-  cmake -B $installPathV3 -S $binDirectory/$installType &> $installType-cmake.log
+  $binPathCMake/cmake -B $installPathV3 -S $binDirectory/$installType &> $installType-cmake.log
   make -C $installPathV3 &> $installType-make.log
   ln -s $installPathV3/pbrt $installPath/pbrt3
   echo "Customize (End): PBRT v3"
@@ -302,7 +310,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   installPathV4="$installPath/$versionInfo"
   git clone --recursive https://github.com/mmp/$installType.git &> $installType-git.log
   mkdir -p $installPathV4
-  cmake -B $installPathV4 -S $binDirectory/$installType &> $installType-cmake.log
+  $binPathCMake/cmake -B $installPathV4 -S $binDirectory/$installType &> $installType-cmake.log
   make -C $installPathV4 &> $installType-make.log
   ln -s $installPathV4/pbrt $installPath/pbrt4
   echo "Customize (End): PBRT v4"
@@ -356,6 +364,46 @@ if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (End): Blender"
 fi
 
+if [[ $renderEngines == *MoonRay* ]]; then
+  echo "Customize (Start): MoonRay"
+  dnf -y install mesa-libGL
+  dnf -y install mesa-libGL-devel
+  dnf -y install libtiff-devel libjpeg-devel patch
+  dnf -y install qt5-qtbase-devel qt5-qtscript-devel
+
+  versionInfo="1.1.0.0"
+  installFile="openmoonray-$versionInfo.tar.gz"
+  downloadUrl="https://github.com/dreamworksanimation/openmoonray/archive/refs/tags/v$versionInfo.tar.gz"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+
+  mkdir -p /installs/bin
+  mkdir -p /installs/lib
+  mkdir -p /installs/include
+  mkdir -p /installs/openmoonray
+
+  ln -s /usr/local/bin/openmoonray-$versionInfo /openmoonray
+  ln -s /openmoonray/building /building
+
+  mkdir -p /openmoonray/build
+  cd /openmoonray/build
+  installType="openmoonray-prereq"
+  $binPathCMake/cmake ../building &> $installType-cmake.log
+
+  # dnf -y install python2
+  # ln -s /bin/python2 /bin/python
+  # $binPathCMake/cmake --build . -- -j 64 &> $installType-cmake-build.log
+  # rm -rf /build/*
+
+  # cd /openmoonray
+  # $binPathCMake/cmake --preset container-release
+  # $binPathCMake/cmake --build --preset container-release -- -j 64
+  # $binPathCMake/cmake --install /build --prefix /installs/openmoonray
+  # source /installs/openmoonray/scripts/setup.sh
+  # cd $binDirectory
+  echo "Customize (End): MoonRay"
+fi
+
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
   echo "Customize (Start): Unreal Engine Setup"
   dnf -y install libicu
@@ -402,7 +450,7 @@ fi
 if [ $machineType == "Workstation" ]; then
   echo "Customize (Start): Teradici PCoIP"
   versionInfo="23.04.1"
-  [[ $gpuPlatform == *GRID* ]] && installType=pcoip-agent-graphics || installType=pcoip-agent-standard
+  [ "$gpuProvider" == "" ] && installType=pcoip-agent-standard || installType=pcoip-agent-graphics
   installFile="pcoip-agent-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
   downloadUrl="$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl

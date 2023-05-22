@@ -63,10 +63,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Storage"
-      machineSize = "Standard_L8s_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
-      ]
+      machineType    = "Storage"
+      machineSize    = "Standard_L8s_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                # NVIDIA or AMD
       outputVersion  = "0.0.0"
       timeoutMinutes = 60
       osDiskSizeGB   = 64
@@ -101,10 +100,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Scheduler"
-      machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
-      ]
+      machineType    = "Scheduler"
+      machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                # NVIDIA or AMD
       outputVersion  = "1.0.0"
       timeoutMinutes = 120
       osDiskSizeGB   = 512
@@ -121,10 +119,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Farm"
-      machineSize = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                    # GRID, AMD, CUDA and/or CUDA.OptiX
-      ]
+      machineType    = "Farm"
+      machineSize    = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                   # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
@@ -133,6 +130,7 @@ imageTemplates = [
         "PBRT",
         "Houdini",
         "Blender",
+        "MoonRay",
         #"Unreal"
       ]
       customize = [
@@ -146,11 +144,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Farm"
-      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
-        "GRID"
-      ]
+      machineType    = "Farm"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "2.1.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
@@ -159,6 +155,7 @@ imageTemplates = [
         "PBRT",
         "Houdini",
         "Blender",
+        "MoonRay",
         #"Unreal"
       ]
       customize = [
@@ -172,11 +169,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Workstation"
-      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
-        "GRID"
-      ]
+      machineType    = "Workstation"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "3.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
@@ -185,6 +180,7 @@ imageTemplates = [
         "PBRT",
         "Houdini",
         "Blender",
+        "MoonRay",
         #"Unreal+PixelStream"
       ]
       customize = [
@@ -198,10 +194,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Scheduler"
-      machineSize = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                 # GRID, AMD, CUDA and/or CUDA.OptiX
-      ]
+      machineType    = "Scheduler"
+      machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                # NVIDIA or AMD
       outputVersion  = "1.0.0"
       timeoutMinutes = 180
       osDiskSizeGB   = 512
@@ -218,10 +213,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Farm"
-      machineSize = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                    # GRID, AMD, CUDA and/or CUDA.OptiX
-      ]
+      machineType    = "Farm"
+      machineSize    = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                   # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
@@ -243,11 +237,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Farm"
-      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
-        "GRID"
-      ]
+      machineType    = "Farm"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                        # NVIDIA or AMD
       outputVersion  = "2.1.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
@@ -269,11 +261,9 @@ imageTemplates = [
       inputVersion   = "Latest"
     }
     build = {
-      machineType = "Workstation"
-      machineSize = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuPlatform = [                         # GRID, AMD, CUDA and/or CUDA.OptiX
-        "GRID"
-      ]
+      machineType    = "Workstation"
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "3.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024

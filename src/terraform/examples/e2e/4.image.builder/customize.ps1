@@ -21,13 +21,13 @@ Write-Host "Customize (Start): Image Build Parameters"
 $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
 $buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
 $machineType = $buildConfig.machineType
-$gpuPlatform = $buildConfig.gpuPlatform
+$gpuProvider = $buildConfig.gpuProvider
 $renderManager = $buildConfig.renderManager
 $renderEngines = $buildConfig.renderEngines
 $binStorageHost = $buildConfig.binStorageHost
 $binStorageAuth = $buildConfig.binStorageAuth
 Write-Host "Machine Type: $machineType"
-Write-Host "GPU Platform: $gpuPlatform"
+Write-Host "GPU Provider: $gpuProvider"
 Write-Host "Render Manager: $renderManager"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
@@ -69,14 +69,7 @@ $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\B
 $binPaths += ";$binPathCMake;$binPathMSBuild"
 Write-Host "Customize (End): Visual Studio Build Tools"
 
-if ($gpuPlatform -contains "GRID") {
-  Write-Host "Customize (Start): NVIDIA GPU (GRID)"
-  $installFile = "nvidia-gpu-grid.exe"
-  $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-grid" -Wait
-  Write-Host "Customize (End): NVIDIA GPU (GRID)"
-} elseif ($gpuPlatform -contains "AMD") {
+if ($gpuProvider -eq "AMD") {
   Write-Host "Customize (Start): AMD GPU"
   $installFile = "amd-gpu.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
@@ -84,19 +77,22 @@ if ($gpuPlatform -contains "GRID") {
   Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait
   Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install -log $binDirectory\amd-gpu.log" -Wait
   Write-Host "Customize (End): AMD GPU"
-}
+} elseif ($gpuProvider -eq "NVIDIA") {
+  Write-Host "Customize (Start): NVIDIA GPU (GRID)"
+  $installFile = "nvidia-gpu-grid.exe"
+  $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-grid" -Wait
+  Write-Host "Customize (End): NVIDIA GPU (GRID)"
 
-if ($gpuPlatform -contains "CUDA" -or $gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
-  $versionInfo = "12.1.0"
+  $versionInfo = "12.1.1"
   $installFile = "cuda_${versionInfo}_531.14_windows.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/CUDA/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-cuda" -Wait
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
-}
 
-if ($gpuPlatform -contains "CUDA.OptiX") {
   Write-Host "Customize (Start): NVIDIA OptiX"
   $versionInfo = "7.7.0"
   $installType = "nvidia-optix"
@@ -489,7 +485,7 @@ if ($machineType -eq "Farm") {
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP"
   $versionInfo = "23.04.1"
-  $installType = if ($gpuPlatform -contains "GRID") {"pcoip-agent-graphics"} else {"pcoip-agent-standard"}
+  $installType = if ($gpuProvider -eq "") {"pcoip-agent-standard"} else {"pcoip-agent-graphics"}
   $installFile = "${installType}_$versionInfo.exe"
   $downloadUrl = "$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
