@@ -13,7 +13,7 @@ imageGallery = {
       generation = "V2"
       publisher  = "CIQ"
       offer      = "Rocky"
-      sku        = "8-6-Free"
+      sku        = "Rocky-8-6-Free"
     },
     {
       name       = "WinScheduler"
