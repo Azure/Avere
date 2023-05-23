@@ -25,9 +25,9 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
-dnf -y install gcc perl flex bison elfutils-libelf-devel openssl-devel
-installFile="kernel-devel-5.14.0-162.6.1.el9_1.x86_64.rpm"
-downloadUrl="$binStorageHost/Linux/$installFile$binStorageAuth"
+dnf -y install perl gcc # flex bison elfutils-libelf-devel openssl-devel
+installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
+downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
 rpm -i $installFile
 dnf -y install epel-release
@@ -58,7 +58,7 @@ fi
 
 echo "Customize (Start): NVIDIA GPU (CUDA)"
 installType="nvidia-cuda"
-dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
+dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
 dnf -y module install nvidia-driver:latest-dkms &> $installType-dkms.log
 dnf -y install cuda &> $installType.log
 echo "Customize (End): NVIDIA GPU (CUDA)"
@@ -384,12 +384,14 @@ if [[ $renderEngines == *MoonRay* ]]; then
   ln -s /usr/local/bin/openmoonray-$versionInfo /openmoonray
   ln -s /openmoonray/building /building
 
+  dnf -y install gcc-toolset-9
+  source /opt/rh/gcc-toolset-9/enable
   mkdir -p /openmoonray/build
   cd /openmoonray/build
   installType="openmoonray-prereq"
   $binPathCMake/cmake ../building &> $installType-cmake.log
-  #$binPathCMake/cmake --build . -- -j 64 &> $installType-cmake-build.log
-  #rm -rf /build/*
+  # $binPathCMake/cmake --build . -- -j 64 &> $installType-cmake-build.log
+  # rm -rf /build/*
 
   # cd /openmoonray
   # $binPathCMake/cmake --preset container-release
