@@ -25,7 +25,7 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
-dnf -y install perl gcc # flex bison elfutils-libelf-devel openssl-devel
+dnf -y install gcc perl elfutils-libelf-devel # openssl-devel bison flex
 installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
 downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
@@ -40,7 +40,7 @@ downloadUrl="https://github.com/Kitware/CMake/releases/download/v$versionInfo/cm
 curl -o $installFile -L $downloadUrl
 chmod +x $installFile
 mkdir -p $installType
-./$installFile --skip-license --prefix=$installType &> $installType.log
+./$installFile --skip-license --prefix=$installType 2>&1 | tee $installType.log
 binPathCMake="$binDirectory/$installType/bin"
 binPaths="$binPaths:$binPathCMake"
 echo "Customize (End): Image Build Platform"
@@ -52,15 +52,15 @@ if [ "$gpuProvider" == "NVIDIA" ]; then
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent --dkms &> $installType.log
+  ./$installFile --silent --dkms 2>&1 | tee $installType.log
   echo "Customize (End): NVIDIA GPU (GRID)"
 fi
 
 echo "Customize (Start): NVIDIA GPU (CUDA)"
 installType="nvidia-cuda"
 dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-dnf -y module install nvidia-driver:latest-dkms &> $installType-dkms.log
-dnf -y install cuda &> $installType.log
+dnf -y module install nvidia-driver:latest-dkms 2>&1 | tee $installType-dkms.log
+dnf -y install cuda 2>&1 | tee $installType.log
 echo "Customize (End): NVIDIA GPU (CUDA)"
 
 echo "Customize (Start): NVIDIA OptiX"
@@ -76,11 +76,11 @@ downloadUrl="$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAu
 curl -o $installFile -L $downloadUrl
 chmod +x $installFile
 mkdir -p $installType
-./$installFile --skip-license --prefix=$installType &> $installType.log
+./$installFile --skip-license --prefix=$installType 2>&1 | tee $installType.log
 buildDirectory="$binDirectory/$installType/build"
 mkdir -p $buildDirectory
-$binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installType/SDK &> $installType-cmake.log
-make -C $buildDirectory &> $installType-make.log
+$binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installType/SDK 2>&1 | tee $installType-cmake.log
+make -C $buildDirectory 2>&1 | tee $installType-make.log
 binPaths="$binPaths:$buildDirectory/bin"
 echo "Customize (End): NVIDIA OptiX"
 
@@ -88,7 +88,7 @@ if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
   dnf -y install https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm
-  dnf -y install azure-cli &> azure-cli.log
+  dnf -y install azure-cli 2>&1 | tee azure-cli.log
   echo "Customize (End): Azure CLI"
 
   if [[ $renderManager == *Deadline* || $renderManager == *RoyalRender* ]]; then
@@ -145,7 +145,7 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "roles: [" >> $createUserScript
     echo "{ role: \"dbOwner\", db: \"$schedulerDatabaseName\" }" >> $createUserScript
     echo "]})" >> $createUserScript
-    mongo $createUserScript &> $installType.log
+    mongo $createUserScript 2>&1 | tee $installType.log
     echo "Customize (End): Mongo DB User"
 
     echo "Customize (Start): Deadline Server"
@@ -198,7 +198,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
   if [ $machineType == "Scheduler" ]; then
     echo "Customize (Start): Royal Render Server"
     mkdir -p $schedulerInstallPath
-    ./$installPath/$installFile -console -rrRoot $schedulerInstallPath &> royal-render.log
+    ./$installPath/$installFile -console -rrRoot $schedulerInstallPath 2>&1 | tee royal-render.log
     echo "$schedulerInstallPath *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
     echo "Customize (End): Royal Render Server"
@@ -220,7 +220,7 @@ if [[ $renderManager == *Qube* ]]; then
   installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
   downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
-  rpm -i $installType-*.rpm &> $installType.log
+  rpm -i $installType-*.rpm 2>&1 | tee $installType.log
   echo "Customize (End): Qube Core"
 
   if [ $machineType == "Scheduler" ]; then
@@ -229,7 +229,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-${schedulerVersion}.CENTOS_8.2.x86_64.rpm"
     downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm &> $installType.log
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
     echo "Customize (End): Qube Supervisor"
 
     echo "Customize (Start): Qube Data Relay Agent (DRA)"
@@ -237,7 +237,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
     downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm &> $installType.log
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
     echo "Customize (End): Qube Data Relay Agent (DRA)"
   else
     echo "Customize (Start): Qube Worker"
@@ -245,7 +245,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
     downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm &> $installType.log
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
     echo "Customize (End): Qube Worker"
 
     echo "Customize (Start): Qube Client"
@@ -253,7 +253,7 @@ if [[ $renderManager == *Qube* ]]; then
     installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
     downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm &> $installType.log
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
     echo "Customize (End): Qube Client"
 
     sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $schedulerConfigFile
@@ -280,7 +280,7 @@ if [[ $renderEngines == *Maya* ]]; then
   curl -o $installFile -L $downloadUrl
   mkdir -p $installType
   tar -xzf $installFile -C $installType
-  ./$installType/Setup --silent &> $installType.log
+  ./$installType/Setup --silent 2>&1 | tee $installType.log
   binPaths="$binPaths:/usr/autodesk/maya/bin"
   echo "Customize (End): Maya"
 fi
@@ -291,10 +291,10 @@ if [[ $renderEngines == *PBRT* ]]; then
   installType="pbrt-$versionInfo"
   installPath="/usr/local/pbrt"
   installPathV3="$installPath/$versionInfo"
-  git clone --recursive https://github.com/mmp/$installType.git &> $installType-git.log
+  git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
   mkdir -p $installPathV3
-  $binPathCMake/cmake -B $installPathV3 -S $binDirectory/$installType &> $installType-cmake.log
-  make -C $installPathV3 &> $installType-make.log
+  $binPathCMake/cmake -B $installPathV3 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
+  make -C $installPathV3 2>&1 | tee $installType-make.log
   ln -s $installPathV3/pbrt $installPath/pbrt3
   echo "Customize (End): PBRT v3"
 
@@ -307,10 +307,10 @@ if [[ $renderEngines == *PBRT* ]]; then
   versionInfo="v4"
   installType="pbrt-$versionInfo"
   installPathV4="$installPath/$versionInfo"
-  git clone --recursive https://github.com/mmp/$installType.git &> $installType-git.log
+  git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
   mkdir -p $installPathV4
-  $binPathCMake/cmake -B $installPathV4 -S $binDirectory/$installType &> $installType-cmake.log
-  make -C $installPathV4 &> $installType-make.log
+  $binPathCMake/cmake -B $installPathV4 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
+  make -C $installPathV4 2>&1 | tee $installType-make.log
   ln -s $installPathV4/pbrt $installPath/pbrt4
   echo "Customize (End): PBRT v4"
 
@@ -338,7 +338,7 @@ if [[ $renderEngines == *Houdini* ]]; then
   tar -xzf $installFile
   [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
   [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
-  ./houdini*/houdini.install --auto-install --make-dir --accept-EULA $versionEULA $mayaPlugIn $unrealPlugIn &> $installType.log
+  ./houdini*/houdini.install --auto-install --make-dir --accept-EULA $versionEULA $mayaPlugIn $unrealPlugIn 2>&1 | tee $installType.log
   binPaths="$binPaths:/opt/hfs$versionInfo/bin"
   echo "Customize (End): Houdini"
 fi
@@ -389,8 +389,8 @@ if [[ $renderEngines == *MoonRay* ]]; then
   mkdir -p /openmoonray/build
   cd /openmoonray/build
   installType="openmoonray-prereq"
-  $binPathCMake/cmake ../building &> $installType-cmake.log
-  # $binPathCMake/cmake --build . -- -j 64 &> $installType-cmake-build.log
+  $binPathCMake/cmake ../building 2>&1 | tee $installType-cmake.log
+  # $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-cmake-build.log
   # rm -rf /build/*
 
   # cd /openmoonray
@@ -414,31 +414,31 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
   tar -xzf $installFile
   mkdir -p $installPath
   mv UnrealEngine-$versionInfo-release/* $installPath
-  $installPath/Setup.sh &> $installType-setup.log
+  $installPath/Setup.sh 2>&1 | tee $installType-setup.log
   echo "Customize (End): Unreal Engine Setup"
 
   echo "Customize (Start): Unreal Project Files Generate"
-  $installPath/GenerateProjectFiles.sh &> unreal-project-files-generate.log
+  $installPath/GenerateProjectFiles.sh 2>&1 | tee unreal-project-files-generate.log
   echo "Customize (End): Unreal Project Files Generate"
 
   echo "Customize (Start): Unreal Engine Build"
-  make -C $installPath &> $installType-build.log
+  make -C $installPath 2>&1 | tee $installType-build.log
   echo "Customize (End): Unreal Engine Build"
 
   if [[ $renderEngines == *Unreal+PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
     installType="unreal-stream"
-    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 &> $installType-git.log
+    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 2>&1 | tee $installType-git.log
     dnf -y install coturn
     installFile="PixelStreamingInfrastructure/SignallingWebServer/platform_scripts/bash/setup.sh"
     chmod +x $installFile
-    ./$installFile &> $installType-signalling.log
+    ./$installFile 2>&1 | tee $installType-signalling.log
     installFile="PixelStreamingInfrastructure/Matchmaker/platform_scripts/bash/setup.sh"
     chmod +x $installFile
-    ./$installFile &> $installType-matchmaker.log
+    ./$installFile 2>&1 | tee $installType-matchmaker.log
     installFile="PixelStreamingInfrastructure/SFU/platform_scripts/bash/setup.sh"
     chmod +x $installFile
-    ./$installFile &> $installType-sfu.log
+    ./$installFile 2>&1 | tee $installType-sfu.log
     echo "Customize (End): Unreal Pixel Streaming"
   fi
 
@@ -455,7 +455,7 @@ if [ $machineType == "Workstation" ]; then
   mkdir -p $installType
   tar -xzf $installFile -C $installType
   cd $installType
-  ./install-pcoip-agent.sh $installType usb-vhci &> ../$installType.log
+  ./install-pcoip-agent.sh $installType usb-vhci 2>&1 | tee ../$installType.log
   cd $binDirectory
   echo "Customize (End): Teradici PCoIP"
 fi

@@ -29,10 +29,10 @@ function EnableRenderClient {
   #   installPath="RoyalRender*"
   #   installFile="rrSetup_linux"
   #   rrRootShare="\\scheduler.content.studio\RoyalRender"
-  #   ./$installPath/$installFile -console -rrRoot $rrRootShare &> $installType.log
+  #   ./$installPath/$installFile -console -rrRoot $rrRootShare 2>&1 | tee $installType.log
 
   #   serviceUser="rrService"
   #   useradd -r $serviceUser -p "$servicePassword"
-  #   rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "$servicePassword" -fwOut &> $installType-service.log
+  #   rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "$servicePassword" -fwOut 2>&1 | tee $installType-service.log
   # fi
 }

@@ -22,5 +22,5 @@ fi
 EnableRenderClient "${renderManager}" "${servicePassword}"
 
 if [ "${teradiciLicenseKey}" != "" ]; then
-  /sbin/pcoip-register-host --registration-code=${teradiciLicenseKey} &> pcoip-agent-license.log
+  /sbin/pcoip-register-host --registration-code=${teradiciLicenseKey} 2>&1 | tee pcoip-agent-license.log
 fi

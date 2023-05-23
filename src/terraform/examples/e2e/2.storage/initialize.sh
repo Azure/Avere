@@ -5,7 +5,7 @@ cd ${binDirectoryPath}
 if [ "${wekaClusterName}" != "" ]; then
   volumeLabel="weka-iosw"
   installDisk="/dev/$(lsblk | grep ${wekaDataDiskSize}G | awk '{print $1}')"
-  mkfs.ext4 -L $volumeLabel $installDisk &> weka-mkfs.log
+  mkfs.ext4 -L $volumeLabel $installDisk 2>&1 | tee weka-mkfs.log
   installPath="/opt/weka"
   mkdir -p $installPath
   echo "LABEL=$volumeLabel $installPath ext4 defaults 0 2" >> /etc/fstab

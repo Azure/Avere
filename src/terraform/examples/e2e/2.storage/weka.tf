@@ -380,11 +380,11 @@ resource "terraform_data" "weka_cluster_create" {
     inline = [
       "machineSpec=${local.wekaMachineSpec}",
       "source ${local.wekaDriveDisksScript}",
-      "weka cluster create ${join(" ", data.azurerm_virtual_machine_scale_set.weka[0].instances[*].private_ip_address)} --admin-password ${var.weka.adminLogin.userPassword}",
+      "weka cluster create ${join(" ", data.azurerm_virtual_machine_scale_set.weka[0].instances[*].private_ip_address)} --admin-password ${var.weka.adminLogin.userPassword} 2>&1 | tee weka-cluster-create.log",
       "weka user login admin ${var.weka.adminLogin.userPassword}",
       "for (( i=0; i<${var.weka.machine.count}; i++ )); do",
       "  hostName=${azurerm_linux_virtual_machine_scale_set.weka[0].name}$(printf %06X $i)",
-      "  weka cluster drive add $i --HOST $hostName $nvmeDisks",
+      "  weka cluster drive add $i --HOST $hostName $nvmeDisks 2>&1 | tee --append weka-cluster-drive-add-$hostName.log",
       "done"
     ]
   }
@@ -427,9 +427,9 @@ resource "terraform_data" "weka_cluster_start" {
       "weka cluster hot-spare ${var.weka.dataProtection.hotSpare}",
       "weka cloud enable ${var.weka.supportUrl != "" ? "--cloud-url=${var.weka.supportUrl}" : ""}",
       "if [ \"${var.weka.license.key}\" != \"\" ]; then",
-      "  weka cluster license set ${var.weka.license.key} &> weka-cluster-license.log",
+      "  weka cluster license set ${var.weka.license.key} 2>&1 | tee weka-cluster-license.log",
       "elif [ \"${var.weka.license.payg.planId}\" != \"\" ]; then",
-      "  weka cluster license payg ${var.weka.license.payg.planId} ${var.weka.license.payg.secretKey} &> weka-cluster-license.log",
+      "  weka cluster license payg ${var.weka.license.payg.planId} ${var.weka.license.payg.secretKey} 2>&1 | tee weka-cluster-license.log",
       "fi",
       "weka cluster start-io"
     ]
