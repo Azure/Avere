@@ -30,6 +30,7 @@ installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
 downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
 rpm -i $installFile
+dnf config-manager --set-enabled devel
 dnf -y install epel-release
 dnf -y install dkms python3-devel bc git lsof unzip
 
@@ -86,9 +87,10 @@ echo "Customize (End): NVIDIA OptiX"
 
 if [ $machineType == "Scheduler" ]; then
   echo "Customize (Start): Azure CLI"
+  installType="azure-cli"
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  dnf -y install https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm
-  dnf -y install azure-cli 2>&1 | tee azure-cli.log
+  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+  dnf -y install $installType 2>&1 | tee $installType.log
   echo "Customize (End): Azure CLI"
 
   if [[ $renderManager == *Deadline* || $renderManager == *RoyalRender* ]]; then
@@ -329,6 +331,7 @@ if [[ $renderEngines == *Houdini* ]]; then
   dnf -y install libXScrnSaver
   dnf -y install alsa-lib
   dnf -y install libnsl
+  dnf -y install avahi
   versionInfo="19.5.569"
   versionEULA="2021-10-13"
   installType="houdini"
@@ -336,9 +339,10 @@ if [[ $renderEngines == *Houdini* ]]; then
   downloadUrl="$binStorageHost/Houdini/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
+  [[ $machineType == "Workstation" ]] && desktopMenus=--install-menus || desktopMenus=--no-install-menus
   [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
   [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
-  ./houdini*/houdini.install --auto-install --make-dir --accept-EULA $versionEULA $mayaPlugIn $unrealPlugIn 2>&1 | tee $installType.log
+  ./houdini*/houdini.install --auto-install --make-dir --no-install-license --accept-EULA $versionEULA $desktopMenus $mayaPlugIn $unrealPlugIn 2>&1 | tee $installType.log
   binPaths="$binPaths:/opt/hfs$versionInfo/bin"
   echo "Customize (End): Houdini"
 fi
@@ -352,13 +356,14 @@ if [[ $renderEngines == *Blender* ]]; then
   dnf -y install libSM
   versionInfo="3.5.1"
   versionType="linux-x64"
-  installPath="/usr/local/blender"
-  installFile="blender-$versionInfo-$versionType.tar.xz"
+  installType="blender"
+  installPath="/usr/local/$installType"
+  installFile="$installType-$versionInfo-$versionType.tar.xz"
   downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
-  tar -xf $installFile --xz
+  tar -xJf $installFile
   mkdir -p $installPath
-  mv blender-$versionInfo-$versionType/* $installPath
+  mv $installType-$versionInfo-$versionType/* $installPath
   binPaths="$binPaths:$installPath"
   echo "Customize (End): Blender"
 fi
@@ -367,36 +372,44 @@ if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (Start): MoonRay"
   dnf -y install mesa-libGL
   dnf -y install mesa-libGL-devel
-  dnf -y install libtiff-devel libjpeg-devel patch
-  dnf -y install qt5-qtbase-devel qt5-qtscript-devel
+  dnf -y install libtiff-devel
+  dnf -y install libjpeg-devel
+  dnf -y install libuuid-devel
+  dnf -y install libcurl-devel
+  dnf -y install openssl-devel
+  dnf -y install libcgroup-devel
+  dnf -y install libatomic
+  dnf -y install patch
+  if [ $machineType == "Workstation" ]; then
+    dnf -y install qt5-qtbase-devel
+    dnf -y install qt5-qtscript-devel
+  fi
 
-  versionInfo="1.1.0.0"
-  installFile="openmoonray-$versionInfo.tar.gz"
-  downloadUrl="https://github.com/dreamworksanimation/openmoonray/archive/refs/tags/v$versionInfo.tar.gz"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
+  git clone --recurse-submodules https://github.com/dreamworksanimation/openmoonray.git /openmoonray
 
   mkdir -p /installs/bin
   mkdir -p /installs/lib
   mkdir -p /installs/include
   mkdir -p /installs/openmoonray
 
-  ln -s /usr/local/bin/openmoonray-$versionInfo /openmoonray
-  ln -s /openmoonray/building /building
-
-  dnf -y install gcc-toolset-9
+  dnf -y install gcc-toolset-9 python2
   source /opt/rh/gcc-toolset-9/enable
+  ln -s /bin/python2 /bin/python
+
   mkdir -p /openmoonray/build
   cd /openmoonray/build
+  ln -s /openmoonray/building /building
   installType="openmoonray-prereq"
   $binPathCMake/cmake ../building 2>&1 | tee $installType-cmake.log
-  # $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-cmake-build.log
-  # rm -rf /build/*
+  $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-cmake-build.log
 
-  # cd /openmoonray
-  # $binPathCMake/cmake --preset container-release
-  # $binPathCMake/cmake --build --preset container-release -- -j 64
-  # $binPathCMake/cmake --install /build --prefix /installs/openmoonray
+  cd /openmoonray
+  installType="openmoonray"
+  [[ "$gpuProvider" == "NVIDIA" ]] && useCUDA=YES || useCUDA=NO
+  [[ $machineType == "Workstation" ]] && uiApps=YES || uiApps=NO
+  $binPathCMake/cmake --preset container-release -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType-cmake-preset.log
+  # $binPathCMake/cmake --build --preset container-release -- -j 64 2>&1 | tee $installType-cmake-preset-build.log
+  # $binPathCMake/cmake --install /build --prefix /installs/openmoonray 2>&1 | tee $installType-cmake-install.log
   # source /installs/openmoonray/scripts/setup.sh
   # cd $binDirectory
   echo "Customize (End): MoonRay"

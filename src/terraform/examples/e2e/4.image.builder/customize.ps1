@@ -71,26 +71,29 @@ Write-Host "Customize (End): Visual Studio Build Tools"
 
 if ($gpuProvider -eq "AMD") {
   Write-Host "Customize (Start): AMD GPU"
-  $installFile = "amd-gpu.exe"
+  $installType = "amd-gpu"
+  $installFile = "$installType.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait
-  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install -log $binDirectory\amd-gpu.log" -Wait
+  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install -log $binDirectory\$installType.log" -Wait
   Write-Host "Customize (End): AMD GPU"
 } elseif ($gpuProvider -eq "NVIDIA") {
   Write-Host "Customize (Start): NVIDIA GPU (GRID)"
-  $installFile = "nvidia-gpu-grid.exe"
+  $installType = "nvidia-gpu-grid"
+  $installFile = "$installType.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-grid" -Wait
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\$installType" -Wait
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
   $versionInfo = "12.1.1"
+  $installType = "nvidia-gpu-cuda"
   $installFile = "cuda_${versionInfo}_531.14_windows.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/CUDA/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\nvidia-gpu-cuda" -Wait
+  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\$installType" -Wait
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 
   Write-Host "Customize (Start): NVIDIA OptiX"
@@ -99,7 +102,7 @@ if ($gpuProvider -eq "AMD") {
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-32649046.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /O $binDirectory\nvidia-optix.log" -Wait
+  Start-Process -FilePath .\$installFile -ArgumentList "/S /O $binDirectory\$installType.log" -Wait
   $versionInfo = "v12.0"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
@@ -112,10 +115,11 @@ if ($gpuProvider -eq "AMD") {
 
 if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): Azure CLI"
-  $installFile = "azure-cli.msi"
+  $installType = "azure-cli"
+  $installFile = "$installType.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log azure-cli.log" -Wait
+  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
   Write-Host "Customize (End): Azure CLI"
 
   if ($renderManager -like "*Deadline*" -or $renderManager -like "*RoyalRender*") {
@@ -374,10 +378,11 @@ if ($renderEngines -contains "Houdini") {
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
   $versionInfo = "3.5.1"
-  $installFile = "blender-$versionInfo-windows-x64.msi"
+  $installType = "blender"
+  $installFile = "$installType-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart /log blender.log') -Wait
+  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart /log ' + $installType + '.log') -Wait
   $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.5"
   Write-Host "Customize (End): Blender"
 }
