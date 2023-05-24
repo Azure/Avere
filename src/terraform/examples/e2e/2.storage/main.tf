@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.56.0"
+      version = "~>3.57.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -167,7 +167,7 @@ data "azurerm_private_dns_zone" "network" {
 locals {
   stateExistsNetwork   = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualNetworkSubnet = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
-  binDirectoryPath     = "/usr/local/bin"
+  binDirectory         = "/usr/local/bin"
 }
 
 resource "azurerm_resource_group" "storage" {

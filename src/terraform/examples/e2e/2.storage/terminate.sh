@@ -5,7 +5,7 @@ rootHost=${wekaClusterName}000000
 logDirectory=/mnt/log
 if ! mountpoint -q $logDirectory; then
   mkdir -p $logDirectory
-  mount $rootHost:${binDirectoryPath}/log $logDirectory
+  mount $rootHost:${binDirectory}/log $logDirectory
 fi
 
 metadataUrl="http://169.254.169.254/metadata"
@@ -21,7 +21,7 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
   eventType=$(_jq .EventType)
   eventScope=$(_jq .Resources[0])
 
-  if [[ $eventType == "Terminate" && $eventScope == $instanceName ]]; then
+  if [[ $eventType == Terminate && $eventScope == $instanceName ]]; then
     az login --identity
     dnsRecordQuery="aRecords[?ipv4Address=='$(hostname -i)']"
     dnsRecordAddress=$(az network private-dns record-set a show --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --name ${dnsRecordSetName} --query $dnsRecordQuery --output tsv)

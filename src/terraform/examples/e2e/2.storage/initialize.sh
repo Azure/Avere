@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-cd ${binDirectoryPath}
+cd ${binDirectory}
 
 if [ "${wekaClusterName}" != "" ]; then
   volumeLabel="weka-iosw"
@@ -63,7 +63,7 @@ if [ "${wekaClusterName}" != "" ]; then
   failureDomain=$(hostname)
   drivesContainerName=drives0
   vmScaleSetState=$(az vmss show --resource-group ${wekaResourceGroupName} --name ${wekaClusterName} --query provisioningState --output tsv)
-  if [ "$vmScaleSetState" == "Updating" ]; then
+  if [ "$vmScaleSetState" == Updating ]; then
     joinIps=$(az vmss nic list --resource-group ${wekaResourceGroupName} --vmss-name ${wekaClusterName} --query [].ipConfigurations[0].privateIPAddress --output tsv | tr \\n ',')
     weka local setup container --name $drivesContainerName --base-port 14000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends &> weka-container-setup-$drivesContainerName.log
     weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $${joinIps::-1} --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends &> weka-container-setup-compute0.log
@@ -86,16 +86,16 @@ if [ "${wekaClusterName}" != "" ]; then
     weka local setup container --name $drivesContainerName --base-port 14000 --failure-domain $failureDomain --cores $coreCountDrives --drives-dedicated-cores $coreCountDrives --core-ids $coreIdsDrives --dedicate --no-frontends &> weka-container-setup-$drivesContainerName.log
   fi
 
-  if [ $(hostname) == "${wekaClusterName}000000" ]; then
+  if [ $(hostname) == ${wekaClusterName}000000 ]; then
     systemctl --now enable nfs-server
-    mkdir -p ${binDirectoryPath}/log
-    echo "${binDirectoryPath}/log *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+    mkdir -p ${binDirectory}/log
+    echo "${binDirectory}/log *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
   fi
 
   dataFilePath="/var/lib/waagent/ovf-env.xml"
   dataFileText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $dataFilePath)
-  codeFilePath="${binDirectoryPath}/terminate.sh"
+  codeFilePath="${binDirectory}/terminate.sh"
   echo $dataFileText | base64 -d > $codeFilePath
   chmod +x $codeFilePath
 

@@ -163,7 +163,32 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxArtist"
+    name = "LnxArtistCPU"
+    image = {
+      definitionName = "Linux"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "Workstation"
+      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                   # NVIDIA or AMD
+      outputVersion  = "3.0.0"
+      timeoutMinutes = 240
+      osDiskSizeGB   = 1024
+      renderEngines = [
+        "Maya",
+        "PBRT",
+        "Houdini",
+        "Blender",
+        "MoonRay",
+        #"Unreal+PixelStream"
+      ]
+      customize = [
+      ]
+    }
+  },
+  {
+    name = "LnxArtistGPU"
     image = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -172,7 +197,7 @@ imageTemplates = [
       machineType    = "Workstation"
       machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
-      outputVersion  = "3.0.0"
+      outputVersion  = "3.1.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
@@ -255,7 +280,31 @@ imageTemplates = [
     }
   },
   {
-    name = "WinArtist"
+    name = "WinArtistCPU"
+    image = {
+      definitionName = "WinArtist"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "Workstation"
+      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                   # NVIDIA or AMD
+      outputVersion  = "3.0.0"
+      timeoutMinutes = 420
+      osDiskSizeGB   = 1024
+      renderEngines = [
+        "Maya",
+        "PBRT",
+        "Houdini",
+        "Blender",
+        #"Unreal+PixelStream"
+      ]
+      customize = [
+      ]
+    }
+  },
+  {
+    name = "WinArtistGPU"
     image = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"
@@ -264,7 +313,7 @@ imageTemplates = [
       machineType    = "Workstation"
       machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
-      outputVersion  = "3.0.0"
+      outputVersion  = "3.1.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [

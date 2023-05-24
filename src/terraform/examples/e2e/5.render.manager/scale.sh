@@ -19,7 +19,7 @@ if [[ $renderManager == *Deadline* ]]; then
         task=$(deadlinecommand -GetJobTask $jobId $taskId)
         taskStatus=$(echo "$task" | grep "TaskStatus=")
         taskStatus=$(echo $${taskStatus#*=})
-        if [ $taskStatus == "Queued" ]; then
+        if [ $taskStatus == Queued ]; then
           ((queuedTasks++))
         fi
       done
@@ -40,7 +40,7 @@ else # Scale Down
     workerNames=$(deadlinecommand -GetSlaveNames)
     for workerName in $(echo $workerNames); do
       workerState=$(deadlinecommand -GetSlaveInfo $workerName SlaveState)
-      if [ $workerState == "Idle" ]; then
+      if [ $workerState == Idle ]; then
         worker=$(deadlinecommand -GetSlave $workerName)
         workerProperty="WorkerLastRenderFinishedTime="
         workerIdleStartTime=$(echo "$worker" | grep $workerProperty)

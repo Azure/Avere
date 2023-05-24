@@ -33,6 +33,9 @@ rpm -i $installFile
 dnf config-manager --set-enabled devel
 dnf -y install epel-release
 dnf -y install dkms python3-devel bc git lsof unzip
+if [ $machineType == Workstation ]; then
+  dnf -y group install Workstation
+fi
 
 versionInfo="3.26.4"
 installType="cmake"
@@ -46,7 +49,7 @@ binPathCMake="$binDirectory/$installType/bin"
 binPaths="$binPaths:$binPathCMake"
 echo "Customize (End): Image Build Platform"
 
-if [ "$gpuProvider" == "NVIDIA" ]; then
+if [ "$gpuProvider" == NVIDIA ]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
   installType="nvidia-gpu-grid"
   installFile="$installType.run"
@@ -85,7 +88,7 @@ make -C $buildDirectory 2>&1 | tee $installType-make.log
 binPaths="$binPaths:$buildDirectory/bin"
 echo "Customize (End): NVIDIA OptiX"
 
-if [ $machineType == "Scheduler" ]; then
+if [ $machineType == Scheduler ]; then
   echo "Customize (Start): Azure CLI"
   installType="azure-cli"
   rpm --import https://packages.microsoft.com/keys/microsoft.asc
@@ -119,7 +122,7 @@ if [[ $renderManager == *Deadline* ]]; then
   tar -xzf $installFile -C $installPath
   echo "Customize (End): Deadline Download"
 
-  if [ $machineType == "Scheduler" ]; then
+  if [ $machineType == Scheduler ]; then
     echo "Customize (Start): Mongo DB Service"
     repoPath="/etc/yum.repos.d/mongodb.repo"
     echo "[mongodb-org-4.4]" > $repoPath
@@ -163,10 +166,10 @@ if [[ $renderManager == *Deadline* ]]; then
   echo "Customize (Start): Deadline Client"
   installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
   installArgs="--mode unattended --prefix $schedulerInstallPath --repositorydir $schedulerServerMount"
-  if [ $machineType == "Scheduler" ]; then
+  if [ $machineType == Scheduler ]; then
     installArgs="$installArgs --slavestartup false --launcherdaemon false"
   else
-    [ $machineType == "Farm" ] && workerStartup=true || workerStartup=false
+    [ $machineType == Farm ] && workerStartup=true || workerStartup=false
     installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
   fi
   $installPath/$installFile $installArgs
@@ -197,7 +200,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
   installPath="RoyalRender*"
   installFile="rrSetup_linux"
   chmod +x ./$installPath/$installFile
-  if [ $machineType == "Scheduler" ]; then
+  if [ $machineType == Scheduler ]; then
     echo "Customize (Start): Royal Render Server"
     mkdir -p $schedulerInstallPath
     ./$installPath/$installFile -console -rrRoot $schedulerInstallPath 2>&1 | tee royal-render.log
@@ -225,7 +228,7 @@ if [[ $renderManager == *Qube* ]]; then
   rpm -i $installType-*.rpm 2>&1 | tee $installType.log
   echo "Customize (End): Qube Core"
 
-  if [ $machineType == "Scheduler" ]; then
+  if [ $machineType == Scheduler ]; then
     echo "Customize (Start): Qube Supervisor"
     installType="qube-supervisor"
     installFile="$installType-${schedulerVersion}.CENTOS_8.2.x86_64.rpm"
@@ -339,7 +342,7 @@ if [[ $renderEngines == *Houdini* ]]; then
   downloadUrl="$binStorageHost/Houdini/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
-  [[ $machineType == "Workstation" ]] && desktopMenus=--install-menus || desktopMenus=--no-install-menus
+  [[ $machineType == Workstation ]] && desktopMenus=--install-menus || desktopMenus=--no-install-menus
   [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
   [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
   ./houdini*/houdini.install --auto-install --make-dir --no-install-license --accept-EULA $versionEULA $desktopMenus $mayaPlugIn $unrealPlugIn 2>&1 | tee $installType.log
@@ -372,15 +375,17 @@ if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (Start): MoonRay"
   dnf -y install mesa-libGL
   dnf -y install mesa-libGL-devel
+  dnf -y install libcgroup-devel
   dnf -y install libtiff-devel
   dnf -y install libjpeg-devel
   dnf -y install libuuid-devel
   dnf -y install libcurl-devel
   dnf -y install openssl-devel
-  dnf -y install libcgroup-devel
+  dnf -y install giflib-devel
+  dnf -y install libmng-devel
   dnf -y install libatomic
   dnf -y install patch
-  if [ $machineType == "Workstation" ]; then
+  if [ $machineType == Workstation ]; then
     dnf -y install qt5-qtbase-devel
     dnf -y install qt5-qtscript-devel
   fi
@@ -405,8 +410,8 @@ if [[ $renderEngines == *MoonRay* ]]; then
 
   cd /openmoonray
   installType="openmoonray"
-  [[ "$gpuProvider" == "NVIDIA" ]] && useCUDA=YES || useCUDA=NO
-  [[ $machineType == "Workstation" ]] && uiApps=YES || uiApps=NO
+  [[ "$gpuProvider" == NVIDIA ]] && useCUDA=YES || useCUDA=NO
+  [[ $machineType == Workstation ]] && uiApps=YES || uiApps=NO
   $binPathCMake/cmake --preset container-release -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType-cmake-preset.log
   # $binPathCMake/cmake --build --preset container-release -- -j 64 2>&1 | tee $installType-cmake-preset-build.log
   # $binPathCMake/cmake --install /build --prefix /installs/openmoonray 2>&1 | tee $installType-cmake-install.log
@@ -458,7 +463,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
   binPaths="$binPaths:$installPath"
 fi
 
-if [ $machineType == "Workstation" ]; then
+if [ $machineType == Workstation ]; then
   echo "Customize (Start): Teradici PCoIP"
   versionInfo="23.04.1"
   [ "$gpuProvider" == "" ] && installType=pcoip-agent-standard || installType=pcoip-agent-graphics

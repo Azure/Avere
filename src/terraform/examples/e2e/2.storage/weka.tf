@@ -207,9 +207,9 @@ locals {
       }'
     json
   }
-  wekaCoreIdsScript    = "${local.binDirectoryPath}/weka-core-ids.sh"
-  wekaDriveDisksScript = "${local.binDirectoryPath}/weka-drive-disks.sh"
-  wekaFileSystemScript = "${local.binDirectoryPath}/weka-file-system.sh"
+  wekaCoreIdsScript    = "${local.binDirectory}/weka-core-ids.sh"
+  wekaDriveDisksScript = "${local.binDirectory}/weka-drive-disks.sh"
+  wekaFileSystemScript = "${local.binDirectory}/weka-file-system.sh"
 }
 
 resource "azurerm_resource_group" "weka" {
@@ -259,7 +259,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name
     dnsZoneName          = data.azurerm_private_dns_zone.network.name
     dnsRecordSetName     = var.weka.network.privateDnsZone.recordSetName
-    binDirectoryPath     = local.binDirectoryPath
+    binDirectory         = local.binDirectory
   }))
   network_interface {
     name    = "nic1"
@@ -318,7 +318,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
           dnsResourceGroupName      = data.azurerm_private_dns_zone.network.resource_group_name
           dnsZoneName               = data.azurerm_private_dns_zone.network.name
           dnsRecordSetName          = var.weka.network.privateDnsZone.recordSetName
-          binDirectoryPath          = local.binDirectoryPath
+          binDirectory              = local.binDirectory
         })
       )}"
     })
