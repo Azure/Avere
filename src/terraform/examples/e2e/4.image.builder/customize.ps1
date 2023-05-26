@@ -45,6 +45,7 @@ $renderManager = $buildConfig.renderManager
 $renderEngines = $buildConfig.renderEngines
 $binStorageHost = $buildConfig.binStorageHost
 $binStorageAuth = $buildConfig.binStorageAuth
+$servicePassword = $buildConfig.servicePassword
 Write-Host "Machine Type: $machineType"
 Write-Host "GPU Provider: $gpuProvider"
 Write-Host "Render Manager: $renderManager"
