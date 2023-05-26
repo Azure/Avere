@@ -96,8 +96,8 @@ if ($gpuProvider -eq "AMD") {
     $installFile = "$installType.exe"
     $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess .\$installFile /S
-    StartProcess C:\AMD\AMD*\Setup.exe "-install -log $binDirectory\$installType.log"
+    StartProcess .\$installFile /S $null
+    StartProcess C:\AMD\AMD*\Setup.exe "-install -log $binDirectory\$installType.log" $null
     Write-Host "Customize (End): AMD GPU (NV v4)"
   }
 } elseif ($gpuProvider -eq "NVIDIA") {
@@ -106,7 +106,7 @@ if ($gpuProvider -eq "AMD") {
   $installFile = "$installType.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess .\$installFile "-s -n -log:$binDirectory\$installType"
+  StartProcess .\$installFile "-s -n -log:$binDirectory\$installType" $null
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
@@ -115,7 +115,7 @@ if ($gpuProvider -eq "AMD") {
   $installFile = "cuda_${versionInfo}_531.14_windows.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/CUDA/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess .\$installFile "-s -n -log:$binDirectory\$installType"
+  StartProcess .\$installFile "-s -n -log:$binDirectory\$installType" $null
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 
   Write-Host "Customize (Start): NVIDIA OptiX"
@@ -124,7 +124,7 @@ if ($gpuProvider -eq "AMD") {
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-32649046.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess .\$installFile "/S /O $binDirectory\$installType.log"
+  StartProcess .\$installFile "/S /O $binDirectory\$installType.log" $null
   $versionInfo = "v12.0"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
@@ -206,7 +206,7 @@ if ($renderEngines -contains "Blender") {
   $installFile = "$installType-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess $installFile "/quiet /norestart /log $installType.log"
+  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
   $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.5"
   Write-Host "Customize (End): Blender"
 }
@@ -314,7 +314,7 @@ if ($machineType -eq "Scheduler") {
   $installFile = "$installType.msi"
   $downloadUrl = "https://aka.ms/installazurecliwindows"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess $installFile "/quiet /norestart /log $installType.log"
+  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
   Write-Host "Customize (End): Azure CLI"
 
   if ($renderManager -like "*Deadline*" -or $renderManager -like "*RoyalRender*") {
@@ -376,7 +376,7 @@ if ($renderManager -like "*Deadline*") {
     netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$databasePort
     $installType = "deadline-repository"
     $installFile = "DeadlineRepository-$versionInfo-windows-installer.exe"
-    StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true"
+    StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true" $null
     Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
     Copy-Item -Path $databasePath\certs\$certificateFile -Destination $installRoot\$certificateFile
     New-NfsShare -Name "Deadline" -Path $installRoot -Permission ReadWrite
@@ -399,7 +399,7 @@ if ($renderManager -like "*Deadline*") {
     }
     $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
   }
-  StartProcess .\$installFile $installArgs
+  StartProcess .\$installFile $installArgs $null
   Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log
   Set-Location -Path $binDirectory
   Write-Host "Customize (End): Deadline Client"
@@ -470,7 +470,7 @@ if ($renderManager -like "*Qube*") {
   $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
   $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess $installFile "/quiet /norestart /log $installType.log"
+  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
   Write-Host "Customize (End): Qube Core"
 
   if ($machineType -eq "Scheduler") {
@@ -483,7 +483,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-${versionInfo}-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
     $binPaths += ";C:\Program Files\pfx\pgsql\bin"
     Write-Host "Customize (End): Qube Supervisor"
 
@@ -493,7 +493,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
     Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
   } else {
     Write-Host "Customize (Start): Qube Worker"
@@ -503,7 +503,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
     Write-Host "Customize (End): Qube Worker"
 
     Write-Host "Customize (Start): Qube Client"
@@ -511,7 +511,7 @@ if ($renderManager -like "*Qube*") {
     $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
     $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
     $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
