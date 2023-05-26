@@ -57,35 +57,35 @@ if [ "$gpuProvider" == NVIDIA ]; then
   chmod +x $installFile
   ./$installFile --silent --dkms 2>&1 | tee $installType.log
   echo "Customize (End): NVIDIA GPU (GRID)"
+
+  echo "Customize (Start): NVIDIA GPU (CUDA)"
+  installType="nvidia-cuda"
+  dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+  dnf -y module install nvidia-driver:latest-dkms 2>&1 | tee $installType-dkms.log
+  dnf -y install cuda 2>&1 | tee $installType.log
+  echo "Customize (End): NVIDIA GPU (CUDA)"
+
+  echo "Customize (Start): NVIDIA OptiX"
+  dnf -y install mesa-libGL
+  dnf -y install mesa-libGL-devel
+  dnf -y install libXrandr-devel
+  dnf -y install libXinerama-devel
+  dnf -y install libXcursor-devel
+  versionInfo="7.7.0"
+  installType="nvidia-optix"
+  installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
+  downloadUrl="$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  chmod +x $installFile
+  mkdir -p $installType
+  ./$installFile --skip-license --prefix=$installType 2>&1 | tee $installType.log
+  buildDirectory="$binDirectory/$installType/build"
+  mkdir -p $buildDirectory
+  $binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installType/SDK 2>&1 | tee $installType-cmake.log
+  make -C $buildDirectory 2>&1 | tee $installType-make.log
+  binPaths="$binPaths:$buildDirectory/bin"
+  echo "Customize (End): NVIDIA OptiX"
 fi
-
-echo "Customize (Start): NVIDIA GPU (CUDA)"
-installType="nvidia-cuda"
-dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-dnf -y module install nvidia-driver:latest-dkms 2>&1 | tee $installType-dkms.log
-dnf -y install cuda 2>&1 | tee $installType.log
-echo "Customize (End): NVIDIA GPU (CUDA)"
-
-echo "Customize (Start): NVIDIA OptiX"
-dnf -y install mesa-libGL
-dnf -y install mesa-libGL-devel
-dnf -y install libXrandr-devel
-dnf -y install libXinerama-devel
-dnf -y install libXcursor-devel
-versionInfo="7.7.0"
-installType="nvidia-optix"
-installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
-downloadUrl="$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
-curl -o $installFile -L $downloadUrl
-chmod +x $installFile
-mkdir -p $installType
-./$installFile --skip-license --prefix=$installType 2>&1 | tee $installType.log
-buildDirectory="$binDirectory/$installType/build"
-mkdir -p $buildDirectory
-$binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installType/SDK 2>&1 | tee $installType-cmake.log
-make -C $buildDirectory 2>&1 | tee $installType-make.log
-binPaths="$binPaths:$buildDirectory/bin"
-echo "Customize (End): NVIDIA OptiX"
 
 if [[ $renderEngines == *Maya* ]]; then
   echo "Customize (Start): Maya"

@@ -8,8 +8,8 @@ $binPaths = ""
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
-function StartProcess ($filePath, $argumentList, $logFileName) {
-  if ($logFileName -eq $null) {
+function StartProcess ($filePath, $argumentList, $logFile) {
+  if ($logFile -eq $null) {
     if ($argumentList -eq $null) {
       Start-Process -FilePath $filePath -Wait
     } else {
@@ -17,13 +17,13 @@ function StartProcess ($filePath, $argumentList, $logFileName) {
     }
   } else {
     if ($argumentList -eq $null) {
-      Start-Process -FilePath $filePath -Wait -RedirectStandardError $logFileName-err.log -RedirectStandardOutput $logFileName-out.log
+      Start-Process -FilePath $filePath -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
     } else {
-      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardError $logFileName-err.log -RedirectStandardOutput $logFileName-out.log
+      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
     }
-    Get-Content -Path $logFileName-err.log | Tee-Object -FilePath "$logFileName.log" -Append
-    Get-Content -Path $logFileName-out.log | Tee-Object -FilePath "$logFileName.log" -Append
-    Remove-Item -Path $logFileName-err.log, $logFileName-out.log
+    Get-Content -Path $logFile-err.log | Tee-Object -FilePath "$logFile.log" -Append
+    Get-Content -Path $logFile-out.log | Tee-Object -FilePath "$logFile.log" -Append
+    Remove-Item -Path $logFile-err.log, $logFile-out.log
   }
 }
 
@@ -63,12 +63,12 @@ Write-Host "Customize (End): Chocolatey"
 
 Write-Host "Customize (Start): Python"
 $installType = "python"
-StartProcess $binPathChoco\choco.exe "install $installType -y" $installType
+StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
 $installType = "git"
-StartProcess $binPathChoco\choco.exe "install $installType -y" $installType
+StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
@@ -461,7 +461,7 @@ if ($renderManager -like "*Qube*") {
 
   Write-Host "Customize (Start): Strawberry Perl"
   $installType = "strawberryperl"
-  StartProcess $binPathChoco\choco.exe "install $installType -y" $installType
+  StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
   Write-Host "Customize (End): Strawberry Perl"
 
   Write-Host "Customize (Start): Qube Core"
