@@ -30,7 +30,6 @@ installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
 downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
 rpm -i $installFile
-dnf config-manager --set-enabled devel
 dnf -y install epel-release
 dnf -y install dkms python3-devel bc git lsof unzip
 if [ $machineType == Workstation ]; then
@@ -87,186 +86,6 @@ $binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installType/SDK 2>&1 | 
 make -C $buildDirectory 2>&1 | tee $installType-make.log
 binPaths="$binPaths:$buildDirectory/bin"
 echo "Customize (End): NVIDIA OptiX"
-
-if [ $machineType == Scheduler ]; then
-  echo "Customize (Start): Azure CLI"
-  installType="azure-cli"
-  rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-  dnf -y install $installType 2>&1 | tee $installType.log
-  echo "Customize (End): Azure CLI"
-
-  if [[ $renderManager == *Deadline* || $renderManager == *RoyalRender* ]]; then
-    echo "Customize (Start): NFS Server"
-    systemctl --now enable nfs-server
-    echo "Customize (End): NFS Server"
-  fi
-fi
-
-if [[ $renderManager == *Deadline* ]]; then
-  schedulerVersion="10.2.1.0"
-  schedulerInstallPath="/Deadline"
-  schedulerServerMount="/DeadlineServer"
-  schedulerDatabaseHost=$(hostname)
-  schedulerDatabasePort=27017
-  schedulerDatabaseUser="dbService"
-  schedulerDatabaseName="deadline10db"
-  schedulerBinPath="$schedulerInstallPath/bin"
-
-  echo "Customize (Start): Deadline Download"
-  installFile="Deadline-$schedulerVersion-linux-installers.tar"
-  installPath=$(echo ${installFile%.tar})
-  downloadUrl="$binStorageHost/Deadline/$schedulerVersion/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  mkdir -p $installPath
-  tar -xzf $installFile -C $installPath
-  echo "Customize (End): Deadline Download"
-
-  if [ $machineType == Scheduler ]; then
-    echo "Customize (Start): Mongo DB Service"
-    repoPath="/etc/yum.repos.d/mongodb.repo"
-    echo "[mongodb-org-4.4]" > $repoPath
-    echo "name=MongoDB 4.4" >> $repoPath
-    echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.4/x86_64/" >> $repoPath
-    echo "gpgcheck=1" >> $repoPath
-    echo "enabled=1" >> $repoPath
-    echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc" >> $repoPath
-    dnf -y install mongodb-org
-    serviceConfigFile="/etc/mongod.conf"
-    sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $serviceConfigFile
-    sed -i "/bindIp: 0.0.0.0/a\  tls:" $serviceConfigFile
-    sed -i "/tls:/a\    mode: disabled" $serviceConfigFile
-    systemctl --now enable mongod
-    sleep 5s
-    echo "Customize (End): Mongo DB Service"
-
-    echo "Customize (Start): Mongo DB User"
-    installType="mongo-create-user"
-    createUserScript="$installType.js"
-    echo "db = db.getSiblingDB(\"$schedulerDatabaseName\");" > $createUserScript
-    echo "db.createUser({" >> $createUserScript
-    echo "user: \"$schedulerDatabaseUser\"," >> $createUserScript
-    echo "pwd: \"$servicePassword\"," >> $createUserScript
-    echo "roles: [" >> $createUserScript
-    echo "{ role: \"dbOwner\", db: \"$schedulerDatabaseName\" }" >> $createUserScript
-    echo "]})" >> $createUserScript
-    mongo $createUserScript 2>&1 | tee $installType.log
-    echo "Customize (End): Mongo DB User"
-
-    echo "Customize (Start): Deadline Server"
-    export DB_PASSWORD=$servicePassword
-    installFile="DeadlineRepository-$schedulerVersion-linux-x64-installer.run"
-    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --dbport $schedulerDatabasePort --dbname $schedulerDatabaseName --installmongodb false --dbauth true --dbuser $schedulerDatabaseUser --dbpassword env:DB_PASSWORD
-    mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
-    echo "$schedulerInstallPath *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
-    exportfs -r
-    echo "Customize (End): Deadline Server"
-  fi
-
-  echo "Customize (Start): Deadline Client"
-  installFile="DeadlineClient-$schedulerVersion-linux-x64-installer.run"
-  installArgs="--mode unattended --prefix $schedulerInstallPath --repositorydir $schedulerServerMount"
-  if [ $machineType == Scheduler ]; then
-    installArgs="$installArgs --slavestartup false --launcherdaemon false"
-  else
-    [ $machineType == Farm ] && workerStartup=true || workerStartup=false
-    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
-  fi
-  $installPath/$installFile $installArgs
-  cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-  echo "$schedulerBinPath/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser $servicePassword" >> $aaaProfile
-  echo "Customize (End): Deadline Client"
-
-  binPaths="$binPaths:$schedulerBinPath"
-fi
-
-if [[ $renderManager == *RoyalRender* ]]; then
-  schedulerVersion="9.0.05"
-  schedulerInstallPath="/RoyalRender"
-  schedulerBinPath="$schedulerInstallPath/bin/lx64"
-
-  echo "Customize (Start): Royal Render Download"
-  installFile="RoyalRender__${schedulerVersion}__installer.zip"
-  downloadUrl="$binStorageHost/RoyalRender/$schedulerVersion/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  unzip -q $installFile
-  echo "Customize (End): Royal Render Download"
-
-  dnf -y install xcb-util-wm
-  dnf -y install xcb-util-image
-  dnf -y install xcb-util-keysyms
-  dnf -y install xcb-util-renderutil
-  dnf -y install libxkbcommon-x11
-  installPath="RoyalRender*"
-  installFile="rrSetup_linux"
-  chmod +x ./$installPath/$installFile
-  if [ $machineType == Scheduler ]; then
-    echo "Customize (Start): Royal Render Server"
-    mkdir -p $schedulerInstallPath
-    ./$installPath/$installFile -console -rrRoot $schedulerInstallPath 2>&1 | tee royal-render.log
-    echo "$schedulerInstallPath *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
-    exportfs -r
-    echo "Customize (End): Royal Render Server"
-  fi
-
-  binPaths="$binPaths:$schedulerBinPath"
-fi
-
-if [[ $renderManager == *Qube* ]]; then
-  schedulerVersion="8.0-0"
-  schedulerConfigFile="/etc/qb.conf"
-  schedulerInstallPath="/usr/local/pfx/qube"
-  schedulerBinPath="$schedulerInstallPath/bin"
-
-  echo "Customize (Start): Qube Core"
-  dnf -y install perl
-  dnf -y install xinetd
-  installType="qube-core"
-  installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-  downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-  echo "Customize (End): Qube Core"
-
-  if [ $machineType == Scheduler ]; then
-    echo "Customize (Start): Qube Supervisor"
-    installType="qube-supervisor"
-    installFile="$installType-${schedulerVersion}.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Supervisor"
-
-    echo "Customize (Start): Qube Data Relay Agent (DRA)"
-    installType="qube-dra"
-    installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Data Relay Agent (DRA)"
-  else
-    echo "Customize (Start): Qube Worker"
-    installType="qube-worker"
-    installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Worker"
-
-    echo "Customize (Start): Qube Client"
-    installType="qube-client"
-    installFile="$installType-$schedulerVersion.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Client"
-
-    sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $schedulerConfigFile
-    sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $schedulerConfigFile
-  fi
-
-  binPaths="$binPaths:$schedulerBinPath:$schedulerInstallPath/sbin"
-fi
 
 if [[ $renderEngines == *Maya* ]]; then
   echo "Customize (Start): Maya"
@@ -375,13 +194,13 @@ if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (Start): MoonRay"
   dnf -y install mesa-libGL
   dnf -y install mesa-libGL-devel
-  dnf -y install libcgroup-devel
+  dnf -y --enablerepo=devel install libcgroup-devel
+  dnf -y --enablerepo=devel install giflib-devel
   dnf -y install libtiff-devel
   dnf -y install libjpeg-devel
   dnf -y install libuuid-devel
   dnf -y install libcurl-devel
   dnf -y install openssl-devel
-  dnf -y install giflib-devel
   dnf -y install libmng-devel
   dnf -y install libatomic
   dnf -y install patch
@@ -405,25 +224,24 @@ if [[ $renderEngines == *MoonRay* ]]; then
   cd /openmoonray/build
   ln -s /openmoonray/building /building
   installType="openmoonray-prereq"
-  $binPathCMake/cmake ../building 2>&1 | tee $installType-cmake.log
-  $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-cmake-build.log
+  $binPathCMake/cmake ../building 2>&1 | tee $installType.log
+  $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-build.log
 
   cd /openmoonray
   installType="openmoonray"
   [[ "$gpuProvider" == NVIDIA ]] && useCUDA=YES || useCUDA=NO
   [[ $machineType == Workstation ]] && uiApps=YES || uiApps=NO
-  $binPathCMake/cmake --preset container-release -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType-cmake-preset.log
-  # $binPathCMake/cmake --build --preset container-release -- -j 64 2>&1 | tee $installType-cmake-preset-build.log
-  # $binPathCMake/cmake --install /build --prefix /installs/openmoonray 2>&1 | tee $installType-cmake-install.log
-  # source /installs/openmoonray/scripts/setup.sh
-  # cd $binDirectory
+  $binPathCMake/cmake --preset container-release -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType-preset.log
+  $binPathCMake/cmake --build --preset container-release -- -j 64 2>&1 | tee $installType-preset-build.log
+  $binPathCMake/cmake --install /build --prefix /installs/openmoonray 2>&1 | tee $installType-install.log
+  echo "source /installs/openmoonray/scripts/setup.sh" >> $aaaProfile
+  cd $binDirectory
   echo "Customize (End): MoonRay"
 fi
 
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
   echo "Customize (Start): Unreal Engine Setup"
-  dnf -y install libicu
-  versionInfo="5.1.1"
+  versionInfo="5.2.0"
   installType="unreal-engine"
   installPath="/usr/local/unreal"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
@@ -440,27 +258,237 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
   echo "Customize (End): Unreal Project Files Generate"
 
   echo "Customize (Start): Unreal Engine Build"
-  make -C $installPath 2>&1 | tee $installType-build.log
+  make -C $installPath 2>&1 | tee $installType-make.log
   echo "Customize (End): Unreal Engine Build"
 
   if [[ $renderEngines == *Unreal+PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
-    installType="unreal-stream"
-    git clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1 2>&1 | tee $installType-git.log
     dnf -y install coturn
-    installFile="PixelStreamingInfrastructure/SignallingWebServer/platform_scripts/bash/setup.sh"
+    unrealVersion=$versionInfo
+    versionInfo="UE5.2-0.6.2"
+    installType="unreal-stream"
+    installFile="PixelStreamingInfrastructure-$versionInfo.tar.gz"
+    downloadUrl="$binStorageHost/Unreal/$unrealVersion/$installFile$binStorageAuth"
+    curl -o $installFile -L $downloadUrl
+    tar -xzf $installFile
+    installFile="PixelStreamingInfrastructure-$versionInfo/SignallingWebServer/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 2>&1 | tee $installType-signalling.log
-    installFile="PixelStreamingInfrastructure/Matchmaker/platform_scripts/bash/setup.sh"
+    installFile="PixelStreamingInfrastructure-$versionInfo/Matchmaker/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 2>&1 | tee $installType-matchmaker.log
-    installFile="PixelStreamingInfrastructure/SFU/platform_scripts/bash/setup.sh"
+    installFile="PixelStreamingInfrastructure-$versionInfo/SFU/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 2>&1 | tee $installType-sfu.log
     echo "Customize (End): Unreal Pixel Streaming"
   fi
 
-  binPaths="$binPaths:$installPath"
+  binPaths="$binPaths:$installPath/Engine/Binaries/Linux"
+fi
+
+if [ $machineType == Scheduler ]; then
+  echo "Customize (Start): Azure CLI"
+  installType="azure-cli"
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+  dnf -y install $installType 2>&1 | tee $installType.log
+  echo "Customize (End): Azure CLI"
+
+  if [[ $renderManager == *Deadline* || $renderManager == *RoyalRender* ]]; then
+    echo "Customize (Start): NFS Server"
+    systemctl --now enable nfs-server
+    echo "Customize (End): NFS Server"
+  fi
+fi
+
+if [[ $renderManager == *Flamenco* ]]; then
+  versionInfo="3.2"
+
+  echo "Customize (Start): Flamenco Download"
+  installFile="flamenco-$versionInfo-linux-amd64.tar.gz"
+  downloadUrl="$binStorageHost/Flamenco/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  echo "Customize (End): Flamenco Download"
+
+  cd flamenco*
+  if [ $machineType == Scheduler ]; then
+    echo "Customize (Start): Flamenco Server"
+    installType="flamenco-server"
+    # ./flamenco-manager --quiet 2>&1 | tee $installType.log
+    echo "Customize (End): Flamenco Server"
+  else
+    echo "Customize (Start): Flamenco Client"
+    installType="flamenco-client"
+    # ./flamenco-worker --quiet 2>&1 | tee $installType.log
+    echo "Customize (End): Flamenco Client"
+  fi
+  cd $binDirectory
+fi
+
+if [[ $renderManager == *Flamenco* ]]; then
+  versionInfo="10.2.1.0"
+  installRoot="/Deadline"
+  serverMount="/DeadlineServer"
+  databaseHost=$(hostname)
+  databasePort=27017
+  databaseUser="dbService"
+  databaseName="deadline10db"
+  binPathScheduler="$installRoot/bin"
+
+  echo "Customize (Start): Deadline Download"
+  installFile="Deadline-$versionInfo-linux-installers.tar"
+  installPath=$(echo ${installFile%.tar})
+  downloadUrl="$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  mkdir -p $installPath
+  tar -xzf $installFile -C $installPath
+  echo "Customize (End): Deadline Download"
+
+  if [ $machineType == Scheduler ]; then
+    echo "Customize (Start): Mongo DB Service"
+    repoPath="/etc/yum.repos.d/mongodb.repo"
+    echo "[mongodb-org-4.4]" > $repoPath
+    echo "name=MongoDB 4.4" >> $repoPath
+    echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.4/x86_64/" >> $repoPath
+    echo "gpgcheck=1" >> $repoPath
+    echo "enabled=1" >> $repoPath
+    echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc" >> $repoPath
+    dnf -y install mongodb-org
+    configFile="/etc/mongod.conf"
+    sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $configFile
+    sed -i "/bindIp: 0.0.0.0/a\  tls:" $configFile
+    sed -i "/tls:/a\    mode: disabled" $configFile
+    systemctl --now enable mongod
+    sleep 5s
+    echo "Customize (End): Mongo DB Service"
+
+    echo "Customize (Start): Mongo DB User"
+    installType="mongo-create-user"
+    createUserScript="$installType.js"
+    echo "db = db.getSiblingDB(\"$databaseName\");" > $createUserScript
+    echo "db.createUser({" >> $createUserScript
+    echo "user: \"$databaseUser\"," >> $createUserScript
+    echo "pwd: \"$servicePassword\"," >> $createUserScript
+    echo "roles: [" >> $createUserScript
+    echo "{ role: \"dbOwner\", db: \"$databaseName\" }" >> $createUserScript
+    echo "]})" >> $createUserScript
+    mongo $createUserScript 2>&1 | tee $installType.log
+    echo "Customize (End): Mongo DB User"
+
+    echo "Customize (Start): Deadline Server"
+    export DB_PASSWORD=$servicePassword
+    installFile="DeadlineRepository-$versionInfo-linux-x64-installer.run"
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --installmongodb false --dbauth true --dbuser $databaseUser --dbpassword env:DB_PASSWORD
+    mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
+    echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+    exportfs -r
+    echo "Customize (End): Deadline Server"
+  fi
+
+  echo "Customize (Start): Deadline Client"
+  installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
+  installArgs="--mode unattended --prefix $installRoot --repositorydir $serverMount"
+  if [ $machineType == Scheduler ]; then
+    installArgs="$installArgs --slavestartup false --launcherdaemon false"
+  else
+    [ $machineType == Farm ] && workerStartup=true || workerStartup=false
+    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+  fi
+  $installPath/$installFile $installArgs
+  cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+  echo "$binPathScheduler/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser $servicePassword" >> $aaaProfile
+  echo "Customize (End): Deadline Client"
+
+  binPaths="$binPaths:$binPathScheduler"
+fi
+
+if [[ $renderManager == *RoyalRender* ]]; then
+  versionInfo="9.0.05"
+  installRoot="/RoyalRender"
+  binPathScheduler="$installRoot/bin/lx64"
+
+  echo "Customize (Start): Royal Render Download"
+  installFile="RoyalRender__${versionInfo}__installer.zip"
+  downloadUrl="$binStorageHost/RoyalRender/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  unzip -q $installFile
+  echo "Customize (End): Royal Render Download"
+
+  dnf -y install xcb-util-wm
+  dnf -y install xcb-util-image
+  dnf -y install xcb-util-keysyms
+  dnf -y install xcb-util-renderutil
+  dnf -y install libxkbcommon-x11
+  installPath="RoyalRender*"
+  installFile="rrSetup_linux"
+  chmod +x ./$installPath/$installFile
+  if [ $machineType == Scheduler ]; then
+    echo "Customize (Start): Royal Render Server"
+    mkdir -p $installRoot
+    ./$installPath/$installFile -console -rrRoot $installRoot 2>&1 | tee royal-render.log
+    echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+    exportfs -r
+    echo "Customize (End): Royal Render Server"
+  fi
+
+  binPaths="$binPaths:$binPathScheduler"
+fi
+
+if [[ $renderManager == *Qube* ]]; then
+  versionInfo="8.0-0"
+  installRoot="/usr/local/pfx/qube"
+  binPathScheduler="$installRoot/bin"
+
+  echo "Customize (Start): Qube Core"
+  dnf -y install perl
+  dnf -y install xinetd
+  installType="qube-core"
+  installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
+  downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  rpm -i $installType-*.rpm 2>&1 | tee $installType.log
+  echo "Customize (End): Qube Core"
+
+  if [ $machineType == Scheduler ]; then
+    echo "Customize (Start): Qube Supervisor"
+    installType="qube-supervisor"
+    installFile="$installType-${versionInfo}.CENTOS_8.2.x86_64.rpm"
+    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
+    echo "Customize (End): Qube Supervisor"
+
+    echo "Customize (Start): Qube Data Relay Agent (DRA)"
+    installType="qube-dra"
+    installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
+    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
+    echo "Customize (End): Qube Data Relay Agent (DRA)"
+  else
+    echo "Customize (Start): Qube Worker"
+    installType="qube-worker"
+    installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
+    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
+    echo "Customize (End): Qube Worker"
+
+    echo "Customize (Start): Qube Client"
+    installType="qube-client"
+    installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
+    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    curl -o $installFile -L $downloadUrl
+    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
+    echo "Customize (End): Qube Client"
+
+    configFile="/etc/qb.conf"
+    sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $configFile
+    sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $configFile
+  fi
+
+  binPaths="$binPaths:$binPathScheduler:$installRoot/sbin"
 fi
 
 if [ $machineType == Workstation ]; then

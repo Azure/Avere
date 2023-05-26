@@ -8,6 +8,25 @@ $binPaths = ""
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
+function StartProcess ($filePath, $argumentList, $logFileName) {
+  if ($logFileName -eq $null) {
+    if ($argumentList -eq $null) {
+      Start-Process -FilePath $filePath -Wait
+    } else {
+      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait
+    }
+  } else {
+    if ($argumentList -eq $null) {
+      Start-Process -FilePath $filePath -Wait -RedirectStandardError $logFileName-err.log -RedirectStandardOutput $logFileName-out.log
+    } else {
+      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardError $logFileName-err.log -RedirectStandardOutput $logFileName-out.log
+    }
+    Get-Content -Path $logFileName-err.log | Tee-Object -FilePath "$logFileName.log" -Append
+    Get-Content -Path $logFileName-out.log | Tee-Object -FilePath "$logFileName.log" -Append
+    Remove-Item -Path $logFileName-err.log, $logFileName-out.log
+  }
+}
+
 Write-Host "Customize (Start): Resize OS Disk"
 $osDriveLetter = "C"
 $partitionSizeActive = (Get-Partition -DriveLetter $osDriveLetter).Size
@@ -37,19 +56,19 @@ $installType = "chocolatey"
 $installFile = "$installType.ps1"
 $downloadUrl = "https://community.chocolatey.org/install.ps1"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Start-Process -FilePath "PowerShell.exe" -ArgumentList "-ExecutionPolicy Unrestricted -File $installFile" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File .\$installFile" $installType
 $binPathChoco = "C:\ProgramData\chocolatey"
 $binPaths += ";$binPathChoco"
 Write-Host "Customize (End): Chocolatey"
 
 Write-Host "Customize (Start): Python"
 $installType = "python"
-Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $installType -y" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+StartProcess $binPathChoco\choco.exe "install $installType -y" $installType
 Write-Host "Customize (End): Python"
 
 Write-Host "Customize (Start): Git"
 $installType = "git"
-Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $installType -y" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+StartProcess $binPathChoco\choco.exe "install $installType -y" $installType
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
@@ -63,28 +82,30 @@ $downloadUrl = "$binStorageHost/VS/$versionInfo/$installFile$binStorageAuth"
 $componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
 $componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
 $componentIds += " --add Microsoft.Component.MSBuild"
-Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+StartProcess .\$installFile "$componentIds --quiet --norestart" $installType
 $binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin\amd64"
 $binPaths += ";$binPathCMake;$binPathMSBuild"
 Write-Host "Customize (End): Visual Studio Build Tools"
 
 if ($gpuProvider -eq "AMD") {
-  Write-Host "Customize (Start): AMD GPU"
-  $installType = "amd-gpu"
-  $installFile = "$installType.exe"
-  $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S" -Wait
-  Start-Process -FilePath "C:\AMD\AMD*\Setup.exe" -ArgumentList "-install -log $binDirectory\$installType.log" -Wait
-  Write-Host "Customize (End): AMD GPU"
+  if ($machineType -like "*NV*" -and $machineType -like "*v4*") {
+    Write-Host "Customize (Start): AMD GPU (NV v4)"
+    $installType = "amd-gpu"
+    $installFile = "$installType.exe"
+    $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    StartProcess .\$installFile /S
+    StartProcess C:\AMD\AMD*\Setup.exe "-install -log $binDirectory\$installType.log"
+    Write-Host "Customize (End): AMD GPU (NV v4)"
+  }
 } elseif ($gpuProvider -eq "NVIDIA") {
   Write-Host "Customize (Start): NVIDIA GPU (GRID)"
   $installType = "nvidia-gpu-grid"
   $installFile = "$installType.exe"
   $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=874181"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\$installType" -Wait
+  StartProcess .\$installFile "-s -n -log:$binDirectory\$installType"
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
@@ -93,7 +114,7 @@ if ($gpuProvider -eq "AMD") {
   $installFile = "cuda_${versionInfo}_531.14_windows.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/CUDA/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "-s -n -log:$binDirectory\$installType" -Wait
+  StartProcess .\$installFile "-s -n -log:$binDirectory\$installType"
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 
   Write-Host "Customize (Start): NVIDIA OptiX"
@@ -102,213 +123,15 @@ if ($gpuProvider -eq "AMD") {
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-32649046.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /O $binDirectory\$installType.log" -Wait
+  StartProcess .\$installFile "/S /O $binDirectory\$installType.log"
   $versionInfo = "v12.0"
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" -Wait -RedirectStandardOutput "$installType-cmake.out.log" -RedirectStandardError "$installType-cmake.err.log"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "$installType-msbuild.out.log" -RedirectStandardError "$installType-msbuild.err.log"
+  StartProcess $binPathCMake\cmake.exe "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" $installType-cmake
+  StartProcess $binPathMSBuild\MSBuild.exe """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" $installType-msbuild
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA OptiX"
-}
-
-if ($machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): Azure CLI"
-  $installType = "azure-cli"
-  $installFile = "$installType.msi"
-  $downloadUrl = "https://aka.ms/installazurecliwindows"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
-  Write-Host "Customize (End): Azure CLI"
-
-  if ($renderManager -like "*Deadline*" -or $renderManager -like "*RoyalRender*") {
-    Write-Host "Customize (Start): NFS Server"
-    Install-WindowsFeature -Name "FS-NFS-Service"
-    Write-Host "Customize (End): NFS Server"
-  }
-} else {
-  Write-Host "Customize (Start): NFS Client"
-  $installType = "nfs-client"
-  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-  Write-Host "Customize (End): NFS Client"
-}
-
-if ($renderManager -like "*Deadline*") {
-  $schedulerVersion = "10.2.1.0"
-  $schedulerInstallPath = "C:\Deadline"
-  $schedulerDatabaseHost = $(hostname)
-  $schedulerDatabasePort = 27100
-  $schedulerDatabasePath = "C:\DeadlineDatabase"
-  $schedulerCertificateFile = "Deadline10Client.pfx"
-  $schedulerBinPath = "$schedulerInstallPath\bin"
-
-  Write-Host "Customize (Start): Deadline Download"
-  $installFile = "Deadline-$schedulerVersion-windows-installers.zip"
-  $downloadUrl = "$binStorageHost/Deadline/$schedulerVersion/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Deadline Download"
-
-  Set-Location -Path "Deadline*"
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Deadline Server"
-    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$schedulerDatabasePort
-    $installType = "deadline-repository"
-    $installFile = "DeadlineRepository-$schedulerVersion-windows-installer.exe"
-    Start-Process -FilePath .\$installFile -ArgumentList "--mode unattended --dbLicenseAcceptance accept --prefix $schedulerInstallPath --dbhost $schedulerDatabaseHost --mongodir $schedulerDatabasePath --installmongodb true" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-    Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
-    Copy-Item -Path $schedulerDatabasePath\certs\$schedulerCertificateFile -Destination $schedulerInstallPath\$schedulerCertificateFile
-    New-NfsShare -Name "Deadline" -Path $schedulerInstallPath -Permission ReadWrite
-    Write-Host "Customize (End): Deadline Server"
-  }
-
-  Write-Host "Customize (Start): Deadline Client"
-  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$schedulerBinPath\deadlineworker.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$schedulerBinPath\deadlinemonitor.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$schedulerBinPath\deadlinelauncher.exe"
-  $installFile = "DeadlineClient-$schedulerVersion-windows-installer.exe"
-  $installArgs = "--mode unattended --prefix $schedulerInstallPath"
-  if ($machineType -eq "Scheduler") {
-    $installArgs = "$installArgs --slavestartup false --launcherservice false"
-  } else {
-    if ($machineType -eq "Farm") {
-      $workerStartup = "true"
-    } else {
-      $workerStartup = "false"
-    }
-    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
-  }
-  Start-Process -FilePath $installFile -ArgumentList $installArgs -Wait
-  Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log
-  Set-Location -Path $binDirectory
-  Write-Host "Customize (End): Deadline Client"
-
-  Write-Host "Customize (Start): Deadline Monitor"
-  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
-  $scriptShell = New-Object -ComObject WScript.Shell
-  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-  $shortcut.WorkingDirectory = $schedulerBinPath
-  $shortcut.TargetPath = "$schedulerBinPath\deadlinemonitor.exe"
-  $shortcut.Save()
-  Write-Host "Customize (End): Deadline Monitor"
-
-  $binPaths += ";$schedulerBinPath"
-}
-
-if ($renderManager -like "*RoyalRender*") {
-  $schedulerVersion = "9.0.05"
-  $schedulerInstallPath = "\RoyalRender"
-  $schedulerBinPath = "C:$schedulerInstallPath\bin\win64"
-
-  Write-Host "Customize (Start): Royal Render Download"
-  $installFile = "RoyalRender__${schedulerVersion}__installer.zip"
-  $downloadUrl = "$binStorageHost/RoyalRender/$schedulerVersion/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Royal Render Download"
-
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Royal Render Server"
-    $installType = "royal-render"
-    $installPath = "RoyalRender*"
-    $installFile = "rrSetup_win.exe"
-    $rrShareName = $schedulerInstallPath.TrimStart("\")
-    $rrRootShare = "\\$(hostname)$schedulerInstallPath"
-    New-Item -ItemType Directory -Path $schedulerInstallPath
-    New-SmbShare -Name $rrShareName -Path "C:$schedulerInstallPath" -FullAccess "Everyone"
-    Start-Process -FilePath .\$installPath\$installPath\$installFile -ArgumentList "-console -rrRoot $rrRootShare" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-    Remove-SmbShare -Name $rrShareName -Force
-    New-NfsShare -Name "RoyalRender" -Path C:$schedulerInstallPath -Permission ReadWrite
-    Write-Host "Customize (End): Royal Render Server"
-  }
-
-  Write-Host "Customize (Start): Royal Render Viewer"
-  $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
-  $scriptShell = New-Object -ComObject WScript.Shell
-  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-  $shortcut.WorkingDirectory = $schedulerBinPath
-  $shortcut.TargetPath = "$schedulerBinPath\rrViewer.exe"
-  $shortcut.Save()
-  Write-Host "Customize (End): Royal Render Viewer"
-
-  $binPaths += ";$schedulerBinPath"
-}
-
-if ($renderManager -like "*Qube*") {
-  $schedulerVersion = "8.0-0"
-  $schedulerConfigFile = "C:\ProgramData\pfx\qube\qb.conf"
-  $schedulerInstallPath = "C:\Program Files\pfx\qube"
-  $schedulerBinPath = "$schedulerInstallPath\bin"
-
-  Write-Host "Customize (Start): Strawberry Perl"
-  $installType = "strawberryperl"
-  Start-Process -FilePath "$binPathChoco\choco" -ArgumentList "install $installType -y" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
-  Write-Host "Customize (End): Strawberry Perl"
-
-  Write-Host "Customize (Start): Qube Core"
-  $installType = "qube-core"
-  $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-  $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
-  Write-Host "Customize (End): Qube Core"
-
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Qube Supervisor"
-    netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor (TCP)" dir=in action=allow protocol=TCP localport=50001,50002
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor Proxy" dir=in action=allow protocol=TCP localport=50555,50556
-    $installType = "qube-supervisor"
-    $installFile = "$installType-${schedulerVersion}-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
-    $binPaths += ";C:\Program Files\pfx\pgsql\bin"
-    Write-Host "Customize (End): Qube Supervisor"
-
-    Write-Host "Customize (Start): Qube Data Relay Agent (DRA)"
-    netsh advfirewall firewall add rule name="Allow Qube Data Relay Agent (DRA)" dir=in action=allow protocol=TCP localport=5001
-    $installType = "qube-dra"
-    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
-    Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
-  } else {
-    Write-Host "Customize (Start): Qube Worker"
-    netsh advfirewall firewall add rule name="Allow Qube Worker (TCP)" dir=in action=allow protocol=TCP localport=50011
-    netsh advfirewall firewall add rule name="Allow Qube Worker (UDP)" dir=in action=allow protocol=UDP localport=50011
-    $installType = "qube-worker"
-    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
-    Write-Host "Customize (End): Qube Worker"
-
-    Write-Host "Customize (Start): Qube Client"
-    $installType = "qube-client"
-    $installFile = "$installType-$schedulerVersion-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$schedulerVersion/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Start-Process -FilePath $installFile -ArgumentList "/quiet /norestart /log $installType.log" -Wait
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$schedulerInstallPath\QubeUI"
-    $shortcut.TargetPath = "$schedulerInstallPath\QubeUI\QubeUI.bat"
-    $shortcut.IconLocation = "$schedulerInstallPath\lib\install\qube_icon.ico"
-    $shortcut.Save()
-    Write-Host "Customize (End): Qube Client"
-
-    $configFileText = Get-Content -Path $schedulerConfigFile
-    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = scheduler.content.studio")
-    $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
-    Set-Content -Path $schedulerConfigFile -Value $configFileText
-  }
-
-  $binPaths += ";$schedulerBinPath;$schedulerInstallPath\sbin"
 }
 
 if ($renderEngines -contains "*Maya*") {
@@ -330,22 +153,22 @@ if ($renderEngines -contains "PBRT") {
   $installType = "pbrt-$versionInfo"
   $installPath = "C:\Program Files\PBRT"
   $installPathV3 = "$installPath\$versionInfo"
-  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/$installType.git" -Wait -RedirectStandardOutput "$installType-git.out.log" -RedirectStandardError "$installType-git.err.log"
-  New-Item -ItemType Directory -Path "$installPathV3" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$installPathV3"" -S $binDirectory\$installType" -Wait -RedirectStandardOutput "$installType-cmake.out.log" -RedirectStandardError "$installType-cmake.err.log"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$installPathV3\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "$installType-msbuild.out.log" -RedirectStandardError "$installType-msbuild.err.log"
-  New-Item -ItemType SymbolicLink -Target "$installPathV3\Release\pbrt.exe" -Path "$installPath\pbrt3"
+  StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" $installType-git
+  New-Item -ItemType Directory -Path $installPathV3 -Force
+  StartProcess $binPathCMake\cmake.exe "-B ""$installPathV3"" -S $binDirectory\$installType" $installType-cmake
+  StartProcess $binPathMSBuild\MSBuild.exe """$installPathV3\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
+  New-Item -ItemType SymbolicLink -Target $installPathV3\Release\pbrt.exe -Path $installPath\pbrt3
   Write-Host "Customize (End): PBRT v3"
 
   Write-Host "Customize (Start): PBRT v4"
   $versionInfo = "v4"
   $installType = "pbrt-$versionInfo"
   $installPathV4 = "$installPath\$versionInfo"
-  Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/mmp/$installType.git" -Wait -RedirectStandardOutput "$installType-git.out.log" -RedirectStandardError "$installType-git.err.log"
-  New-Item -ItemType Directory -Path "$installPathV4" -Force
-  Start-Process -FilePath "$binPathCMake\cmake.exe" -ArgumentList "-B ""$installPathV4"" -S $binDirectory\$installType" -Wait -RedirectStandardOutput "$installType-cmake.out.log" -RedirectStandardError "$installType-cmake.err.log"
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$installPathV4\PBRT-$versionInfo.sln"" -p:Configuration=Release" -Wait -RedirectStandardOutput "$installType-msbuild.out.log" -RedirectStandardError "$installType-msbuild.err.log"
-  New-Item -ItemType SymbolicLink -Target "$installPathV4\Release\pbrt.exe" -Path "$installPath\pbrt4"
+  StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" $installType-git
+  New-Item -ItemType Directory -Path $installPathV4 -Force
+  StartProcess $binPathCMake\cmake.exe "-B ""$installPathV4"" -S $binDirectory\$installType" $installType-cmake
+  StartProcess $binPathMSBuild\MSBuild.exe """$installPathV4\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
+  New-Item -ItemType SymbolicLink -Target $installPathV4\Release\pbrt.exe -Path $installPath\pbrt4
   Write-Host "Customize (End): PBRT v4"
 
   $binPaths += ";$installPath"
@@ -370,7 +193,7 @@ if ($renderEngines -contains "Houdini") {
   if ($renderEngines -contains "Unreal") {
     $installArgs += " /EngineUnreal=Yes"
   }
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /AcceptEULA=$versionEULA $installArgs" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  StartProcess .\$installFile "/S /AcceptEULA=$versionEULA $installArgs" $installType
   $binPaths += ";C:\Program Files\Side Effects Software\Houdini $versionInfo\bin"
   Write-Host "Customize (End): Houdini"
 }
@@ -382,7 +205,7 @@ if ($renderEngines -contains "Blender") {
   $installFile = "$installType-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath "msiexec.exe" -ArgumentList ('/i ' + $installFile + ' /quiet /norestart /log ' + $installType + '.log') -Wait
+  StartProcess $installFile "/quiet /norestart /log $installType.log"
   $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.5"
   Write-Host "Customize (End): Blender"
 }
@@ -390,7 +213,7 @@ if ($renderEngines -contains "Blender") {
 if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+PixelStream") {
   Write-Host "Customize (Start): Visual Studio Workloads"
   $versionInfo = "2022"
-  $installType = "unreal-vs"
+  $installType = "unreal-visual-studio"
   $installFile = "VisualStudioSetup.exe"
   $downloadUrl = "$binStorageHost/VS/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
@@ -403,23 +226,23 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $componentIds += " --add Microsoft.VisualStudio.Workload.NativeCrossPlat"
   $componentIds += " --add Microsoft.VisualStudio.Workload.ManagedDesktop"
   $componentIds += " --add Microsoft.VisualStudio.Workload.Universal"
-  Start-Process -FilePath .\$installFile -ArgumentList "$componentIds --quiet --norestart" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  StartProcess .\$installFile "$componentIds --quiet --norestart" $installType
   Write-Host "Customize (End): Visual Studio Workloads"
 
   Write-Host "Customize (Start): Unreal Engine Setup"
-  $installType = "net-fx3"
-  Start-Process -FilePath "dism.exe" -ArgumentList "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  $installType = "dotnet-fx3"
+  StartProcess dism.exe "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" $installType
   Set-Location -Path C:\
-  $versionInfo = "5.1.1"
+  $versionInfo = "5.2.0"
   $installType = "unreal-engine"
-  $installPath = "C:\Program Files\Unreal"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Expand-Archive -Path $installFile
 
-  New-Item -ItemType Directory -Path "$installPath"
-  Move-Item -Path "Unreal*\Unreal*\*" -Destination "$installPath"
+  $installPath = "C:\Program Files\Unreal"
+  New-Item -ItemType Directory -Path $installPath
+  Move-Item -Path "Unreal*\Unreal*\*" -Destination $installPath
   Remove-Item -Path "Unreal*" -Exclude "*.zip" -Recurse
   Set-Location -Path $binDirectory
   $installFile = "$installPath\Setup.bat"
@@ -428,7 +251,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $scriptFileText = $scriptFileText.Replace("/register", "/register /unattended")
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
-  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "$installType-setup.out.log" -RedirectStandardError "$installType-setup.err.log"
+  StartProcess $installFile $null $installType-setup
   Write-Host "Customize (End): Unreal Engine Setup"
 
   Write-Host "Customize (Start): Unreal Project Files Generate"
@@ -441,42 +264,270 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
-  Start-Process -FilePath "$installFile" -Wait -RedirectStandardOutput "unreal-project-files-generate.out.log" -RedirectStandardError "unreal-project-files-generate.err.log"
+  StartProcess $installFile $null unreal-project-files-generate
   Write-Host "Customize (End): Unreal Project Files Generate"
 
   Write-Host "Customize (Start): Unreal Engine Build"
   [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
   [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$installPath\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
-  Start-Process -FilePath "$binPathMSBuild\MSBuild.exe" -ArgumentList """$installPath\UE5.sln"" -p:Configuration=""Development Client"" -p:Platform=Win64 -restore" -Wait -RedirectStandardOutput "$installType-build.out.log" -RedirectStandardError "$installType-build.err.log"
+  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\UE5.sln"" -p:Configuration=""Development Editor"" -p:Platform=Win64 -restore" $installType-msbuild
   Write-Host "Customize (End): Unreal Engine Build"
 
   if ($renderEngines -contains "Unreal+PixelStream") {
     Write-Host "Customize (Start): Unreal Pixel Streaming"
+    $unrealVersion = $versionInfo
+    $versionInfo = "UE5.2-0.6.2"
     $installType = "unreal-stream"
-    Start-Process -FilePath "$binPathGit\git.exe" -ArgumentList "clone --recursive https://github.com/EpicGames/PixelStreamingInfrastructure --branch UE5.1" -Wait -RedirectStandardOutput "$installType-git.out.log" -RedirectStandardError "$installType-git.err.log"
-    $installFile = "PixelStreamingInfrastructure\SignallingWebServer\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "$installType-signalling.out.log" -RedirectStandardError "$installType-signalling.err.log"
-    $installFile = "PixelStreamingInfrastructure\Matchmaker\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "$installType-matchmaker.out.log" -RedirectStandardError "$installType-matchmaker.err.log"
-    $installFile = "PixelStreamingInfrastructure\SFU\platform_scripts\cmd\setup.bat"
-    Start-Process -FilePath .\$installFile -Wait -RedirectStandardOutput "$installType-sfu.out.log" -RedirectStandardError "$installType-sfu.err.log"
+    $installFile = "PixelStreamingInfrastructure-$versionInfo.zip"
+    $downloadUrl = "$binStorageHost/Unreal/$unrealVersion/$installFile$binStorageAuth"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Expand-Archive -Path $installFile
+    $installFile = "PixelStreaming*\PixelStreaming*\SignallingWebServer\platform_scripts\cmd\setup.bat"
+    StartProcess .\$installFile $null $installType-signalling
+    $installFile = "PixelStreaming*\PixelStreaming*\Matchmaker\platform_scripts\cmd\setup.bat"
+    StartProcess .\$installFile $null $installType-matchmaker
+    $installFile = "PixelStreaming*\PixelStreaming*\SFU\platform_scripts\cmd\setup.bat"
+    StartProcess .\$installFile $null $installType-sfu
     Write-Host "Customize (End): Unreal Pixel Streaming"
   }
 
+  $binPathUnreal = "$installPath\Engine\Binaries\Win64"
+  $binPaths += ";$binPathUnreal"
+
   if ($machineType -eq "Workstation") {
     Write-Host "Customize (Start): Unreal Editor"
-    $installPathEditor = "$installPath\Engine\Binaries\Win64"
-    netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$installPathEditor\UnrealEditor.exe"
+    netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$binPathUnreal\UnrealEditor.exe"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$installPathEditor"
-    $shortcut.TargetPath = "$installPathEditor\UnrealEditor.exe"
+    $shortcut.WorkingDirectory = "$binPathUnreal"
+    $shortcut.TargetPath = "$binPathUnreal\UnrealEditor.exe"
     $shortcut.Save()
     Write-Host "Customize (End): Unreal Editor"
   }
+}
 
-  $binPaths += ";$installPath"
+if ($machineType -eq "Scheduler") {
+  Write-Host "Customize (Start): Azure CLI"
+  $installType = "azure-cli"
+  $installFile = "$installType.msi"
+  $downloadUrl = "https://aka.ms/installazurecliwindows"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  StartProcess $installFile "/quiet /norestart /log $installType.log"
+  Write-Host "Customize (End): Azure CLI"
+
+  if ($renderManager -like "*Deadline*" -or $renderManager -like "*RoyalRender*") {
+    Write-Host "Customize (Start): NFS Server"
+    Install-WindowsFeature -Name "FS-NFS-Service"
+    Write-Host "Customize (End): NFS Server"
+  }
+} else {
+  Write-Host "Customize (Start): NFS Client"
+  $installType = "nfs-client"
+  StartProcess dism.exe "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" $installType
+  Write-Host "Customize (End): NFS Client"
+}
+
+if ($renderManager -like "*Flamenco*") {
+  $versionInfo = "3.2"
+
+  Write-Host "Customize (Start): Flamenco Download"
+  $installFile = "flamenco-$versionInfo-windows-amd64.zip"
+  $downloadUrl = "$binStorageHost/Flamenco/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Flamenco Download"
+
+  Set-Location -Path flamenco*
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Flamenco Server"
+    $installType = "flamenco-server"
+    # StartProcess .\flamenco-manager.exe --quiet $installType
+    Write-Host "Customize (End): Flamenco Server"
+  } else {
+    Write-Host "Customize (Start): Flamenco Client"
+    $installType = "flamenco-client"
+    # StartProcess .\flamenco-worker.exe --quiet $installType
+    Write-Host "Customize (End): Flamenco Client"
+  }
+  Set-Location -Path $binDirectory
+}
+
+if ($renderManager -like "*Deadline*") {
+  $versionInfo = "10.2.1.0"
+  $installRoot = "C:\Deadline"
+  $databaseHost = $(hostname)
+  $databasePort = 27100
+  $databasePath = "C:\DeadlineDatabase"
+  $certificateFile = "Deadline10Client.pfx"
+  $binPathScheduler = "$installRoot\bin"
+
+  Write-Host "Customize (Start): Deadline Download"
+  $installFile = "Deadline-$versionInfo-windows-installers.zip"
+  $downloadUrl = "$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Deadline Download"
+
+  Set-Location -Path Deadline*
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Deadline Server"
+    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$databasePort
+    $installType = "deadline-repository"
+    $installFile = "DeadlineRepository-$versionInfo-windows-installer.exe"
+    StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true"
+    Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
+    Copy-Item -Path $databasePath\certs\$certificateFile -Destination $installRoot\$certificateFile
+    New-NfsShare -Name "Deadline" -Path $installRoot -Permission ReadWrite
+    Write-Host "Customize (End): Deadline Server"
+  }
+
+  Write-Host "Customize (Start): Deadline Client"
+  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$binPathScheduler\deadlineworker.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$binPathScheduler\deadlinemonitor.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$binPathScheduler\deadlinelauncher.exe"
+  $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
+  $installArgs = "--mode unattended --prefix $installRoot"
+  if ($machineType -eq "Scheduler") {
+    $installArgs = "$installArgs --slavestartup false --launcherservice false"
+  } else {
+    if ($machineType -eq "Farm") {
+      $workerStartup = "true"
+    } else {
+      $workerStartup = "false"
+    }
+    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+  }
+  StartProcess .\$installFile $installArgs
+  Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): Deadline Client"
+
+  Write-Host "Customize (Start): Deadline Monitor"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $binPathScheduler
+  $shortcut.TargetPath = "$binPathScheduler\deadlinemonitor.exe"
+  $shortcut.Save()
+  Write-Host "Customize (End): Deadline Monitor"
+
+  $binPaths += ";$binPathScheduler"
+}
+
+if ($renderManager -like "*RoyalRender*") {
+  $versionInfo = "9.0.05"
+  $installRoot = "\RoyalRender"
+  $binPathScheduler = "C:$installRoot\bin\win64"
+
+  Write-Host "Customize (Start): Royal Render Download"
+  $installFile = "RoyalRender__${versionInfo}__installer.zip"
+  $downloadUrl = "$binStorageHost/RoyalRender/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Royal Render Download"
+
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Royal Render Server"
+    $installType = "royal-render"
+    $installPath = "RoyalRender*"
+    $installFile = "rrSetup_win.exe"
+    $rrShareName = $installRoot.TrimStart("\")
+    $rrRootShare = "\\$(hostname)$installRoot"
+    New-Item -ItemType Directory -Path $installRoot
+    New-SmbShare -Name $rrShareName -Path "C:$installRoot" -FullAccess "Everyone"
+    StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
+    Remove-SmbShare -Name $rrShareName -Force
+    New-NfsShare -Name "RoyalRender" -Path C:$installRoot -Permission ReadWrite
+    Write-Host "Customize (End): Royal Render Server"
+  }
+
+  Write-Host "Customize (Start): Royal Render Viewer"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $binPathScheduler
+  $shortcut.TargetPath = "$binPathScheduler\rrViewer.exe"
+  $shortcut.Save()
+  Write-Host "Customize (End): Royal Render Viewer"
+
+  $binPaths += ";$binPathScheduler"
+}
+
+if ($renderManager -like "*Qube*") {
+  $versionInfo = "8.0-0"
+  $installRoot = "C:\Program Files\pfx\qube"
+  $binPathScheduler = "$installRoot\bin"
+
+  Write-Host "Customize (Start): Strawberry Perl"
+  $installType = "strawberryperl"
+  StartProcess $binPathChoco\choco.exe "install $installType -y" $installType
+  Write-Host "Customize (End): Strawberry Perl"
+
+  Write-Host "Customize (Start): Qube Core"
+  $installType = "qube-core"
+  $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
+  $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  StartProcess $installFile "/quiet /norestart /log $installType.log"
+  Write-Host "Customize (End): Qube Core"
+
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Qube Supervisor"
+    netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor (TCP)" dir=in action=allow protocol=TCP localport=50001,50002
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
+    netsh advfirewall firewall add rule name="Allow Qube Supervisor Proxy" dir=in action=allow protocol=TCP localport=50555,50556
+    $installType = "qube-supervisor"
+    $installFile = "$installType-${versionInfo}-WIN32-6.3-x64.msi"
+    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    $binPaths += ";C:\Program Files\pfx\pgsql\bin"
+    Write-Host "Customize (End): Qube Supervisor"
+
+    Write-Host "Customize (Start): Qube Data Relay Agent (DRA)"
+    netsh advfirewall firewall add rule name="Allow Qube Data Relay Agent (DRA)" dir=in action=allow protocol=TCP localport=5001
+    $installType = "qube-dra"
+    $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
+    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
+  } else {
+    Write-Host "Customize (Start): Qube Worker"
+    netsh advfirewall firewall add rule name="Allow Qube Worker (TCP)" dir=in action=allow protocol=TCP localport=50011
+    netsh advfirewall firewall add rule name="Allow Qube Worker (UDP)" dir=in action=allow protocol=UDP localport=50011
+    $installType = "qube-worker"
+    $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
+    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    Write-Host "Customize (End): Qube Worker"
+
+    Write-Host "Customize (Start): Qube Client"
+    $installType = "qube-client"
+    $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
+    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    StartProcess $installFile "/quiet /norestart /log $installType.log"
+    $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
+    $scriptShell = New-Object -ComObject WScript.Shell
+    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+    $shortcut.WorkingDirectory = "$installRoot\QubeUI"
+    $shortcut.TargetPath = "$installRoot\QubeUI\QubeUI.bat"
+    $shortcut.IconLocation = "$installRoot\lib\install\qube_icon.ico"
+    $shortcut.Save()
+    Write-Host "Customize (End): Qube Client"
+
+    $configFile = "C:\ProgramData\pfx\qube\qb.conf"
+    $configFileText = Get-Content -Path $configFile
+    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = scheduler.content.studio")
+    $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
+    Set-Content -Path $configFile -Value $configFileText
+  }
+
+  $binPaths += ";$binPathScheduler;$installRoot\sbin"
 }
 
 if ($machineType -eq "Farm") {
@@ -490,11 +541,11 @@ if ($machineType -eq "Farm") {
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Teradici PCoIP"
   $versionInfo = "23.04.1"
-  $installType = if ($gpuProvider -eq "") {"pcoip-agent-standard"} else {"pcoip-agent-graphics"}
+  $installType = if ([string]::IsNullOrEmpty($gpuProvider)) {"pcoip-agent-standard"} else {"pcoip-agent-graphics"}
   $installFile = "${installType}_$versionInfo.exe"
   $downloadUrl = "$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Start-Process -FilePath .\$installFile -ArgumentList "/S /NoPostReboot /Force" -Wait -RedirectStandardOutput "$installType.out.log" -RedirectStandardError "$installType.err.log"
+  StartProcess .\$installFile "/S /NoPostReboot /Force" $installType
   Write-Host "Customize (End): Teradici PCoIP"
 }
 
