@@ -311,7 +311,7 @@ if [[ $renderManager == *Flamenco* ]]; then
   tar -xzf $installFile
   echo "Customize (End): Flamenco Download"
 
-  cd flamenco*
+  cd "flamenco*"
   if [ $machineType == Scheduler ]; then
     echo "Customize (Start): Flamenco Server"
     installType="flamenco-server"

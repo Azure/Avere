@@ -135,7 +135,7 @@ if ($gpuProvider -eq "AMD") {
   Write-Host "Customize (End): NVIDIA OptiX"
 }
 
-if ($renderEngines -contains "*Maya*") {
+if ($renderEngines -contains "Maya") {
   Write-Host "Customize (Start): Maya"
   $versionInfo = "2024_0_1"
   $installFile = "Autodesk_Maya_${versionInfo}_Update_Windows_64bit_dlm.zip"
@@ -317,7 +317,7 @@ if ($machineType -eq "Scheduler") {
   StartProcess $installFile "/quiet /norestart /log $installType.log" $null
   Write-Host "Customize (End): Azure CLI"
 
-  if ($renderManager -like "*Deadline*" -or $renderManager -like "*RoyalRender*") {
+  if ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"
     Write-Host "Customize (End): NFS Server"
@@ -329,7 +329,7 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-if ($renderManager -like "*Flamenco*") {
+if ("$renderManager" -like "*Flamenco*") {
   $versionInfo = "3.2"
 
   Write-Host "Customize (Start): Flamenco Download"
@@ -354,7 +354,7 @@ if ($renderManager -like "*Flamenco*") {
   Set-Location -Path $binDirectory
 }
 
-if ($renderManager -like "*Deadline*") {
+if ("$renderManager" -like "*Deadline*") {
   $versionInfo = "10.2.1.0"
   $installRoot = "C:\Deadline"
   $databaseHost = $(hostname)
@@ -416,7 +416,7 @@ if ($renderManager -like "*Deadline*") {
   $binPaths += ";$binPathScheduler"
 }
 
-if ($renderManager -like "*RoyalRender*") {
+if ("$renderManager" -like "*RoyalRender*") {
   $versionInfo = "9.0.05"
   $installRoot = "\RoyalRender"
   $binPathScheduler = "C:$installRoot\bin\win64"
@@ -455,7 +455,7 @@ if ($renderManager -like "*RoyalRender*") {
   $binPaths += ";$binPathScheduler"
 }
 
-if ($renderManager -like "*Qube*") {
+if ("$renderManager" -like "*Qube*") {
   $versionInfo = "8.0-0"
   $installRoot = "C:\Program Files\pfx\qube"
   $binPathScheduler = "$installRoot\bin"
