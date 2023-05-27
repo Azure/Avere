@@ -326,7 +326,7 @@ if [[ $renderManager == *Flamenco* ]]; then
   cd $binDirectory
 fi
 
-if [[ $renderManager == *Flamenco* ]]; then
+if [[ $renderManager == *Deadline* ]]; then
   versionInfo="10.2.1.0"
   installRoot="/Deadline"
   serverMount="/DeadlineServer"
