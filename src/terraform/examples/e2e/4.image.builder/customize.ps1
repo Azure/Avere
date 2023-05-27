@@ -329,31 +329,6 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-if ("$renderManager" -like "*Flamenco*") {
-  $versionInfo = "3.2"
-
-  Write-Host "Customize (Start): Flamenco Download"
-  $installFile = "flamenco-$versionInfo-windows-amd64.zip"
-  $downloadUrl = "$binStorageHost/Flamenco/$versionInfo/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Flamenco Download"
-
-  Set-Location -Path flamenco*
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Flamenco Server"
-    $installType = "flamenco-server"
-    # StartProcess .\flamenco-manager.exe --quiet $installType
-    Write-Host "Customize (End): Flamenco Server"
-  } else {
-    Write-Host "Customize (Start): Flamenco Client"
-    $installType = "flamenco-client"
-    # StartProcess .\flamenco-worker.exe --quiet $installType
-    Write-Host "Customize (End): Flamenco Client"
-  }
-  Set-Location -Path $binDirectory
-}
-
 if ("$renderManager" -like "*Deadline*") {
   $versionInfo = "10.2.1.0"
   $installRoot = "C:\Deadline"
@@ -414,6 +389,31 @@ if ("$renderManager" -like "*Deadline*") {
   Write-Host "Customize (End): Deadline Monitor"
 
   $binPaths += ";$binPathScheduler"
+}
+
+if ("$renderManager" -like "*Flamenco*") {
+  $versionInfo = "3.2"
+
+  Write-Host "Customize (Start): Flamenco Download"
+  $installFile = "flamenco-$versionInfo-windows-amd64.zip"
+  $downloadUrl = "$binStorageHost/Flamenco/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Flamenco Download"
+
+  Set-Location -Path flamenco*
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Flamenco Server"
+    $installType = "flamenco-server"
+    # StartProcess .\flamenco-manager.exe --quiet $installType
+    Write-Host "Customize (End): Flamenco Server"
+  } else {
+    Write-Host "Customize (Start): Flamenco Client"
+    $installType = "flamenco-client"
+    # StartProcess .\flamenco-worker.exe --quiet $installType
+    Write-Host "Customize (End): Flamenco Client"
+  }
+  Set-Location -Path $binDirectory
 }
 
 if ("$renderManager" -like "*RoyalRender*") {

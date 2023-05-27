@@ -25,12 +25,12 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
-# dnf -y install gcc perl elfutils-libelf-devel # openssl-devel bison flex
-# installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
-# downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
-# curl -o $installFile -L $downloadUrl
-# rpm -i $installFile
-# dnf -y install python3-devel bc git lsof unzip
+dnf -y install gcc perl elfutils-libelf-devel # openssl-devel bison flex
+installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
+downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
+curl -o $installFile -L $downloadUrl
+rpm -i $installFile
+dnf -y install python3-devel bc git lsof unzip
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
 fi
@@ -303,31 +303,6 @@ if [ $machineType == Scheduler ]; then
   fi
 fi
 
-if [[ $renderManager == *Flamenco* ]]; then
-  versionInfo="3.2"
-
-  echo "Customize (Start): Flamenco Download"
-  installFile="flamenco-$versionInfo-linux-amd64.tar.gz"
-  downloadUrl="$binStorageHost/Flamenco/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  echo "Customize (End): Flamenco Download"
-
-  cd "flamenco*"
-  if [ $machineType == Scheduler ]; then
-    echo "Customize (Start): Flamenco Server"
-    installType="flamenco-server"
-    # ./flamenco-manager --quiet 2>&1 | tee $installType.log
-    echo "Customize (End): Flamenco Server"
-  else
-    echo "Customize (Start): Flamenco Client"
-    installType="flamenco-client"
-    # ./flamenco-worker --quiet 2>&1 | tee $installType.log
-    echo "Customize (End): Flamenco Client"
-  fi
-  cd $binDirectory
-fi
-
 if [[ $renderManager == *Deadline* ]]; then
   versionInfo="10.2.1.0"
   installRoot="/Deadline"
@@ -399,10 +374,35 @@ if [[ $renderManager == *Deadline* ]]; then
   fi
   $installPath/$installFile $installArgs
   cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-  echo "$binPathScheduler/deadlinecommand -StoreDatabaseCredentials $schedulerDatabaseUser $servicePassword" >> $aaaProfile
+  echo "$binPathScheduler/deadlinecommand -StoreDatabaseCredentials $databaseUser $servicePassword" >> $aaaProfile
   echo "Customize (End): Deadline Client"
 
   binPaths="$binPaths:$binPathScheduler"
+fi
+
+if [[ $renderManager == *Flamenco* ]]; then
+  versionInfo="3.2"
+
+  echo "Customize (Start): Flamenco Download"
+  installFile="flamenco-$versionInfo-linux-amd64.tar.gz"
+  downloadUrl="$binStorageHost/Flamenco/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  echo "Customize (End): Flamenco Download"
+
+  cd "flamenco*"
+  if [ $machineType == Scheduler ]; then
+    echo "Customize (Start): Flamenco Server"
+    installType="flamenco-server"
+    # ./flamenco-manager --quiet 2>&1 | tee $installType.log
+    echo "Customize (End): Flamenco Server"
+  else
+    echo "Customize (Start): Flamenco Client"
+    installType="flamenco-client"
+    # ./flamenco-worker --quiet 2>&1 | tee $installType.log
+    echo "Customize (End): Flamenco Client"
+  fi
+  cd $binDirectory
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
@@ -508,7 +508,4 @@ if [ $machineType == Workstation ]; then
   echo "Customize (End): Teradici PCoIP"
 fi
 
-echo "binPaths=$binPaths"
 echo "PATH=$PATH$binPaths" >> $aaaProfile
-echo "aaaProfile"
-cat $aaaProfile
