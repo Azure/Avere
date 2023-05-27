@@ -508,4 +508,7 @@ if [ $machineType == Workstation ]; then
   echo "Customize (End): Teradici PCoIP"
 fi
 
+echo "binPaths=$binPaths"
 echo "PATH=$PATH$binPaths" >> $aaaProfile
+echo "aaaProfile"
+cat $aaaProfile
