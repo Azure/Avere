@@ -25,13 +25,12 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
-dnf -y install gcc perl elfutils-libelf-devel # openssl-devel bison flex
-installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
-downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
-curl -o $installFile -L $downloadUrl
-rpm -i $installFile
-dnf -y install epel-release
-dnf -y install dkms python3-devel bc git lsof unzip
+# dnf -y install gcc perl elfutils-libelf-devel # openssl-devel bison flex
+# installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
+# downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
+# curl -o $installFile -L $downloadUrl
+# rpm -i $installFile
+# dnf -y install python3-devel bc git lsof unzip
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
 fi
@@ -49,6 +48,9 @@ binPaths="$binPaths:$binPathCMake"
 echo "Customize (End): Image Build Platform"
 
 if [ "$gpuProvider" == NVIDIA ]; then
+  dnf -y install epel-release
+  dnf -y install dkms
+
   echo "Customize (Start): NVIDIA GPU (GRID)"
   installType="nvidia-gpu-grid"
   installFile="$installType.run"
@@ -190,6 +192,53 @@ if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (End): Blender"
 fi
 
+if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
+  echo "Customize (Start): Unreal Engine Setup"
+  versionInfo="5.2.0"
+  installType="unreal-engine"
+  installPath="/usr/local/unreal"
+  installFile="UnrealEngine-$versionInfo-release.tar.gz"
+  downloadUrl="$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  mkdir -p $installPath
+  mv UnrealEngine-$versionInfo-release/* $installPath
+  $installPath/Setup.sh 2>&1 | tee $installType-setup.log
+  echo "Customize (End): Unreal Engine Setup"
+
+  echo "Customize (Start): Unreal Project Files Generate"
+  $installPath/GenerateProjectFiles.sh 2>&1 | tee unreal-project-files-generate.log
+  echo "Customize (End): Unreal Project Files Generate"
+
+  echo "Customize (Start): Unreal Engine Build"
+  make -C $installPath 2>&1 | tee $installType-make.log
+  echo "Customize (End): Unreal Engine Build"
+
+  if [[ $renderEngines == *Unreal+PixelStream* ]]; then
+    echo "Customize (Start): Unreal Pixel Streaming"
+    dnf -y install coturn
+    unrealVersion=$versionInfo
+    versionInfo="UE5.2-0.6.2"
+    installType="unreal-stream"
+    installFile="PixelStreamingInfrastructure-$versionInfo.tar.gz"
+    downloadUrl="$binStorageHost/Unreal/$unrealVersion/$installFile$binStorageAuth"
+    curl -o $installFile -L $downloadUrl
+    tar -xzf $installFile
+    installFile="PixelStreamingInfrastructure-$versionInfo/SignallingWebServer/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 2>&1 | tee $installType-signalling.log
+    installFile="PixelStreamingInfrastructure-$versionInfo/Matchmaker/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 2>&1 | tee $installType-matchmaker.log
+    installFile="PixelStreamingInfrastructure-$versionInfo/SFU/platform_scripts/bash/setup.sh"
+    chmod +x $installFile
+    ./$installFile 2>&1 | tee $installType-sfu.log
+    echo "Customize (End): Unreal Pixel Streaming"
+  fi
+
+  binPaths="$binPaths:$installPath/Engine/Binaries/Linux"
+fi
+
 if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (Start): MoonRay"
   dnf -y install mesa-libGL
@@ -237,53 +286,6 @@ if [[ $renderEngines == *MoonRay* ]]; then
   echo "source /installs/openmoonray/scripts/setup.sh" >> $aaaProfile
   cd $binDirectory
   echo "Customize (End): MoonRay"
-fi
-
-if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
-  echo "Customize (Start): Unreal Engine Setup"
-  versionInfo="5.2.0"
-  installType="unreal-engine"
-  installPath="/usr/local/unreal"
-  installFile="UnrealEngine-$versionInfo-release.tar.gz"
-  downloadUrl="$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  mkdir -p $installPath
-  mv UnrealEngine-$versionInfo-release/* $installPath
-  $installPath/Setup.sh 2>&1 | tee $installType-setup.log
-  echo "Customize (End): Unreal Engine Setup"
-
-  echo "Customize (Start): Unreal Project Files Generate"
-  $installPath/GenerateProjectFiles.sh 2>&1 | tee unreal-project-files-generate.log
-  echo "Customize (End): Unreal Project Files Generate"
-
-  echo "Customize (Start): Unreal Engine Build"
-  make -C $installPath 2>&1 | tee $installType-make.log
-  echo "Customize (End): Unreal Engine Build"
-
-  if [[ $renderEngines == *Unreal+PixelStream* ]]; then
-    echo "Customize (Start): Unreal Pixel Streaming"
-    dnf -y install coturn
-    unrealVersion=$versionInfo
-    versionInfo="UE5.2-0.6.2"
-    installType="unreal-stream"
-    installFile="PixelStreamingInfrastructure-$versionInfo.tar.gz"
-    downloadUrl="$binStorageHost/Unreal/$unrealVersion/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    tar -xzf $installFile
-    installFile="PixelStreamingInfrastructure-$versionInfo/SignallingWebServer/platform_scripts/bash/setup.sh"
-    chmod +x $installFile
-    ./$installFile 2>&1 | tee $installType-signalling.log
-    installFile="PixelStreamingInfrastructure-$versionInfo/Matchmaker/platform_scripts/bash/setup.sh"
-    chmod +x $installFile
-    ./$installFile 2>&1 | tee $installType-matchmaker.log
-    installFile="PixelStreamingInfrastructure-$versionInfo/SFU/platform_scripts/bash/setup.sh"
-    chmod +x $installFile
-    ./$installFile 2>&1 | tee $installType-sfu.log
-    echo "Customize (End): Unreal Pixel Streaming"
-  fi
-
-  binPaths="$binPaths:$installPath/Engine/Binaries/Linux"
 fi
 
 if [ $machineType == Scheduler ]; then
