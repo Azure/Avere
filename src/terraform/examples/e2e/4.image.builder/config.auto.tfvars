@@ -67,7 +67,7 @@ imageTemplates = [
       machineSize    = "Standard_L8s_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                # NVIDIA or AMD
       outputVersion  = "0.0.0"
-      timeoutMinutes = 60
+      timeoutMinutes = 120
       osDiskSizeGB   = 64
       renderEngines = [
       ]
@@ -76,7 +76,7 @@ imageTemplates = [
         "dnf -y install jq bc lsof",
         "binStorageHost=https://azstudio.blob.core.windows.net/bin",
         "binStorageAuth='?sv=2021-10-04&st=2022-01-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=SyE2RuK0C7M9nNQSJfiw4SenqqV8O6DYulr24ZJapFw%3D'",
-        "dnf -y install gcc perl elfutils-libelf-devel # openssl-devel bison flex",
+        "dnf -y install gcc gcc-c++ perl elfutils-libelf-devel # openssl-devel bison flex",
         "installFile=kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm",
         "downloadUrl=$binStorageHost/Linux/Rocky/$installFile$binStorageAuth",
         "curl -o $installFile -L $downloadUrl",
@@ -126,12 +126,10 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        "MoonRay",
-        #"Unreal"
+        # "MoonRay",
+        "Unreal"
       ]
       customize = [
       ]
@@ -151,12 +149,10 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        "MoonRay",
-        #"Unreal"
+        # "MoonRay",
+        "Unreal"
       ]
       customize = [
       ]
@@ -176,12 +172,10 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        "MoonRay",
-        #"Unreal+PixelStream"
+        # "MoonRay",
+        "Unreal+PixelStream"
       ]
       customize = [
       ]
@@ -201,12 +195,10 @@ imageTemplates = [
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        "MoonRay",
-        #"Unreal+PixelStream"
+        # "MoonRay",
+        "Unreal+PixelStream"
       ]
       customize = [
       ]
@@ -245,11 +237,9 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        #"Unreal"
+        "Unreal"
       ]
       customize = [
       ]
@@ -269,11 +259,9 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        #"Unreal"
+        "Unreal"
       ]
       customize = [
       ]
@@ -293,11 +281,9 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        #"Unreal+PixelStream"
+        "Unreal+PixelStream"
       ]
       customize = [
       ]
@@ -317,11 +303,9 @@ imageTemplates = [
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
       renderEngines = [
-        "Maya",
         "PBRT",
-        "Houdini",
         "Blender",
-        #"Unreal+PixelStream"
+        "Unreal+PixelStream"
       ]
       customize = [
       ]

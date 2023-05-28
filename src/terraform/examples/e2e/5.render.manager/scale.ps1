@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 az login --identity
 
 $queuedTasks = 0
-if ($renderManager -like "*Deadline*") {
+if ("$renderManager" -like "*Deadline*") {
   $activeJobIds = deadlinecommand -GetJobIdsFilter Status=Active
   foreach ($jobId in $activeJobIds) {
     $jobDetails = deadlinecommand -GetJobDetails $jobId
@@ -39,7 +39,7 @@ if ($queuedTasks -gt 0) { # Scale Up
   }
   az vmss scale --resource-group $resourceGroupName --name $scaleSetName --new-capacity $scaleSetNodeCount
 } else { # Scale Down
-  if ($renderManager -like "*Deadline*") {
+  if ("$renderManager" -like "*Deadline*") {
     $workerNames = deadlinecommand -GetSlaveNames
     foreach ($workerName in $workerNames) {
       $worker = deadlinecommand -GetSlave $workerName | ConvertFrom-StringData

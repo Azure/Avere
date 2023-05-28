@@ -2,35 +2,43 @@ $ErrorActionPreference = "Stop"
 
 Set-Location -Path "C:\Users\Public\Downloads"
 
-if (${renderManager} -like "*Deadline*") {
-  $installType = "deadline-database"
-  Start-Process -FilePath "sc.exe" -ArgumentList "start Deadline10DatabaseService" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
+function StartProcess ($filePath, $argumentList, $logFile) {
+  if ($argumentList -eq $null) {
+    Start-Process -FilePath $filePath -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
+  } else {
+    Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
+  }
+  Get-Content -Path $logFile-err.log | Tee-Object -FilePath "$logFile.log" -Append
+  Get-Content -Path $logFile-out.log | Tee-Object -FilePath "$logFile.log" -Append
+  Remove-Item -Path $logFile-err.log, $logFile-out.log
 }
 
-if (${renderManager} -like "*RoyalRender*") {
+if ("${renderManager}" -like "*Deadline*") {
+  StartProcess sc.exe "start Deadline10DatabaseService" deadline-database-service
+}
+
+if ("${renderManager}" -like "*RoyalRender*") {
   $installType = "royal-render-server"
   $serviceUser = "rrService"
   $servicePassword = ConvertTo-SecureString "${servicePassword}" -AsPlainText -Force
   New-LocalUser -Name $serviceUser -Password $servicePassword -PasswordNeverExpires
-  Start-Process -FilePath "rrServerconsole.exe" -ArgumentList "-initAndClose" -Wait -RedirectStandardOutput "$installType-init.out.log" -RedirectStandardError "$installType-init.err.log"
-  Start-Process -FilePath "rrWorkstation_installer.exe" -ArgumentList "-serviceServer -rrUser $serviceUser -rrUserPW ""${servicePassword}"" -fwIn" -Wait -RedirectStandardOutput "$installType-service.out.log" -RedirectStandardError "$installType-service.err.log"
+  StartProcess rrServerconsole.exe -initAndClose $installType-init
+  StartProcess rrWorkstation_installer.exe "-serviceServer -rrUser $serviceUser -rrUserPW ${servicePassword} -fwIn" $installType-service
 }
 
-if (${renderManager} -like "*Qube*") {
-  $installType = "qube-supervisor"
-  Start-Process -FilePath "C:\Program Files\pfx\qube\utils\supe_postinstall.bat" -Wait -RedirectStandardOutput "$installType-post.out.log" -RedirectStandardError "$installType-post.err.log"
-}
-
-if (${qubeLicense.userName} -ne "") {
-  $configFilePath = "C:\ProgramData\pfx\qube\dra.conf"
-  if (!(Test-Path -PathType Leaf -Path $configFilePath)) {
-    Copy-Item -Path "C:\Program Files\pfx\qube\dra\dra.conf.default" -Destination $configFilePath
+if ("${renderManager}" -like "*Qube*") {
+  StartProcess "C:\Program Files\pfx\qube\utils\supe_postinstall.bat" $null qube-supervisor-post
+  if (${qubeLicense.userName} -ne "") {
+    $configFile = "C:\ProgramData\pfx\qube\dra.conf"
+    if (!(Test-Path -PathType Leaf -Path $configFile)) {
+      Copy-Item -Path "C:\Program Files\pfx\qube\dra\dra.conf.default" -Destination $configFile
+    }
+    $configFileText = Get-Content -Path $configFile
+    $configFileText = $configFileText.Replace("#mls_user =", "mls_user = ${qubeLicense.userName}")
+    $configFileText = $configFileText.Replace("#mls_password =", "mls_password = ${qubeLicense.userPassword}")
+    Set-Content -Path $configFile -Value $configFileText
+    Restart-Service -Name "qubedra"
   }
-  $configFileText = Get-Content -Path $configFilePath
-  $configFileText = $configFileText.Replace("#mls_user =", "mls_user = ${qubeLicense.userName}")
-  $configFileText = $configFileText.Replace("#mls_password =", "mls_password = ${qubeLicense.userPassword}")
-  Set-Content -Path $configFilePath -Value $configFileText
-  Restart-Service -Name "qubedra"
 }
 
 $scriptFile = "C:\AzureData\aaaScaler.ps1"
@@ -41,7 +49,7 @@ $taskStart = Get-Date
 $taskInterval = New-TimeSpan -Seconds ${autoScale.detectionIntervalSeconds}
 $taskAction = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -File $scriptFile -resourceGroupName ${autoScale.resourceGroupName} -scaleSetName ${autoScale.scaleSetName} -scaleSetMachineCountMax ${autoScale.scaleSetMachineCountMax} -jobWaitThresholdSeconds ${autoScale.jobWaitThresholdSeconds} -workerIdleDeleteSeconds ${autoScale.workerIdleDeleteSeconds}"
 $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $taskStart -Once
-if (${autoScale.enable} -ne $false) {
+if ("${autoScale.enable}" -ne $false) {
   $taskSettings = New-ScheduledTaskSettingsSet
 } else {
   $taskSettings = New-ScheduledTaskSettingsSet -Disable

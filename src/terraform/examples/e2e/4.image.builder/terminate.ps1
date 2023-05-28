@@ -13,13 +13,13 @@ foreach ($scheduledEvent in $scheduledEvents) {
     $instanceName = Invoke-RestMethod -Headers @{"Metadata"="true"} -Uri "http://169.254.169.254/metadata/instance/compute/name?api-version=2021-12-13&format=text"
 
     if ($eventScope -eq $instanceName) {
-      if ($renderManager -like "*Deadline*") {
+      if ("$renderManager" -like "*Deadline*") {
         deadlineworker -shutdown
         deadlinecommand -DeleteSlave $(hostname)
       }
-      if ($renderManager -like "*RoyalRender*") {
+      if ("$renderManager" -like "*RoyalRender*") {
       }
-      if ($renderManager -like "*Qube*") {
+      if ("$renderManager" -like "*Qube*") {
         qbadmin worker --remove $(hostname)
       }
     }
