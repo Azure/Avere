@@ -194,6 +194,7 @@ fi
 
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
   echo "Customize (Start): Unreal Engine Setup"
+  dnf -y install libicu
   versionInfo="5.2.0"
   installType="unreal-engine"
   installPath="/usr/local/unreal"
