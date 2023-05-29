@@ -66,6 +66,7 @@ variable "virtualMachineScaleSets" {
             {
               storageType = string
               cachingType = string
+              sizeGB      = number
               ephemeral = object(
                 {
                   enable    = bool
@@ -285,6 +286,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
+    disk_size_gb         = each.value.operatingSystem.disk.sizeGB
     dynamic diff_disk_settings {
       for_each = each.value.operatingSystem.disk.ephemeral.enable ? [1] : []
       content {
@@ -402,6 +404,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
+    disk_size_gb         = each.value.operatingSystem.disk.sizeGB
     dynamic diff_disk_settings {
       for_each = each.value.operatingSystem.disk.ephemeral.enable ? [1] : []
       content {

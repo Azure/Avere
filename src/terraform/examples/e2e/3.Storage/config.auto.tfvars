@@ -68,6 +68,7 @@ weka = {
   name = {
     resource = ""
     display  = "Azure Artist Anywhere"
+    domain   = ""
   }
   machine = {
     size  = "Standard_L8s_v3"
@@ -109,6 +110,7 @@ weka = {
   osDisk = {
     storageType = "Premium_LRS"
     cachingType = "None"
+    sizeGB      = 0
   }
   dataDisk = {
     storageType = "Premium_LRS"
@@ -201,14 +203,14 @@ hammerspace = {
       enableAcceleration = true
     }
     osDisk = {
-      sizeGB      = 128
       storageType = "Premium_LRS"
       cachingType = "ReadWrite"
+      sizeGB      = 128
     }
     dataDisk = {
-      sizeGB      = 256
       storageType = "Premium_LRS"
       cachingType = "None"
+      sizeGB      = 256
     }
     adminLogin = {
       userName     = "azadmin"
@@ -229,16 +231,16 @@ hammerspace = {
       enableAcceleration = true
     }
     osDisk = {
-      sizeGB      = 128
       storageType = "Premium_LRS"
       cachingType = "ReadWrite"
+      sizeGB      = 128
     }
     dataDisk = {
-      count       = 2
-      sizeGB      = 256
       storageType = "Premium_LRS"
       cachingType = "None"
       enableRaid0 = false
+      sizeGB      = 256
+      count       = 2
     }
     adminLogin = {
       userName     = "azadmin"
@@ -261,6 +263,35 @@ qumulo = {
   offerId   = "qumulo-saas"
   termId    = "Monthly" # "Yearly"
   autoRenew = true
+}
+
+#################################################################################################################################################
+# Active Directory (https://learn.microsoft.com/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview) #
+#################################################################################################################################################
+
+activeDirectory = {
+  enable = false
+  machine = {
+    name    = "WinDirectory"
+    size    = "Standard_D8s_v5"
+    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinServer/versions/0.0.0"
+  }
+  network = {
+    enableAcceleration = false
+  }
+  osDisk = {
+    storageType = "Premium_LRS"
+    cachingType = "ReadWrite"
+    sizeGB      = 0
+  }
+  adminLogin = {
+    userName     = "azadmin"
+    userPassword = "P@ssword1234"
+    sshPublicKey = "" # "ssh-rsa ..."
+    passwordAuth = {
+      disable = false
+    }
+  }
 }
 
 #######################################################################

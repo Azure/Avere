@@ -69,6 +69,7 @@ variable "virtualMachines" {
             {
               storageType = string
               cachingType = string
+              sizeGB      = number
             }
           )
         }
@@ -288,6 +289,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
+    disk_size_gb         = each.value.operatingSystem.disk.sizeGB
   }
   identity {
     type = "UserAssigned"
@@ -384,6 +386,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
     caching              = each.value.operatingSystem.disk.cachingType
+    disk_size_gb         = each.value.operatingSystem.disk.sizeGB
   }
   identity {
     type = "UserAssigned"

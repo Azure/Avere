@@ -26,6 +26,7 @@ virtualMachines = [
       disk = {
         storageType = "Premium_LRS"
         cachingType = "ReadWrite"
+        sizeGB      = 0
       }
     }
     adminLogin = {
@@ -81,6 +82,7 @@ virtualMachines = [
       disk = {
         storageType = "Premium_LRS"
         cachingType = "ReadWrite"
+        sizeGB      = 0
       }
     }
     adminLogin = {
@@ -136,6 +138,7 @@ virtualMachines = [
       disk = {
         storageType = "Premium_LRS"
         cachingType = "ReadWrite"
+        sizeGB      = 0
       }
     }
     adminLogin = {
@@ -191,6 +194,7 @@ virtualMachines = [
       disk = {
         storageType = "Premium_LRS"
         cachingType = "ReadWrite"
+        sizeGB      = 0
       }
     }
     adminLogin = {

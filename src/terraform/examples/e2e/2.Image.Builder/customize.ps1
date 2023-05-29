@@ -52,48 +52,42 @@ Write-Host "Render Manager: $renderManager"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
-if ($machineType -eq "DomainController") {
-    Write-Host "Customize (Start): Active Directory Domain"
-    # Install-WindowsFeature -Name "AD-Domain-Services"
-    Write-Host "Customize (End): Active Directory Domain"
-} else {
-  Write-Host "Customize (Start): Chocolatey"
-  $installType = "chocolatey"
-  $installFile = "$installType.ps1"
-  $downloadUrl = "https://community.chocolatey.org/install.ps1"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File .\$installFile" $installType
-  $binPathChoco = "C:\ProgramData\chocolatey"
-  $binPaths += ";$binPathChoco"
-  Write-Host "Customize (End): Chocolatey"
+Write-Host "Customize (Start): Chocolatey"
+$installType = "chocolatey"
+$installFile = "$installType.ps1"
+$downloadUrl = "https://community.chocolatey.org/install.ps1"
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File .\$installFile" $installType
+$binPathChoco = "C:\ProgramData\chocolatey"
+$binPaths += ";$binPathChoco"
+Write-Host "Customize (End): Chocolatey"
 
-  Write-Host "Customize (Start): Python"
-  $installType = "python"
-  StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
-  Write-Host "Customize (End): Python"
+Write-Host "Customize (Start): Python"
+$installType = "python"
+StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
+Write-Host "Customize (End): Python"
 
-  Write-Host "Customize (Start): Git"
-  $installType = "git"
-  StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
-  $binPathGit = "C:\Program Files\Git\bin"
-  $binPaths += ";$binPathGit"
-  Write-Host "Customize (End): Git"
+Write-Host "Customize (Start): Git"
+$installType = "git"
+StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
+$binPathGit = "C:\Program Files\Git\bin"
+$binPaths += ";$binPathGit"
+Write-Host "Customize (End): Git"
 
-  Write-Host "Customize (Start): Visual Studio Build Tools"
-  $versionInfo = "2022"
-  $installType = "vs-build-tools"
-  $installFile = "vs_BuildTools.exe"
-  $downloadUrl = "$binStorageHost/VS/$versionInfo/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  $componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
-  $componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
-  $componentIds += " --add Microsoft.Component.MSBuild"
-  StartProcess .\$installFile "$componentIds --quiet --norestart" $installType
-  $binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
-  $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin\amd64"
-  $binPaths += ";$binPathCMake;$binPathMSBuild"
-  Write-Host "Customize (End): Visual Studio Build Tools"
-}
+Write-Host "Customize (Start): Visual Studio Build Tools"
+$versionInfo = "2022"
+$installType = "vs-build-tools"
+$installFile = "vs_BuildTools.exe"
+$downloadUrl = "$binStorageHost/VS/$versionInfo/$installFile$binStorageAuth"
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+$componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
+$componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
+$componentIds += " --add Microsoft.Component.MSBuild"
+StartProcess .\$installFile "$componentIds --quiet --norestart" $installType
+$binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
+$binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin\amd64"
+$binPaths += ";$binPathCMake;$binPathMSBuild"
+Write-Host "Customize (End): Visual Studio Build Tools"
 
 if ($gpuProvider -eq "AMD") {
   if ($machineType -like "*NV*" -and $machineType -like "*v4*") {

@@ -23,16 +23,16 @@ variable "hammerspace" {
           )
           osDisk = object(
             {
-              sizeGB      = number
               storageType = string
               cachingType = string
+              sizeGB      = number
             }
           )
           dataDisk = object(
             {
-              sizeGB      = number
               storageType = string
               cachingType = string
+              sizeGB      = number
             }
           )
           adminLogin = object(
@@ -65,18 +65,18 @@ variable "hammerspace" {
           )
           osDisk = object(
             {
-              sizeGB      = number
               storageType = string
               cachingType = string
+              sizeGB      = number
             }
           )
           dataDisk = object(
             {
-              count       = number
-              sizeGB      = number
               storageType = string
               cachingType = string
               enableRaid0 = bool
+              sizeGB      = number
+              count       = number
             }
           )
           adminLogin = object(
@@ -272,9 +272,9 @@ resource "azurerm_linux_virtual_machine" "storage_metadata" {
     "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ])
   os_disk {
-    disk_size_gb         = var.hammerspace.metadata.osDisk.sizeGB
     storage_account_type = var.hammerspace.metadata.osDisk.storageType
     caching              = var.hammerspace.metadata.osDisk.cachingType
+    disk_size_gb         = var.hammerspace.metadata.osDisk.sizeGB
   }
   plan {
     publisher = local.hammerspaceImage.publisher
@@ -314,9 +314,9 @@ resource "azurerm_linux_virtual_machine" "storage_data" {
     "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
   os_disk {
-    disk_size_gb         = each.value.osDisk.sizeGB
     storage_account_type = each.value.osDisk.storageType
     caching              = each.value.osDisk.cachingType
+    disk_size_gb         = each.value.osDisk.sizeGB
   }
   plan {
     publisher = local.hammerspaceImage.publisher

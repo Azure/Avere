@@ -71,6 +71,7 @@ variable "weka" {
         {
           storageType = string
           cachingType = string
+          sizeGB      = number
         }
       )
       dataDisk = object(
@@ -274,6 +275,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   os_disk {
     storage_account_type = var.weka.osDisk.storageType
     caching              = var.weka.osDisk.cachingType
+    disk_size_gb         = var.weka.osDisk.sizeGB
   }
   data_disk {
     storage_account_type = var.weka.dataDisk.storageType

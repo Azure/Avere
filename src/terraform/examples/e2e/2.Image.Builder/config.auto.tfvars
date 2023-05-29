@@ -205,7 +205,7 @@ imageTemplates = [
     }
   },
   {
-    name = "WinDomain"
+    name = "WinDirectory"
     image = {
       definitionName = "WinServer"
       inputVersion   = "Latest"
@@ -220,6 +220,11 @@ imageTemplates = [
       renderEngines = [
       ]
       customize = [
+        "$domainName = 'contant.studio'",
+        "$domainPassword = 'P$ssword1234'",
+        "Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools",
+        "Import-Module ADDSDeployment",
+        "Install-ADDSForest -DomainName $domainName -SafeModeAdministratorPassword $domainPassword -Force -NoRebootOnCompletion"
       ]
     }
   },
