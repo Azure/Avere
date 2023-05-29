@@ -16,7 +16,7 @@ imageGallery = {
       sku        = "Rocky-8-6-Free"
     },
     {
-      name       = "WinScheduler"
+      name       = "WinServer"
       type       = "Windows"
       generation = "V2"
       publisher  = "MicrosoftWindowsServer"
@@ -205,9 +205,28 @@ imageTemplates = [
     }
   },
   {
+    name = "WinDomain"
+    image = {
+      definitionName = "WinServer"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "DomainController"
+      machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                # NVIDIA or AMD
+      outputVersion  = "0.0.0"
+      timeoutMinutes = 180
+      osDiskSizeGB   = 512
+      renderEngines = [
+      ]
+      customize = [
+      ]
+    }
+  },
+  {
     name = "WinScheduler"
     image = {
-      definitionName = "WinScheduler"
+      definitionName = "WinServer"
       inputVersion   = "Latest"
     }
     build = {

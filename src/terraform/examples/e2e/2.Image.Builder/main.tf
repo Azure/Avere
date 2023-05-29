@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "4.image.builder"
+    key = "2.Image.Builder"
   }
 }
 
@@ -23,7 +23,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global/module"
+  source = "../0.Global.Foundation/module"
 }
 
 variable "resourceGroupName" {
@@ -124,7 +124,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "1.network"
+    key                  = "1.Virtual.Network"
   }
 }
 
@@ -376,12 +376,12 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/customize.sh",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/customize.sh",
                     "destination": "/tmp/customize.sh"
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/terminate.sh",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/terminate.sh",
                     "destination": "/tmp/terminate.sh"
                   },
                   {
@@ -430,12 +430,12 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/customize.ps1",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/customize.ps1",
                     "destination": "C:\\AzureData\\customize.ps1"
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/4.image.builder/terminate.ps1",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/terminate.ps1",
                     "destination": "C:\\AzureData\\terminate.ps1"
                   },
                   {

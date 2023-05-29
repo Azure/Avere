@@ -6,7 +6,7 @@ binDirectory="/usr/local/bin"
 cd $binDirectory
 
 functionsCode="functions.sh"
-functionsData="${filebase64("../0.global/functions.sh")}"
+functionsData="${filebase64("../0.Global.Foundation/functions.sh")}"
 echo $functionsData | base64 --decode > $functionsCode
 source $functionsCode
 

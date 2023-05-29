@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "6.render.farm"
+    key = "6.Render.Farm"
   }
 }
 
@@ -25,7 +25,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global/module"
+  source = "../0.Global.Foundation/module"
 }
 
 variable "resourceGroupName" {
@@ -199,7 +199,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "1.network"
+    key                  = "1.Virtual.Network"
   }
 }
 
@@ -209,7 +209,7 @@ data "terraform_remote_state" "image" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "4.image.builder"
+    key                  = "2.Image.Builder"
   }
 }
 
@@ -386,7 +386,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   admin_password         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   priority               = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
-  custom_data            = base64encode(templatefile("../0.global/functions.ps1", {}))
+  custom_data            = base64encode(templatefile("../0.Global.Foundation/functions.ps1", {}))
   single_placement_group = false
   overprovision          = false
   network_interface {

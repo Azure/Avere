@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "7.render.ai"
+    key = "7.Render.AI"
   }
 }
 
@@ -23,7 +23,7 @@ provider "azurerm" {
 }
 
 module "global" {
-  source = "../0.global/module"
+  source = "../0.Global.Foundation/module"
 }
 
 variable "resourceGroupName" {
@@ -67,7 +67,7 @@ data "terraform_remote_state" "network" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "1.network"
+    key                  = "1.Virtual.Network"
   }
 }
 
