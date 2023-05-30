@@ -1,4 +1,4 @@
-curl http://data.content.studio:14000/dist/v1/install | sh
+curl http://data.artist.studio:14000/dist/v1/install | sh
 
 function SetMount {
   storageMount="$1"
@@ -28,7 +28,7 @@ function EnableRenderClient {
 
   #   installPath="RoyalRender*"
   #   installFile="rrSetup_linux"
-  #   rrRootShare="\\scheduler.content.studio\RoyalRender"
+  #   rrRootShare="\\scheduler.artist.studio\RoyalRender"
   #   ./$installPath/$installFile -console -rrRoot $rrRootShare 2>&1 | tee $installType.log
 
   #   serviceUser="rrService"

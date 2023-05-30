@@ -523,7 +523,7 @@ if ("$renderManager" -like "*Qube*") {
 
     $configFile = "C:\ProgramData\pfx\qube\qb.conf"
     $configFileText = Get-Content -Path $configFile
-    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = scheduler.content.studio")
+    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = scheduler.artist.studio")
     $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
     Set-Content -Path $configFile -Value $configFileText
   }

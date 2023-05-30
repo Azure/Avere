@@ -220,7 +220,7 @@ imageTemplates = [
       renderEngines = [
       ]
       customize = [
-        "$domainName = 'contant.studio'",
+        "$domainName = 'artist.studio'",
         "$domainPassword = 'P$ssword1234'",
         "Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools",
         "Import-Module ADDSDeployment",

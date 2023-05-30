@@ -46,7 +46,7 @@ function EnableRenderClient ($renderManager, $servicePassword) {
 
   #   $installPath = "RoyalRender*"
   #   $installFile = "rrSetup_win.exe"
-  #   $rrRootShare = "\\scheduler.content.studio\RoyalRender"
+  #   $rrRootShare = "\\scheduler.artist.studio\RoyalRender"
   #   StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
 
   #   $serviceUser = "rrService"

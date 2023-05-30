@@ -53,11 +53,11 @@ virtualMachineScaleSets = [
         }
         fileSystemMount = {
           enable            = false
-          storageRead       = "data.content.studio/default /mnt/data wekafs net=udp 0 0"
-          storageReadCache  = "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          storageWrite      = "data.content.studio/default /mnt/data wekafs net=udp 0 0"
-          storageWriteCache = "cache.content.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          schedulerDeadline = "scheduler.content.studio:/Deadline /DeadlineServer nfs defaults 0 0"
+          storageRead       = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageReadCache  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          storageWrite      = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageWriteCache = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          schedulerDeadline = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
         }
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true
@@ -127,11 +127,11 @@ virtualMachineScaleSets = [
         }
         fileSystemMount = {
           enable            = false
-          storageRead       = "data.content.studio/default /mnt/data wekafs net=udp 0 0"
-          storageReadCache  = "cache.content.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          storageWrite      = "data.content.studio/default /mnt/data wekafs net=udp 0 0"
-          storageWriteCache = "cache.content.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          schedulerDeadline = "scheduler.content.studio:/Deadline /DeadlineServer nfs defaults 0 0"
+          storageRead       = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageReadCache  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          storageWrite      = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageWriteCache = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          schedulerDeadline = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
         }
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true
@@ -201,11 +201,11 @@ virtualMachineScaleSets = [
         }
         fileSystemMount = {
           enable            = false
-          storageRead       = "net use R: \\\\data.content.studio\\default /persistent:yes"
-          storageReadCache  = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
-          storageWrite      = "net use W: \\\\data.content.studio\\default /persistent:yes"
-          storageWriteCache = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data W:"
-          schedulerDeadline = "net use S: \\\\scheduler.content.studio\\Deadline /persistent:yes"
+          storageRead       = "net use R: \\\\data.artist.studio\\default /persistent:yes"
+          storageReadCache  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+          storageWrite      = "net use W: \\\\data.artist.studio\\default /persistent:yes"
+          storageWriteCache = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
+          schedulerDeadline = "net use S: \\\\scheduler.artist.studio\\Deadline /persistent:yes"
         }
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true
@@ -275,11 +275,11 @@ virtualMachineScaleSets = [
         }
         fileSystemMount = {
           enable            = false
-          storageRead       = "net use R: \\\\data.content.studio\\default /persistent:yes"
-          storageReadCache  = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data R:"
-          storageWrite      = "net use W: \\\\data.content.studio\\default /persistent:yes"
-          storageWriteCache = "mount -o anon nolock \\\\cache.content.studio\\mnt\\data W:"
-          schedulerDeadline = "net use S: \\\\scheduler.content.studio\\Deadline /persistent:yes"
+          storageRead       = "net use R: \\\\data.artist.studio\\default /persistent:yes"
+          storageReadCache  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+          storageWrite      = "net use W: \\\\data.artist.studio\\default /persistent:yes"
+          storageWriteCache = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
+          schedulerDeadline = "net use S: \\\\scheduler.artist.studio\\Deadline /persistent:yes"
         }
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true

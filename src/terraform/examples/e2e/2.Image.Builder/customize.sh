@@ -487,7 +487,7 @@ if [[ $renderManager == *Qube* ]]; then
     echo "Customize (End): Qube Client"
 
     configFile="/etc/qb.conf"
-    sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.content.studio/" $configFile
+    sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.artist.studio/" $configFile
     sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $configFile
   fi
 
