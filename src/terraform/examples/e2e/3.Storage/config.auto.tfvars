@@ -68,7 +68,6 @@ weka = {
   name = {
     resource = ""
     display  = "Azure Artist Anywhere"
-    domain   = ""
   }
   machine = {
     size  = "Standard_L8s_v3"
