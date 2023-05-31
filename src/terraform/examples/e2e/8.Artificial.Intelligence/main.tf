@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "7.Render.AI"
+    key = "8.Artificial.Intelligence"
   }
 }
 

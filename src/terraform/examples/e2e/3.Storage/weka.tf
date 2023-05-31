@@ -485,7 +485,7 @@ resource "terraform_data" "weka_data_load" {
       "sudo mkdir -p $mountPath",
       "sudo mount -t wekafs ${var.weka.fileSystem.name} $mountPath",
       "if [ \"${var.dataLoadSource.blobName}\" != \"\" ]; then",
-      "  sudo az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --source-blob ${var.dataLoadSource.blobName} --recursive --destination /mnt/${var.dataLoadSource.containerName}/${var.dataLoadSource.blobName}",
+      "  sudo az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --source-blob ${var.dataLoadSource.blobName} --recursive --destination /mnt/${var.dataLoadSource.containerName}",
       "else",
       "  sudo az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --recursive --destination /mnt",
       "fi"

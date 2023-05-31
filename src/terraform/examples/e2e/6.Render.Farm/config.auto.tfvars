@@ -53,9 +53,9 @@ virtualMachineScaleSets = [
         }
         fileSystemMount = {
           enable            = false
-          storageRead       = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageRead       = "data.artist.studio/default /mnt/data/read wekafs net=udp 0 0"
           storageReadCache  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          storageWrite      = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageWrite      = "data.artist.studio/default /mnt/data/write wekafs net=udp 0 0"
           storageWriteCache = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
           schedulerDeadline = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
         }
@@ -127,9 +127,9 @@ virtualMachineScaleSets = [
         }
         fileSystemMount = {
           enable            = false
-          storageRead       = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageRead       = "data.artist.studio/default /mnt/data/read wekafs net=udp 0 0"
           storageReadCache  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          storageWrite      = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+          storageWrite      = "data.artist.studio/default /mnt/data/write wekafs net=udp 0 0"
           storageWriteCache = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
           schedulerDeadline = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
         }

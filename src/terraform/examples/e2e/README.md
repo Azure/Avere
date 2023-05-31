@@ -11,17 +11,17 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 
 | **Module Name** | **Module Description** | **Module Required for<br>Azure Burst Render?<br>(Compute Only)** | **Module Required for<br>All Azure Solution?<br>(Compute & Storage)** |
 | - | - | - | - |
-| [0&#160;Global&#160;Foundation](#0-global-foundation) | Defines global config ([Azure region](https://azure.microsoft.com/regions)) and core solution resources ([Terraform state storage](https://developer.hashicorp.com/terraform/language/settings/backends/azurerm), [Monitor log storage](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-workspace-overview)). | Yes | Yes |
-| [1 Virtual Network](#1-virtual-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview), [Private DNS](https://learn.microsoft.com/azure/dns/private-dns-overview), [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview), etc with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) gateway services. | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed.<br>Otherwise, No | Yes, if [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed.<br>Otherwise, No |
-| [2 Image Builder](#2-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) image definitions and templates for custom images built via the [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No | No |
+| [0 Global Foundation](#0-global-foundation) | Defines global config ([Azure region](https://azure.microsoft.com/regions)) and core solution resources ([Terraform state storage](https://developer.hashicorp.com/terraform/language/settings/backends/azurerm), [Monitor log storage](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-workspace-overview)). | Yes | Yes |
+| [1 Virtual Network](#1-virtual-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview), [Private DNS](https://learn.microsoft.com/azure/dns/private-dns-overview), [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview), etc with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) gateway services. | Yes,&#160;if&#160;[Virtual&#160;Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed.<br>Otherwise, No | Yes,&#160;if&#160;[Virtual&#160;Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed.<br>Otherwise, No |
+| [2 Image Builder](#2-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) image definitions and templates for custom images built via the [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, use your custom images | No, use your custom images |
 | [3 Storage](#3-storage) | Deploys native ([Blob NFS](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)) and/or hosted ([Weka](https://azuremarketplace.microsoft.com/marketplace/apps/weka1652213882079.weka_data_platform), [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5), [Qumulo](https://azuremarketplace.microsoft.com/marketplace/apps/qumulo1584033880660.qumulo-saas-mpp)) storage services with optional sample data load for [Blender](https://www.blender.org) and [PBRT](https://pbrt.org). | No | Yes |
 | [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) cluster for highly-available and scalable storage file caching on-demand. | Yes | Maybe, depends on your scale requirements |
 | [5 Render Manager](#5-render-manager) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for render job scheduling via your custom render farm management server image. | No, use your current render manager | No, use your current render manager |
 | [6 Render Farm](#6-render-farm) | Deploys [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) ([HPC Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc)) for scalable Linux and/or Windows render farm compute. | Yes | Yes |
-| [7 Render AI](#7-render-ai) | Deploys [Open AI](https://learn.microsoft.com/azure/cognitive-services/openai/overview) services, including [DALL-E 2](https://openai.com/product/dall-e-2) for text-to-image generation. | No | No |
-| [8&#160;Artist&#160;Workstation](#8-artist-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [7 Artist Workstation](#7-artist-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [8&#160;Artificial&#160;Intelligence](#8-artificial-intelligence) | Deploys [Open AI](https://learn.microsoft.com/azure/cognitive-services/openai/overview) services, including [DALL-E 2](https://openai.com/product/dall-e-2) for text-to-image generation. | No | No |
 | [9 GitOps](#9-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via<br>[GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
-| [10 Render](#10-render) | Sample render farm job submission from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [10 Examples](#10-examples) | Example render farm job submissions from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
 For example, the following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via the Azure Artist Anywhere (AAA) solution deployment framework.
 
@@ -161,26 +161,26 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 7 Render AI
+## 7 Artist Workstation
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/7.Render.AI` in a local shell (Bash or PowerShell)
-1. Review and edit the config values in `config.auto.tfvars` for your deployment.
-1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
-
-## 8 Artist Workstation
-
-### Deployment Steps
-
-1. Run `cd ~/e2e/8.Artist.Workstation` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/7.Artist.Workstation` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
    * Make sure the **storageCache** read and write boolean switches are set properly for your environment.
    * Make sure the **fileSystemMount** config has the correct values for your environment (e.g., storage cache mount).
+1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
+1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
+1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
+
+## 8 Artificial Intelligence
+
+### Deployment Steps
+
+1. Run `cd ~/e2e/8.Artificial.Intelligence` in a local shell (Bash or PowerShell)
+1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
@@ -210,7 +210,7 @@ To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure 
 
 ```az ad sp create-for-rbac --name $servicePrincipalName --role $servicePrincipalRole --scope $servicePrincipalScope```
 
-## 10 Render
+## 10 Examples
 
 Now that deployment of the AAA solution framework is complete, this final section provides render job submission examples for multiple render engines (Blender, Physically-Based Ray Tracer).
 

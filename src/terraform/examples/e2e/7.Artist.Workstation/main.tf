@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "8.Artist.Workstation"
+    key = "7.Artist.Workstation"
   }
 }
 
