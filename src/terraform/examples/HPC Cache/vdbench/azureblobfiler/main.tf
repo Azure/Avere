@@ -14,20 +14,14 @@ locals {
   //  Standard_L4_5G 
   //  Standard_L9G 
   //  Standard_L16G 
-  //  Premium_5G
-  //  Premium_10G
-  //  Premium_20G
   cache_throughput = "Standard_2G"
 
   // HPC Cache Size - allowed sizes (GBs) for the cache
   //   3072
   //   6144
   //  12288
-  //  21623 - Premium 5G
   //  24576
-  //  43246 - Premium 10G
   //  49152
-  //  86491 - Premium 15G
   cache_size = 12288
 
   // unique name for cache
