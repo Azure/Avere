@@ -105,23 +105,23 @@ locals {
     version   = "22.08.18"
   }
   hammerspaceMetadataNodes = [
-    for i in range(var.hammerspace.metadata.machine.count) : merge(var.hammerspace.metadata,
-      {index = i},
-      {name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}"}
-    ) if var.hammerspace.namePrefix != ""
+    for i in range(var.hammerspace.metadata.machine.count) : merge(var.hammerspace.metadata, {
+      index = i
+      name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}"
+    }) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDataNodes = [
-    for i in range(var.hammerspace.data.machine.count) : merge(var.hammerspace.data,
-      {index = i},
-      {name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}"}
-    ) if var.hammerspace.namePrefix != ""
+    for i in range(var.hammerspace.data.machine.count) : merge(var.hammerspace.data, {
+      index = i
+      name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}"
+    }) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDataDisks = [
-    for i in range(var.hammerspace.data.machine.count * var.hammerspace.data.dataDisk.count) : merge(var.hammerspace.data,
-      {index       = i % var.hammerspace.data.dataDisk.count + 1},
-      {machineName = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}"},
-      {name        = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}DataDisk${i % var.hammerspace.data.dataDisk.count + 1}"}
-    ) if var.hammerspace.namePrefix != ""
+    for i in range(var.hammerspace.data.machine.count * var.hammerspace.data.dataDisk.count) : merge(var.hammerspace.data, {
+      index       = i % var.hammerspace.data.dataDisk.count + 1
+      machineName = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}"
+      name        = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${floor(i / var.hammerspace.data.dataDisk.count) + 1}DataDisk${i % var.hammerspace.data.dataDisk.count + 1}"
+    }) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDomainName = var.hammerspace.domainName == "" ? "${var.hammerspace.namePrefix}.azure" : var.hammerspace.domainName
   hammerspaceMetadataNodeConfig = {

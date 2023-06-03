@@ -46,9 +46,9 @@ data "azurerm_subnet" "storage_netapp" {
 locals {
   netAppVolumes = flatten([
     for capacityPool in var.netAppAccount.capacityPools : [
-      for volume in capacityPool.volumes : merge(volume,
-        {capacityPoolName = capacityPool.name}
-      ) if volume.name != ""
+      for volume in capacityPool.volumes : merge(volume, {
+        capacityPoolName = capacityPool.name
+      }) if volume.name != ""
     ] if capacityPool.name != "" && var.netAppAccount.name != ""
   ])
 }

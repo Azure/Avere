@@ -121,7 +121,10 @@ virtualMachines = [
   }
 ]
 
-servicePassword = "P@ssword1234"
+serviceAccount = {
+  name     = "aaaService"
+  password = "P@ssword1234"
+}
 
 ############################################################################
 # Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #

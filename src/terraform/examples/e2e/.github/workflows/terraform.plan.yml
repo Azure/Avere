@@ -9,15 +9,15 @@ on:
         description: 'Solution Module'
         type: choice
         options:
-        - 0.global
-        - 1.network
-        - 2.storage
-        - 3.storage.cache
-        - 4.image.builder
-        - 5.render.manager
-        - 6.render.farm
-        - 7.render.ai
-        - 8.artist.workstation
+        - 0.Global.Foundation
+        - 1.Virtual.Network
+        - 2.Artificial.Intelligence
+        - 3.Image.Builder
+        - 4.Storage
+        - 5.Storage.Cache
+        - 6.Render.Manager
+        - 7.Render.Farm
+        - 8.Artist.Workstation
         required: true
       logLevel:
         description: 'Log Level'
@@ -83,7 +83,7 @@ jobs:
         run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade
 
       - if: "!startsWith(env.solutionModule, 1)"
-        run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade -backend-config ../0.global/backend.config
+        run: terraform -chdir=$(pwd)/${{env.solutionModule}} init -upgrade -backend-config ../0.Global.Foundation/backend.config
 
       - id: plan
         if: github.event.inputs.destroyMode != 'true'

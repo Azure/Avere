@@ -47,18 +47,32 @@ virtualMachineScaleSets = [
       name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
-        storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
-          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
-        }
-        fileSystemMount = {
-          enable            = false
-          storageRead       = "data.artist.studio/default /mnt/data/read wekafs net=udp 0 0"
-          storageReadCache  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          storageWrite      = "data.artist.studio/default /mnt/data/write wekafs net=udp 0 0"
-          storageWriteCache = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          schedulerDeadline = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
-        }
+        fileSystemMounts = [
+          {
+            enable = false # Storage Read
+            mount  = "data.artist.studio/default /mnt/data/read wekafs net=udp 0 0"
+          },
+          {
+            enable = false # Storage Read Cache
+            mount  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          },
+          {
+            enable = false # Storage Write
+            mount  = "data.artist.studio/default /mnt/data/write wekafs net=udp 0 0"
+          },
+          {
+            enable = false # Storage Write Cache
+            mount  = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          },
+          {
+            enable = true # Scheduler Deadline
+            mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
+          },
+          {
+            enable = true # Scheduler Royal Render
+            mount  = "scheduler.artist.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
+          }
+        ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true
           delayTimeout = "PT5M"
@@ -121,18 +135,32 @@ virtualMachineScaleSets = [
       name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
-        storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
-          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
-        }
-        fileSystemMount = {
-          enable            = false
-          storageRead       = "data.artist.studio/default /mnt/data/read wekafs net=udp 0 0"
-          storageReadCache  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          storageWrite      = "data.artist.studio/default /mnt/data/write wekafs net=udp 0 0"
-          storageWriteCache = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-          schedulerDeadline = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
-        }
+        fileSystemMounts = [
+          {
+            enable = false # Storage Read
+            mount  = "data.artist.studio/default /mnt/data/read wekafs net=udp 0 0"
+          },
+          {
+            enable = false # Storage Read Cache
+            mount  = "cache.artist.studio:/mnt/data /mnt/data/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          },
+          {
+            enable = false # Storage Write
+            mount  = "data.artist.studio/default /mnt/data/write wekafs net=udp 0 0"
+          },
+          {
+            enable = false # Storage Write Cache
+            mount  = "cache.artist.studio:/mnt/data /mnt/data/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+          },
+          {
+            enable = true # Scheduler Deadline
+            mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
+          },
+          {
+            enable = true # Scheduler Royal Render
+            mount  = "scheduler.artist.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
+          }
+        ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true
           delayTimeout = "PT5M"
@@ -195,18 +223,32 @@ virtualMachineScaleSets = [
       name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
-        storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
-          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
-        }
-        fileSystemMount = {
-          enable            = false
-          storageRead       = "net use R: \\\\data.artist.studio\\default /persistent:yes"
-          storageReadCache  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
-          storageWrite      = "net use W: \\\\data.artist.studio\\default /persistent:yes"
-          storageWriteCache = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
-          schedulerDeadline = "net use S: \\\\scheduler.artist.studio\\Deadline /persistent:yes"
-        }
+        fileSystemMounts = [
+          {
+            enable = false # Storage Read
+            mount  = "mount -o anon \\\\data.artist.studio\\default R:"
+          },
+          {
+            enable = false # Storage Read Cache
+            mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+          },
+          {
+            enable = false # Storage Write
+            mount  = "mount -o anon \\\\data.artist.studio\\default W:"
+          },
+          {
+            enable = false # Storage Write Cache
+            mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
+          },
+          {
+            enable = true # Scheduler Deadline
+            mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+          },
+          {
+            enable = true # Scheduler Royal Render
+            mount  = "mount -o anon \\\\scheduler.artist.studio\\RoyalRender T:"
+          }
+        ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true
           delayTimeout = "PT5M"
@@ -269,18 +311,32 @@ virtualMachineScaleSets = [
       name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
-        storageCache = {
-          enableRead  = false # Set to true to enable storageReadCache within fileSystemMount
-          enableWrite = false # Set to true to enable storageWriteCache within fileSystemMount
-        }
-        fileSystemMount = {
-          enable            = false
-          storageRead       = "net use R: \\\\data.artist.studio\\default /persistent:yes"
-          storageReadCache  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
-          storageWrite      = "net use W: \\\\data.artist.studio\\default /persistent:yes"
-          storageWriteCache = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
-          schedulerDeadline = "net use S: \\\\scheduler.artist.studio\\Deadline /persistent:yes"
-        }
+        fileSystemMounts = [
+          {
+            enable = false # Storage Read
+            mount  = "mount -o anon \\\\data.artist.studio\\default R:"
+          },
+          {
+            enable = false # Storage Read Cache
+            mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+          },
+          {
+            enable = false # Storage Write
+            mount  = "mount -o anon \\\\data.artist.studio\\default W:"
+          },
+          {
+            enable = false # Storage Write Cache
+            mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
+          },
+          {
+            enable = true # Scheduler Deadline
+            mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+          },
+          {
+            enable = true # Scheduler Royal Render
+            mount  = "mount -o anon \\\\scheduler.artist.studio\\RoyalRender T:"
+          }
+        ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
           enable       = true
           delayTimeout = "PT5M"
@@ -303,7 +359,10 @@ virtualMachineScaleSets = [
   }
 ]
 
-servicePassword = "P@ssword1234"
+serviceAccount = {
+  name     = "aaaService"
+  password = "P@ssword1234"
+}
 
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #

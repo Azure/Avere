@@ -3,11 +3,15 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.58.0"
+      version = "~>3.59.0"
+    }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~>2.39.0"
     }
   }
   backend "azurerm" {
-    key = "7.Artist.Workstation"
+    key = "6.Render.Manager"
   }
 }
 
@@ -89,23 +93,24 @@ variable "virtualMachines" {
           fileName = string
           parameters = object(
             {
-              storageCache = object(
+              autoScale = object(
                 {
-                  enableRead  = bool
-                  enableWrite = bool
+                  enable                   = bool
+                  fileName                 = string
+                  resourceGroupName        = string
+                  scaleSetName             = string
+                  scaleSetMachineCountMax  = number
+                  jobWaitThresholdSeconds  = number
+                  workerIdleDeleteSeconds  = number
+                  detectionIntervalSeconds = number
                 }
               )
-              fileSystemMount = object(
+              qubeLicense = object(
                 {
-                  enable            = bool
-                  storageRead       = string
-                  storageReadCache  = string
-                  storageWrite      = string
-                  storageWriteCache = string
-                  schedulerDeadline = string
+                  userName     = string
+                  userPassword = string
                 }
               )
-              teradiciLicenseKey = string
             }
           )
         }
@@ -119,16 +124,31 @@ variable "virtualMachines" {
   ))
 }
 
-variable "servicePassword" {
-  type = string
+variable "serviceAccount" {
+  type = object(
+    {
+      name     = string
+      password = string
+    }
+  )
+}
+
+variable "privateDns" {
+  type = object(
+    {
+      aRecordName = string
+      ttlSeconds  = number
+    }
+  )
 }
 
 variable "computeNetwork" {
   type = object(
     {
-      name              = string
-      subnetName        = string
-      resourceGroupName = string
+      name               = string
+      subnetName         = string
+      resourceGroupName  = string
+      privateDnsZoneName = string
     }
   )
 }
@@ -184,7 +204,7 @@ data "terraform_remote_state" "image" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "2.Image.Builder"
+    key                  = "3.Image.Builder"
   }
 }
 
@@ -193,14 +213,19 @@ data "azurerm_virtual_network" "compute" {
   resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
-data "azurerm_subnet" "workstation" {
-  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.workstation].name
+data "azurerm_subnet" "farm" {
+  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
+data "azurerm_private_dns_zone" "network" {
+  name                = !local.stateExistsNetwork ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
+  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
+}
+
 locals {
-  servicePassword    = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
+  servicePassword    = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachinesLinux = [
     for virtualMachine in var.virtualMachines : merge(virtualMachine, {
@@ -217,42 +242,54 @@ locals {
       }
     }) if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
   ]
+  virtualMachineNames = [
+    for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
+  ]
 }
 
-resource "azurerm_resource_group" "workstation" {
+resource "azurerm_resource_group" "scheduler" {
   name     = var.resourceGroupName
   location = module.global.regionName
 }
 
-resource "azurerm_network_interface" "workstation" {
+#########################################################################
+# Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
+#########################################################################
+
+resource "azurerm_network_interface" "scheduler" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != ""
   }
   name                = each.value.name
-  resource_group_name = azurerm_resource_group.workstation.name
-  location            = azurerm_resource_group.workstation.location
+  resource_group_name = azurerm_resource_group.scheduler.name
+  location            = azurerm_resource_group.scheduler.location
   ip_configuration {
     name                          = "ipConfig"
-    subnet_id                     = data.azurerm_subnet.workstation.id
+    subnet_id                     = data.azurerm_subnet.farm.id
     private_ip_address_allocation = "Dynamic"
   }
   enable_accelerated_networking = each.value.network.enableAcceleration
 }
 
-resource "azurerm_linux_virtual_machine" "workstation" {
+resource "azurerm_linux_virtual_machine" "scheduler" {
   for_each = {
     for virtualMachine in local.virtualMachinesLinux : virtualMachine.name => virtualMachine
   }
   name                            = each.value.name
-  resource_group_name             = azurerm_resource_group.workstation.name
-  location                        = azurerm_resource_group.workstation.location
-  size                            = each.value.machine.size
+  resource_group_name             = azurerm_resource_group.scheduler.name
+  location                        = azurerm_resource_group.scheduler.location
   source_image_id                 = each.value.machine.image.id
+  size                            = each.value.machine.size
   admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
+  custom_data = base64encode(
+    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {
+      renderManager = module.global.renderManager
+    }))
+  )
   network_interface_ids = [
-    "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
+    "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -281,7 +318,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     }
   }
   depends_on = [
-    azurerm_network_interface.workstation
+    azurerm_network_interface.scheduler
   ]
 }
 
@@ -294,17 +331,20 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
   auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
-    script = "${base64encode(
+    script: "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
         renderManager   = module.global.renderManager
+        binStorageHost  = module.global.binStorage.host
+        binStorageAuth  = module.global.binStorage.auth
+        serviceAccount  = var.serviceAccount.name
         servicePassword = local.servicePassword
       }))
     )}"
   })
   depends_on = [
-    azurerm_linux_virtual_machine.workstation
+    azurerm_linux_virtual_machine.scheduler
   ]
 }
 
@@ -317,7 +357,7 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
   publisher                  = "Microsoft.Azure.Monitor"
   type_handler_version       = "1.21"
   auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     workspaceId = data.azurerm_log_analytics_workspace.monitor[0].workspace_id
   })
@@ -325,24 +365,30 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
     workspaceKey = data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
   })
   depends_on = [
-    azurerm_linux_virtual_machine.workstation
+    azurerm_linux_virtual_machine.scheduler
   ]
 }
 
-resource "azurerm_windows_virtual_machine" "workstation" {
+resource "azurerm_windows_virtual_machine" "scheduler" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows"
   }
   name                = each.value.name
-  resource_group_name = azurerm_resource_group.workstation.name
-  location            = azurerm_resource_group.workstation.location
-  size                = each.value.machine.size
+  resource_group_name = azurerm_resource_group.scheduler.name
+  location            = azurerm_resource_group.scheduler.location
   source_image_id     = each.value.machine.image.id
+  size                = each.value.machine.size
   admin_username      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
-  custom_data         = base64encode(templatefile("../0.Global.Foundation/functions.ps1", {}))
+  custom_data = base64encode(
+    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {
+      renderManager   = module.global.renderManager
+      serviceAccount  = var.serviceAccount.name
+      servicePassword = local.servicePassword
+    }))
+  )
   network_interface_ids = [
-    "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
+    "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
   ]
   os_disk {
     storage_account_type = each.value.operatingSystem.disk.storageType
@@ -356,7 +402,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     ]
   }
   depends_on = [
-    azurerm_network_interface.workstation
+    azurerm_network_interface.scheduler
   ]
 }
 
@@ -369,17 +415,18 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   publisher                  = "Microsoft.Compute"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
         renderManager   = module.global.renderManager
+        serviceAccount  = var.serviceAccount.name
         servicePassword = local.servicePassword
       })), "UTF-16LE"
     )}"
   })
   depends_on = [
-    azurerm_windows_virtual_machine.workstation
+    azurerm_windows_virtual_machine.scheduler
   ]
 }
 
@@ -392,7 +439,7 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   publisher                  = "Microsoft.Azure.Monitor"
   type_handler_version       = "1.7"
   auto_upgrade_minor_version = true
-  virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     workspaceId = data.azurerm_log_analytics_workspace.monitor[0].workspace_id
   })
@@ -400,7 +447,17 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
     workspaceKey = data.azurerm_log_analytics_workspace.monitor[0].primary_shared_key
   })
   depends_on = [
-    azurerm_windows_virtual_machine.workstation
+    azurerm_windows_virtual_machine.scheduler
+  ]
+}
+
+resource "azurerm_private_dns_a_record" "scheduler" {
+  name                = var.privateDns.aRecordName
+  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
+  zone_name           = data.azurerm_private_dns_zone.network.name
+  ttl                 = var.privateDns.ttlSeconds
+  records = [
+    azurerm_network_interface.scheduler[local.virtualMachineNames[0]].private_ip_address
   ]
 }
 
@@ -410,4 +467,8 @@ output "resourceGroupName" {
 
 output "virtualMachines" {
   value = var.virtualMachines
+}
+
+output "privateDnsRecord" {
+  value = azurerm_private_dns_a_record.scheduler
 }

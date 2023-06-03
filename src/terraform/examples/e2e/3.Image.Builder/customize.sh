@@ -33,6 +33,7 @@ rpm -i $installFile
 dnf -y install python3-devel bc git lsof unzip
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
+  dnf -y module install nodejs:18
 fi
 
 versionInfo="3.26.4"
@@ -418,6 +419,7 @@ if [[ $renderManager == *RoyalRender* ]]; then
   unzip -q $installFile
   echo "Customize (End): Royal Render Download"
 
+  echo "Customize (Start): Royal Render Setup"
   dnf -y install xcb-util-wm
   dnf -y install xcb-util-image
   dnf -y install xcb-util-keysyms
@@ -426,13 +428,13 @@ if [[ $renderManager == *RoyalRender* ]]; then
   installPath="RoyalRender*"
   installFile="rrSetup_linux"
   chmod +x ./$installPath/$installFile
+  mkdir -p $installRoot
+  ./$installPath/$installFile -console -rrRoot $installRoot 2>&1 | tee royal-render.log
+  echo "Customize (End): Royal Render Setup"
+
   if [ $machineType == Scheduler ]; then
-    echo "Customize (Start): Royal Render Server"
-    mkdir -p $installRoot
-    ./$installPath/$installFile -console -rrRoot $installRoot 2>&1 | tee royal-render.log
     echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
-    echo "Customize (End): Royal Render Server"
   fi
 
   binPaths="$binPaths:$binPathScheduler"

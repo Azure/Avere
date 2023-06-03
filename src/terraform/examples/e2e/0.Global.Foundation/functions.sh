@@ -1,17 +1,18 @@
 curl http://data.artist.studio:14000/dist/v1/install | sh
 
-function SetMount {
-  storageMount="$1"
-  storageCacheMount="$2"
-  enableStorageCache=$3
-  if [ $enableStorageCache == true ]; then
-    AddMount "$storageCacheMount"
-  else
-    AddMount "$storageMount"
+function SetServiceAccount {
+  serviceAccount=$1
+  servicePassword=$2
+  if ! id -u $serviceAccount &> /dev/null; then
+    useradd --system --password $servicePassword $serviceAccount
   fi
 }
 
-function AddMount {
+function GetEncodedValue {
+  echo $1 | base64 -d | jq -r $2
+}
+
+function SetFileSystemMount {
   fileSystemMount="$1"
   mountDirectory=$(cut -d " " -f 2 <<< "$fileSystemMount")
   if [ $(grep -c $mountDirectory /etc/fstab) ]; then
@@ -20,19 +21,12 @@ function AddMount {
   fi
 }
 
-function EnableRenderClient {
+function EnableSchedulerClient {
   renderManager="$1"
-  servicePassword="$2"
+  serviceAccount=$2
+  servicePassword=$3
   # if [[ $renderManager == *RoyalRender* ]]; then
   #   installType="royal-render-client"
-
-  #   installPath="RoyalRender*"
-  #   installFile="rrSetup_linux"
-  #   rrRootShare="\\scheduler.artist.studio\RoyalRender"
-  #   ./$installPath/$installFile -console -rrRoot $rrRootShare 2>&1 | tee $installType.log
-
-  #   serviceUser="rrService"
-  #   useradd -r $serviceUser -p "$servicePassword"
-  #   rrWorkstation_installer -plugins -service -rrUser $serviceUser -rrUserPW "$servicePassword" -fwOut 2>&1 | tee $installType-service.log
+  #   rrWorkstation_installer -plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut 2>&1 | tee $installType-service.log
   # fi
 }

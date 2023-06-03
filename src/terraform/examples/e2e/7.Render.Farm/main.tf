@@ -3,11 +3,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.58.0"
+      version = "~>3.59.0"
     }
   }
   backend "azurerm" {
-    key = "6.Render.Farm"
+    key = "7.Render.Farm"
   }
 }
 
@@ -96,22 +96,12 @@ variable "virtualMachineScaleSets" {
           fileName = string
           parameters = object(
             {
-              storageCache = object(
+              fileSystemMounts = list(object(
                 {
-                  enableRead  = bool
-                  enableWrite = bool
+                  enable = bool
+                  mount  = string
                 }
-              )
-              fileSystemMount = object(
-                {
-                  enable            = bool
-                  storageRead       = string
-                  storageReadCache  = string
-                  storageWrite      = string
-                  storageWriteCache = string
-                  schedulerDeadline = string
-                }
-              )
+              ))
               terminateNotification = object(
                 {
                   enable       = bool
@@ -145,8 +135,13 @@ variable "virtualMachineScaleSets" {
   ))
 }
 
-variable "servicePassword" {
-  type = string
+variable "serviceAccount" {
+  type = object(
+    {
+      name     = string
+      password = string
+    }
+  )
 }
 
 variable "computeNetwork" {
@@ -210,7 +205,7 @@ data "terraform_remote_state" "image" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "2.Image.Builder"
+    key                  = "3.Image.Builder"
   }
 }
 
@@ -231,7 +226,7 @@ data "azurerm_private_dns_zone" "studio" {
 }
 
 locals {
-  servicePassword    = var.servicePassword != "" ? var.servicePassword : data.azurerm_key_vault_secret.service_password[0].value
+  servicePassword    = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachineScaleSetsLinux = [
     for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet, {
@@ -328,6 +323,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
         script: "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
             renderManager   = module.global.renderManager
+            serviceAccount  = var.serviceAccount.name
             servicePassword = local.servicePassword
           }))
         )}"
@@ -431,6 +427,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
             renderManager   = module.global.renderManager
+            serviceAccount  = var.serviceAccount.name
             servicePassword = local.servicePassword
           })), "UTF-16LE"
         )}"

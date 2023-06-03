@@ -1,5 +1,13 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
+function SetServiceAccount ($serviceAccount, $serviceAccountPassword) {
+  $localUser = Get-LocalUser -Name $serviceAccount -ErrorAction SilentlyContinue
+  if ($localUser -eq $null) {
+    $servicePassword = ConvertTo-SecureString $serviceAccountPassword -AsPlainText -Force
+    New-LocalUser -Name $serviceAccount -Password $servicePassword -PasswordNeverExpires -AccountNeverExpires
+  }
+}
+
 function StartProcess ($filePath, $argumentList, $logFile) {
   if ($logFile -eq $null) {
     if ($argumentList -eq $null) {
@@ -19,16 +27,12 @@ function StartProcess ($filePath, $argumentList, $logFile) {
   }
 }
 
-function SetMount ($storageMount, $storageCacheMount, $enableStorageCache) {
-  if ($enableStorageCache -eq $true) {
-    AddMount $storageCacheMount
-  } else {
-    AddMount $storageMount
-  }
+function FileExists ($filePath) {
+  return Test-Path -PathType Leaf -Path $filePath
 }
 
-function AddMount ($fileSystemMount) {
-  if (!(Test-Path -PathType Leaf -Path $fileSystemMountPath)) {
+function SetFileSystemMount ($fileSystemMount) {
+  if (!(FileExists $fileSystemMountPath)) {
     New-Item -ItemType File -Path $fileSystemMountPath
   }
   $mountScript = Get-Content -Path $fileSystemMountPath
@@ -37,21 +41,22 @@ function AddMount ($fileSystemMount) {
   }
 }
 
-function EnableRenderClient ($renderManager, $servicePassword) {
+function RegisterFileSystemMount ($fileSystemMountPath) {
+  if (FileExists $fileSystemMountPath) {
+    StartProcess $fileSystemMountPath $null file-system-mount
+    $taskName = "AAA File System Mount"
+    $taskAction = New-ScheduledTaskAction -Execute $fileSystemMountPath
+    $taskTrigger = New-ScheduledTaskTrigger -AtStartup
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
+  }
+}
+
+function EnableSchedulerClient ($renderManager, $serviceAccount, $servicePassword) {
   if ("$renderManager" -like "*Deadline*") {
     deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
   }
   # if ("$renderManager" -like "*RoyalRender*") {
   #   $installType = "royal-render-client"
-
-  #   $installPath = "RoyalRender*"
-  #   $installFile = "rrSetup_win.exe"
-  #   $rrRootShare = "\\scheduler.artist.studio\RoyalRender"
-  #   StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
-
-  #   $serviceUser = "rrService"
-  #   $servicePwd = ConvertTo-SecureString "$servicePassword" -AsPlainText -Force
-  #   New-LocalUser -Name $serviceUser -Password $servicePwd -PasswordNeverExpires
-  #   StartProcess $rrRootShare\bin\win64\rrWorkstation_installer.exe "-plugins -service -rrUser $serviceUser -rrUserPW $servicePassword -fwOut" $installType-service
+  #   StartProcess rrWorkstation_installer.exe "-plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut" $installType-service
   # }
 }

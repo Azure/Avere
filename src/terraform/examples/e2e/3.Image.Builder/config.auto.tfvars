@@ -128,8 +128,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "MoonRay",
-        "Unreal"
+        # "MoonRay"
       ]
       customize = [
       ]
@@ -151,8 +150,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "MoonRay",
-        "Unreal"
+        # "MoonRay"
       ]
       customize = [
       ]
@@ -221,7 +219,7 @@ imageTemplates = [
       ]
       customize = [
         "$domainName = 'artist.studio'",
-        "$domainPassword = 'P$ssword1234'",
+        "$domainPassword = 'P@ssword1234'",
         "Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools",
         "Import-Module ADDSDeployment",
         "Install-ADDSForest -DomainName $domainName -SafeModeAdministratorPassword $domainPassword -Force -NoRebootOnCompletion"
@@ -262,8 +260,7 @@ imageTemplates = [
       osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
-        "Blender",
-        "Unreal"
+        "Blender"
       ]
       customize = [
       ]
@@ -284,8 +281,7 @@ imageTemplates = [
       osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
-        "Blender",
-        "Unreal"
+        "Blender"
       ]
       customize = [
       ]

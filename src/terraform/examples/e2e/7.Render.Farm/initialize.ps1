@@ -1,21 +1,23 @@
 $ErrorActionPreference = "Stop"
 
-Set-Location -Path "C:\Users\Public\Downloads"
+$binDirectory = "C:\Users\Public\Downloads"
+Set-Location -Path $binDirectory
 
 $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-if ("${fileSystemMount.enable}" -eq $true) {
-  SetMount "${fileSystemMount.storageRead}" "${fileSystemMount.storageReadCache}" "${storageCache.enableRead}"
-  SetMount "${fileSystemMount.storageWrite}" "${fileSystemMount.storageWriteCache}" "${storageCache.enableWrite}"
-  if ("${renderManager}" -like "*Deadline*") {
-    AddMount "${fileSystemMount.schedulerDeadline}"
-  }
-  StartProcess $fileSystemMountPath $null file-system-mount
-}
+SetServiceAccount ${serviceAccount} ${servicePassword}
 
-EnableRenderClient "${renderManager}" "${servicePassword}"
+$fileSystemMounts = ConvertFrom-Json -InputObject '${jsonencode(fileSystemMounts)}'
+foreach ($fileSystemMount in $fileSystemMounts) {
+  if ($fileSystemMount.enable -eq $true) {
+    SetFileSystemMount $fileSystemMount.mount
+  }
+}
+RegisterFileSystemMount $fileSystemMountPath
+
+EnableSchedulerClient "${renderManager}" ${serviceAccount} ${servicePassword}
 
 if ("${terminateNotification.enable}" -eq $true) {
   $taskName = "AAA Terminate Event Handler"

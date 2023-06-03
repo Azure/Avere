@@ -3,11 +3,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.58.0"
+      version = "~>3.59.0"
     }
   }
   backend "azurerm" {
-    key = "8.Artificial.Intelligence"
+    key = "2.Artificial.Intelligence"
   }
 }
 

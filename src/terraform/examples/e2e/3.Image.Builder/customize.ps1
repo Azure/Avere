@@ -67,6 +67,13 @@ $installType = "python"
 StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
 Write-Host "Customize (End): Python"
 
+if ($machineType -eq "Workstation") {
+  Write-Host "Customize (Start): Node.js"
+  $installType = "nodejs"
+  StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
+  Write-Host "Customize (End): Node.js"
+}
+
 Write-Host "Customize (Start): Git"
 $installType = "git"
 StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
@@ -158,7 +165,7 @@ if ($renderEngines -contains "PBRT") {
   New-Item -ItemType Directory -Path $installPathV3 -Force
   StartProcess $binPathCMake\cmake.exe "-B ""$installPathV3"" -S $binDirectory\$installType" $installType-cmake
   StartProcess $binPathMSBuild\MSBuild.exe """$installPathV3\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
-  New-Item -ItemType SymbolicLink -Target $installPathV3\Release\pbrt.exe -Path $installPath\pbrt3
+  New-Item -ItemType SymbolicLink -Target $installPathV3\Release\pbrt.exe -Path $installPath\pbrt3.exe
   Write-Host "Customize (End): PBRT v3"
 
   Write-Host "Customize (Start): PBRT v4"
@@ -169,7 +176,7 @@ if ($renderEngines -contains "PBRT") {
   New-Item -ItemType Directory -Path $installPathV4 -Force
   StartProcess $binPathCMake\cmake.exe "-B ""$installPathV4"" -S $binDirectory\$installType" $installType-cmake
   StartProcess $binPathMSBuild\MSBuild.exe """$installPathV4\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
-  New-Item -ItemType SymbolicLink -Target $installPathV4\Release\pbrt.exe -Path $installPath\pbrt4
+  New-Item -ItemType SymbolicLink -Target $installPathV4\Release\pbrt.exe -Path $installPath\pbrt4.exe
   Write-Host "Customize (End): PBRT v4"
 
   $binPaths += ";$installPath"
@@ -428,19 +435,21 @@ if ("$renderManager" -like "*RoyalRender*") {
   Expand-Archive -Path $installFile
   Write-Host "Customize (End): Royal Render Download"
 
+  Write-Host "Customize (Start): Royal Render Setup"
+  $installType = "royal-render"
+  $installPath = "RoyalRender*"
+  $installFile = "rrSetup_win.exe"
+  $rrShareName = $installRoot.TrimStart("\")
+  $rrRootShare = "\\$(hostname)$installRoot"
+  New-Item -ItemType Directory -Path $installRoot
+  New-SmbShare -Name $rrShareName -Path "C:$installRoot" -FullAccess "Everyone"
+  StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
+  Remove-SmbShare -Name $rrShareName -Force
+  New-NfsShare -Name "RoyalRender" -Path C:$installRoot -Permission ReadWrite
+  Write-Host "Customize (End): Royal Render Setup"
+
   if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Royal Render Server"
-    $installType = "royal-render"
-    $installPath = "RoyalRender*"
-    $installFile = "rrSetup_win.exe"
-    $rrShareName = $installRoot.TrimStart("\")
-    $rrRootShare = "\\$(hostname)$installRoot"
-    New-Item -ItemType Directory -Path $installRoot
-    New-SmbShare -Name $rrShareName -Path "C:$installRoot" -FullAccess "Everyone"
-    StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
-    Remove-SmbShare -Name $rrShareName -Force
     New-NfsShare -Name "RoyalRender" -Path C:$installRoot -Permission ReadWrite
-    Write-Host "Customize (End): Royal Render Server"
   }
 
   Write-Host "Customize (Start): Royal Render Viewer"

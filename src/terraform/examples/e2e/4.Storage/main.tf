@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.58.0"
+      version = "~>3.59.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -11,7 +11,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "3.Storage"
+    key = "4.Storage"
   }
 }
 
@@ -120,7 +120,7 @@ data "terraform_remote_state" "image" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "2.Image.Builder"
+    key                  = "3.Image.Builder"
   }
 }
 

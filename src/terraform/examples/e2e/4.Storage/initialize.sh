@@ -41,12 +41,12 @@ if [ "${wekaClusterName}" != "" ]; then
   echo 'coreIdsCompute=$(GetCoreIds $coreCountCompute $coreCountDrives)' >> $coreIdsScript
   echo 'coreIdsFrontend=$(GetCoreIds $coreCountFrontend $(($coreCountDrives + $coreCountCompute)))' >> $coreIdsScript
 
-  machineSpec=${wekaMachineSpec}
+  machineSpec='${wekaMachineSpec}'
   source $coreIdsScript
 
   driveDisksScript=${wekaDriveDisksScript}
   echo 'nvmeDisks=/dev/nvme0n1' > $driveDisksScript
-  echo 'for (( d=1; d<$(echo $machineSpec | jq -r .nvmeDisk); d++ )); do' >> $driveDisksScript
+  echo 'for (( d=1; d<$(echo $machineSpec | jq -r .nvmeDisks); d++ )); do' >> $driveDisksScript
   echo '  nvmeDisks="$nvmeDisks /dev/nvme$(echo $d)n1"' >> $driveDisksScript
   echo 'done' >> $driveDisksScript
 

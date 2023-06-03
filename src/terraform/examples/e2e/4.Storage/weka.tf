@@ -155,58 +155,48 @@ locals {
     }
   })
   wekaMachineSize = trimsuffix(trimsuffix(trimprefix(var.weka.machine.size, "Standard_"), "as_v3"), "s_v3")
-  wekaMachineSpec = local.wekaMachineSpecs[local.wekaMachineSize]
+  wekaMachineSpec = jsonencode(local.wekaMachineSpecs[local.wekaMachineSize])
   wekaMachineSpecs = {
-    L8 = <<-json
-      '{
-        "nvmeDisk"      : 1,
-        "coreDrives"    : 1,
-        "coreCompute"   : 1,
-        "coreFrontend"  : 1,
-        "networkCards"  : 4,
-        "computeMemory" : "31GB"
-      }'
-    json
-    L16 = <<-json
-      '{
-        "nvmeDisk"      : 2,
-        "coreDrives"    : 2,
-        "coreCompute"   : 4,
-        "coreFrontend"  : 1,
-        "networkCards"  : 8,
-        "computeMemory" : "72GB"
-      }'
-    json
-    L32 = <<-json
-      '{
-        "nvmeDisk"      : 4,
-        "coreDrives"    : 2,
-        "coreCompute"   : 4,
-        "coreFrontend"  : 1,
-        "networkCards"  : 8,
-        "computeMemory" : "189GB"
-      }'
-    json
-    L48 = <<-json
-      '{
-        "nvmeDisk"      : 6,
-        "coreDrives"    : 3,
-        "coreCompute"   : 3,
-        "coreFrontend"  : 1,
-        "networkCards"  : 8,
-        "computeMemory" : "306GB"
-      }'
-    json
-    L64 = <<-json
-      '{
-        "nvmeDisk"      : 8,
-        "coreDrives"    : 2,
-        "coreCompute"   : 4,
-        "coreFrontend"  : 1,
-        "networkCards"  : 8,
-        "computeMemory" : "418GB"
-      }'
-    json
+    L8 = {
+      nvmeDisks     = 1
+      coreDrives    = 1
+      coreCompute   = 1
+      coreFrontend  = 1
+      networkCards  = 4
+      computeMemory = "31GB"
+    }
+    L16 = {
+      nvmeDisks     = 2
+      coreDrives    = 2
+      coreCompute   = 4
+      coreFrontend  = 1
+      networkCards  = 8
+      computeMemory = "72GB"
+    }
+    L32 = {
+      nvmeDisks     = 4
+      coreDrives    = 2
+      coreCompute   = 4
+      coreFrontend  = 1
+      networkCards  = 8
+      computeMemory = "189GB"
+    }
+    L48 = {
+      nvmeDisks     = 6
+      coreDrives    = 3
+      coreCompute   = 3
+      coreFrontend  = 1
+      networkCards  = 8
+      computeMemory = "306GB"
+    }
+    L64 = {
+      nvmeDisks     = 8
+      coreDrives    = 2
+      coreCompute   = 4
+      coreFrontend  = 1
+      networkCards  = 8
+      computeMemory = "418GB"
+    }
   }
   wekaCoreIdsScript    = "${local.binDirectory}/weka-core-ids.sh"
   wekaDriveDisksScript = "${local.binDirectory}/weka-drive-disks.sh"
@@ -380,7 +370,7 @@ resource "terraform_data" "weka_cluster_create" {
   }
   provisioner "remote-exec" {
     inline = [
-      "machineSpec=${local.wekaMachineSpec}",
+      "machineSpec='${local.wekaMachineSpec}'",
       "source ${local.wekaDriveDisksScript}",
       "weka cluster create ${join(" ", data.azurerm_virtual_machine_scale_set.weka[0].instances[*].private_ip_address)} --admin-password ${var.weka.adminLogin.userPassword} 2>&1 | tee weka-cluster-create.log",
       "weka user login admin ${var.weka.adminLogin.userPassword}",
@@ -403,7 +393,7 @@ resource "terraform_data" "weka_container_setup" {
   provisioner "remote-exec" {
     inline = [
       "failureDomain=$(hostname)",
-      "machineSpec=${local.wekaMachineSpec}",
+      "machineSpec='${local.wekaMachineSpec}'",
       "source ${local.wekaCoreIdsScript}",
       "joinIps=${join(",", [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address])}",
       "sudo weka local setup container --name compute0 --base-port 15000 --failure-domain $failureDomain --join-ips $joinIps --cores $coreCountCompute --compute-dedicated-cores $coreCountCompute --core-ids $coreIdsCompute --dedicate --memory $computeMemory --no-frontends &> weka-container-setup-compute0.log",
