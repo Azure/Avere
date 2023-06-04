@@ -157,15 +157,15 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxArtistCPU"
+    name = "LnxArtistNVIDIA"
     image = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
-      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuProvider    = ""                   # NVIDIA or AMD
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "3.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
@@ -180,15 +180,15 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxArtistGPU"
+    name = "LnxArtistAMD"
     image = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
+      machineSize    = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "AMD"                      # NVIDIA or AMD
       outputVersion  = "3.1.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
@@ -288,15 +288,15 @@ imageTemplates = [
     }
   },
   {
-    name = "WinArtistCPU"
+    name = "WinArtistNVIDIA"
     image = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
-      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuProvider    = ""                   # NVIDIA or AMD
+      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "3.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
@@ -310,15 +310,15 @@ imageTemplates = [
     }
   },
   {
-    name = "WinArtistGPU"
+    name = "WinArtistAMD"
     image = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"
     }
     build = {
       machineType    = "Workstation"
-      machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
+      machineSize    = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "AMD"                      # NVIDIA or AMD
       outputVersion  = "3.1.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024

@@ -6,9 +6,9 @@ resourceGroupName = "ArtistAnywhere.Workstation" # Alphanumeric, underscores, hy
 
 virtualMachines = [
   {
-    name = "" # "LnxArtistCPU"
+    name = "LnxArtistNVIDIA"
     machine = {
-      size = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      size = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/3.0.0"
         plan = {
@@ -76,9 +76,9 @@ virtualMachines = [
     }
   },
   {
-    name = "LnxArtistGPU"
+    name = "LnxArtistAMD"
     machine = {
-      size = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      size = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/3.1.0"
         plan = {
@@ -146,9 +146,9 @@ virtualMachines = [
     }
   },
   {
-    name = "" # "WinArtistCPU"
+    name = "WinArtistNVIDIA"
     machine = {
-      size = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      size = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinArtist/versions/3.0.0"
         plan = {
@@ -216,9 +216,9 @@ virtualMachines = [
     }
   },
   {
-    name = "WinArtistGPU"
+    name = "WinArtistAMD"
     machine = {
-      size = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      size = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinArtist/versions/3.1.0"
         plan = {
