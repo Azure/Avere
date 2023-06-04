@@ -42,6 +42,14 @@ variable "openAI" {
   )
 }
 
+variable "appWorkflows" {
+  type = list(object(
+    {
+      name = string
+    }
+  ))
+}
+
 variable "computeNetwork" {
   type = object(
     {
@@ -194,10 +202,38 @@ resource "azurerm_cognitive_account" "open_ai" {
   }
 }
 
+#################################################################################
+# Logic Apps (https://learn.microsoft.com/azure/logic-apps/logic-apps-overview) #
+#################################################################################
+
+resource "azurerm_logic_app_workflow" "ai" {
+  for_each = {
+    for appWorkflow in var.appWorkflows : appWorkflow.name => appWorkflow
+  }
+  name                = each.value.name
+  location            = azurerm_resource_group.ai.location
+  resource_group_name = azurerm_resource_group.ai.name
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      data.azurerm_user_assigned_identity.studio.id
+    ]
+  }
+}
+
 output "resourceGroupName" {
   value = var.resourceGroupName
 }
 
-output "serviceEndpoint" {
+output "openAI" {
   value = azurerm_cognitive_account.open_ai.endpoint
+}
+
+output "appWorkflows" {
+  value = [
+    for appWorkflow in azurerm_logic_app_workflow.ai : {
+      name     = appWorkflow.name
+      endpoint = appWorkflow.access_endpoint
+    }
+  ]
 }

@@ -12,6 +12,16 @@ openAI = {
   enableStorage = false
 }
 
+#################################################################################
+# Logic Apps (https://learn.microsoft.com/azure/logic-apps/logic-apps-overview) #
+#################################################################################
+
+appWorkflows = [
+  {
+    name = "animatic"
+  }
+]
+
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################
