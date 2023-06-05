@@ -395,19 +395,18 @@ if [[ $renderManager == *Flamenco* ]]; then
   tar -xzf $installFile
   echo "Customize (End): Flamenco Download"
 
-  cd "flamenco*"
+  installPath="flamenco*"
   if [ $machineType == Scheduler ]; then
     echo "Customize (Start): Flamenco Server"
     installType="flamenco-server"
-    # ./flamenco-manager --quiet 2>&1 | tee $installType.log
+    # ./$installPath/flamenco-manager --quiet 2>&1 | tee $installType.log
     echo "Customize (End): Flamenco Server"
   else
     echo "Customize (Start): Flamenco Client"
     installType="flamenco-client"
-    # ./flamenco-worker --quiet 2>&1 | tee $installType.log
+    # ./$installPath/flamenco-worker --quiet 2>&1 | tee $installType.log
     echo "Customize (End): Flamenco Client"
   fi
-  cd $binDirectory
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then

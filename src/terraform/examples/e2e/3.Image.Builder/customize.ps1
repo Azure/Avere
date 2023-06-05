@@ -100,7 +100,7 @@ if ($gpuProvider -eq "AMD") {
   if ($machineType -like "*NG*" -and $machineType -like "*v1*") {
     Write-Host "Customize (Start): AMD GPU (NG v1)"
     Write-Host "Customize (End): AMD GPU (NG v1)"
-  } else if ($machineType -like "*NV*" -and $machineType -like "*v4*") {
+  } elseif ($machineType -like "*NV*" -and $machineType -like "*v4*") {
     Write-Host "Customize (Start): AMD GPU (NV v4)"
     $installType = "amd-gpu"
     $installFile = "$installType.exe"
