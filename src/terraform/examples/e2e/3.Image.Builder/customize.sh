@@ -353,6 +353,9 @@ if [[ $renderManager == *Deadline* ]]; then
     echo "{ role: \"dbOwner\", db: \"$databaseName\" }" >> $createUserScript
     echo "]})" >> $createUserScript
     mongo $createUserScript 2>&1 | tee $installType.log
+    if grep --silent --ignore-case exception $installType.log; then
+      exit 1
+    fi
     echo "Customize (End): Mongo DB User"
 
     echo "Customize (Start): Deadline Server"
