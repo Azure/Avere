@@ -448,7 +448,6 @@ if ("$renderManager" -like "*RoyalRender*") {
   New-SmbShare -Name $rrShareName -Path "C:$installRoot" -FullAccess "Everyone"
   StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
   Remove-SmbShare -Name $rrShareName -Force
-  New-NfsShare -Name "RoyalRender" -Path C:$installRoot -Permission ReadWrite
   Write-Host "Customize (End): Royal Render Setup"
 
   if ($machineType -eq "Scheduler") {
