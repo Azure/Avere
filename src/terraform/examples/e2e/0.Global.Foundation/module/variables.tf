@@ -2,8 +2,11 @@
 # Global Variables #
 ####################
 
-variable "regionName" {
-  default = "WestUS3" # Set default Azure region name (az account list-locations --query [].name)
+variable "regionNames" { # Set Azure region names from "az account list-locations --query [].name"
+  default = [
+    "WestUS3",
+    "EastUS2"
+  ]
 }
 
 variable "resourceGroupName" {
@@ -34,7 +37,7 @@ variable "managedIdentity" {
 # Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview)
 variable "keyVault" {
   default = {
-    name = "" # Set to a globally unique name (alphanumeric, hyphens)
+    name = "azstudio" # Set to a globally unique name (alphanumeric, hyphens)
     secretName = {
       gatewayConnection = "GatewayConnection"
       adminUsername     = "AdminUsername"
@@ -50,7 +53,7 @@ variable "keyVault" {
 }
 
 # Monitor (https://learn.microsoft.com/azure/azure-monitor/overview)
-variable "monitorWorkspace" {
+variable "monitor" {
   default = {
     name = "azstudio"
   }
@@ -63,8 +66,8 @@ variable "binStorage" {
   }
 }
 
-output "regionName" {
-  value = var.regionName
+output "regionNames" {
+  value = var.regionNames
 }
 
 output "resourceGroupName" {
@@ -87,8 +90,8 @@ output "keyVault" {
   value = var.keyVault
 }
 
-output "monitorWorkspace" {
-  value = var.monitorWorkspace
+output "monitor" {
+  value = var.monitor
 }
 
 output "binStorage" {

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+      version = "~>3.60.0"
     }
   }
   backend "azurerm" {
@@ -184,8 +184,8 @@ data "azurerm_key_vault_secret" "service_password" {
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  count               = module.global.monitorWorkspace.name != "" ? 1 : 0
-  name                = module.global.monitorWorkspace.name
+  count               = module.global.monitor.name != "" ? 1 : 0
+  name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
 
@@ -248,7 +248,7 @@ locals {
 
 resource "azurerm_resource_group" "farm" {
   name     = var.resourceGroupName
-  location = module.global.regionName
+  location = module.global.regionNames[0]
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
@@ -346,7 +346,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic extension {
-    for_each = each.value.monitorExtension.enable && module.global.monitorWorkspace.name != "" ? [1] : []
+    for_each = each.value.monitorExtension.enable && module.global.monitor.name != "" ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorLinuxAgent"
@@ -450,7 +450,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic extension {
-    for_each = each.value.monitorExtension.enable && module.global.monitorWorkspace.name != "" ? [1] : []
+    for_each = each.value.monitorExtension.enable && module.global.monitor.name != "" ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorWindowsAgent"
@@ -475,7 +475,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
 }
 
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = azurerm_resource_group.farm.name
 }
 
 output "virtualMachineScaleSets" {

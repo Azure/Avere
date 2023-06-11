@@ -5,12 +5,11 @@ resourceGroupName = "ArtistAnywhere.Network" # Alphanumeric, underscores, hyphen
 #################################################################################################
 
 computeNetwork = {
-  name       = "Studio"
-  regionName = "" # Optional region override
+  name = "Studio"
   addressSpace = [
     "10.1.0.0/16"
   ]
-  dnsIpAddresses = [
+  dnsAddresses = [
   ]
   subnets = [
     {
@@ -89,12 +88,11 @@ computeNetwork = {
 }
 
 storageNetwork = {
-  name       = "" # Set to "" to skip storage network deployment
-  regionName = "" # Optional region override
+  name = "" # Set to "" to skip storage network deployment
   addressSpace = [
     "10.0.0.0/16"
   ]
-  dnsIpAddresses = [
+  dnsAddresses = [
   ]
   subnets = [
     {
@@ -142,7 +140,7 @@ storageNetwork = {
 ################################################################################################################
 
 networkPeering = {
-  enable                      = true
+  enable                      = false
   allowRemoteNetworkAccess    = true
   allowRemoteForwardedTraffic = true
 }
@@ -161,7 +159,7 @@ privateDns = {
 ########################################################################
 
 bastion = {
-  enable              = true
+  enable              = false
   sku                 = "Standard"
   scaleUnitCount      = 2
   enableFileCopy      = true
@@ -243,5 +241,17 @@ expressRouteGateway = {
 ######################################################################
 
 monitor = {
-  enablePrivateLink = false # https://learn.microsoft.com/azure/azure-monitor/logs/private-link-security
+  privateLink = { # https://learn.microsoft.com/azure/azure-monitor/logs/private-link-security
+    enable = false
+  }
+}
+
+#######################################################################
+# Resource dependency configuration for pre-existing deployments only #
+#######################################################################
+
+virtualNetwork = {
+  name              = ""
+  regionName        = ""
+  resourceGroupName = ""
 }

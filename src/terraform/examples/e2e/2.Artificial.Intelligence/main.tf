@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+      version = "~>3.60.0"
     }
   }
   backend "azurerm" {
@@ -101,7 +101,7 @@ locals {
 
 resource "azurerm_resource_group" "ai" {
   name     = var.resourceGroupName
-  location = var.openAI.regionName != "" ? var.openAI.regionName : module.global.regionName
+  location = var.openAI.regionName != "" ? var.openAI.regionName : module.global.regionNames[0]
 }
 
 resource "azurerm_private_dns_zone" "cognitive_services" {
@@ -222,7 +222,7 @@ resource "azurerm_logic_app_workflow" "ai" {
 }
 
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = azurerm_resource_group.ai.name
 }
 
 output "openAI" {
@@ -233,7 +233,7 @@ output "appWorkflows" {
   value = [
     for appWorkflow in azurerm_logic_app_workflow.ai : {
       name     = appWorkflow.name
-      endpoint = appWorkflow.access_endpoint
+      endpoint = "${appWorkflow.access_endpoint}?api-version=2019-05-01"
     }
   ]
 }

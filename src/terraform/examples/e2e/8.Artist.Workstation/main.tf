@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+      version = "~>3.60.0"
     }
   }
   backend "azurerm" {
@@ -118,6 +118,26 @@ variable "serviceAccount" {
   )
 }
 
+variable "trafficManager" {
+  type = object(
+    {
+      profile = object(
+        {
+          name              = string
+          routingMethod     = string
+          enableTrafficView = bool
+        }
+      )
+      dns = object(
+        {
+          name = string
+          ttl  = string
+        }
+      )
+    }
+  )
+}
+
 variable "computeNetwork" {
   type = object(
     {
@@ -158,8 +178,8 @@ data "azurerm_key_vault_secret" "service_password" {
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  count               = module.global.monitorWorkspace.name != "" ? 1 : 0
-  name                = module.global.monitorWorkspace.name
+  count               = module.global.monitor.name != "" ? 1 : 0
+  name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
 
@@ -216,7 +236,7 @@ locals {
 
 resource "azurerm_resource_group" "workstation" {
   name     = var.resourceGroupName
-  location = module.global.regionName
+  location = module.global.regionNames[0]
 }
 
 resource "azurerm_network_interface" "workstation" {
@@ -230,6 +250,7 @@ resource "azurerm_network_interface" "workstation" {
     name                          = "ipConfig"
     subnet_id                     = data.azurerm_subnet.workstation.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = var.trafficManager.profile.name != "" ? azurerm_public_ip.workstation[each.value.name].id : null
   }
   enable_accelerated_networking = each.value.network.enableAcceleration
 }
@@ -306,7 +327,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitorWorkspace.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -382,7 +403,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitorWorkspace.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"
@@ -401,10 +422,61 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   ]
 }
 
+###############################################################################################
+# Traffic Manager (https://learn.microsoft.comazure/traffic-manager/traffic-manager-overview) #
+###############################################################################################
+
+resource "azurerm_traffic_manager_profile" "workstation" {
+  count                  = var.trafficManager.profile.name != "" ? 1 : 0
+  name                   = var.trafficManager.profile.name
+  resource_group_name    = azurerm_resource_group.workstation.name
+  traffic_routing_method = var.trafficManager.profile.routingMethod
+  traffic_view_enabled   = var.trafficManager.profile.enableTrafficView
+  dns_config {
+    relative_name = var.trafficManager.dns.name
+    ttl           = var.trafficManager.dns.ttl
+  }
+  monitor_config {
+    protocol = "HTTP"
+    port     = 80
+    path     = "/"
+  }
+}
+
+resource "azurerm_traffic_manager_external_endpoint" "workstation" {
+  for_each = {
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if var.trafficManager.profile.name != "" && virtualMachine.name != ""
+  }
+  name       = each.value.name
+  target     = azurerm_public_ip.workstation[each.value.name].ip_address
+  profile_id = azurerm_traffic_manager_profile.workstation[0].id
+  depends_on = [
+    azurerm_linux_virtual_machine.workstation,
+    azurerm_windows_virtual_machine.workstation
+  ]
+}
+
+resource "azurerm_public_ip" "workstation" {
+  for_each = {
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if var.trafficManager.profile.name != "" && virtualMachine.name != ""
+  }
+  name                = each.value.name
+  resource_group_name = azurerm_resource_group.workstation.name
+  location            = azurerm_resource_group.workstation.location
+  sku                 = "Standard"
+  allocation_method   = "Static"
+}
+
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = azurerm_resource_group.workstation.name
 }
 
 output "virtualMachines" {
   value = var.virtualMachines
+}
+
+output "trafficManager" {
+  value = {
+    fqdn = var.trafficManager.profile.name != "" ? azurerm_traffic_manager_profile.workstation[0].fqdn : ""
+  }
 }

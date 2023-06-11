@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+      version = "~>3.60.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -93,10 +93,19 @@ variable "keyVault" {
   )
 }
 
-variable "monitorWorkspace" {
+variable "monitor" {
   type = object(
     {
-      sku           = string
+      workspace = object(
+        {
+          sku = string
+        }
+      )
+      appInsights = object(
+        {
+          type = string
+        }
+      )
       retentionDays = number
     }
   )
@@ -106,11 +115,11 @@ data "http" "client_address" {
   url = "https://api.ipify.org?format=json"
 }
 
-data "azurerm_client_config" "provider" {}
+data "azurerm_client_config" "studio" {}
 
 resource "azurerm_resource_group" "studio" {
   name     = module.global.resourceGroupName
-  location = module.global.regionName
+  location = module.global.regionNames[0]
 }
 
 #######################################################
@@ -167,7 +176,7 @@ resource "azurerm_key_vault" "studio" {
   name                            = module.global.keyVault.name
   resource_group_name             = azurerm_resource_group.studio.name
   location                        = azurerm_resource_group.studio.location
-  tenant_id                       = data.azurerm_client_config.provider.tenant_id
+  tenant_id                       = data.azurerm_client_config.studio.tenant_id
   sku_name                        = var.keyVault.type
   purge_protection_enabled        = var.keyVault.enablePurgeProtection
   soft_delete_retention_days      = var.keyVault.softDeleteRetentionDays
@@ -236,16 +245,39 @@ resource "azurerm_key_vault_certificate" "certificates" {
 ######################################################################
 
 resource "azurerm_log_analytics_workspace" "monitor" {
-  count                      = module.global.monitorWorkspace.name != "" ? 1 : 0
-  name                       = module.global.monitorWorkspace.name
+  count                      = module.global.monitor.name != "" ? 1 : 0
+  name                       = module.global.monitor.name
   resource_group_name        = azurerm_resource_group.studio.name
   location                   = azurerm_resource_group.studio.location
-  sku                        = var.monitorWorkspace.sku
-  retention_in_days          = var.monitorWorkspace.retentionDays
+  sku                        = var.monitor.workspace.sku
+  retention_in_days          = var.monitor.retentionDays
   internet_ingestion_enabled = false
   internet_query_enabled     = false
 }
 
+resource "azurerm_application_insights" "monitor" {
+  count               = module.global.monitor.name != "" ? 1 : 0
+  name                = module.global.monitor.name
+  location            = azurerm_resource_group.studio.location
+  resource_group_name = azurerm_resource_group.studio.name
+  workspace_id        = azurerm_log_analytics_workspace.monitor[0].id
+  application_type    = var.monitor.appInsights.type
+  retention_in_days   = var.monitor.retentionDays
+}
+
 output "resourceGroupName" {
-  value = module.global.resourceGroupName
+  value = azurerm_resource_group.studio.name
+}
+
+output "monitor" {
+  value = {
+    workspace = {
+      name = module.global.monitor.name
+      id   = module.global.monitor.name != "" ? azurerm_log_analytics_workspace.monitor[0].workspace_id : ""
+    }
+    appInsights = {
+      name = module.global.monitor.name
+      id   = module.global.monitor.name != "" ? azurerm_application_insights.monitor[0].app_id : ""
+    }
+  }
 }

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+      version = "~>3.60.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -183,8 +183,8 @@ data "azurerm_key_vault_secret" "service_password" {
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  count               = module.global.monitorWorkspace.name != "" ? 1 : 0
-  name                = module.global.monitorWorkspace.name
+  count               = module.global.monitor.name != "" ? 1 : 0
+  name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
 
@@ -249,7 +249,7 @@ locals {
 
 resource "azurerm_resource_group" "scheduler" {
   name     = var.resourceGroupName
-  location = module.global.regionName
+  location = module.global.regionNames[0]
 }
 
 #########################################################################
@@ -350,7 +350,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitorWorkspace.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -432,7 +432,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitorWorkspace.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"
@@ -462,7 +462,7 @@ resource "azurerm_private_dns_a_record" "scheduler" {
 }
 
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = azurerm_resource_group.scheduler.name
 }
 
 output "virtualMachines" {

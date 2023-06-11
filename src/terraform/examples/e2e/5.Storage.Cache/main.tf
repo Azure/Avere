@@ -103,7 +103,7 @@ variable "computeNetwork" {
   )
 }
 
-data "azurerm_client_config" "provider" {}
+data "azurerm_client_config" "studio" {}
 
 data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
@@ -166,7 +166,7 @@ locals {
 
 resource "azurerm_resource_group" "cache" {
   name     = var.resourceGroupName
-  location = module.global.regionName
+  location = module.global.regionNames[0]
 }
 
 ############################################################################
@@ -182,7 +182,7 @@ resource "azurerm_private_dns_a_record" "cache" {
 }
 
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = azurerm_resource_group.cache.name
 }
 
 output "cacheName" {

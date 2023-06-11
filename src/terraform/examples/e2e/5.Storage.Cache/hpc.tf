@@ -36,7 +36,7 @@ resource "azurerm_role_assignment" "storage_account" {
   }
   role_definition_name = "Storage Account Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   principal_id         = data.azuread_service_principal.hpc_cache[0].object_id
-  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
+  scope                = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
 }
 
 resource "azurerm_role_assignment" "storage_blob_data" {
@@ -45,7 +45,7 @@ resource "azurerm_role_assignment" "storage_blob_data" {
   }
   role_definition_name = "Storage Blob Data Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   principal_id         = data.azuread_service_principal.hpc_cache[0].object_id
-  scope                = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
+  scope                = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
 }
 
 resource "azurerm_hpc_cache" "cache" {
@@ -105,7 +105,7 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.cache.name
   cache_name           = azurerm_hpc_cache.cache[0].name
-  storage_container_id = "/subscriptions/${data.azurerm_client_config.provider.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
+  storage_container_id = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
   usage_model          = each.value.usageModel
   namespace_path       = each.value.clientPath
 }

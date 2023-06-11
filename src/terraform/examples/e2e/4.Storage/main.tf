@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+      version = "~>3.60.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -99,8 +99,8 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  count               = module.global.monitorWorkspace.name != "" ? 1 : 0
-  name                = module.global.monitorWorkspace.name
+  count               = module.global.monitor.name != "" ? 1 : 0
+  name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
 

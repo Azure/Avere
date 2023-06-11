@@ -292,6 +292,22 @@ serviceAccount = {
   password = "P@ssword1234"
 }
 
+###############################################################################################
+# Traffic Manager (https://learn.microsoft.comazure/traffic-manager/traffic-manager-overview) #
+###############################################################################################
+
+trafficManager = {
+  profile = {
+    name              = ""
+    routingMethod     = "Performance"
+    enableTrafficView = true
+  }
+  dns = {
+    name = "artistanywhere"
+    ttl  = 100
+  }
+}
+
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################

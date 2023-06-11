@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.59.0"
+      version = "~>3.60.0"
     }
   }
   backend "azurerm" {
@@ -150,7 +150,7 @@ locals {
 
 resource "azurerm_resource_group" "image" {
   name     = var.resourceGroupName
-  location = module.global.regionName
+  location = module.global.regionNames[0]
 }
 
 resource "azurerm_role_assignment" "image" {
@@ -264,6 +264,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
     binStorageAuth = {
       value = module.global.binStorage.auth
     }
+    regionNames = {
+      value = module.global.regionNames
+    }
     renderManager = {
       value = module.global.renderManager
     }
@@ -293,6 +296,9 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         },
         "binStorageAuth": {
           "type": "string"
+        },
+        "regionNames": {
+          "type": "array"
         },
         "renderManager": {
           "type": "string"
@@ -484,9 +490,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                 "type": "SharedImage",
                 "runOutputName": "[concat(parameters('imageTemplates')[copyIndex()].name, '-', parameters('imageTemplates')[copyIndex()].build.outputVersion)]",
                 "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images/versions', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName, parameters('imageTemplates')[copyIndex()].build.outputVersion)]",
-                "replicationRegions": [
-                  "[resourceGroup().location]"
-                ],
+                "replicationRegions": "[parameters('regionNames')]",
                 "artifactTags": {
                   "imageTemplateName": "[parameters('imageTemplates')[copyIndex()].name]"
                 }
@@ -512,7 +516,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
 }
 
 output "resourceGroupName" {
-  value = var.resourceGroupName
+  value = azurerm_resource_group.image.name
 }
 
 output "imageGallery" {

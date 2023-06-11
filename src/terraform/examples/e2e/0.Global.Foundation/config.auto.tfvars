@@ -60,7 +60,12 @@ keyVault = {
 # Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
 ######################################################################
 
-monitorWorkspace = {
-  sku           = "PerGB2018"
+monitor = {
+  workspace = {
+    sku = "PerGB2018"
+  }
+  appInsights = {
+    type = "Node.JS"
+  }
   retentionDays = 90
 }
