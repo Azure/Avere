@@ -339,7 +339,7 @@ if [[ $renderManager == *Deadline* ]]; then
     sed -i "/bindIp: 0.0.0.0/a\  tls:" $configFile
     sed -i "/tls:/a\    mode: disabled" $configFile
     systemctl --now enable mongod
-    sleep 5s
+    sleep 10s
     echo "Customize (End): Mongo DB Service"
 
     echo "Customize (Start): Mongo DB User"
@@ -398,11 +398,46 @@ if [[ $renderManager == *Flamenco* ]]; then
   installPath="flamenco*"
   if [ $machineType == Scheduler ]; then
     echo "Customize (Start): Flamenco Server"
+    configFile="flamenco-manager.yaml"
+    echo "_meta:" > $configFile
+    echo "  version: 3" >> $configFile
+    echo "manager_name: Flamenco Manager" >> $configFile
+    echo "database: flamenco-manager.sqlite" >> $configFile
+    echo "listen: :8080" >> $configFile
+    echo "autodiscoverable: true" >> $configFile
+    echo "local_manager_storage_path: ./flamenco-manager-storage" >> $configFile
+    echo "shared_storage_path: data.artist.studio/default" >> $configFile
+    echo "shaman:" >> $configFile
+    echo "  enabled: false" >> $configFile
+    echo "  garbageCollect:" >> $configFile
+    echo "    period: 24h0m0s" >> $configFile
+    echo "    maxAge: 744h0m0s" >> $configFile
+    echo "    extraCheckoutPaths: []" >> $configFile
+    echo "task_timeout: 10m0s" >> $configFile
+    echo "worker_timeout: 1m0s" >> $configFile
+    echo "blocklist_threshold: 3" >> $configFile
+    echo "task_fail_after_softfail_count: 3" >> $configFile
+    echo "variables:" >> $configFile
+    echo "  blender:" >> $configFile
+    echo "    values:" >> $configFile
+    echo "      - platform: linux" >> $configFile
+    echo "        value: blender" >> $configFile
+    echo "      - platform: windows" >> $configFile
+    echo "        value: blender" >> $configFile
+    echo "      - platform: darwin" >> $configFile
+    echo "        value: blender" >> $configFile
+    echo "  blenderArgs:" >> $configFile
+    echo "    values:" >> $configFile
+    echo "      - platform: all" >> $configFile
+    echo "        value: -b -y" >> $configFile
     installType="flamenco-server"
     # ./$installPath/flamenco-manager --quiet 2>&1 | tee $installType.log
     echo "Customize (End): Flamenco Server"
   else
     echo "Customize (Start): Flamenco Client"
+    configFile="flamenco-worker.yaml"
+    echo "manager_url:" > $configFile
+    echo "task_types: [blender, ffmpeg, file-management, misc]" >> $configFile
     installType="flamenco-client"
     # ./$installPath/flamenco-worker --quiet 2>&1 | tee $installType.log
     echo "Customize (End): Flamenco Client"
@@ -410,7 +445,7 @@ if [[ $renderManager == *Flamenco* ]]; then
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
-  versionInfo="9.0.05"
+  versionInfo="9.0.06"
   installRoot="/RoyalRender"
   binPathScheduler="$installRoot/bin/lx64"
 

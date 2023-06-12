@@ -414,20 +414,55 @@ if ("$renderManager" -like "*Flamenco*") {
   Set-Location -Path flamenco*
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Flamenco Server"
+    $configFile = "flamenco-manager.yaml"
+    Set-Content -Path $configFile -Value "_meta:"
+    Add-Content -Path $configFile -Value "  version: 3"
+    Add-Content -Path $configFile -Value "manager_name: Flamenco Manager"
+    Add-Content -Path $configFile -Value "database: flamenco-manager.sqlite"
+    Add-Content -Path $configFile -Value "listen: :8080"
+    Add-Content -Path $configFile -Value "autodiscoverable: true"
+    Add-Content -Path $configFile -Value "local_manager_storage_path: .\flamenco-manager-storage"
+    Add-Content -Path $configFile -Value "shared_storage_path: R:\"
+    Add-Content -Path $configFile -Value "shaman:"
+    Add-Content -Path $configFile -Value "  enabled: false"
+    Add-Content -Path $configFile -Value "  garbageCollect:"
+    Add-Content -Path $configFile -Value "    period: 24h0m0s"
+    Add-Content -Path $configFile -Value "    maxAge: 744h0m0s"
+    Add-Content -Path $configFile -Value "    extraCheckoutPaths: []"
+    Add-Content -Path $configFile -Value "task_timeout: 10m0s"
+    Add-Content -Path $configFile -Value "worker_timeout: 1m0s"
+    Add-Content -Path $configFile -Value "blocklist_threshold: 3"
+    Add-Content -Path $configFile -Value "task_fail_after_softfail_count: 3"
+    Add-Content -Path $configFile -Value "variables:"
+    Add-Content -Path $configFile -Value "  blender:"
+    Add-Content -Path $configFile -Value "    values:"
+    Add-Content -Path $configFile -Value "      - platform: linux"
+    Add-Content -Path $configFile -Value "        value: blender"
+    Add-Content -Path $configFile -Value "      - platform: windows"
+    Add-Content -Path $configFile -Value "        value: blender"
+    Add-Content -Path $configFile -Value "      - platform: darwin"
+    Add-Content -Path $configFile -Value "        value: blender"
+    Add-Content -Path $configFile -Value "  blenderArgs:"
+    Add-Content -Path $configFile -Value "    values:"
+    Add-Content -Path $configFile -Value "      - platform: all"
+    Add-Content -Path $configFile -Value "        value: -b -y"
     $installType = "flamenco-server"
-    # StartProcess .\flamenco-manager.exe --quiet $installType
+    # StartProcess .\flamenco-manager.exe "--quiet" $installType
     Write-Host "Customize (End): Flamenco Server"
   } else {
     Write-Host "Customize (Start): Flamenco Client"
+    $configFile = "flamenco-worker.yaml"
+    Set-Content -Path $configFile -Value "manager_url:"
+    Add-Content -Path $configFile -Value "task_types: [blender, ffmpeg, file-management, misc]"
     $installType = "flamenco-client"
-    # StartProcess .\flamenco-worker.exe --quiet $installType
+    # StartProcess .\flamenco-worker.exe "--quiet" $installType
     Write-Host "Customize (End): Flamenco Client"
   }
   Set-Location -Path $binDirectory
 }
 
 if ("$renderManager" -like "*RoyalRender*") {
-  $versionInfo = "9.0.05"
+  $versionInfo = "9.0.06"
   $installRoot = "\RoyalRender"
   $binPathScheduler = "C:$installRoot\bin\win64"
 
