@@ -85,6 +85,7 @@ computeNetwork = {
     storage     = 2
     cache       = 3
   }
+  enableNatGateway = false
 }
 
 storageNetwork = {
@@ -133,6 +134,7 @@ storageNetwork = {
     secondary   = 1
     netAppFiles = 2
   }
+  enableNatGateway = false
 }
 
 ################################################################################################################
@@ -169,14 +171,6 @@ bastion = {
   enableShareableLink = false
 }
 
-##########################################################################################################################
-# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
-##########################################################################################################################
-
-natGateway = {
-  enable = false
-}
-
 ###########################
 # Virtual Network Gateway #
 ###########################
@@ -197,6 +191,7 @@ vpnGateway = {
   generation         = "Generation2"
   sharedKey          = "GatewayConnection"
   enableBgp          = false
+  enableVnet2Vnet    = false
   enableActiveActive = false
   pointToSiteClient = {
     certificateName = ""

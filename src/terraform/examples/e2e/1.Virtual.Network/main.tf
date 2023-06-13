@@ -50,6 +50,7 @@ variable "computeNetwork" {
           cache       = number
         }
       )
+      enableNatGateway = bool
     }
   )
 }
@@ -76,6 +77,7 @@ variable "storageNetwork" {
           netAppFiles = number
         }
       )
+      enableNatGateway = bool
     }
   )
 }
@@ -114,14 +116,6 @@ variable "bastion" {
   )
 }
 
-variable "natGateway" {
-  type = object(
-    {
-      enable = bool
-    }
-  )
-}
-
 variable "networkGateway" {
   type = object(
     {
@@ -138,6 +132,7 @@ variable "vpnGateway" {
       generation         = string
       sharedKey          = string
       enableBgp          = bool
+      enableVnet2Vnet    = bool
       enableActiveActive = bool
       pointToSiteClient = object(
         {
@@ -277,7 +272,7 @@ locals {
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for subnet in virtualNetwork.subnets : merge(subnet, {
-        key                = "${virtualNetwork.regionName}.${virtualNetwork.name}.${subnet.name}"
+        key                = "${virtualNetwork.key}.${subnet.name}"
         regionName         = virtualNetwork.regionName
         resourceGroupId    = virtualNetwork.resourceGroupId
         resourceGroupName  = virtualNetwork.resourceGroupName
@@ -288,16 +283,18 @@ locals {
   virtualNetworksSubnetsSecurity = [
     for subnet in local.virtualNetworksSubnets : subnet if subnet.name != "GatewaySubnet" && subnet.name != "AzureBastionSubnet" && subnet.serviceDelegation == ""
   ]
-  virtualGatewayNetworks = var.networkGateway.type != "Vpn" ? [] : [var.virtualNetwork.name != "" ?
+  virtualGatewayNetworks = var.virtualNetwork.name != "" ? [
     merge(var.virtualNetwork, {
       key             = "${var.virtualNetwork.regionName}.${var.virtualNetwork.name}"
       resourceGroupId = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}"
-    }) : merge({}, {
-      key               = "${local.computeNetworks[0].regionName}.${local.computeNetworks[0].name}"
-      name              = local.computeNetworks[0].name
-      regionName        = local.computeNetworks[0].regionName
-      resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${local.computeNetworks[0].resourceGroupName}"
-      resourceGroupName = local.computeNetworks[0].resourceGroupName
+    })
+  ] : [
+    for virtualNetwork in var.vpnGateway.enableVnet2Vnet ? local.virtualNetworks : [local.virtualNetworks[0]] : merge({}, {
+      key               = "${virtualNetwork.regionName}.${virtualNetwork.name}"
+      name              = virtualNetwork.name
+      regionName        = virtualNetwork.regionName
+      resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${virtualNetwork.resourceGroupName}"
+      resourceGroupName = virtualNetwork.resourceGroupName
     })
   ]
   virtualGatewayNetworkNames = [
@@ -307,7 +304,7 @@ locals {
 }
 
 resource "azurerm_resource_group" "network" {
-  count    = var.virtualNetwork.name == "" ? length(module.global.regionNames) : 0
+  count    = var.virtualNetwork.name != "" ? 0 : length(module.global.regionNames)
   name     = length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${module.global.regionNames[count.index]}" : var.resourceGroupName
   location = module.global.regionNames[count.index]
 }
