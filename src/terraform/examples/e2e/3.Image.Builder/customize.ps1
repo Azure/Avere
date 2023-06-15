@@ -473,32 +473,33 @@ if ("$renderManager" -like "*RoyalRender*") {
   Expand-Archive -Path $installFile
   Write-Host "Customize (End): Royal Render Download"
 
-  Write-Host "Customize (Start): Royal Render Setup"
-  $installType = "royal-render"
-  $installPath = "RoyalRender*"
-  $installFile = "rrSetup_win.exe"
-  $rrShareName = $installRoot.TrimStart("\")
-  $rrRootShare = "\\$(hostname)$installRoot"
-  New-Item -ItemType Directory -Path $installRoot
-  New-SmbShare -Name $rrShareName -Path "C:$installRoot" -FullAccess "Everyone"
-  StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
-  Remove-SmbShare -Name $rrShareName -Force
-  Write-Host "Customize (End): Royal Render Setup"
-
   if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Royal Render Server"
+    $installType = "royal-render"
+    $installPath = "RoyalRender*"
+    $installFile = "rrSetup_win.exe"
+    $rrShareName = $installRoot.TrimStart("\")
+    $rrRootShare = "\\$(hostname)$installRoot"
+    New-Item -ItemType Directory -Path $installRoot
+    New-SmbShare -Name $rrShareName -Path "C:$installRoot" -FullAccess "Everyone"
+    StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
+    Remove-SmbShare -Name $rrShareName -Force
     New-NfsShare -Name "RoyalRender" -Path C:$installRoot -Permission ReadWrite
+    Write-Host "Customize (End): Royal Render Server"
+  } else {
+    $binPathScheduler = "T:\bin\win64"
   }
 
-  Write-Host "Customize (Start): Royal Render Viewer"
-  $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Viewer.lnk"
+  $binPaths += ";$binPathScheduler"
+
+  Write-Host "Customize (Start): Royal Render Submitter"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Submitter.lnk"
   $scriptShell = New-Object -ComObject WScript.Shell
   $shortcut = $scriptShell.CreateShortcut($shortcutPath)
   $shortcut.WorkingDirectory = $binPathScheduler
-  $shortcut.TargetPath = "$binPathScheduler\rrViewer.exe"
+  $shortcut.TargetPath = "$binPathScheduler\rrSubmitter.exe"
   $shortcut.Save()
-  Write-Host "Customize (End): Royal Render Viewer"
-
-  $binPaths += ";$binPathScheduler"
+  Write-Host "Customize (End): Royal Render Submitter"
 }
 
 if ("$renderManager" -like "*Qube*") {

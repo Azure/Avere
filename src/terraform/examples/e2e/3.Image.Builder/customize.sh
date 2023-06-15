@@ -456,22 +456,22 @@ if [[ $renderManager == *RoyalRender* ]]; then
   unzip -q $installFile
   echo "Customize (End): Royal Render Download"
 
-  echo "Customize (Start): Royal Render Setup"
   dnf -y install xcb-util-wm
   dnf -y install xcb-util-image
   dnf -y install xcb-util-keysyms
   dnf -y install xcb-util-renderutil
   dnf -y install libxkbcommon-x11
-  installPath="RoyalRender*"
-  installFile="rrSetup_linux"
-  chmod +x ./$installPath/$installFile
-  mkdir -p $installRoot
-  ./$installPath/$installFile -console -rrRoot $installRoot 2>&1 | tee royal-render.log
-  echo "Customize (End): Royal Render Setup"
-
+  dnf -y install qt5-qtbase
   if [ $machineType == Scheduler ]; then
+    echo "Customize (Start): Royal Render Server"
+    installPath="RoyalRender*"
+    installFile="rrSetup_linux"
+    chmod +x ./$installPath/$installFile
+    mkdir -p $installRoot
+    ./$installPath/$installFile -console -rrRoot $installRoot 2>&1 | tee royal-render.log
     echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
+    echo "Customize (End): Royal Render Server"
   fi
 
   binPaths="$binPaths:$binPathScheduler"
