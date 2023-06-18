@@ -255,6 +255,8 @@ if [[ $renderEngines == *MoonRay* ]]; then
   dnf -y install libmng-devel
   dnf -y install libatomic
   dnf -y install patch
+  dnf -y install bison
+  dnf -y install flex
   if [ $machineType == Workstation ]; then
     dnf -y install qt5-qtbase-devel
     dnf -y install qt5-qtscript-devel

@@ -475,6 +475,7 @@ if ("$renderManager" -like "*RoyalRender*") {
 
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Royal Render Server"
+    netsh advfirewall set public state off
     $installType = "royal-render"
     $installPath = "RoyalRender*"
     $installFile = "rrSetup_win.exe"
