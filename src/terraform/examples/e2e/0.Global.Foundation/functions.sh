@@ -25,8 +25,9 @@ function EnableSchedulerClient {
   renderManager="$1"
   serviceAccount=$2
   servicePassword=$3
-  # if [[ $renderManager == *RoyalRender* ]]; then
-  #   installType="royal-render-client"
-  #   rrWorkstation_installer -plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut 2>&1 | tee $installType-service.log
-  # fi
+  if [[ $renderManager == *RoyalRender* ]]; then
+    installType="royal-render-client"
+    rrWorkstation_installer -plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut 2>&1 | tee $installType-service.log
+    sed -i "s|BLENDER_PATH|local/blender|" /RoyalRender/render_apps/_install_paths/Blender.cfg
+  fi
 }

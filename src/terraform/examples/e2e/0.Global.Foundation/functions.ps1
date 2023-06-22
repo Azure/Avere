@@ -55,8 +55,8 @@ function EnableSchedulerClient ($renderManager, $serviceAccount, $servicePasswor
   if ("$renderManager" -like "*Deadline*") {
     deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
   }
-  # if ("$renderManager" -like "*RoyalRender*") {
-  #   $installType = "royal-render-client"
-  #   StartProcess rrWorkstation_installer.exe "-plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut" $installType-service
-  # }
+  if ("$renderManager" -like "*RoyalRender*") {
+    $installType = "royal-render-client"
+    StartProcess rrWorkstation_installer.exe "-plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut" $installType-service
+  }
 }

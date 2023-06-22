@@ -14,12 +14,14 @@ vmNameUrl="$metadataUrl/instance/compute/name?api-version=2021-12-13&format=text
 
 instanceName=$(curl --silent --header Metadata:true $vmNameUrl)
 scheduledEvents=$(curl --silent --header Metadata:true $eventsUrl | jq -c .Events)
+
+function GetEncodedValue {
+  echo $scheduledEvent | base64 -d | jq -r $1
+}
+
 for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
-  _jq() {
-    echo $scheduledEvent | base64 -d | tee -a $logDirectory/$instanceName-scheduled-event.log | jq -r $1
-  }
-  eventType=$(_jq .EventType)
-  eventScope=$(_jq .Resources[0])
+  eventType=$(GetEncodedValue .EventType)
+  eventScope=$(GetEncodedValue .Resources[0])
 
   if [[ $eventType == Terminate && $eventScope == $instanceName ]]; then
     az login --identity
@@ -32,44 +34,50 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
     weka user login admin ${wekaAdminPassword}
     instanceName="$instanceName-$(date +%T)"
 
-    driveIds=$(weka cluster drive --filter hostname=$(hostname) --output uuid --no-header | tr \\n ' ')
+    drivesRemoved=false
+    driveIds=$(weka cluster drive --filter hostname=$(hostname),status=ACTIVE --output uuid --no-header | tr \\n ' ')
     driveIds=$${driveIds::-1}
-    weka cluster drive deactivate --force $driveIds &> $logDirectory/$instanceName-weka-cluster-drive-deactivate.log
+    if [ "$driveIds" != "" ]; then
+      weka cluster drive deactivate --force $driveIds &> $logDirectory/$instanceName-weka-cluster-drive-deactivate.log
 
-    drivesRemoved=true
-    read -a driveIds <<< "$driveIds"
-    for (( i=0; i<$${#driveIds[@]}; i++ )); do
-      driveId=$${driveIds[i]}
-      driveStatus=$(weka cluster drive --filter uuid=$driveId --output status --no-header)
-      if [ $driveStatus == INACTIVE ]; then
+      read -a driveIds <<< "$driveIds"
+      for (( i=0; i<$${#driveIds[@]}; i++ )); do
+        driveId=$${driveIds[i]}
+        while
+          driveStatus=$(weka cluster drive --filter uuid=$driveId --output status --no-header)
+          [ $driveStatus != INACTIVE ]
+        do
+          sleep 3
+        done
         weka cluster drive remove --force $driveId &> $logDirectory/$instanceName-weka-cluster-drive-remove-$driveId.log
-      elif [ -n "$driveStatus" ]; then
-        drivesRemoved=false
-      fi
-    done
+      done
+      drivesRemoved=true
+    fi
 
-    if [ $drivesRemoved == true ]; then
-      containerIds=$(weka cluster container --filter ips=$(hostname -i) --output id --no-header | tr \\n ' ')
-      containerIds=$${containerIds::-1}
+    containersRemoved=false
+    containerIds=$(weka cluster container --filter ips=$(hostname -i),status=UP --output id --no-header | tr \\n ' ')
+    containerIds=$${containerIds::-1}
+    if [ "$containerIds" != "" ]; then
       weka cluster container deactivate $containerIds &> $logDirectory/$instanceName-weka-cluster-container-deactivate.log
 
-      containersRemoved=true
       read -a containerIds <<< "$containerIds"
       for (( i=0; i<$${#containerIds[@]}; i++ )); do
         containerId=$${containerIds[i]}
-        containerStatus=$(weka cluster container --HOST $rootHost --filter id=$containerId --output status --no-header)
-        if [ $containerStatus == INACTIVE ]; then
-          weka cluster container remove $containerId --HOST $rootHost &> $logDirectory/$instanceName-weka-cluster-container-remove-$containerId.log
-        elif [ -n "$containerStatus" ]; then
-          containersRemoved=false
-        fi
+        while
+          containerStatus=$(weka cluster container --HOST $rootHost --filter id=$containerId --output status --no-header)
+          [ $containerStatus != INACTIVE ]
+        do
+          sleep 3
+        done
+        weka cluster container remove $containerId --HOST $rootHost &> $logDirectory/$instanceName-weka-cluster-container-remove-$containerId.log
       done
+      containersRemoved=true
     fi
 
     if [[ $drivesRemoved == true && $containersRemoved == true ]]; then
-      eventId=$(_jq .EventId)
+      eventId=$(GetEncodedValue .EventId)
       eventData="{\"StartRequests\":[{\"EventId\":\"$eventId\"}]}"
-      curl --silent --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl &> $logDirectory/$instanceName-post-event-$eventId.log
+      curl --silent --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl &> $logDirectory/$instanceName-event-$eventId.log
     fi
   fi
 done
