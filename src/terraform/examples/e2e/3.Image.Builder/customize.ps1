@@ -97,12 +97,17 @@ $binPaths += ";$binPathCMake;$binPathMSBuild"
 Write-Host "Customize (End): Visual Studio Build Tools"
 
 if ($gpuProvider -eq "AMD") {
+  $installType = "amd-gpu"
   if ($machineType -like "*NG*" -and $machineType -like "*v1*") {
     Write-Host "Customize (Start): AMD GPU (NG v1)"
+    $installFile = "$installType.zip"
+    $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2234555"
+    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+    Expand-Archive -Path $installFile
+    StartProcess .\$installType\Setup.exe "-install -log $binDirectory\$installType.log" $null
     Write-Host "Customize (End): AMD GPU (NG v1)"
   } elseif ($machineType -like "*NV*" -and $machineType -like "*v4*") {
     Write-Host "Customize (Start): AMD GPU (NV v4)"
-    $installType = "amd-gpu"
     $installFile = "$installType.exe"
     $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))

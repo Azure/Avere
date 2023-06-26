@@ -225,7 +225,6 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
-  servicePassword    = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachinesLinux = [
     for virtualMachine in var.virtualMachines : merge(virtualMachine, {
@@ -245,6 +244,7 @@ locals {
   virtualMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
   ]
+  serviceAccountPassword = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
 }
 
 resource "azurerm_resource_group" "scheduler" {
@@ -335,11 +335,11 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   settings = jsonencode({
     script: "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager   = module.global.renderManager
-        binStorageHost  = module.global.binStorage.host
-        binStorageAuth  = module.global.binStorage.auth
-        serviceAccount  = var.serviceAccount.name
-        servicePassword = local.servicePassword
+        renderManager          = module.global.renderManager
+        binStorageHost         = module.global.binStorage.host
+        binStorageAuth         = module.global.binStorage.auth
+        serviceAccountName     = var.serviceAccount.name
+        serviceAccountPassword = local.serviceAccountPassword
       }))
     )}"
   })
@@ -382,9 +382,9 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   custom_data = base64encode(
     templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {
-      renderManager   = module.global.renderManager
-      serviceAccount  = var.serviceAccount.name
-      servicePassword = local.servicePassword
+      renderManager          = module.global.renderManager
+      serviceAccountName     = var.serviceAccount.name
+      serviceAccountPassword = local.serviceAccountPassword
     }))
   )
   network_interface_ids = [
@@ -419,9 +419,9 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager   = module.global.renderManager
-        serviceAccount  = var.serviceAccount.name
-        servicePassword = local.servicePassword
+        renderManager          = module.global.renderManager
+        serviceAccountName     = var.serviceAccount.name
+        serviceAccountPassword = local.serviceAccountPassword
       })), "UTF-16LE"
     )}"
   })

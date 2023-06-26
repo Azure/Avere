@@ -215,7 +215,6 @@ data "azurerm_subnet" "workstation" {
 }
 
 locals {
-  servicePassword    = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachinesLinux = [
     for virtualMachine in var.virtualMachines : merge(virtualMachine, {
@@ -232,6 +231,7 @@ locals {
       }
     }) if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
   ]
+  serviceAccountPassword = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
 }
 
 resource "azurerm_resource_group" "workstation" {
@@ -314,9 +314,9 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   settings = jsonencode({
     script = "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager   = module.global.renderManager
-        serviceAccount  = var.serviceAccount.name
-        servicePassword = local.servicePassword
+        renderManager          = module.global.renderManager
+        serviceAccountName     = var.serviceAccount.name
+        serviceAccountPassword = local.serviceAccountPassword
       }))
     )}"
   })
@@ -390,9 +390,9 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager   = module.global.renderManager
-        serviceAccount  = var.serviceAccount.name
-        servicePassword = local.servicePassword
+        renderManager          = module.global.renderManager
+        serviceAccountName     = var.serviceAccount.name
+        serviceAccountPassword = local.serviceAccountPassword
       })), "UTF-16LE"
     )}"
   })

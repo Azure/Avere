@@ -1,10 +1,10 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
-function SetServiceAccount ($serviceAccount, $serviceAccountPassword) {
-  $localUser = Get-LocalUser -Name $serviceAccount -ErrorAction SilentlyContinue
+function SetServiceAccount ($accountName, $accountPassword) {
+  $localUser = Get-LocalUser -Name $accountName -ErrorAction SilentlyContinue
   if ($localUser -eq $null) {
-    $servicePassword = ConvertTo-SecureString $serviceAccountPassword -AsPlainText -Force
-    New-LocalUser -Name $serviceAccount -Password $servicePassword -PasswordNeverExpires -AccountNeverExpires
+    $securePassword = ConvertTo-SecureString $accountPassword -AsPlainText -Force
+    New-LocalUser -Name $accountName -Password $securePassword -PasswordNeverExpires -AccountNeverExpires
   }
 }
 
@@ -41,7 +41,7 @@ function SetFileSystemMount ($fileSystemMount) {
   }
 }
 
-function RegisterFileSystemMount ($fileSystemMountPath) {
+function RegisterFileSystemMountPath {
   if (FileExists $fileSystemMountPath) {
     StartProcess $fileSystemMountPath $null file-system-mount
     $taskName = "AAA File System Mount"
@@ -51,12 +51,12 @@ function RegisterFileSystemMount ($fileSystemMountPath) {
   }
 }
 
-function EnableSchedulerClient ($renderManager, $serviceAccount, $servicePassword) {
+function EnableSchedulerClient ($renderManager, $serviceAccountName, $serviceAccountPassword) {
   if ("$renderManager" -like "*Deadline*") {
     deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
   }
   if ("$renderManager" -like "*RoyalRender*") {
     $installType = "royal-render-client"
-    StartProcess rrWorkstation_installer.exe "-plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut" $installType-service
+    StartProcess rrWorkstation_installer.exe "-plugins -service -rrUser $serviceAccountName -rrUserPW $serviceAccountPassword -fwOut" $installType-service
   }
 }

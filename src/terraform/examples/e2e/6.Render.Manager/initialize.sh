@@ -5,12 +5,12 @@ source /etc/profile.d/aaa.sh
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-useradd --system --password ${servicePassword} ${serviceAccount}
+useradd --system --password ${serviceAccountPassword} ${serviceAccountName}
 
 if [[ ${renderManager} == *RoyalRender* ]]; then
   installType="royal-render-server"
   rrServerconsole -initAndClose 2>&1 | tee $installType-init.log
-  rrWorkstation_installer -serviceServer -rrUser ${serviceAccount} -rrUserPW ${servicePassword} 2>&1 | tee $installType-service.log
+  rrWorkstation_installer -serviceServer -rrUser ${serviceAccountName} -rrUserPW ${serviceAccountPassword} 2>&1 | tee $installType-service.log
 fi
 
 if [ "${qubeLicense.userName}" != "" ]; then

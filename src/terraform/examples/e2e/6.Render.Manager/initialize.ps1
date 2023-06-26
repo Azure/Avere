@@ -3,8 +3,8 @@ $ErrorActionPreference = "Stop"
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
-$servicePassword = ConvertTo-SecureString ${servicePassword} -AsPlainText -Force
-New-LocalUser -Name ${serviceAccount} -Password $servicePassword -PasswordNeverExpires -AccountNeverExpires
+$securePassword = ConvertTo-SecureString ${serviceAccountPassword} -AsPlainText -Force
+New-LocalUser -Name ${serviceAccountName} -Password $securePassword -PasswordNeverExpires -AccountNeverExpires
 
 function StartProcess ($filePath, $argumentList, $logFile) {
   if ($argumentList -eq $null) {
@@ -24,7 +24,7 @@ if ("${renderManager}" -like "*Deadline*") {
 if ("${renderManager}" -like "*RoyalRender*") {
   $installType = "royal-render-server"
   StartProcess rrServerconsole.exe "-initAndClose" $installType-init
-  StartProcess rrWorkstation_installer.exe "-serviceServer -rrUser ${serviceAccount} -rrUserPW ${servicePassword} -fwIn" $installType-service
+  StartProcess rrWorkstation_installer.exe "-serviceServer -rrUser ${serviceAccountName} -rrUserPW ${serviceAccountPassword} -fwIn" $installType-service
 }
 
 if ("${renderManager}" -like "*Qube*") {

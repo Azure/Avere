@@ -1,10 +1,10 @@
 curl http://data.artist.studio:14000/dist/v1/install | sh
 
 function SetServiceAccount {
-  serviceAccount=$1
-  servicePassword=$2
-  if ! id -u $serviceAccount &> /dev/null; then
-    useradd --system --password $servicePassword $serviceAccount
+  accountName=$1
+  accountPassword=$2
+  if ! id -u $accountName &> /dev/null; then
+    useradd --system --password $accountPassword $accountName
   fi
 }
 
@@ -23,11 +23,11 @@ function SetFileSystemMount {
 
 function EnableSchedulerClient {
   renderManager="$1"
-  serviceAccount=$2
-  servicePassword=$3
+  serviceAccountName=$2
+  serviceAccountPassword=$3
   if [[ $renderManager == *RoyalRender* ]]; then
     installType="royal-render-client"
-    rrWorkstation_installer -plugins -service -rrUser $serviceAccount -rrUserPW $servicePassword -fwOut 2>&1 | tee $installType-service.log
+    rrWorkstation_installer -plugins -service -rrUser $serviceAccountName -rrUserPW $serviceAccountPassword -fwOut 2>&1 | tee $installType-service.log
     sed -i "s|BLENDER_PATH|local/blender|" /RoyalRender/render_apps/_install_paths/Blender.cfg
   fi
 }

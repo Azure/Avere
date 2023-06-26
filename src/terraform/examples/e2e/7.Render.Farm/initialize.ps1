@@ -7,7 +7,7 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-SetServiceAccount ${serviceAccount} ${servicePassword}
+SetServiceAccount ${serviceAccountName} ${serviceAccountPassword}
 
 $fileSystemMounts = ConvertFrom-Json -InputObject '${jsonencode(fileSystemMounts)}'
 foreach ($fileSystemMount in $fileSystemMounts) {
@@ -15,9 +15,9 @@ foreach ($fileSystemMount in $fileSystemMounts) {
     SetFileSystemMount $fileSystemMount.mount
   }
 }
-RegisterFileSystemMount $fileSystemMountPath
+RegisterFileSystemMountPath
 
-EnableSchedulerClient "${renderManager}" ${serviceAccount} ${servicePassword}
+EnableSchedulerClient "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
 
 if ("${terminateNotification.enable}" -eq $true) {
   $taskName = "AAA Terminate Event Handler"

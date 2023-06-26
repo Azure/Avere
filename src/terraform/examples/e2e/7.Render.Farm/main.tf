@@ -226,7 +226,6 @@ data "azurerm_private_dns_zone" "studio" {
 }
 
 locals {
-  servicePassword    = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
   stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachineScaleSetsLinux = [
     for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet, {
@@ -244,6 +243,7 @@ locals {
       }
     }) if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
   ]
+  serviceAccountPassword = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
 }
 
 resource "azurerm_resource_group" "farm" {
@@ -322,9 +322,9 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         script: "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-            renderManager   = module.global.renderManager
-            serviceAccount  = var.serviceAccount.name
-            servicePassword = local.servicePassword
+            renderManager          = module.global.renderManager
+            serviceAccountName     = var.serviceAccount.name
+            serviceAccountPassword = local.serviceAccountPassword
           }))
         )}"
       })
@@ -426,9 +426,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-            renderManager   = module.global.renderManager
-            serviceAccount  = var.serviceAccount.name
-            servicePassword = local.servicePassword
+            renderManager          = module.global.renderManager
+            serviceAccountName     = var.serviceAccount.name
+            serviceAccountPassword = local.serviceAccountPassword
           })), "UTF-16LE"
         )}"
       })
