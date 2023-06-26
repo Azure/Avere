@@ -20,7 +20,7 @@ for fileSystemMount in $(echo $fileSystemMounts | jq -r '.[] | @base64'); do
 done
 mount -a
 
-EnableSchedulerClient "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
+EnableClientApp "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
 
 if [ ${terminateNotification.enable} == true ]; then
   cronFilePath="/tmp/crontab"

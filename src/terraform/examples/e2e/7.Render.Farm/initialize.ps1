@@ -17,7 +17,7 @@ foreach ($fileSystemMount in $fileSystemMounts) {
 }
 RegisterFileSystemMountPath
 
-EnableSchedulerClient "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
+EnableClientApp "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
 
 if ("${terminateNotification.enable}" -eq $true) {
   $taskName = "AAA Terminate Event Handler"

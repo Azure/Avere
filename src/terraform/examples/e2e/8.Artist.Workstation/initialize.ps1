@@ -17,7 +17,7 @@ foreach ($fileSystemMount in $fileSystemMounts) {
 }
 RegisterFileSystemMountPath
 
-EnableSchedulerClient "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
+EnableClientApp "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
 
 if (${teradiciLicenseKey} != "") {
   $installFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"

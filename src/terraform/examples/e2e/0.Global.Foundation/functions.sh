@@ -1,5 +1,3 @@
-curl http://data.artist.studio:14000/dist/v1/install | sh
-
 function SetServiceAccount {
   accountName=$1
   accountPassword=$2
@@ -21,10 +19,11 @@ function SetFileSystemMount {
   fi
 }
 
-function EnableSchedulerClient {
+function EnableClientApp {
   renderManager="$1"
   serviceAccountName=$2
   serviceAccountPassword=$3
+  curl http://data.artist.studio:14000/dist/v1/install | sh
   if [[ $renderManager == *RoyalRender* ]]; then
     installType="royal-render-client"
     rrWorkstation_installer -plugins -service -rrUser $serviceAccountName -rrUserPW $serviceAccountPassword -fwOut 2>&1 | tee $installType-service.log

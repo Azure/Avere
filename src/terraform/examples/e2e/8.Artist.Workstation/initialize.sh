@@ -20,7 +20,7 @@ for fileSystemMount in $(echo $fileSystemMounts | jq -r '.[] | @base64'); do
 done
 mount -a
 
-EnableSchedulerClient "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
+EnableClientApp "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
 
 if [ "${teradiciLicenseKey}" != "" ]; then
   /sbin/pcoip-register-host --registration-code=${teradiciLicenseKey} 2>&1 | tee pcoip-agent-license.log

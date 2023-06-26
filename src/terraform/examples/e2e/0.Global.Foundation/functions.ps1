@@ -51,7 +51,7 @@ function RegisterFileSystemMountPath {
   }
 }
 
-function EnableSchedulerClient ($renderManager, $serviceAccountName, $serviceAccountPassword) {
+function EnableClientApp ($renderManager, $serviceAccountName, $serviceAccountPassword) {
   if ("$renderManager" -like "*Deadline*") {
     deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
   }
