@@ -156,7 +156,7 @@ resource "azurerm_virtual_network_gateway_connection" "site_to_site" {
   resource_group_name        = azurerm_resource_group.network[0].name
   location                   = local.computeNetworks[0].regionName
   type                       = "IPsec"
-  virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[count.index].id
+  virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[local.virtualGatewayNetworks[0].name].id
   local_network_gateway_id   = azurerm_local_network_gateway.vpn[count.index].id
   shared_key                 = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
   enable_bgp                 = var.vpnGatewayLocal.bgp.enable

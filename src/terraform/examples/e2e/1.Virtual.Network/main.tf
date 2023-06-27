@@ -304,7 +304,7 @@ locals {
 }
 
 resource "azurerm_resource_group" "network" {
-  count    = var.virtualNetwork.name != "" ? 0 : length(module.global.regionNames)
+  count    = var.virtualNetwork.name != "" ? 1 : length(module.global.regionNames)
   name     = length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${module.global.regionNames[count.index]}" : var.resourceGroupName
   location = module.global.regionNames[count.index]
 }
