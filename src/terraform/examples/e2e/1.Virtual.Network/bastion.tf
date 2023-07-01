@@ -123,10 +123,12 @@ resource "azurerm_subnet_network_security_group_association" "bastion" {
 }
 
 resource "azurerm_public_ip" "bastion_address" {
-  count               = var.bastion.enable && var.virtualNetwork.name == "" ? 1 : 0
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && var.virtualNetwork.name == ""
+  }
   name                = "Bastion"
-  resource_group_name = azurerm_resource_group.network[0].name
-  location            = azurerm_resource_group.network[0].location
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
   sku                 = "Standard"
   allocation_method   = "Static"
   depends_on = [
@@ -135,10 +137,12 @@ resource "azurerm_public_ip" "bastion_address" {
 }
 
 resource "azurerm_bastion_host" "compute" {
-  count                  = var.bastion.enable && var.virtualNetwork.name == "" ? 1 : 0
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && var.virtualNetwork.name == ""
+  }
   name                   = "Bastion"
-  resource_group_name    = azurerm_resource_group.network[0].name
-  location               = azurerm_resource_group.network[0].location
+  resource_group_name    = each.value.resourceGroupName
+  location               = each.value.regionName
   sku                    = var.bastion.sku
   scale_units            = var.bastion.scaleUnitCount
   file_copy_enabled      = var.bastion.enableFileCopy
@@ -148,8 +152,8 @@ resource "azurerm_bastion_host" "compute" {
   shareable_link_enabled = var.bastion.enableShareableLink
   ip_configuration {
     name                 = "ipConfig"
-    public_ip_address_id = azurerm_public_ip.bastion_address[0].id
-    subnet_id            = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetworks[0].name}/subnets/AzureBastionSubnet"
+    public_ip_address_id = azurerm_public_ip.bastion_address[each.value.key].id
+    subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/AzureBastionSubnet"
   }
   depends_on = [
     azurerm_subnet_nat_gateway_association.compute,

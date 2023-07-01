@@ -216,13 +216,13 @@ if ($renderEngines -contains "Houdini") {
 
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.5.1"
+  $versionInfo = "3.6.0"
   $installType = "blender"
   $installFile = "$installType-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-  $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.5"
+  $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.6"
   Write-Host "Customize (End): Blender"
 }
 

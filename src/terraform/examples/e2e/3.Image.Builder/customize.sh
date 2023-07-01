@@ -179,7 +179,7 @@ if [[ $renderEngines == *Blender* ]]; then
   dnf -y install libXfixes
   dnf -y install libXi
   dnf -y install libSM
-  versionInfo="3.5.1"
+  versionInfo="3.6.0"
   versionType="linux-x64"
   installType="blender"
   installPath="/usr/local/$installType"
