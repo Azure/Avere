@@ -104,6 +104,15 @@ if ($gpuProvider -eq "AMD") {
     $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2234555"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Expand-Archive -Path $installFile
+    $certStore = Get-Item -Path "cert:LocalMachine\TrustedPublisher"
+    $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+    $filePath = ".\$installType\Packages\Drivers\Display\WT6A_INF\U0388197.cat"
+    $signature = Get-AuthenticodeSignature -FilePath $filePath
+    $certStore.Add($signature.SignerCertificate)
+    $filePath = ".\$installType\Packages\Drivers\Display\WT6A_INF\amdfdans\AMDFDANS.cat"
+    $signature = Get-AuthenticodeSignature -FilePath $filePath
+    $certStore.Add($signature.SignerCertificate)
+    $certStore.Close()
     StartProcess .\$installType\Setup.exe "-install -log $binDirectory\$installType.log" $null
     Write-Host "Customize (End): AMD GPU (NG v1)"
   } elseif ($machineType -like "*NV*" -and $machineType -like "*v4*") {
