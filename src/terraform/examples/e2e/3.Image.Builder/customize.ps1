@@ -258,7 +258,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $installType = "dotnet-fx3"
   StartProcess dism.exe "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" $installType
   Set-Location -Path C:\
-  $versionInfo = "5.2.0"
+  $versionInfo = "5.2.1"
   $installType = "unreal-engine"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
