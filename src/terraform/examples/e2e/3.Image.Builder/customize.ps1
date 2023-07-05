@@ -270,12 +270,20 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   Move-Item -Path "Unreal*\Unreal*\*" -Destination $installPath
   Remove-Item -Path "Unreal*" -Exclude "*.zip" -Recurse
   Set-Location -Path $binDirectory
+
+  $scriptFilePath = "$installPath\Engine\Source\Programs\ShaderCompileWorker\ShaderCompileWorker.Build.cs"
+  $scriptFileText = Get-Content -Path $scriptFilePath
+  $scriptFileText = $scriptFileText.Replace("DirectX.GetDllDir(Target) + ", "")
+  $scriptFileText = $scriptFileText.Replace("d3dcompiler_47.dll", "$installPath\Engine\ThirdParty\Windows\DirectX\x64\d3dcompiler_47.dll")
+  Set-Content -Path $scriptFilePath -Value $scriptFileText
+
   $installFile = "$installPath\Setup.bat"
   $scriptFilePath = $installFile
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("/register", "/register /unattended")
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
+
   StartProcess $installFile $null $installType-setup
   Write-Host "Customize (End): Unreal Engine Setup"
 
