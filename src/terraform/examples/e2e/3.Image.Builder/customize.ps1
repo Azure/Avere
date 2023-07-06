@@ -271,10 +271,12 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   Remove-Item -Path "Unreal*" -Exclude "*.zip" -Recurse
   Set-Location -Path $binDirectory
 
+  $buildPath = $installPath.Replace("\", "\\")
+  $buildPath = "$buildPath\\Engine\\Binaries\\ThirdParty\\Windows\\DirectX\\x64\"
   $scriptFilePath = "$installPath\Engine\Source\Programs\ShaderCompileWorker\ShaderCompileWorker.Build.cs"
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("DirectX.GetDllDir(Target) + ", "")
-  $scriptFileText = $scriptFileText.Replace("d3dcompiler_47.dll", "$installPath\Engine\ThirdParty\Windows\DirectX\x64\d3dcompiler_47.dll")
+  $scriptFileText = $scriptFileText.Replace("d3dcompiler_47.dll", "$buildPath\d3dcompiler_47.dll")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
 
   $installFile = "$installPath\Setup.bat"
@@ -308,18 +310,17 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
 
   if ($renderEngines -contains "Unreal+PixelStream") {
     Write-Host "Customize (Start): Unreal Pixel Streaming"
-    $unrealVersion = $versionInfo
-    $versionInfo = "UE5.2-0.6.2"
+    $versionInfo = "5.2-0.6.5"
     $installType = "unreal-stream"
-    $installFile = "PixelStreamingInfrastructure-$versionInfo.zip"
-    $downloadUrl = "$binStorageHost/Unreal/$unrealVersion/$installFile$binStorageAuth"
+    $installFile = "UE$versionInfo.zip"
+    $downloadUrl = "$binStorageHost/Unreal/PixelStream/$versionInfo/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Expand-Archive -Path $installFile
-    $installFile = "PixelStreaming*\PixelStreaming*\SignallingWebServer\platform_scripts\cmd\setup.bat"
+    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-$versionInfo\SignallingWebServer\platform_scripts\cmd\setup.bat"
     StartProcess .\$installFile $null $installType-signalling
-    $installFile = "PixelStreaming*\PixelStreaming*\Matchmaker\platform_scripts\cmd\setup.bat"
+    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-$versionInfo\Matchmaker\platform_scripts\cmd\setup.bat"
     StartProcess .\$installFile $null $installType-matchmaker
-    $installFile = "PixelStreaming*\PixelStreaming*\SFU\platform_scripts\cmd\setup.bat"
+    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-$versionInfo\SFU\platform_scripts\cmd\setup.bat"
     StartProcess .\$installFile $null $installType-sfu
     Write-Host "Customize (End): Unreal Pixel Streaming"
   }

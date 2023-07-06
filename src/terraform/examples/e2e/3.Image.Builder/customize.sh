@@ -219,11 +219,10 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
   if [[ $renderEngines == *Unreal+PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
     dnf -y install coturn
-    unrealVersion=$versionInfo
-    versionInfo="UE5.2-0.6.2"
+    versionInfo="5.2-0.6.5"
     installType="unreal-stream"
-    installFile="PixelStreamingInfrastructure-$versionInfo.tar.gz"
-    downloadUrl="$binStorageHost/Unreal/$unrealVersion/$installFile$binStorageAuth"
+    installFile="UE$versionInfo.tar.gz"
+    downloadUrl="$binStorageHost/Unreal/PixelStream/$versionInfo/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
     tar -xzf $installFile
     installFile="PixelStreamingInfrastructure-$versionInfo/SignallingWebServer/platform_scripts/bash/setup.sh"
