@@ -70,7 +70,7 @@ resource "azurerm_network_interface" "vm" {
     subnet_id                     = data.azurerm_subnet.vnet.id
     private_ip_address_allocation = var.static_ip_address == null || var.static_ip_address == "" ? "Dynamic" : "Static"
     private_ip_address            = var.static_ip_address == null || var.static_ip_address == "" ? null : var.static_ip_address
-    public_ip_address_id          = var.add_public_ip ? azurerm_public_ip.vm[0].id : ""
+    public_ip_address_id          = var.add_public_ip ? azurerm_public_ip.vm[0].id : null
   }
 
   count = var.deploy_controller ? 1 : 0
