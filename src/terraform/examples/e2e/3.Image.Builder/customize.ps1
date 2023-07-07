@@ -316,11 +316,11 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
     $downloadUrl = "$binStorageHost/Unreal/PixelStream/$versionInfo/$installFile$binStorageAuth"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Expand-Archive -Path $installFile
-    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-$versionInfo\SignallingWebServer\platform_scripts\cmd\setup.bat"
+    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-UE$versionInfo\SignallingWebServer\platform_scripts\cmd\setup.bat"
     StartProcess .\$installFile $null $installType-signalling
-    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-$versionInfo\Matchmaker\platform_scripts\cmd\setup.bat"
+    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-UE$versionInfo\Matchmaker\platform_scripts\cmd\setup.bat"
     StartProcess .\$installFile $null $installType-matchmaker
-    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-$versionInfo\SFU\platform_scripts\cmd\setup.bat"
+    $installFile = "UE$versionInfo\PixelStreamingInfrastructure-UE$versionInfo\SFU\platform_scripts\cmd\setup.bat"
     StartProcess .\$installFile $null $installType-sfu
     Write-Host "Customize (End): Unreal Pixel Streaming"
   }

@@ -218,6 +218,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
 
   if [[ $renderEngines == *Unreal+PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
+    dnf -y install epel-release
     dnf -y install coturn
     versionInfo="5.2-0.6.5"
     installType="unreal-stream"
@@ -225,13 +226,13 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
     downloadUrl="$binStorageHost/Unreal/PixelStream/$versionInfo/$installFile$binStorageAuth"
     curl -o $installFile -L $downloadUrl
     tar -xzf $installFile
-    installFile="PixelStreamingInfrastructure-$versionInfo/SignallingWebServer/platform_scripts/bash/setup.sh"
+    installFile="PixelStreamingInfrastructure-UE$versionInfo/SignallingWebServer/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 2>&1 | tee $installType-signalling.log
-    installFile="PixelStreamingInfrastructure-$versionInfo/Matchmaker/platform_scripts/bash/setup.sh"
+    installFile="PixelStreamingInfrastructure-UE$versionInfo/Matchmaker/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 2>&1 | tee $installType-matchmaker.log
-    installFile="PixelStreamingInfrastructure-$versionInfo/SFU/platform_scripts/bash/setup.sh"
+    installFile="PixelStreamingInfrastructure-UE$versionInfo/SFU/platform_scripts/bash/setup.sh"
     chmod +x $installFile
     ./$installFile 2>&1 | tee $installType-sfu.log
     echo "Customize (End): Unreal Pixel Streaming"
