@@ -48,6 +48,24 @@ binPathCMake="$binDirectory/$installType/bin"
 binPaths="$binPaths:$binPathCMake"
 echo "Customize (End): Image Build Platform"
 
+if [ $machineType == Storage ]; then
+  dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk # tcsh
+  installFile="MLNX_OFED_LINUX-23.04-1.1.3.0-rhel8.6-x86_64.tgz"
+  downloadUrl="$binStorageHost/NVIDIA/OFED/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  ./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --skip-repo --force 2>&1 | tee mellanox-ofed.log
+fi
+
+if [[ $machineType == Storage || $machineType == Scheduler ]]; then
+  echo "Customize (Start): Azure CLI"
+  installType="azure-cli"
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+  dnf -y install $installType 2>&1 | tee $installType.log
+  echo "Customize (End): Azure CLI"
+fi
+
 if [ "$gpuProvider" == NVIDIA ]; then
   dnf -y install epel-release
   dnf -y install dkms
@@ -292,19 +310,10 @@ if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (End): MoonRay"
 fi
 
-if [ $machineType == Scheduler ]; then
-  echo "Customize (Start): Azure CLI"
-  installType="azure-cli"
-  rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-  dnf -y install $installType 2>&1 | tee $installType.log
-  echo "Customize (End): Azure CLI"
-
-  if [[ $renderManager == *Deadline* || $renderManager == *RoyalRender* ]]; then
-    echo "Customize (Start): NFS Server"
-    systemctl --now enable nfs-server
-    echo "Customize (End): NFS Server"
-  fi
+if [[ $machineType == Scheduler && ($renderManager == *Deadline* || $renderManager == *RoyalRender*) ]]; then
+  echo "Customize (Start): NFS Server"
+  systemctl --now enable nfs-server
+  echo "Customize (End): NFS Server"
 fi
 
 if [[ $renderManager == *Deadline* ]]; then
@@ -491,4 +500,6 @@ if [ $machineType == Workstation ]; then
   echo "Customize (End): Teradici PCoIP"
 fi
 
-echo "PATH=$PATH$binPaths" >> $aaaProfile
+if [ "$binPaths" != "" ]; then
+  echo "PATH=$PATH$binPaths" >> $aaaProfile
+fi

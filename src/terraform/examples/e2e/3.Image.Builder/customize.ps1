@@ -52,6 +52,16 @@ Write-Host "Render Manager: $renderManager"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
+if ($machineType -eq "Storage" -or $machineType -eq "Scheduler") {
+  Write-Host "Customize (Start): Azure CLI"
+  $installType = "azure-cli"
+  $installFile = "$installType.msi"
+  $downloadUrl = "https://aka.ms/installazurecliwindows"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
+  Write-Host "Customize (End): Azure CLI"
+}
+
 Write-Host "Customize (Start): Chocolatey"
 $installType = "chocolatey"
 $installFile = "$installType.ps1"
@@ -341,20 +351,10 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   }
 }
 
-if ($machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): Azure CLI"
-  $installType = "azure-cli"
-  $installFile = "$installType.msi"
-  $downloadUrl = "https://aka.ms/installazurecliwindows"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-  Write-Host "Customize (End): Azure CLI"
-
-  if ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*") {
-    Write-Host "Customize (Start): NFS Server"
-    Install-WindowsFeature -Name "FS-NFS-Service"
-    Write-Host "Customize (End): NFS Server"
-  }
+if ($machineType -eq "Scheduler" -and ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*")) {
+  Write-Host "Customize (Start): NFS Server"
+  Install-WindowsFeature -Name "FS-NFS-Service"
+  Write-Host "Customize (End): NFS Server"
 } else {
   Write-Host "Customize (Start): NFS Client"
   $installType = "nfs-client"
@@ -561,4 +561,6 @@ if ($machineType -eq "Workstation") {
   Write-Host "Customize (End): Teradici PCoIP"
 }
 
-setx PATH "$env:PATH$binPaths" /m
+if ($binPaths -ne "") {
+  setx PATH "$env:PATH$binPaths" /m
+}
