@@ -43,8 +43,8 @@ $machineType = $buildConfig.machineType
 $gpuProvider = $buildConfig.gpuProvider
 $renderManager = $buildConfig.renderManager
 $renderEngines = $buildConfig.renderEngines
-$binStorageHost = $buildConfig.binStorageHost
-$binStorageAuth = $buildConfig.binStorageAuth
+$binStorageHost = $buildConfig.binStorage.Host
+$binStorageAuth = $buildConfig.binStorage.Auth
 $servicePassword = $buildConfig.servicePassword
 Write-Host "Machine Type: $machineType"
 Write-Host "GPU Provider: $gpuProvider"
@@ -425,7 +425,7 @@ if ("$renderManager" -like "*Deadline*") {
 }
 
 if ("$renderManager" -like "*RoyalRender*") {
-  $versionInfo = "9.0.06"
+  $versionInfo = "9.0.07"
   $installRoot = "\RoyalRender"
   $binPathScheduler = "C:$installRoot\bin\win64"
 

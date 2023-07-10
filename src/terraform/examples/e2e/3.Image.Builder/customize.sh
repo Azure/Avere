@@ -14,8 +14,8 @@ machineType=$(echo $buildConfig | jq -r .machineType)
 gpuProvider=$(echo $buildConfig | jq -r .gpuProvider)
 renderManager=$(echo $buildConfig | jq -r .renderManager)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
-binStorageHost=$(echo $buildConfig | jq -r .binStorageHost)
-binStorageAuth=$(echo $buildConfig | jq -r .binStorageAuth)
+binStorageHost=$(echo $buildConfig | jq -r .binStorage.host)
+binStorageAuth=$(echo $buildConfig | jq -r .binStorage.auth)
 servicePassword=$(echo $buildConfig | jq -r .servicePassword)
 echo "Machine Type: $machineType"
 echo "GPU Provider: $gpuProvider"
@@ -23,31 +23,18 @@ echo "Render Manager: $renderManager"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
-echo "Customize (Start): Azure CLI"
-installType="azure-cli"
-rpm --import https://packages.microsoft.com/keys/microsoft.asc
-dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-dnf -y install $installType 2>&1 | tee $installType.log
-echo "Customize (End): Azure CLI"
-
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
 dnf -y install gcc gcc-c++ perl elfutils-libelf-devel # openssl-devel bison flex
 installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
-
-# downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
-# curl -o $installFile -L $downloadUrl
-az login --identity
-az storage blob download --account-name azstudio --container-name bin --name "Linux/Rocky/$installFile" --file $installFile
-
+downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
+curl -o $installFile -L $downloadUrl
 rpm -i $installFile
 dnf -y install python3-devel bc git lsof unzip
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
   dnf -y module install nodejs:18
 fi
-
-exit 0
 
 versionInfo="3.26.4"
 installType="cmake"
@@ -306,12 +293,12 @@ if [[ $renderEngines == *MoonRay* ]]; then
 fi
 
 if [ $machineType == Scheduler ]; then
-  # echo "Customize (Start): Azure CLI"
-  # installType="azure-cli"
-  # rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  # dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-  # dnf -y install $installType 2>&1 | tee $installType.log
-  # echo "Customize (End): Azure CLI"
+  echo "Customize (Start): Azure CLI"
+  installType="azure-cli"
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+  dnf -y install $installType 2>&1 | tee $installType.log
+  echo "Customize (End): Azure CLI"
 
   if [[ $renderManager == *Deadline* || $renderManager == *RoyalRender* ]]; then
     echo "Customize (Start): NFS Server"
