@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.60.0"
+      version = "~>3.64.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -336,8 +336,6 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
     script: "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
         renderManager          = module.global.renderManager
-        binStorageHost         = module.global.binStorage.host
-        binStorageAuth         = module.global.binStorage.auth
         serviceAccountName     = var.serviceAccount.name
         serviceAccountPassword = local.serviceAccountPassword
       }))

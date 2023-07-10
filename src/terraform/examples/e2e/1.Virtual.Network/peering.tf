@@ -1,3 +1,13 @@
+variable "networkPeering" {
+  type = object(
+    {
+      enable                      = bool
+      allowRemoteNetworkAccess    = bool
+      allowRemoteForwardedTraffic = bool
+    }
+  )
+}
+
 ################################################################################################################
 # Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
 ################################################################################################################

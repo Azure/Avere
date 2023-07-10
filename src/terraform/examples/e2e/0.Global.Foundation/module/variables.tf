@@ -59,13 +59,6 @@ variable "monitor" {
   }
 }
 
-variable "binStorage" {
-  default = {
-    host = "https://azstudio.blob.core.windows.net/bin"
-    auth = "?sv=2021-10-04&st=2022-01-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=SyE2RuK0C7M9nNQSJfiw4SenqqV8O6DYulr24ZJapFw%3D"
-  }
-}
-
 output "regionNames" {
   value = var.regionNames
 }
@@ -92,8 +85,4 @@ output "keyVault" {
 
 output "monitor" {
   value = var.monitor
-}
-
-output "binStorage" {
-  value = var.binStorage
 }

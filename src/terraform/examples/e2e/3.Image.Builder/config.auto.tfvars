@@ -72,24 +72,6 @@ imageTemplates = [
       renderEngines = [
       ]
       customize = [
-        "cd /usr/local/bin",
-        "dnf -y install jq bc lsof",
-        "binStorageHost=https://azstudio.blob.core.windows.net/bin",
-        "binStorageAuth='?sv=2021-10-04&st=2022-01-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=SyE2RuK0C7M9nNQSJfiw4SenqqV8O6DYulr24ZJapFw%3D'",
-        "dnf -y install gcc gcc-c++ perl elfutils-libelf-devel # openssl-devel bison flex",
-        "installFile=kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm",
-        "downloadUrl=$binStorageHost/Linux/Rocky/$installFile$binStorageAuth",
-        "curl -o $installFile -L $downloadUrl",
-        "rpm -i $installFile",
-        "dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk # tcsh",
-        "installFile=MLNX_OFED_LINUX-23.04-0.5.3.3-rhel8.6-x86_64.tgz",
-        "downloadUrl=$binStorageHost/NVIDIA/OFED/$installFile$binStorageAuth",
-        "curl -o $installFile -L $downloadUrl",
-        "tar -xzf $installFile",
-        "./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --skip-repo --force 2>&1 | tee mellanox-ofed.log",
-        "rpm --import https://packages.microsoft.com/keys/microsoft.asc",
-        "dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm",
-        "dnf -y install azure-cli 2>&1 | tee azure-cli.log"
       ]
     }
   },
@@ -150,7 +132,8 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "MoonRay"
+        # "MoonRay",
+        "Unreal"
       ]
       customize = [
       ]
@@ -281,7 +264,8 @@ imageTemplates = [
       osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
-        "Blender"
+        "Blender",
+        "Unreal"
       ]
       customize = [
       ]
@@ -334,6 +318,11 @@ imageTemplates = [
 ]
 
 servicePassword = "P@ssword1234"
+
+binStorage = {
+  host = ""
+  auth = ""
+}
 
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #

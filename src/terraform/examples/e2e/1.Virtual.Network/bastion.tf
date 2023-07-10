@@ -1,3 +1,18 @@
+variable "bastion" {
+  type = object(
+    {
+      enable              = bool
+      sku                 = string
+      scaleUnitCount      = number
+      enableFileCopy      = bool
+      enableCopyPaste     = bool
+      enableIpConnect     = bool
+      enableTunneling     = bool
+      enableShareableLink = bool
+    }
+  )
+}
+
 ########################################################################
 # Bastion (https://learn.microsoft.com/azure/bastion/bastion-overview) #
 ########################################################################

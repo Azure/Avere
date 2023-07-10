@@ -1,47 +1,44 @@
-#############################
-# Public IP Addresses (VPN) #
-#############################
-
-resource "azurerm_public_ip" "vpn_gateway_address1" {
-  for_each = {
-    for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.key => virtualNetwork if var.networkGateway.type == "Vpn"
-  }
-  name                = local.virtualGatewayActiveActive ? "${each.value.name}1" : "${each.value.name}"
-  resource_group_name = each.value.resourceGroupName
-  location            = each.value.regionName
-  sku                 = "Standard"
-  allocation_method   = "Static"
-  depends_on = [
-    azurerm_virtual_network.network
-  ]
+variable "vpnGateway" {
+  type = object(
+    {
+      sku                = string
+      type               = string
+      generation         = string
+      sharedKey          = string
+      enableBgp          = bool
+      enableVnet2Vnet    = bool
+      enableActiveActive = bool
+      pointToSiteClient = object(
+        {
+          addressSpace = list(string)
+          rootCertificate = object(
+            {
+              name = string
+              data = string
+            }
+          )
+        }
+      )
+    }
+  )
 }
 
-resource "azurerm_public_ip" "vpn_gateway_address2" {
-  for_each = {
-    for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.key => virtualNetwork if local.virtualGatewayActiveActive
-  }
-  name                = "${each.value.name}2"
-  resource_group_name = each.value.resourceGroupName
-  location            = each.value.regionName
-  sku                 = "Standard"
-  allocation_method   = "Static"
-  depends_on = [
-    azurerm_virtual_network.network
-  ]
-}
-
-resource "azurerm_public_ip" "vpn_gateway_address3" {
-  for_each = {
-    for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.key => virtualNetwork if local.virtualGatewayActiveActive && length(var.vpnGateway.pointToSiteClient.addressSpace) > 0
-  }
-  name                = "${each.value.name}3"
-  resource_group_name = each.value.resourceGroupName
-  location            = each.value.regionName
-  sku                 = "Standard"
-  allocation_method   = "Static"
-  depends_on = [
-    azurerm_virtual_network.network
-  ]
+variable "vpnGatewayLocal" {
+  type = object(
+    {
+      fqdn         = string
+      address      = string
+      addressSpace = list(string)
+      bgp = object(
+        {
+          enable         = bool
+          asn            = number
+          peerWeight     = number
+          peeringAddress = string
+        }
+      )
+    }
+  )
 }
 
 #################################
@@ -63,22 +60,14 @@ resource "azurerm_virtual_network_gateway" "vpn" {
   active_active       = local.virtualGatewayActiveActive
   ip_configuration {
     name                 = "ipConfig1"
-    public_ip_address_id = "${each.value.resourceGroupId}/providers/Microsoft.Network/publicIPAddresses/${each.value.name}${local.virtualGatewayActiveActive ? "1" : ""}"
+    public_ip_address_id = var.networkGateway.ipPrefix.name != "" ? azurerm_public_ip.vpn_gateway_1[0].id : data.azurerm_public_ip.gateway_1[0].id
     subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
   }
   dynamic ip_configuration {
     for_each = local.virtualGatewayActiveActive ? [1] : []
     content {
       name                 = "ipConfig2"
-      public_ip_address_id = "${each.value.resourceGroupId}/providers/Microsoft.Network/publicIPAddresses/${each.value.name}2"
-      subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
-    }
-  }
-  dynamic ip_configuration {
-    for_each = local.virtualGatewayActiveActive && length(var.vpnGateway.pointToSiteClient.addressSpace) > 0 ? [1] : []
-    content {
-      name                 = "ipConfig3"
-      public_ip_address_id = "${each.value.resourceGroupId}/providers/Microsoft.Network/publicIPAddresses/${each.value.name}3"
+      public_ip_address_id = var.networkGateway.ipPrefix.name != "" ? azurerm_public_ip.vpn_gateway_2[0].id : data.azurerm_public_ip.gateway_2[0].id
       subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
     }
   }
@@ -87,16 +76,15 @@ resource "azurerm_virtual_network_gateway" "vpn" {
     content {
       address_space = var.vpnGateway.pointToSiteClient.addressSpace
       root_certificate {
-        name             = var.vpnGateway.pointToSiteClient.certificateName
-        public_cert_data = var.vpnGateway.pointToSiteClient.certificateData
+        name             = var.vpnGateway.pointToSiteClient.rootCertificate.name
+        public_cert_data = var.vpnGateway.pointToSiteClient.rootCertificate.data
       }
     }
   }
   depends_on = [
     azurerm_subnet_network_security_group_association.network,
-    azurerm_public_ip.vpn_gateway_address1,
-    azurerm_public_ip.vpn_gateway_address2,
-    azurerm_public_ip.vpn_gateway_address3
+    azurerm_public_ip.vpn_gateway_1,
+    azurerm_public_ip.vpn_gateway_2
   ]
 }
 
@@ -135,7 +123,7 @@ resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_down" {
 resource "azurerm_local_network_gateway" "vpn" {
   count               = var.networkGateway.type == "Vpn" && var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "" ? 1 : 0
   name                = local.computeNetworks[0].name
-  resource_group_name = azurerm_resource_group.network[0].name
+  resource_group_name = local.computeNetworks[0].resourceGroupName
   location            = local.computeNetworks[0].regionName
   gateway_fqdn        = var.vpnGatewayLocal.address == "" ? var.vpnGatewayLocal.fqdn : null
   gateway_address     = var.vpnGatewayLocal.fqdn == "" ? var.vpnGatewayLocal.address : null

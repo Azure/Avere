@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.60.0"
+      version = "~>3.64.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -52,10 +52,10 @@ variable "keyVault" {
   type = object(
     {
       type                        = string
-      enablePurgeProtection       = bool
       enableForDeployment         = bool
       enableForDiskEncryption     = bool
       enableForTemplateDeployment = bool
+      enablePurgeProtection       = bool
       softDeleteRetentionDays     = number
       secrets = list(object(
         {
@@ -178,11 +178,11 @@ resource "azurerm_key_vault" "studio" {
   location                        = azurerm_resource_group.studio.location
   tenant_id                       = data.azurerm_client_config.studio.tenant_id
   sku_name                        = var.keyVault.type
-  purge_protection_enabled        = var.keyVault.enablePurgeProtection
-  soft_delete_retention_days      = var.keyVault.softDeleteRetentionDays
   enabled_for_deployment          = var.keyVault.enableForDeployment
   enabled_for_disk_encryption     = var.keyVault.enableForDiskEncryption
   enabled_for_template_deployment = var.keyVault.enableForTemplateDeployment
+  purge_protection_enabled        = var.keyVault.enablePurgeProtection
+  soft_delete_retention_days      = var.keyVault.softDeleteRetentionDays
   enable_rbac_authorization       = true
   network_acls {
     bypass         = "None"

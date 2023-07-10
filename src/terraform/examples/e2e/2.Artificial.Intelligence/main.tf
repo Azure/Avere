@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.60.0"
+      version = "~>3.64.0"
     }
   }
   backend "azurerm" {
@@ -38,6 +38,12 @@ variable "openAI" {
       domainName    = string
       serviceTier   = string
       enableStorage = bool
+      networkAccess = object(
+        {
+          enablePublic     = bool
+          restrictOutbound = bool
+        }
+      )
     }
   )
 }
@@ -174,11 +180,11 @@ resource "azurerm_cognitive_account" "open_ai" {
   name                               = var.openAI.accountName
   resource_group_name                = azurerm_resource_group.ai.name
   location                           = azurerm_resource_group.ai.location
+  public_network_access_enabled      = var.openAI.networkAccess.enablePublic
+  outbound_network_access_restricted = var.openAI.networkAccess.restrictOutbound
   custom_subdomain_name              = var.openAI.domainName != "" ? var.openAI.domainName : null
   sku_name                           = var.openAI.serviceTier
   kind                               = "OpenAI"
-  public_network_access_enabled      = false
-  outbound_network_access_restricted = false
   identity {
     type = "UserAssigned"
     identity_ids = [

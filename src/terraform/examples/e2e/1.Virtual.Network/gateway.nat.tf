@@ -2,24 +2,6 @@
 # Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
 ##########################################################################################################################
 
-resource "azurerm_public_ip" "nat_gateway_address_compute" {
-  count               = var.computeNetwork.enableNatGateway ? 1 : 0
-  name                = azurerm_nat_gateway.compute[0].name
-  resource_group_name = local.computeNetworks[0].resourceGroupName
-  location            = local.computeNetworks[0].regionName
-  sku                 = "Standard"
-  allocation_method   = "Static"
-}
-
-resource "azurerm_public_ip" "nat_gateway_address_storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.name != "" ? 1 : 0
-  name                = azurerm_nat_gateway.storage[0].name
-  resource_group_name = local.storageNetwork.resourceGroupName
-  location            = local.storageNetwork.regionName
-  sku                 = "Standard"
-  allocation_method   = "Static"
-}
-
 resource "azurerm_nat_gateway" "compute" {
   count               = var.computeNetwork.enableNatGateway ? 1 : 0
   name                = "${local.computeNetworks[0].name}.Gateway"
@@ -39,13 +21,13 @@ resource "azurerm_nat_gateway" "storage" {
 resource "azurerm_nat_gateway_public_ip_association" "compute" {
   count               = var.computeNetwork.enableNatGateway ? 1 : 0
   nat_gateway_id       = azurerm_nat_gateway.compute[0].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway_address_compute[0].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_compute[0].id
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "storage" {
   count               = var.storageNetwork.enableNatGateway && local.storageNetwork.name != "" ? 1 : 0
   nat_gateway_id       = azurerm_nat_gateway.storage[0].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway_address_storage[0].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway_storage[0].id
 }
 
 resource "azurerm_subnet_nat_gateway_association" "compute" {

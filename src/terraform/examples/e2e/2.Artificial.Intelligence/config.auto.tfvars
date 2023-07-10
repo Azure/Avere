@@ -10,6 +10,10 @@ openAI = {
   domainName    = "azstudio"
   serviceTier   = "S0"
   enableStorage = false
+  networkAccess = {
+    enablePublic     = true
+    restrictOutbound = false
+  }
 }
 
 #################################################################################

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.60.0"
+      version = "~>3.64.0"
     }
   }
   backend "azurerm" {
@@ -82,110 +82,22 @@ variable "storageNetwork" {
   )
 }
 
-variable "networkPeering" {
-  type = object(
-    {
-      enable                      = bool
-      allowRemoteNetworkAccess    = bool
-      allowRemoteForwardedTraffic = bool
-    }
-  )
-}
-
-variable "privateDns" {
-  type = object(
-    {
-      zoneName               = string
-      enableAutoRegistration = bool
-    }
-  )
-}
-
-variable "bastion" {
-  type = object(
-    {
-      enable              = bool
-      sku                 = string
-      scaleUnitCount      = number
-      enableFileCopy      = bool
-      enableCopyPaste     = bool
-      enableIpConnect     = bool
-      enableTunneling     = bool
-      enableShareableLink = bool
-    }
-  )
-}
-
 variable "networkGateway" {
   type = object(
     {
       type = string
-    }
-  )
-}
-
-variable "vpnGateway" {
-  type = object(
-    {
-      sku                = string
-      type               = string
-      generation         = string
-      sharedKey          = string
-      enableBgp          = bool
-      enableVnet2Vnet    = bool
-      enableActiveActive = bool
-      pointToSiteClient = object(
+      ipPrefix = object(
         {
-          addressSpace    = list(string)
-          certificateName = string
-          certificateData = string
+          name              = string
+          resourceGroupName = string
         }
       )
-    }
-  )
-}
-
-variable "vpnGatewayLocal" {
-  type = object(
-    {
-      fqdn         = string
-      address      = string
-      addressSpace = list(string)
-      bgp = object(
+      ipAddresses = list(object(
         {
-          enable         = bool
-          asn            = number
-          peerWeight     = number
-          peeringAddress = string
+          name              = string
+          resourceGroupName = string
         }
-      )
-    }
-  )
-}
-
-variable "expressRouteGateway" {
-  type = object(
-    {
-      sku = string
-      connection = object(
-        {
-          circuitId        = string
-          authorizationKey = string
-          enableFastPath   = bool
-        }
-      )
-    }
-  )
-}
-
-variable "monitor" {
-  type = object(
-    {
-      privateLink = object(
-        {
-          enable = bool
-        }
-      )
+      ))
     }
   )
 }
@@ -216,12 +128,6 @@ data "azurerm_key_vault_secret" "gateway_connection" {
 
 data "azurerm_storage_account" "studio" {
   name                = module.global.rootStorage.accountName
-  resource_group_name = module.global.resourceGroupName
-}
-
-data "azurerm_log_analytics_workspace" "studio" {
-  count               = module.global.monitor.name != "" ? 1 : 0
-  name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
 

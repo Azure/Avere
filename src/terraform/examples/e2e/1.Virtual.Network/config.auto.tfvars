@@ -152,8 +152,10 @@ networkPeering = {
 ############################################################################
 
 privateDns = {
-  zoneName               = "artist.studio"
-  enableAutoRegistration = true
+  zoneName = "artist.studio"
+  autoRegistration = {
+    enable = true
+  }
 }
 
 ########################################################################
@@ -179,6 +181,21 @@ networkGateway = {
   type = ""
   //type = "Vpn"          # https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
   //type = "ExpressRoute" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
+
+  ipPrefix = { # https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-address-prefix
+    name              = ""
+    resourceGroupName = ""
+  }
+  ipAddresses = [ # https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-addresses
+    {
+      name              = "azstudio"
+      resourceGroupName = "ArtistAnywhere"
+    },
+    {
+      name              = ""
+      resourceGroupName = ""
+    }
+  ]
 }
 
 ###############################################################################################################
@@ -186,7 +203,7 @@ networkGateway = {
 ###############################################################################################################
 
 vpnGateway = {
-  sku                = "VpnGw2"
+  sku                = "VpnGw2AZ"
   type               = "RouteBased"
   generation         = "Generation2"
   sharedKey          = "GatewayConnection"
@@ -194,10 +211,12 @@ vpnGateway = {
   enableVnet2Vnet    = false
   enableActiveActive = false
   pointToSiteClient = {
-    certificateName = ""
-    certificateData = ""
     addressSpace = [
     ]
+    rootCertificate = {
+      name = ""
+      data = ""
+    }
   }
 }
 
@@ -225,19 +244,11 @@ vpnGatewayLocal = {
 expressRouteGateway = {
   sku = "" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   connection = {
-    circuitId        = ""    # Expected format = "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
+    circuitId        = "" # Expected format = "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
     authorizationKey = ""
-    enableFastPath   = false # https://learn.microsoft.com/azure/expressroute/about-fastpath
-  }
-}
-
-######################################################################
-# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
-######################################################################
-
-monitor = {
-  privateLink = { # https://learn.microsoft.com/azure/azure-monitor/logs/private-link-security
-    enable = false
+    fastPath = { # https://learn.microsoft.com/azure/expressroute/about-fastpath
+      enable = false
+    }
   }
 }
 
