@@ -43,8 +43,10 @@ $machineType = $buildConfig.machineType
 $gpuProvider = $buildConfig.gpuProvider
 $renderManager = $buildConfig.renderManager
 $renderEngines = $buildConfig.renderEngines
-$binStorageHost = $buildConfig.binStorage.Host
-$binStorageAuth = $buildConfig.binStorage.Auth
+$binStorageHost = $buildConfig.binStorage.host
+$binStorageAuth = $buildConfig.binStorage.auth
+Write-Host "binStorageHost: $binStorageHost"
+Write-Host "binStorageAuth: $binStorageAuth"
 $servicePassword = $buildConfig.servicePassword
 Write-Host "Machine Type: $machineType"
 Write-Host "GPU Provider: $gpuProvider"
