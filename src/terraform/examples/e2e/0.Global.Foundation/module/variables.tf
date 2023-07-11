@@ -4,8 +4,7 @@
 
 variable "regionNames" { # Set Azure region names from "az account list-locations --query [].name"
   default = [
-    "WestUS3",
-    "EastUS2"
+    "WestUS2"
   ]
 }
 

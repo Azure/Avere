@@ -162,12 +162,6 @@ resource "azurerm_resource_group" "image" {
   location = module.global.regionNames[0]
 }
 
-resource "azurerm_role_assignment" "network" {
-  role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
-  principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
-  scope                = data.azurerm_resource_group.network.id
-}
-
 resource "azurerm_role_assignment" "image" {
   role_definition_name = "Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
   principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
@@ -273,9 +267,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
   resource_group_name = azurerm_resource_group.image.name
   deployment_mode     = "Incremental"
   parameters_content  = jsonencode({
-    subnetId = {
-      value = data.azurerm_subnet.farm.id
-    }
     binStorage = {
       value = var.binStorage
     }
@@ -306,9 +297,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
       "contentVersion": "1.0.0.0",
       "parameters": {
-        "subnetId": {
-          "type": "string"
-        },
         "binStorage": {
           "type": "object"
         },
@@ -404,7 +392,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "Shell",
                     "inline": [
-                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, parameters('binStorage'), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword')))))))]"
+                      "[format('cat /tmp/customize.sh | tr -d \r | {0} /bin/bash', concat('buildConfigEncoded=', base64(string(union(parameters('imageTemplate').build, createObject('binStorage', parameters('binStorage')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword')))))))]"
                     ]
                   }
                 ]
@@ -454,9 +442,12 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   {
                     "type": "PowerShell",
                     "inline": [
-                      "[concat('C:\\AzureData\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, parameters('binStorage'), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
+                      "[concat('C:\\AzureData\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorage', parameters('binStorage')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
+                  },
+                  {
+                    "type": "WindowsRestart"
                   }
                 ]
               }
@@ -480,10 +471,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
           "properties": {
             "vmProfile": {
               "vmSize": "[parameters('imageTemplates')[copyIndex()].build.machineSize]",
-              "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].build.osDiskSizeGB]",
-              "vnetConfig": {
-                "subnetId": "[parameters('subnetId')]"
-              }
+              "osDiskSizeGB": "[parameters('imageTemplates')[copyIndex()].build.osDiskSizeGB]"
             },
             "source": {
               "type": "PlatformImage",
