@@ -144,9 +144,9 @@ if ($gpuProvider -eq "AMD") {
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
-  $versionInfo = "12.1.1"
+  $versionInfo = "12.2.0"
   $installType = "nvidia-gpu-cuda"
-  $installFile = "cuda_${versionInfo}_531.14_windows.exe"
+  $installFile = "cuda_${versionInfo}_windows_network.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/CUDA/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   StartProcess .\$installFile "-s -n -log:$binDirectory\$installType" $null
@@ -158,11 +158,11 @@ if ($gpuProvider -eq "AMD") {
   $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-32649046.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess .\$installFile "/S /O $binDirectory\$installType.log" $null
-  $versionInfo = "v12.0"
+  StartProcess .\$installFile "/S" $null
   $sdkDirectory = "C:\ProgramData\NVIDIA Corporation\OptiX SDK $versionInfo\SDK"
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
+  $versionInfo = "v12.2"
   StartProcess $binPathCMake\cmake.exe "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" $installType-cmake
   StartProcess $binPathMSBuild\MSBuild.exe """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" $installType-msbuild
   $binPaths += ";$buildDirectory\bin\Release"
