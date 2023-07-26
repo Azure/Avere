@@ -6,25 +6,35 @@ resourceGroupName = "ArtistAnywhere.AI" # Alphanumeric, underscores, hyphens, pe
 
 openAI = {
   regionName    = "EastUS"
-  accountName   = "azstudio"
-  domainName    = "azstudio"
+  accountName   = "zai"
+  domainName    = "zai"
   serviceTier   = "S0"
   enableStorage = false
   networkAccess = {
     enablePublic     = true
     restrictOutbound = false
   }
+  modelDeployments = [
+    {
+      name    = "gpt-35-turbo"
+      format  = "OpenAI"
+      version = "0613"
+      scale   = "Standard"
+    }
+  ]
 }
 
-#################################################################################
-# Logic Apps (https://learn.microsoft.com/azure/logic-apps/logic-apps-overview) #
-#################################################################################
+####################################################################
+# Function App (https://learn.microsoft.com/azure/azure-functions) #
+####################################################################
 
-appWorkflows = [
-  {
-    name = "animatic"
+functionApp = {
+  name = "zai"
+  servicePlan = {
+    computeTier = "S1"
+    alwaysOn    = true
   }
-]
+}
 
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #

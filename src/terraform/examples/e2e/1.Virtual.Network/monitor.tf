@@ -4,6 +4,12 @@ data "azurerm_log_analytics_workspace" "studio" {
   resource_group_name = module.global.resourceGroupName
 }
 
+data "azurerm_application_insights" "studio" {
+  count               = module.global.monitor.name != "" ? 1 : 0
+  name                = module.global.monitor.name
+  resource_group_name = module.global.resourceGroupName
+}
+
 ######################################################################
 # Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
 ######################################################################
@@ -99,10 +105,18 @@ resource "azurerm_monitor_private_link_scope" "monitor" {
   resource_group_name = azurerm_resource_group.network[0].name
 }
 
-resource "azurerm_monitor_private_link_scoped_service" "monitor" {
+resource "azurerm_monitor_private_link_scoped_service" "monitor_workspace" {
   count               = module.global.monitor.name != "" ? 1 : 0
-  name                = module.global.monitor.name
+  name                = "${module.global.monitor.name}.workspace"
   resource_group_name = azurerm_resource_group.network[0].name
   linked_resource_id  = data.azurerm_log_analytics_workspace.studio[0].id
+  scope_name          = azurerm_monitor_private_link_scope.monitor[0].name
+}
+
+resource "azurerm_monitor_private_link_scoped_service" "monitor_insight" {
+  count               = module.global.monitor.name != "" ? 1 : 0
+  name                = "${module.global.monitor.name}.insight"
+  resource_group_name = azurerm_resource_group.network[0].name
+  linked_resource_id  = data.azurerm_application_insights.studio[0].id
   scope_name          = azurerm_monitor_private_link_scope.monitor[0].name
 }

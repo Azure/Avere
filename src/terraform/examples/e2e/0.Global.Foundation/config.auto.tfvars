@@ -64,7 +64,7 @@ monitor = {
   workspace = {
     sku = "PerGB2018"
   }
-  appInsights = {
+  insight = {
     type = "Node.JS"
   }
   retentionDays = 90

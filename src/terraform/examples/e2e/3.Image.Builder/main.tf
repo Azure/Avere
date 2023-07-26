@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.4.6"
+  required_version = ">= 1.5.3"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.64.0"
+      version = "~>3.66.0"
     }
   }
   backend "azurerm" {
@@ -445,9 +445,6 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                       "[concat('C:\\AzureData\\customize.ps1 -buildConfigEncoded ', base64(string(union(parameters('imageTemplate').build, createObject('binStorage', parameters('binStorage')), createObject('renderManager', parameters('renderManager')), createObject('servicePassword', parameters('servicePassword'))))))]"
                     ],
                     "runElevated": "[if(and(contains(parameters('renderManager'), 'Deadline'), equals(parameters('imageTemplate').build.machineType, 'Scheduler')), true(), false())]"
-                  },
-                  {
-                    "type": "WindowsRestart"
                   }
                 ]
               }

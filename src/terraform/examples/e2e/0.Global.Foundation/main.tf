@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.4.6"
+  required_version = ">= 1.5.3"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.64.0"
+      version = "~>3.66.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -101,7 +101,7 @@ variable "monitor" {
           sku = string
         }
       )
-      appInsights = object(
+      insight = object(
         {
           type = string
         }
@@ -256,13 +256,15 @@ resource "azurerm_log_analytics_workspace" "monitor" {
 }
 
 resource "azurerm_application_insights" "monitor" {
-  count               = module.global.monitor.name != "" ? 1 : 0
-  name                = module.global.monitor.name
-  location            = azurerm_resource_group.studio.location
-  resource_group_name = azurerm_resource_group.studio.name
-  workspace_id        = azurerm_log_analytics_workspace.monitor[0].id
-  application_type    = var.monitor.appInsights.type
-  retention_in_days   = var.monitor.retentionDays
+  count                      = module.global.monitor.name != "" ? 1 : 0
+  name                       = module.global.monitor.name
+  location                   = azurerm_resource_group.studio.location
+  resource_group_name        = azurerm_resource_group.studio.name
+  workspace_id               = azurerm_log_analytics_workspace.monitor[0].id
+  application_type           = var.monitor.insight.type
+  retention_in_days          = var.monitor.retentionDays
+  internet_ingestion_enabled = false
+  internet_query_enabled     = false
 }
 
 output "resourceGroupName" {
@@ -275,7 +277,7 @@ output "monitor" {
       name = module.global.monitor.name
       id   = module.global.monitor.name != "" ? azurerm_log_analytics_workspace.monitor[0].workspace_id : ""
     }
-    appInsights = {
+    insight = {
       name = module.global.monitor.name
       id   = module.global.monitor.name != "" ? azurerm_application_insights.monitor[0].app_id : ""
     }
