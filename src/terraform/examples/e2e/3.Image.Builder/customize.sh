@@ -49,8 +49,8 @@ binPaths="$binPaths:$binPathCMake"
 echo "Customize (End): Image Build Platform"
 
 if [ $machineType == Storage ]; then
-  dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk # tcsh
-  installFile="MLNX_OFED_LINUX-23.04-1.1.3.0-rhel8.6-x86_64.tgz"
+  dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk
+  installFile="MLNX_OFED_LINUX-23.04-1.1.3.0-rhel9.0-x86_64.tgz"
   downloadUrl="$binStorageHost/NVIDIA/OFED/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
@@ -67,22 +67,18 @@ if [[ $machineType == Storage || $machineType == Scheduler ]]; then
 fi
 
 if [ "$gpuProvider" == NVIDIA ]; then
-  dnf -y install epel-release
-  dnf -y install dkms
-
   echo "Customize (Start): NVIDIA GPU (GRID)"
   installType="nvidia-gpu-grid"
   installFile="$installType.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
   curl -o $installFile -L $downloadUrl
   chmod +x $installFile
-  ./$installFile --silent --dkms 2>&1 | tee $installType.log
+  ./$installFile --silent 2>&1 | tee $installType.log
   echo "Customize (End): NVIDIA GPU (GRID)"
 
   echo "Customize (Start): NVIDIA GPU (CUDA)"
   installType="nvidia-cuda"
-  dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-  dnf -y module install nvidia-driver:latest-dkms 2>&1 | tee $installType-dkms.log
+  dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
   dnf -y install cuda 2>&1 | tee $installType.log
   echo "Customize (End): NVIDIA GPU (CUDA)"
 
@@ -92,7 +88,7 @@ if [ "$gpuProvider" == NVIDIA ]; then
   dnf -y install libXrandr-devel
   dnf -y install libXinerama-devel
   dnf -y install libXcursor-devel
-  versionInfo="7.7.0"
+  versionInfo="7.3.0"
   installType="nvidia-optix"
   installFile="NVIDIA-OptiX-SDK-$versionInfo-linux64-x86_64.sh"
   downloadUrl="$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
@@ -261,50 +257,24 @@ fi
 
 if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (Start): MoonRay"
-  dnf -y install mesa-libGL
-  dnf -y install mesa-libGL-devel
-  dnf -y --enablerepo=devel install libcgroup-devel
-  dnf -y --enablerepo=devel install giflib-devel
-  dnf -y install libtiff-devel
-  dnf -y install libjpeg-devel
-  dnf -y install libuuid-devel
-  dnf -y install libcurl-devel
-  dnf -y install openssl-devel
-  dnf -y install libmng-devel
-  dnf -y install libatomic
-  dnf -y install patch
-  dnf -y install bison
-  dnf -y install flex
-  if [ $machineType == Workstation ]; then
-    dnf -y install qt5-qtbase-devel
-    dnf -y install qt5-qtscript-devel
-  fi
-
   git clone --recurse-submodules https://github.com/dreamworksanimation/openmoonray.git /openmoonray
-
-  mkdir -p /installs/bin
-  mkdir -p /installs/lib
-  mkdir -p /installs/include
-  mkdir -p /installs/openmoonray
-
-  dnf -y install gcc-toolset-9 python2
-  source /opt/rh/gcc-toolset-9/enable
-  ln -s /bin/python2 /bin/python
+  source /openmoonray/building/Rocky9/install_packages.sh
 
   mkdir -p /openmoonray/build
   cd /openmoonray/build
-  ln -s /openmoonray/building /building
   installType="openmoonray-prereq"
-  $binPathCMake/cmake ../building 2>&1 | tee $installType.log
+  $binPathCMake/cmake ../building/Rocky9 2>&1 | tee $installType.log
   $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-build.log
 
-  cd /openmoonray
+  cd /openmoonray/build
+  rm -rf *
   installType="openmoonray"
   [[ "$gpuProvider" == NVIDIA ]] && useCUDA=YES || useCUDA=NO
   [[ $machineType == Workstation ]] && uiApps=YES || uiApps=NO
-  $binPathCMake/cmake --preset container-release -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType-preset.log
-  $binPathCMake/cmake --build --preset container-release -- -j 64 2>&1 | tee $installType-preset-build.log
-  $binPathCMake/cmake --install /build --prefix /installs/openmoonray 2>&1 | tee $installType-install.log
+  $binPathCMake/cmake /openmoonray -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=/usr/local/bin/nvidia-optix/include -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType.log
+  $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-build.log
+  mkdir -p /installs/openmoonray
+  $binPathCMake/cmake --install /openmoonray/build --prefix /installs/openmoonray 2>&1 | tee $installType-install.log
   echo "source /installs/openmoonray/scripts/setup.sh" >> $aaaProfile
   cd $binDirectory
   echo "Customize (End): MoonRay"
