@@ -25,12 +25,12 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
-dnf -y install gcc gcc-c++ perl elfutils-libelf-devel # openssl-devel bison flex
-installFile="kernel-devel-4.18.0-372.16.1.el8_6.0.1.x86_64.rpm"
+dnf -y install gcc gcc-c++ perl bison flex elfutils-libelf-devel openssl-devel
+installFile="kernel-devel-5.14.0-70.17.1.el9_0.x86_64.rpm"
 downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
 rpm -i $installFile
-dnf -y install python3-devel bc git lsof unzip
+dnf -y install python3-devel bc git lsof
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
   dnf -y module install nodejs:18
