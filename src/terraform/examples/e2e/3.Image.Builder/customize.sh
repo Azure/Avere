@@ -30,23 +30,11 @@ installFile="kernel-devel-5.14.0-70.17.1.el9_0.x86_64.rpm"
 downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
 rpm -i $installFile
-dnf -y install python3-devel bc git lsof
+dnf -y install python3-devel cmake lsof git bc
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
   dnf -y module install nodejs:18
 fi
-
-versionInfo="3.26.4"
-installType="cmake"
-installFile="cmake-$versionInfo-linux-x86_64.sh"
-downloadUrl="https://github.com/Kitware/CMake/releases/download/v$versionInfo/cmake-$versionInfo-linux-x86_64.sh"
-curl -o $installFile -L $downloadUrl
-chmod +x $installFile
-mkdir -p $installType
-./$installFile --skip-license --prefix=$installType 2>&1 | tee $installType.log
-binPathCMake="$binDirectory/$installType/bin"
-binPaths="$binPaths:$binPathCMake"
-echo "Customize (End): Image Build Platform"
 
 if [ $machineType == Storage ]; then
   dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk
@@ -68,6 +56,7 @@ fi
 
 if [ "$gpuProvider" == NVIDIA ]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
+  dnf -y install mesa-vulkan-drivers
   installType="nvidia-gpu-grid"
   installFile="$installType.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
@@ -98,7 +87,7 @@ if [ "$gpuProvider" == NVIDIA ]; then
   ./$installFile --skip-license --prefix=$installType 2>&1 | tee $installType.log
   buildDirectory="$binDirectory/$installType/build"
   mkdir -p $buildDirectory
-  $binPathCMake/cmake -B $buildDirectory -S $binDirectory/$installType/SDK 2>&1 | tee $installType-cmake.log
+  cmake -B $buildDirectory -S $binDirectory/$installType/SDK 2>&1 | tee $installType-cmake.log
   make -C $buildDirectory 2>&1 | tee $installType-make.log
   binPaths="$binPaths:$buildDirectory/bin"
   echo "Customize (End): NVIDIA OptiX"
@@ -134,7 +123,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   installPathV3="$installPath/$versionInfo"
   git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
   mkdir -p $installPathV3
-  $binPathCMake/cmake -B $installPathV3 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
+  cmake -B $installPathV3 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
   make -C $installPathV3 2>&1 | tee $installType-make.log
   ln -s $installPathV3/pbrt $installPath/pbrt3
   echo "Customize (End): PBRT v3"
@@ -150,7 +139,7 @@ if [[ $renderEngines == *PBRT* ]]; then
   installPathV4="$installPath/$versionInfo"
   git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
   mkdir -p $installPathV4
-  $binPathCMake/cmake -B $installPathV4 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
+  cmake -B $installPathV4 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
   make -C $installPathV4 2>&1 | tee $installType-make.log
   ln -s $installPathV4/pbrt $installPath/pbrt4
   echo "Customize (End): PBRT v4"
@@ -263,18 +252,18 @@ if [[ $renderEngines == *MoonRay* ]]; then
   mkdir -p /openmoonray/build
   cd /openmoonray/build
   installType="openmoonray-prereq"
-  $binPathCMake/cmake ../building/Rocky9 2>&1 | tee $installType.log
-  $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-build.log
+  cmake ../building/Rocky9 2>&1 | tee $installType.log
+  cmake --build . -- -j 64 2>&1 | tee $installType-build.log
 
   cd /openmoonray/build
   rm -rf *
   installType="openmoonray"
   [[ "$gpuProvider" == NVIDIA ]] && useCUDA=YES || useCUDA=NO
   [[ $machineType == Workstation ]] && uiApps=YES || uiApps=NO
-  $binPathCMake/cmake /openmoonray -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=/usr/local/bin/nvidia-optix/include -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType.log
-  $binPathCMake/cmake --build . -- -j 64 2>&1 | tee $installType-build.log
+  cmake /openmoonray -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=/usr/local/bin/nvidia-optix/include -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType.log
+  cmake --build . -- -j 64 2>&1 | tee $installType-build.log
   mkdir -p /installs/openmoonray
-  $binPathCMake/cmake --install /openmoonray/build --prefix /installs/openmoonray 2>&1 | tee $installType-install.log
+  cmake --install /openmoonray/build --prefix /installs/openmoonray 2>&1 | tee $installType-install.log
   echo "source /installs/openmoonray/scripts/setup.sh" >> $aaaProfile
   cd $binDirectory
   echo "Customize (End): MoonRay"
@@ -457,9 +446,9 @@ fi
 
 if [ $machineType == Workstation ]; then
   echo "Customize (Start): Teradici PCoIP"
-  versionInfo="23.04.1"
+  versionInfo="23.06"
   [ "$gpuProvider" == "" ] && installType=pcoip-agent-standard || installType=pcoip-agent-graphics
-  installFile="pcoip-agent-offline-rocky8.6_$versionInfo-1.el8.x86_64.tar.gz"
+  installFile="pcoip-agent-offline-rocky8.8_23.06.3-1.el8.x86_64.tar"
   downloadUrl="$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   mkdir -p $installType
