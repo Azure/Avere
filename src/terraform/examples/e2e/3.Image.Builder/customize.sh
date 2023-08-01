@@ -30,7 +30,7 @@ installFile="kernel-devel-5.14.0-70.17.1.el9_0.x86_64.rpm"
 downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
 rpm -i $installFile
-dnf -y install python3-devel cmake lsof git bc
+dnf -y install python3-devel cmake lsof unzip git bc
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
   dnf -y module install nodejs:18
@@ -367,12 +367,12 @@ if [[ $renderManager == *RoyalRender* ]]; then
   unzip -q $installFile
   echo "Customize (End): Royal Render Download"
 
+  dnf -y install fontconfig
   dnf -y install xcb-util-wm
   dnf -y install xcb-util-image
   dnf -y install xcb-util-keysyms
   dnf -y install xcb-util-renderutil
   dnf -y install libxkbcommon-x11
-  dnf -y install qt5-qtbase
   if [ $machineType == Scheduler ]; then
     echo "Customize (Start): Royal Render Server"
     installPath="RoyalRender*"
