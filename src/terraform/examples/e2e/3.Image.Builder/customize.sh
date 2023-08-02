@@ -460,5 +460,5 @@ if [ $machineType == Workstation ]; then
 fi
 
 if [ "$binPaths" != "" ]; then
-  echo "PATH=$PATH$binPaths" >> $aaaProfile
+  echo 'PATH=$PATH':$binPaths >> $aaaProfile
 fi
