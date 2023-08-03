@@ -253,18 +253,18 @@ if [[ $renderEngines == *MoonRay* ]]; then
   mkdir -p /openmoonray/build
   cd /openmoonray/build
   installType="openmoonray-prereq"
-  cmake ../building/Rocky9 2>&1 | tee $installType.log
-  cmake --build . -- -j 64 2>&1 | tee $installType-build.log
+  cmake ../building/Rocky9 2>&1 $installType.log
+  cmake --build . -- -j 64 2>&1 $installType-build.log
 
   cd /openmoonray/build
   rm -rf *
   installType="openmoonray"
   [[ "$gpuProvider" == NVIDIA ]] && useCUDA=YES || useCUDA=NO
   [[ $machineType == Workstation ]] && uiApps=YES || uiApps=NO
-  cmake /openmoonray -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=/usr/local/bin/nvidia-optix/include -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 | tee $installType.log
-  cmake --build . -- -j 64 2>&1 | tee $installType-build.log
+  cmake /openmoonray -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=/usr/local/bin/nvidia-optix/include -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 $installType.log
+  cmake --build . -- -j 64 2>&1 $installType-build.log
   mkdir -p /installs/openmoonray
-  cmake --install /openmoonray/build --prefix /installs/openmoonray 2>&1 | tee $installType-install.log
+  cmake --install /openmoonray/build --prefix /installs/openmoonray 2>&1 $installType-install.log
   echo "source /installs/openmoonray/scripts/setup.sh" >> $aaaProfile
   cd $binDirectory
   echo "Customize (End): MoonRay"
@@ -449,7 +449,7 @@ if [ $machineType == Workstation ]; then
   echo "Customize (Start): Teradici PCoIP"
   versionInfo="23.06"
   [ "$gpuProvider" == "" ] && installType=pcoip-agent-standard || installType=pcoip-agent-graphics
-  installFile="pcoip-agent-offline-rocky8.8_23.06.3-1.el8.x86_64.tar"
+  installFile="pcoip-agent-offline-rocky8.8_23.06.3-1.el8.x86_64.tar.gz"
   downloadUrl="$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   mkdir -p $installType
