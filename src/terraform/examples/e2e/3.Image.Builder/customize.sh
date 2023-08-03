@@ -35,6 +35,7 @@ if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
   dnf -y module install nodejs:18
 fi
+echo "Customize (End): Image Build Platform"
 
 if [ $machineType == Storage ]; then
   dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk
@@ -56,7 +57,7 @@ fi
 
 if [ "$gpuProvider" == NVIDIA ]; then
   echo "Customize (Start): NVIDIA GPU (GRID)"
-  dnf -y install mesa-vulkan-drivers
+  dnf -y install mesa-vulkan-drivers libglvnd-devel
   installType="nvidia-gpu-grid"
   installFile="$installType.run"
   downloadUrl="https://go.microsoft.com/fwlink/?linkid=874272"
@@ -68,7 +69,7 @@ if [ "$gpuProvider" == NVIDIA ]; then
   echo "Customize (Start): NVIDIA GPU (CUDA)"
   installType="nvidia-cuda"
   dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
-  dnf -y install cuda 2>&1 | tee $installType.log
+  dnf -y --nobest install cuda 2>&1 | tee $installType.log
   echo "Customize (End): NVIDIA GPU (CUDA)"
 
   echo "Customize (Start): NVIDIA OptiX"
