@@ -30,7 +30,7 @@ installFile="kernel-devel-5.14.0-70.17.1.el9_0.x86_64.rpm"
 downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
 curl -o $installFile -L $downloadUrl
 rpm -i $installFile
-dnf -y install python3-devel cmake lsof unzip git bc
+dnf -y install epel-release python3-devel cmake lsof unzip git bc
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation
   dnf -y module install nodejs:18
@@ -69,7 +69,7 @@ if [ "$gpuProvider" == NVIDIA ]; then
   echo "Customize (Start): NVIDIA GPU (CUDA)"
   installType="nvidia-cuda"
   dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
-  dnf -y --nobest install cuda 2>&1 | tee $installType.log
+  dnf -y install cuda 2>&1 | tee $installType.log
   echo "Customize (End): NVIDIA GPU (CUDA)"
 
   echo "Customize (Start): NVIDIA OptiX"
@@ -222,7 +222,6 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
 
   if [[ $renderEngines == *Unreal+PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
-    dnf -y install epel-release
     dnf -y install coturn
     versionInfo="5.2-0.6.5"
     installType="unreal-stream"
