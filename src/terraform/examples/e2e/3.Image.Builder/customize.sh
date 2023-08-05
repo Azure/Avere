@@ -32,7 +32,7 @@ curl -o $installFile -L $downloadUrl
 rpm -i $installFile
 dnf -y install epel-release python3-devel cmake lsof unzip git bc
 if [ $machineType == Workstation ]; then
-  dnf -y group install Workstation
+  dnf -y group install Workstation &> Workstation.log
   dnf -y module install nodejs:18
 fi
 echo "Customize (End): Image Build Platform"
@@ -252,18 +252,18 @@ if [[ $renderEngines == *MoonRay* ]]; then
   mkdir -p /openmoonray/build
   cd /openmoonray/build
   installType="openmoonray-prereq"
-  cmake ../building/Rocky9 2>&1 $installType.log
-  cmake --build . -- -j 64 2>&1 $installType-build.log
+  cmake ../building/Rocky9 &> $installType.log
+  cmake --build . -- -j 64 &> $installType-build.log
 
   cd /openmoonray/build
   rm -rf *
   installType="openmoonray"
   [[ "$gpuProvider" == NVIDIA ]] && useCUDA=YES || useCUDA=NO
   [[ $machineType == Workstation ]] && uiApps=YES || uiApps=NO
-  cmake /openmoonray -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=/usr/local/bin/nvidia-optix/include -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps 2>&1 $installType.log
-  cmake --build . -- -j 64 2>&1 $installType-build.log
+  cmake /openmoonray -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=/usr/local/bin/nvidia-optix/include -D MOONRAY_USE_CUDA=$useCUDA -D BUILD_QT_APPS=$uiApps &> $installType.log
+  cmake --build . -- -j 64 &> $installType-build.log
   mkdir -p /installs/openmoonray
-  cmake --install /openmoonray/build --prefix /installs/openmoonray 2>&1 $installType-install.log
+  cmake --install /openmoonray/build --prefix /installs/openmoonray &> $installType-install.log
   echo "source /installs/openmoonray/scripts/setup.sh" >> $aaaProfile
   cd $binDirectory
   echo "Customize (End): MoonRay"
