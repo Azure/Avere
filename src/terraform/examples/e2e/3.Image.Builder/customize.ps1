@@ -351,10 +351,15 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   }
 }
 
-if ($machineType -eq "Scheduler" -and ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*")) {
-  Write-Host "Customize (Start): NFS Server"
-  Install-WindowsFeature -Name "FS-NFS-Service"
-  Write-Host "Customize (End): NFS Server"
+if ($machineType -eq "Scheduler") {
+  Write-Host "Customize (Start): AD Domain"
+  Install-WindowsFeature -Name "AD-Domain-Services" -IncludeManagementTools
+  Write-Host "Customize (End): AD Domain"
+  if ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*") {
+    Write-Host "Customize (Start): NFS Server"
+    Install-WindowsFeature -Name "FS-NFS-Service"
+    Write-Host "Customize (End): NFS Server"
+  }
 } else {
   Write-Host "Customize (Start): NFS Client"
   $installType = "nfs-client"
