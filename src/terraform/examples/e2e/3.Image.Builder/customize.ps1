@@ -235,7 +235,7 @@ if ($renderEngines -contains "Houdini") {
 
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.6.0"
+  $versionInfo = "3.6.1"
   $installType = "blender"
   $installFile = "$installType-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
@@ -266,7 +266,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
 
   Write-Host "Customize (Start): Unreal Engine Setup"
   $installType = "dotnet-fx3"
-  StartProcess dism.exe "/Enable-Feature /FeatureName:NetFX3 /Online /All /NoRestart" $installType
+  StartProcess dism.exe "/Online /Enable-Feature /FeatureName:NetFX3 /All /NoRestart" $installType
   Set-Location -Path C:\
   $versionInfo = "5.2.1"
   $installType = "unreal-engine"
@@ -361,15 +361,15 @@ if ($machineType -eq "Scheduler") {
     Write-Host "Customize (End): NFS Server"
   }
 } else {
-  Write-Host "Customize (Start): NFS Client"
-  $installType = "nfs-client"
-  StartProcess dism.exe "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" $installType
-  Write-Host "Customize (End): NFS Client"
-
   Write-Host "Customize (Start): Active Directory Tools"
   $installType = "ad-tools"
-  StartProcess dism.exe "/Enable-Feature /FeatureName:Rsat.ActiveDirectory.DS-LDS.Tools /Online /All /NoRestart" $installType
+  StartProcess dism.exe "/Online /Add-Capability /CapabilityName:Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0 /NoRestart" $installType
   Write-Host "Customize (End): Active Directory Tools"
+
+  Write-Host "Customize (Start): NFS Client"
+  $installType = "nfs-client"
+  StartProcess dism.exe "/Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All /NoRestart" $installType
+  Write-Host "Customize (End): NFS Client"
 }
 
 if ("$renderManager" -like "*Deadline*") {
