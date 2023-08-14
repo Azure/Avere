@@ -276,7 +276,7 @@ if [[ $machineType == Scheduler && ($renderManager == *Deadline* || $renderManag
 fi
 
 if [[ $renderManager == *Deadline* ]]; then
-  versionInfo="10.2.1.0"
+  versionInfo="10.3.0.9"
   installRoot="/Deadline"
   serverMount="/DeadlineServer"
   databaseHost=$(hostname)
@@ -356,7 +356,7 @@ if [[ $renderManager == *Deadline* ]]; then
 fi
 
 if [[ $renderManager == *RoyalRender* ]]; then
-  versionInfo="9.0.07"
+  versionInfo="9.0.08"
   installRoot="/RoyalRender"
   binPathScheduler="$installRoot/bin/lx64"
 
@@ -386,62 +386,6 @@ if [[ $renderManager == *RoyalRender* ]]; then
   fi
 
   binPaths="$binPaths:$binPathScheduler"
-fi
-
-if [[ $renderManager == *Qube* ]]; then
-  versionInfo="8.0-0"
-  installRoot="/usr/local/pfx/qube"
-  binPathScheduler="$installRoot/bin"
-
-  echo "Customize (Start): Qube Core"
-  dnf -y install perl
-  dnf -y install xinetd
-  installType="qube-core"
-  installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
-  downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-  echo "Customize (End): Qube Core"
-
-  if [ $machineType == Scheduler ]; then
-    echo "Customize (Start): Qube Supervisor"
-    installType="qube-supervisor"
-    installFile="$installType-${versionInfo}.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Supervisor"
-
-    echo "Customize (Start): Qube Data Relay Agent (DRA)"
-    installType="qube-dra"
-    installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Data Relay Agent (DRA)"
-  else
-    echo "Customize (Start): Qube Worker"
-    installType="qube-worker"
-    installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Worker"
-
-    echo "Customize (Start): Qube Client"
-    installType="qube-client"
-    installFile="$installType-$versionInfo.CENTOS_8.2.x86_64.rpm"
-    downloadUrl="$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    curl -o $installFile -L $downloadUrl
-    rpm -i $installType-*.rpm 2>&1 | tee $installType.log
-    echo "Customize (End): Qube Client"
-
-    configFile="/etc/qb.conf"
-    sed -i "s/#qb_supervisor =/qb_supervisor = scheduler.artist.studio/" $configFile
-    sed -i "s/#worker_cpus = 0/worker_cpus = 1/" $configFile
-  fi
-
-  binPaths="$binPaths:$binPathScheduler:$installRoot/sbin"
 fi
 
 if [ $machineType == Workstation ]; then

@@ -365,10 +365,15 @@ if ($machineType -eq "Scheduler") {
   $installType = "nfs-client"
   StartProcess dism.exe "/Enable-Feature /FeatureName:ClientForNFS-Infrastructure /Online /All /NoRestart" $installType
   Write-Host "Customize (End): NFS Client"
+
+  Write-Host "Customize (Start): Active Directory Tools"
+  $installType = "ad-tools"
+  StartProcess dism.exe "/Enable-Feature /FeatureName:Rsat.ActiveDirectory.DS-LDS.Tools /Online /All /NoRestart" $installType
+  Write-Host "Customize (End): Active Directory Tools"
 }
 
 if ("$renderManager" -like "*Deadline*") {
-  $versionInfo = "10.2.1.0"
+  $versionInfo = "10.3.0.9"
   $installRoot = "C:\Deadline"
   $databaseHost = $(hostname)
   $databasePort = 27100
@@ -430,7 +435,7 @@ if ("$renderManager" -like "*Deadline*") {
 }
 
 if ("$renderManager" -like "*RoyalRender*") {
-  $versionInfo = "9.0.07"
+  $versionInfo = "9.0.08"
   $installRoot = "\RoyalRender"
   $binPathScheduler = "C:$installRoot\bin\win64"
 
@@ -469,82 +474,6 @@ if ("$renderManager" -like "*RoyalRender*") {
   $shortcut.TargetPath = "$binPathScheduler\rrSubmitter.exe"
   $shortcut.Save()
   Write-Host "Customize (End): Royal Render Submitter"
-}
-
-if ("$renderManager" -like "*Qube*") {
-  $versionInfo = "8.0-0"
-  $installRoot = "C:\Program Files\pfx\qube"
-  $binPathScheduler = "$installRoot\bin"
-
-  Write-Host "Customize (Start): Strawberry Perl"
-  $installType = "strawberryperl"
-  StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
-  Write-Host "Customize (End): Strawberry Perl"
-
-  Write-Host "Customize (Start): Qube Core"
-  $installType = "qube-core"
-  $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
-  $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-  Write-Host "Customize (End): Qube Core"
-
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Qube Supervisor"
-    netsh advfirewall firewall add rule name="Allow Qube Database" dir=in action=allow protocol=TCP localport=50055
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor (TCP)" dir=in action=allow protocol=TCP localport=50001,50002
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor (UDP)" dir=in action=allow protocol=UDP localport=50001,50002
-    netsh advfirewall firewall add rule name="Allow Qube Supervisor Proxy" dir=in action=allow protocol=TCP localport=50555,50556
-    $installType = "qube-supervisor"
-    $installFile = "$installType-${versionInfo}-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-    $binPaths += ";C:\Program Files\pfx\pgsql\bin"
-    Write-Host "Customize (End): Qube Supervisor"
-
-    Write-Host "Customize (Start): Qube Data Relay Agent (DRA)"
-    netsh advfirewall firewall add rule name="Allow Qube Data Relay Agent (DRA)" dir=in action=allow protocol=TCP localport=5001
-    $installType = "qube-dra"
-    $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-    Write-Host "Customize (End): Qube Data Relay Agent (DRA)"
-  } else {
-    Write-Host "Customize (Start): Qube Worker"
-    netsh advfirewall firewall add rule name="Allow Qube Worker (TCP)" dir=in action=allow protocol=TCP localport=50011
-    netsh advfirewall firewall add rule name="Allow Qube Worker (UDP)" dir=in action=allow protocol=UDP localport=50011
-    $installType = "qube-worker"
-    $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-    Write-Host "Customize (End): Qube Worker"
-
-    Write-Host "Customize (Start): Qube Client"
-    $installType = "qube-client"
-    $installFile = "$installType-$versionInfo-WIN32-6.3-x64.msi"
-    $downloadUrl = "$binStorageHost/Qube/$versionInfo/$installFile$binStorageAuth"
-    (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-    $shortcutPath = "$env:AllUsersProfile\Desktop\Qube Client.lnk"
-    $scriptShell = New-Object -ComObject WScript.Shell
-    $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-    $shortcut.WorkingDirectory = "$installRoot\QubeUI"
-    $shortcut.TargetPath = "$installRoot\QubeUI\QubeUI.bat"
-    $shortcut.IconLocation = "$installRoot\lib\install\qube_icon.ico"
-    $shortcut.Save()
-    Write-Host "Customize (End): Qube Client"
-
-    $configFile = "C:\ProgramData\pfx\qube\qb.conf"
-    $configFileText = Get-Content -Path $configFile
-    $configFileText = $configFileText.Replace("#qb_supervisor =", "qb_supervisor = scheduler.artist.studio")
-    $configFileText = $configFileText.Replace("#worker_cpus = 0", "worker_cpus = 1")
-    Set-Content -Path $configFile -Value $configFileText
-  }
-
-  $binPaths += ";$binPathScheduler;$installRoot\sbin"
 }
 
 if ($machineType -eq "Farm") {
