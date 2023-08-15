@@ -39,9 +39,14 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
+        activeDirectory = {
+          domainName    = ""
+          serverName    = ""
+          adminUsername = ""
+          adminPassword = ""
+        }
         fileSystemMounts = [
           {
             enable = false # Storage Read
@@ -109,9 +114,14 @@ virtualMachines = [
   #   }
   #   customExtension = {
   #     enable   = true
-  #     name     = "Initialize"
   #     fileName = "initialize.sh"
   #     parameters = {
+  #       activeDirectory = {
+  #         domainName    = ""
+  #         serverName    = ""
+  #         adminUsername = ""
+  #         adminPassword = ""
+  #       }
   #       fileSystemMounts = [
   #         {
   #           enable = false # Storage Read
@@ -179,9 +189,14 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
+        activeDirectory = {
+          domainName    = "" # "artist.studio"
+          serverName    = "WinScheduler"
+          adminUsername = "azadmin"
+          adminPassword = "P@ssword1234"
+        }
         fileSystemMounts = [
           {
             enable = false # Storage Read
@@ -249,9 +264,14 @@ virtualMachines = [
   #   }
   #   customExtension = {
   #     enable   = true
-  #     name     = "Initialize"
   #     fileName = "initialize.ps1"
   #     parameters = {
+  #       activeDirectory = {
+  #         domainName    = "" # "artist.studio"
+  #         serverName    = "WinScheduler"
+  #         adminUsername = "azadmin"
+  #         adminPassword = "P@ssword1234"
+  #       }
   #       fileSystemMounts = [
   #         {
   #           enable = false # Storage Read

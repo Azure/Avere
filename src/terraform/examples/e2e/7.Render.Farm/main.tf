@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.3"
+  required_version = ">= 1.5.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.66.0"
+      version = "~>3.69.0"
     }
   }
   backend "azurerm" {
@@ -92,10 +92,17 @@ variable "virtualMachineScaleSets" {
       customExtension = object(
         {
           enable   = bool
-          name     = string
           fileName = string
           parameters = object(
             {
+              activeDirectory = object(
+                {
+                  domainName    = string
+                  serverName    = string
+                  adminUsername = string
+                  adminPassword = string
+                }
+              )
               fileSystemMounts = list(object(
                 {
                   enable = bool
@@ -314,7 +321,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   dynamic extension {
     for_each = each.value.customExtension.enable ? [1] : []
     content {
-      name                       = each.value.customExtension.name
+      name                       = "Initialize"
       type                       = "CustomScript"
       publisher                  = "Microsoft.Azure.Extensions"
       type_handler_version       = "2.1"
@@ -418,7 +425,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   dynamic extension {
     for_each = each.value.customExtension.enable ? [1] : []
     content {
-      name                       = each.value.customExtension.name
+      name                       = "Initialize"
       type                       = "CustomScriptExtension"
       publisher                  = "Microsoft.Compute"
       type_handler_version       = "1.10"

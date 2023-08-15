@@ -19,9 +19,6 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
       if [[ $renderManager == *RoyalRender* ]]; then
         :
       fi
-      if [[ $renderManager == *Qube* ]]; then
-        qbadmin worker --remove $(hostname)
-      fi
     fi
   fi
 done

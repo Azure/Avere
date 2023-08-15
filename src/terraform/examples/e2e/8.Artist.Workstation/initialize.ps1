@@ -7,7 +7,13 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-SetServiceAccount ${serviceAccountName} ${serviceAccountPassword}
+$serviceAccountName = "${serviceAccountName}"
+if ("${activeDirectory.domainName}" -ne "") {
+  JoinDomainComputer "${activeDirectory.domainName}" "${activeDirectory.serverName}" "${activeDirectory.adminUsername}" "${activeDirectory.adminPassword}"
+  $serviceAccountName = "${activeDirectory.domainName}\$serviceAccountName"
+} else {
+  SetLocalUser $serviceAccountName ${serviceAccountPassword}
+}
 
 $fileSystemMounts = ConvertFrom-Json -InputObject '${jsonencode(fileSystemMounts)}'
 foreach ($fileSystemMount in $fileSystemMounts) {
@@ -17,9 +23,13 @@ foreach ($fileSystemMount in $fileSystemMounts) {
 }
 RegisterFileSystemMountPath
 
-EnableClientApp "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
+EnableClientApp "${renderManager}" $serviceAccountName ${serviceAccountPassword}
 
 if (${teradiciLicenseKey} != "") {
   $installFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"
   StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File ""$installFile"" -RegistrationCode ${teradiciLicenseKey}" pcoip-agent-license
+}
+
+if ("${activeDirectory.domainName}" -ne "") {
+  Restart-Computer -Force
 }

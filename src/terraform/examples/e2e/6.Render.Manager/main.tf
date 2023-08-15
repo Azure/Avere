@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.5.3"
+  required_version = ">= 1.5.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.66.0"
+      version = "~>3.69.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~>2.40.0"
+      version = "~>2.41.0"
     }
   }
   backend "azurerm" {
@@ -59,6 +59,7 @@ variable "virtualMachines" {
       )
       network = object(
         {
+          staticIpAddress    = string
           enableAcceleration = bool
         }
       )
@@ -89,10 +90,15 @@ variable "virtualMachines" {
       customExtension = object(
         {
           enable   = bool
-          name     = string
           fileName = string
           parameters = object(
             {
+              activeDirectory = object(
+                {
+                  domainName    = string
+                  adminPassword = string
+                }
+              )
               autoScale = object(
                 {
                   enable                   = bool
@@ -103,12 +109,6 @@ variable "virtualMachines" {
                   jobWaitThresholdSeconds  = number
                   workerIdleDeleteSeconds  = number
                   detectionIntervalSeconds = number
-                }
-              )
-              qubeLicense = object(
-                {
-                  userName     = string
-                  userPassword = string
                 }
               )
             }
@@ -266,7 +266,8 @@ resource "azurerm_network_interface" "scheduler" {
   ip_configuration {
     name                          = "ipConfig"
     subnet_id                     = data.azurerm_subnet.farm.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address            = each.value.network.staticIpAddress != "" ? each.value.network.staticIpAddress : null
+    private_ip_address_allocation = each.value.network.staticIpAddress != "" ? "Static" : "Dynamic"
   }
   enable_accelerated_networking = each.value.network.enableAcceleration
 }
@@ -326,7 +327,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux"
   }
-  name                       = each.value.customExtension.name
+  name                       = "Initialize"
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
@@ -408,7 +409,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows"
   }
-  name                       = each.value.customExtension.name
+  name                       = "Initialize"
   type                       = "CustomScriptExtension"
   publisher                  = "Microsoft.Compute"
   type_handler_version       = "1.10"

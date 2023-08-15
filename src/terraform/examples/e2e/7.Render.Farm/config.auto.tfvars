@@ -8,7 +8,7 @@ virtualMachineScaleSets = [
   {
     name = "LnxFarmC"
     machine = {
-      size  = "Standard_D48ads_v5"
+      size  = "Standard_D32ads_v5"
       count = 2
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/2.0.0"
@@ -44,9 +44,14 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
+        activeDirectory = {
+          domainName    = ""
+          serverName    = ""
+          adminUsername = ""
+          adminPassword = ""
+        }
         fileSystemMounts = [
           {
             enable = false # Storage Read
@@ -132,9 +137,14 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
+        activeDirectory = {
+          domainName    = ""
+          serverName    = ""
+          adminUsername = ""
+          adminPassword = ""
+        }
         fileSystemMounts = [
           {
             enable = false # Storage Read
@@ -184,7 +194,7 @@ virtualMachineScaleSets = [
   {
     name = "" # "WinFarmC"
     machine = {
-      size  = "Standard_D48ads_v5"
+      size  = "Standard_D32ads_v5"
       count = 2
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.0.0"
@@ -220,9 +230,14 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
+        activeDirectory = {
+          domainName    = "artist.studio"
+          serverName    = "WinScheduler"
+          adminUsername = "azadmin"
+          adminPassword = "P@ssword1234"
+        }
         fileSystemMounts = [
           {
             enable = false # Storage Read
@@ -308,9 +323,14 @@ virtualMachineScaleSets = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
+        activeDirectory = {
+          domainName    = "artist.studio"
+          serverName    = "WinScheduler"
+          adminUsername = "azadmin"
+          adminPassword = "P@ssword1234"
+        }
         fileSystemMounts = [
           {
             enable = false # Storage Read

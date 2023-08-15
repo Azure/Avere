@@ -264,35 +264,6 @@ qumulo = {
   autoRenew = true
 }
 
-#################################################################################################################################################
-# Active Directory (https://learn.microsoft.com/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview) #
-#################################################################################################################################################
-
-activeDirectory = {
-  enable = false
-  machine = {
-    name    = "WinDirectory"
-    size    = "Standard_D8s_v5"
-    imageId = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinServer/versions/0.0.0"
-  }
-  network = {
-    enableAcceleration = false
-  }
-  osDisk = {
-    storageType = "Premium_LRS"
-    cachingType = "ReadWrite"
-    sizeGB      = 0
-  }
-  adminLogin = {
-    userName     = "azadmin"
-    userPassword = "P@ssword1234"
-    sshPublicKey = "" # "ssh-rsa ..."
-    passwordAuth = {
-      disable = false
-    }
-  }
-}
-
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################

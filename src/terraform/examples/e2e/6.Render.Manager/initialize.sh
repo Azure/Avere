@@ -13,13 +13,6 @@ if [[ ${renderManager} == *RoyalRender* ]]; then
   rrWorkstation_installer -serviceServer -rrUser ${serviceAccountName} -rrUserPW ${serviceAccountPassword} 2>&1 | tee $installType-service.log
 fi
 
-if [ "${qubeLicense.userName}" != "" ]; then
-  configFilePath="/etc/qube/dra.conf"
-  sed -i "s/# mls_user =/mls_user = ${qubeLicense.userName}/" $configFilePath
-  sed -i "s/# mls_password =/mls_password = ${qubeLicense.userPassword}/" $configFilePath
-  systemctl restart dra.service
-fi
-
 serviceFile="aaaAutoScaler"
 dataFilePath="/var/lib/waagent/ovf-env.xml"
 dataFileText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $dataFilePath)

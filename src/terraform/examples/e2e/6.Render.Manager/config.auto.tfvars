@@ -19,6 +19,7 @@ virtualMachines = [
       }
     }
     network = {
+      staticIpAddress    = ""
       enableAcceleration = true
     }
     operatingSystem = {
@@ -39,9 +40,12 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.sh"
       parameters = {
+        activeDirectory = {
+          domainName    = ""
+          adminPassword = ""
+        }
         autoScale = {
           enable                   = false
           fileName                 = "scale.sh"
@@ -51,10 +55,6 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 600
           detectionIntervalSeconds = 60
-        }
-        qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
-          userName     = ""
-          userPassword = ""
         }
       }
     }
@@ -76,6 +76,7 @@ virtualMachines = [
       }
     }
     network = {
+      staticIpAddress    = "10.1.127.0"
       enableAcceleration = true
     }
     operatingSystem = {
@@ -96,9 +97,12 @@ virtualMachines = [
     }
     customExtension = {
       enable   = true
-      name     = "Initialize"
       fileName = "initialize.ps1"
       parameters = {
+        activeDirectory = {
+          domainName    = "artist.studio"
+          adminPassword = "P@ssword1234"
+        }
         autoScale = {
           enable                   = false
           fileName                 = "scale.ps1"
@@ -108,10 +112,6 @@ virtualMachines = [
           jobWaitThresholdSeconds  = 300
           workerIdleDeleteSeconds  = 600
           detectionIntervalSeconds = 60
-        }
-        qubeLicense = { # http://docs.pipelinefx.com/display/QUBE/Metered+Licensing
-          userName     = ""
-          userPassword = ""
         }
       }
     }

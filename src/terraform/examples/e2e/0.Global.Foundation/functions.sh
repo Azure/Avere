@@ -1,4 +1,4 @@
-function SetServiceAccount {
+function SetLocalUser {
   accountName=$1
   accountPassword=$2
   if ! id -u $accountName &> /dev/null; then

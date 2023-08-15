@@ -10,7 +10,7 @@ functionsData="${filebase64("../0.Global.Foundation/functions.sh")}"
 echo $functionsData | base64 --decode > $functionsCode
 source $functionsCode
 
-SetServiceAccount ${serviceAccountName} ${serviceAccountPassword}
+SetLocalUser ${serviceAccountName} ${serviceAccountPassword}
 
 fileSystemMounts='${jsonencode(fileSystemMounts)}'
 for fileSystemMount in $(echo $fileSystemMounts | jq -r '.[] | @base64'); do

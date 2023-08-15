@@ -13,7 +13,7 @@ imageGallery = {
       generation = "V2"
       publisher  = "CIQ"
       offer      = "Rocky"
-      sku        = "Rocky-8-6-Free"
+      sku        = "Rocky-9-0-Free"
     },
     {
       name       = "WinServer"
@@ -68,7 +68,7 @@ imageTemplates = [
       gpuProvider    = ""                # NVIDIA or AMD
       outputVersion  = "0.0.0"
       timeoutMinutes = 120
-      osDiskSizeGB   = 64
+      osDiskSizeGB   = 512
       renderEngines = [
       ]
       customize = [
@@ -102,7 +102,7 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                   # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
@@ -110,7 +110,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "MoonRay"
+        "MoonRay"
       ]
       customize = [
       ]
@@ -132,7 +132,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "MoonRay",
+        "MoonRay",
         "Unreal"
       ]
       customize = [
@@ -155,7 +155,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "MoonRay",
+        "MoonRay",
         "Unreal+PixelStream"
       ]
       customize = [
@@ -178,37 +178,13 @@ imageTemplates = [
   #     renderEngines = [
   #       "PBRT",
   #       "Blender",
-  #       # "MoonRay",
+  #       "MoonRay",
   #       "Unreal+PixelStream"
   #     ]
   #     customize = [
   #     ]
   #   }
   # },
-  {
-    name = "WinDirectory"
-    image = {
-      definitionName = "WinServer"
-      inputVersion   = "Latest"
-    }
-    build = {
-      machineType    = "DomainController"
-      machineSize    = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuProvider    = ""                # NVIDIA or AMD
-      outputVersion  = "0.0.0"
-      timeoutMinutes = 180
-      osDiskSizeGB   = 512
-      renderEngines = [
-      ]
-      customize = [
-        "$domainName = 'artist.studio'",
-        "$domainPassword = 'P@ssword1234'",
-        "Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools",
-        "Import-Module ADDSDeployment",
-        "Install-ADDSForest -DomainName $domainName -SafeModeAdministratorPassword $domainPassword -Force -NoRebootOnCompletion"
-      ]
-    }
-  },
   {
     name = "WinScheduler"
     image = {
@@ -236,7 +212,7 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_D48ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                   # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 420

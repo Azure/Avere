@@ -1,6 +1,6 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
-function SetServiceAccount ($accountName, $accountPassword) {
+function SetLocalUser ($accountName, $accountPassword) {
   $localUser = Get-LocalUser -Name $accountName -ErrorAction SilentlyContinue
   if ($localUser -eq $null) {
     $securePassword = ConvertTo-SecureString $accountPassword -AsPlainText -Force
@@ -58,5 +58,17 @@ function EnableClientApp ($renderManager, $serviceAccountName, $serviceAccountPa
   if ("$renderManager" -like "*RoyalRender*") {
     $installType = "royal-render-client"
     StartProcess rrWorkstation_installer.exe "-plugins -service -rrUser $serviceAccountName -rrUserPW $serviceAccountPassword -fwOut" $installType-service
+  }
+}
+
+function JoinDomainComputer ($domainName, $serverName, $adminUsername, $adminPassword) {
+  if ($domainName -ne "") {
+    $securePassword = ConvertTo-SecureString $adminPassword -AsPlainText -Force
+    $adminCredential = New-Object System.Management.Automation.PSCredential("$adminUsername@$domainName", $securePassword)
+    $adComputer = Get-ADComputer -Identity $(hostname) -Server $serverName -Credential $adminCredential -ErrorAction SilentlyContinue
+    if ($adComputer -ne $null) {
+      Remove-ADObject -Identity $adComputer -Recursive -Confirm:$false
+    }
+    Add-Computer -DomainName $domainName -Server $serverName -Credential $adminCredential -Force -PassThru -Verbose
   }
 }

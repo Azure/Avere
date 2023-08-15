@@ -19,9 +19,6 @@ foreach ($scheduledEvent in $scheduledEvents) {
       }
       if ("$renderManager" -like "*RoyalRender*") {
       }
-      if ("$renderManager" -like "*Qube*") {
-        qbadmin worker --remove $(hostname)
-      }
     }
   }
 }
