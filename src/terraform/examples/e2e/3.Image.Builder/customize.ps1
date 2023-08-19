@@ -235,7 +235,7 @@ if ($renderEngines -contains "Houdini") {
 
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.6.1"
+  $versionInfo = "3.6.2"
   $installType = "blender"
   $installFile = "$installType-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
