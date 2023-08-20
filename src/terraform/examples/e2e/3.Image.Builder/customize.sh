@@ -117,17 +117,18 @@ if [[ $renderEngines == *Maya* ]]; then
 fi
 
 if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT v3"
-  versionInfo="v3"
-  installType="pbrt-$versionInfo"
   installPath="/usr/local/pbrt"
-  installPathV3="$installPath/$versionInfo"
-  git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
-  mkdir -p $installPathV3
-  cmake -B $installPathV3 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
-  make -C $installPathV3 2>&1 | tee $installType-make.log
-  ln -s $installPathV3/pbrt $installPath/pbrt3
-  echo "Customize (End): PBRT v3"
+
+  # echo "Customize (Start): PBRT v3"
+  # versionInfo="v3"
+  # installType="pbrt-$versionInfo"
+  # installPathV3="$installPath/$versionInfo"
+  # git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
+  # mkdir -p $installPathV3
+  # cmake -B $installPathV3 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
+  # make -C $installPathV3 2>&1 | tee $installType-make.log
+  # ln -s $installPathV3/pbrt $installPath/pbrt3
+  # echo "Customize (End): PBRT v3"
 
   echo "Customize (Start): PBRT v4"
   dnf -y install mesa-libGL-devel

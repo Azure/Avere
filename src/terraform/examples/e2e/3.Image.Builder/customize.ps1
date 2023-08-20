@@ -183,17 +183,18 @@ if ($renderEngines -contains "Maya") {
 }
 
 if ($renderEngines -contains "PBRT") {
-  Write-Host "Customize (Start): PBRT v3"
-  $versionInfo = "v3"
-  $installType = "pbrt-$versionInfo"
   $installPath = "C:\Program Files\PBRT"
-  $installPathV3 = "$installPath\$versionInfo"
-  StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" $installType-git
-  New-Item -ItemType Directory -Path $installPathV3 -Force
-  StartProcess $binPathCMake\cmake.exe "-B ""$installPathV3"" -S $binDirectory\$installType" $installType-cmake
-  StartProcess $binPathMSBuild\MSBuild.exe """$installPathV3\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
-  New-Item -ItemType SymbolicLink -Target $installPathV3\Release\pbrt.exe -Path $installPath\pbrt3.exe
-  Write-Host "Customize (End): PBRT v3"
+
+  # Write-Host "Customize (Start): PBRT v3"
+  # $versionInfo = "v3"
+  # $installType = "pbrt-$versionInfo"
+  # $installPathV3 = "$installPath\$versionInfo"
+  # StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" $installType-git
+  # New-Item -ItemType Directory -Path $installPathV3 -Force
+  # StartProcess $binPathCMake\cmake.exe "-B ""$installPathV3"" -S $binDirectory\$installType" $installType-cmake
+  # StartProcess $binPathMSBuild\MSBuild.exe """$installPathV3\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
+  # New-Item -ItemType SymbolicLink -Target $installPathV3\Release\pbrt.exe -Path $installPath\pbrt3.exe
+  # Write-Host "Customize (End): PBRT v3"
 
   Write-Host "Customize (Start): PBRT v4"
   $versionInfo = "v4"
