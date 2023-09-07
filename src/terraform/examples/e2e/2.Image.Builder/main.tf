@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.5.5"
+  required_version = ">= 1.5.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.69.0"
+      version = "~>3.71.0"
     }
   }
   backend "azurerm" {
-    key = "3.Image.Builder"
+    key = "2.Image.Builder"
   }
 }
 
@@ -17,7 +17,7 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
     template_deployment {
-      delete_nested_items_during_deletion = false
+      delete_nested_items_during_deletion = true
     }
   }
 }
@@ -324,7 +324,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
       },
       "variables": {
         "imageBuilderApiVersion": "2022-07-01",
-        "imageGalleryApiVersion": "2022-08-03"
+        "imageGalleryApiVersion": "2023-07-03"
       },
       "functions": [
         {
@@ -381,12 +381,12 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/3.Image.Builder/customize.sh",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/customize.sh",
                     "destination": "/tmp/customize.sh"
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/3.Image.Builder/terminate.sh",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/terminate.sh",
                     "destination": "/tmp/terminate.sh"
                   },
                   {
@@ -431,12 +431,12 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/3.Image.Builder/customize.ps1",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/customize.ps1",
                     "destination": "C:\\AzureData\\customize.ps1"
                   },
                   {
                     "type": "File",
-                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/3.Image.Builder/terminate.ps1",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/terminate.ps1",
                     "destination": "C:\\AzureData\\terminate.ps1"
                   },
                   {

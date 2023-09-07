@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Solution Deployment Framework
 
-Azure Artist Anywhere (AAA) is a *modular and customizable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) deployment framework* for [rendering](https://azure.microsoft.com/solutions/high-performance-computing/rendering) and [gaming](https://azure.microsoft.com/solutions/gaming) solutions. Enable creativity from your remote artists with Azure [global scale](https://azure.microsoft.com/global-infrastructure) and [Open AI](https://learn.microsoft.com/azure/cognitive-services/openai/overview) innovation via [GPU Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu) and [HPC Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc).
+Azure Artist Anywhere (AAA) is a *modular and customizable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) deployment framework* for [rendering](https://azure.microsoft.com/solutions/high-performance-computing/rendering) and [gaming](https://azure.microsoft.com/solutions/gaming) solutions. Enable creativity from your remote artists with Azure [global scale](https://azure.microsoft.com/global-infrastructure) and [Open AI](https://learn.microsoft.com/azure/ai-services/openai/overview) innovation via [GPU Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu) and [HPC Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc).
 
 https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4
 
@@ -13,15 +13,14 @@ The following *core principles* are implemented throughout the Azure Artist Anyw
 | - | - | - | - |
 | [0 Global Foundation](#0-global-foundation) | Defines&#160;global&#160;config&#160;([Azure&#160;regions](https://azure.microsoft.com/regions))&#160;and&#160;core&#160;solution resources ([Terraform state storage](https://developer.hashicorp.com/terraform/language/settings/backends/azurerm), [Monitor log storage](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-workspace-overview)). | Yes | Yes |
 | [1 Virtual Network](#1-virtual-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview), [Private DNS](https://learn.microsoft.com/azure/dns/private-dns-overview), [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview), etc with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) gateway services. | Yes,&#160;if&#160;[Virtual&#160;Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed | Yes,&#160;if&#160;[Virtual&#160;Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed |
-| [2&#160;Artificial&#160;Intelligence](#2-artificial-intelligence) | Deploys [Open AI](https://learn.microsoft.com/azure/cognitive-services/openai/overview) ([GPT-4](https://learn.microsoft.com/azure/cognitive-services/openai/concepts/models#gpt-4-models) and [DALL-E 2](https://openai.com/product/dall-e-2) models) securely with orchestration via [Semantic Kernel](https://learn.microsoft.com/semantic-kernel/overview/) and [Functions](https://learn.microsoft.com/azure/azure-functions/functions-overview). | No | No |
-| [3 Image Builder](#3-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) image definitions and templates for custom images built via the [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, use your custom images via [image.id](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.Render.Farm/config.auto.tfvars#L14) | No, use your custom images via [image.id](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/7.Render.Farm/config.auto.tfvars#L14) |
-| [4 Storage](#4-storage) | Deploys native ([Blob NFS](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)) and/or hosted ([Weka](https://azuremarketplace.microsoft.com/marketplace/apps/weka1652213882079.weka_data_platform), [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5), [Qumulo](https://azuremarketplace.microsoft.com/marketplace/apps/qumulo1584033880660.qumulo-saas-mpp)) storage services with optional sample data load for [Blender](https://www.blender.org) and [PBRT](https://pbrt.org). | No | Yes |
-| [5 Storage Cache](#5-storage-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) cluster for highly-available and scalable storage file caching on-demand. | Yes | No |
-| [6 Render Manager](#6-render-manager) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for render job scheduling via your custom render farm management server image. | No, use your current render manager | No, use your current render manager |
-| [7 Render Farm](#7-render-farm) | Deploys [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) ([HPC Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc)) for scalable Linux and/or Windows render farm compute. | Yes | Yes |
-| [8 Artist Workstation](#8-artist-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
-| [9 GitOps](#9-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via<br>[GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
-| [10 Examples](#10-examples) | Example render farm job submissions from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [2 Image Builder](#2-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) image definitions and templates for custom images built via the [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, use your custom images via [image.id](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.Render.Farm/config.auto.tfvars#L14) | No, use your custom images via [image.id](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.Render.Farm/config.auto.tfvars#L14) |
+| [3 Storage](#3-storage) | Deploys native ([Blob NFS](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction), [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)) and/or hosted ([Weka](https://azuremarketplace.microsoft.com/marketplace/apps/weka1652213882079.weka_data_platform), [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5), [Qumulo](https://azuremarketplace.microsoft.com/marketplace/apps/qumulo1584033880660.qumulo-saas-mpp)) storage services with optional sample data load for [Blender](https://www.blender.org) and [PBRT](https://pbrt.org). | No | Yes |
+| [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) cluster for highly-available and scalable storage file caching on-demand. | Yes | No |
+| [5 Render Manager](#5-render-manager) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for render job scheduling via your custom render farm management server image. | No, use your current render manager | No, use your current render manager |
+| [6 Render Farm](#6-render-farm) | Deploys [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) ([HPC Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc)) for scalable Linux and/or Windows render farm compute. | Yes | Yes |
+| [7 Artist Workstation](#7-artist-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
+| [8 GitOps](#8-gitops) | Enables [Terraform Plan](https://www.terraform.io/cli/commands/plan) and [Apply](https://www.terraform.io/cli/commands/apply) workflows via<br>[GitHub Actions](https://docs.github.com/actions) triggered by [Pull Requests](https://docs.github.com/pull-requests). | No | No |
+| [9 Examples](#9-examples) | Example render farm job submissions from [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview)<br>and/or [Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations. | No | No |
 
 For example, the following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via the Azure Artist Anywhere (AAA) solution deployment framework.
 
@@ -71,21 +70,11 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 2 Artificial Intelligence
+## 2 Image Builder
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/2.Artificial.Intelligence` in a local shell (Bash or PowerShell)
-1. Review and edit the config values in `config.auto.tfvars` for your deployment.
-1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
-1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
-1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
-
-## 3 Image Builder
-
-### Deployment Steps
-
-1. Run `cd ~/e2e/3.Image.Builder` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/2.Image.Builder` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
@@ -93,21 +82,21 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 1. After image template deployment, use the Azure portal or [Image Builder CLI](https://learn.microsoft.com/cli/azure/image/builder#az-image-builder-run) to start image build runs
 
-## 4 Storage
+## 3 Storage
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/4.Storage` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/3.Storage` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 5 Storage Cache
+## 4 Storage Cache
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/5.Storage.Cache` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/4.Storage.Cache` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. For [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) deployment only (i.e., the following step does *not* apply to [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) deployment),
    * Make sure you have at least 96 cores (32 cores x 3 nodes) quota available for [Esv3](https://learn.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
@@ -142,11 +131,11 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
 
 ```(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $localDirectory -ChildPath "terraform-provider-avere_$latestVersion.exe"))```
 
-## 6 Render Manager
+## 5 Render Manager
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/6.Render.Manager` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/5.Render.Manager` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
@@ -154,11 +143,11 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 7 Render Farm
+## 6 Render Farm
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/7.Render.Farm` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/6.Render.Farm` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute (*Spot*) cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
@@ -167,11 +156,11 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 8 Artist Workstation
+## 7 Artist Workstation
 
 ### Deployment Steps
 
-1. Run `cd ~/e2e/8.Artist.Workstation` in a local shell (Bash or PowerShell)
+1. Run `cd ~/e2e/7.Artist.Workstation` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
@@ -180,7 +169,7 @@ As an alternative deployment management approach option, sample [GitOps](#9-gito
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 9 GitOps
+## 8 GitOps
 
 The following [GitHub Actions](https://github.com/features/actions) workflow files can optionally be leveraged to enable a Pull Request-driven automated deployment worklow. Both Terraform Plan and Terraform Apply command outputs are captured as Comments in each Pull Request.
 
@@ -205,48 +194,44 @@ To generate new ARM_CLIENT_ID and ARM_CLIENT_SECRET values, the following Azure 
 
 ```az ad sp create-for-rbac --name $servicePrincipalName --role $servicePrincipalRole --scope $servicePrincipalScope```
 
-## 10 Examples
+## 9 Examples
 
 Now that deployment of the AAA solution framework is complete, this final section provides render job submission examples for multiple render engines (Blender, Physically-Based Ray Tracer).
 
-### 10.1 [Blender](https://www.blender.org) [Splash Screen (3.6)](https://www.blender.org/download/demo-files/#splash)
+### 9.1 [Blender](https://www.blender.org) [Splash Screen (3.6)](https://www.blender.org/download/demo-files/#splash)
 
 <p align="center">
   <img src=".github/images/blender-splash-3.6.jpg" />
 </p>
 
-#### 10.1.1 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
+#### 9.1.1 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.6/splash.blend --render-output /mnt/data/write/blender/3.6/splash --enable-autoexec --render-frame 1"```
 
-#### 10.1.2 Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
+#### 9.1.2 Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background R:\blender\3.6\splash.blend --render-output W:\blender\3.6\splash --enable-autoexec --render-frame 1"```
 
-### 10.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
+### 9.2 [Physically-Based Ray Tracer (PBRT)](https://pbrt.org) [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
 
 <p align="center">
   <img src=".github/images/moana-island.png" />
 </p>
 
-#### 10.2.1 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
+#### 9.2.1 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
-*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v3.png /mnt/data/read/pbrt/moana/island/pbrt/island.pbrt"```
+```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
-```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
+#### 9.2.2 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
-#### 10.2.2 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
+*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-*The following render farm job submission commands can be submitted from a **Linux** and/or **Windows** artist workstation.*
-
-```deadlinecommand -SubmitCommandLineJob -name moana-island-v3 -executable pbrt3 -arguments "--outfile W:\pbrt\moana\island-v3.png R:\pbrt\moana\island\pbrt\island.pbrt"```
-
-```deadlinecommand -SubmitCommandLineJob -name moana-island-v4 -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"```
+```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt4 -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"```
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

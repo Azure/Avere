@@ -18,6 +18,7 @@ keyVault = {
   enableForDiskEncryption     = false
   enableForTemplateDeployment = false
   enablePurgeProtection       = false
+  enableTrustedServices       = true
   softDeleteRetentionDays     = 90
   secrets = [
     {

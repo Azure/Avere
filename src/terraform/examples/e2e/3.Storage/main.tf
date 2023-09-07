@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.5"
+  required_version = ">= 1.5.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.69.0"
+      version = "~>3.71.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -11,7 +11,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "4.Storage"
+    key = "3.Storage"
   }
 }
 
@@ -20,15 +20,18 @@ provider "azurerm" {
     resource_group {
       prevent_deletion_if_contains_resources = false
     }
-    virtual_machine_scale_set {
-      force_delete                  = false
-      roll_instances_when_required  = true
-      scale_to_zero_before_deletion = true
+    managed_disk {
+      expand_without_downtime = true
     }
     virtual_machine {
       delete_os_disk_on_deletion     = true
       graceful_shutdown              = false
       skip_shutdown_and_force_delete = false
+    }
+    virtual_machine_scale_set {
+      force_delete                  = false
+      roll_instances_when_required  = true
+      scale_to_zero_before_deletion = true
     }
   }
 }
@@ -120,7 +123,7 @@ data "terraform_remote_state" "image" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "3.Image.Builder"
+    key                  = "2.Image.Builder"
   }
 }
 

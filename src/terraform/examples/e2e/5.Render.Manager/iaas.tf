@@ -1,40 +1,6 @@
-terraform {
-  required_version = ">= 1.5.5"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~>3.69.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~>2.41.0"
-    }
-  }
-  backend "azurerm" {
-    key = "6.Render.Manager"
-  }
-}
-
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-    virtual_machine {
-      delete_os_disk_on_deletion     = true
-      graceful_shutdown              = false
-      skip_shutdown_and_force_delete = false
-    }
-  }
-}
-
-module "global" {
-  source = "../0.Global.Foundation/module"
-}
-
-variable "resourceGroupName" {
-  type = string
-}
+#########################################################################
+# Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
+#########################################################################
 
 variable "virtualMachines" {
   type = list(object(
@@ -124,108 +90,7 @@ variable "virtualMachines" {
   ))
 }
 
-variable "serviceAccount" {
-  type = object(
-    {
-      name     = string
-      password = string
-    }
-  )
-}
-
-variable "privateDns" {
-  type = object(
-    {
-      aRecordName = string
-      ttlSeconds  = number
-    }
-  )
-}
-
-variable "computeNetwork" {
-  type = object(
-    {
-      name               = string
-      subnetName         = string
-      resourceGroupName  = string
-      privateDnsZoneName = string
-    }
-  )
-}
-
-data "azurerm_user_assigned_identity" "studio" {
-  name                = module.global.managedIdentity.name
-  resource_group_name = module.global.resourceGroupName
-}
-
-data "azurerm_key_vault" "studio" {
-  count               = module.global.keyVault.name != "" ? 1 : 0
-  name                = module.global.keyVault.name
-  resource_group_name = module.global.resourceGroupName
-}
-
-data "azurerm_key_vault_secret" "admin_username" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
-  name         = module.global.keyVault.secretName.adminUsername
-  key_vault_id = data.azurerm_key_vault.studio[0].id
-}
-
-data "azurerm_key_vault_secret" "admin_password" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
-  name         = module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.studio[0].id
-}
-
-data "azurerm_key_vault_secret" "service_password" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
-  name         = module.global.keyVault.secretName.servicePassword
-  key_vault_id = data.azurerm_key_vault.studio[0].id
-}
-
-data "azurerm_log_analytics_workspace" "monitor" {
-  count               = module.global.monitor.name != "" ? 1 : 0
-  name                = module.global.monitor.name
-  resource_group_name = module.global.resourceGroupName
-}
-
-data "terraform_remote_state" "network" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "1.Virtual.Network"
-  }
-}
-
-data "terraform_remote_state" "image" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "3.Image.Builder"
-  }
-}
-
-data "azurerm_virtual_network" "compute" {
-  name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
-  resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
-}
-
-data "azurerm_subnet" "farm" {
-  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
-  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.compute.name
-}
-
-data "azurerm_private_dns_zone" "network" {
-  name                = !local.stateExistsNetwork ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
-  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
-}
-
 locals {
-  stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
   virtualMachinesLinux = [
     for virtualMachine in var.virtualMachines : merge(virtualMachine, {
       machine = {
@@ -244,21 +109,11 @@ locals {
   virtualMachineNames = [
     for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
   ]
-  serviceAccountPassword = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
 }
-
-resource "azurerm_resource_group" "scheduler" {
-  name     = var.resourceGroupName
-  location = module.global.regionNames[0]
-}
-
-#########################################################################
-# Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
-#########################################################################
 
 resource "azurerm_network_interface" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && var.batch.accountName == ""
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
@@ -274,7 +129,7 @@ resource "azurerm_network_interface" "scheduler" {
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in local.virtualMachinesLinux : virtualMachine.name => virtualMachine
+    for virtualMachine in local.virtualMachinesLinux : virtualMachine.name => virtualMachine if var.batch.accountName == ""
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.scheduler.name
@@ -325,7 +180,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux" && var.batch.accountName == ""
   }
   name                       = "Initialize"
   type                       = "CustomScript"
@@ -349,7 +204,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != "" && var.batch.accountName == ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -370,7 +225,7 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
 
 resource "azurerm_windows_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows" && var.batch.accountName == ""
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
@@ -407,7 +262,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows" && var.batch.accountName == ""
   }
   name                       = "Initialize"
   type                       = "CustomScriptExtension"
@@ -431,7 +286,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != "" && var.batch.accountName == ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"
@@ -450,24 +305,6 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   ]
 }
 
-resource "azurerm_private_dns_a_record" "scheduler" {
-  name                = var.privateDns.aRecordName
-  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
-  zone_name           = data.azurerm_private_dns_zone.network.name
-  ttl                 = var.privateDns.ttlSeconds
-  records = [
-    azurerm_network_interface.scheduler[local.virtualMachineNames[0]].private_ip_address
-  ]
-}
-
-output "resourceGroupName" {
-  value = azurerm_resource_group.scheduler.name
-}
-
 output "virtualMachines" {
   value = var.virtualMachines
-}
-
-output "privateDnsRecord" {
-  value = azurerm_private_dns_a_record.scheduler
 }

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.5"
+  required_version = ">= 1.5.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.69.0"
+      version = "~>3.71.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -31,6 +31,9 @@ provider "azurerm" {
     log_analytics_workspace {
       permanently_delete_on_destroy = true
     }
+    application_insights {
+      disable_generated_rule = false
+    }
   }
 }
 
@@ -56,6 +59,7 @@ variable "keyVault" {
       enableForDiskEncryption     = bool
       enableForTemplateDeployment = bool
       enablePurgeProtection       = bool
+      enableTrustedServices       = bool
       softDeleteRetentionDays     = number
       secrets = list(object(
         {
@@ -185,7 +189,7 @@ resource "azurerm_key_vault" "studio" {
   soft_delete_retention_days      = var.keyVault.softDeleteRetentionDays
   enable_rbac_authorization       = true
   network_acls {
-    bypass         = "None"
+    bypass         = var.keyVault.enableTrustedServices ? "AzureServices" : "None"
     default_action = "Deny"
     ip_rules = [
       jsondecode(data.http.client_address.response_body).ip
@@ -258,8 +262,8 @@ resource "azurerm_log_analytics_workspace" "monitor" {
 resource "azurerm_application_insights" "monitor" {
   count                      = module.global.monitor.name != "" ? 1 : 0
   name                       = module.global.monitor.name
-  location                   = azurerm_resource_group.studio.location
   resource_group_name        = azurerm_resource_group.studio.name
+  location                   = azurerm_resource_group.studio.location
   workspace_id               = azurerm_log_analytics_workspace.monitor[0].id
   application_type           = var.monitor.insight.type
   retention_in_days          = var.monitor.retentionDays

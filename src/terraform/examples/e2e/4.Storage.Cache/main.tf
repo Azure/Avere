@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.5"
+  required_version = ">= 1.5.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.69.0"
+      version = "~>3.71.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -15,7 +15,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "5.Storage.Cache"
+    key = "4.Storage.Cache"
   }
 }
 
@@ -23,6 +23,11 @@ provider "azurerm" {
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
+    }
+    virtual_machine {
+      delete_os_disk_on_deletion     = true
+      graceful_shutdown              = false
+      skip_shutdown_and_force_delete = false
     }
   }
 }

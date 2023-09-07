@@ -1,5 +1,16 @@
 resourceGroupName = "ArtistAnywhere.Scheduler" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
+############################################################################
+# Batch (https://learn.microsoft.com/azure/batch/batch-technical-overview) #
+############################################################################
+
+batch = {
+  accountName = ""
+  networkAccess = {
+    enablePublic = true
+  }
+}
+
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
 #########################################################################
@@ -8,7 +19,7 @@ virtualMachines = [
   {
     name = "LnxScheduler"
     machine = {
-      size = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      size = "Standard_D8as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/1.0.0"
         plan = {
@@ -65,7 +76,7 @@ virtualMachines = [
   {
     name = "" # "WinScheduler"
     machine = {
-       size = "Standard_D8s_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+       size = "Standard_D8as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
        image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinServer/versions/1.0.0"
         plan = {

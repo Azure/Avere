@@ -1,13 +1,13 @@
 terraform {
-  required_version = ">= 1.5.5"
+  required_version = ">= 1.5.6"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.69.0"
+      version = "~>3.71.0"
     }
   }
   backend "azurerm" {
-    key = "8.Artist.Workstation"
+    key = "7.Artist.Workstation"
   }
 }
 
@@ -206,7 +206,7 @@ data "terraform_remote_state" "image" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "3.Image.Builder"
+    key                  = "2.Image.Builder"
   }
 }
 

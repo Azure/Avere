@@ -70,7 +70,7 @@ weka = {
     display  = "Azure Artist Anywhere"
   }
   machine = {
-    size  = "Standard_L8s_v3"
+    size  = "Standard_L8as_v3"
     count = 6
     image = {
       id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/0.0.0"

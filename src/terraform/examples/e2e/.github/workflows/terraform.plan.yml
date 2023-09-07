@@ -11,13 +11,12 @@ on:
         options:
         - 0.Global.Foundation
         - 1.Virtual.Network
-        - 2.Artificial.Intelligence
-        - 3.Image.Builder
-        - 4.Storage
-        - 5.Storage.Cache
-        - 6.Render.Manager
-        - 7.Render.Farm
-        - 8.Artist.Workstation
+        - 2.Image.Builder
+        - 3.Storage
+        - 4.Storage.Cache
+        - 5.Render.Manager
+        - 6.Render.Farm
+        - 7.Artist.Workstation
         required: true
       logLevel:
         description: 'Log Level'
@@ -51,7 +50,7 @@ jobs:
     steps:
       - uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.5
+          terraform_version: 1.5.6
 
       - uses: actions/checkout@v3
         with:
