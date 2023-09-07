@@ -42,15 +42,6 @@ imageGallery = {
   ]
 }
 
-#####################################################################################################
-# Container Registry (https://learn.microsoft.com/zure/container-registry/container-registry-intro) #
-#####################################################################################################
-
-containerRegistry = {
-  name = ""
-  sku  = "Premium"
-}
-
 #############################################################################################
 # Image Builder (https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) #
 #############################################################################################
@@ -102,8 +93,8 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuProvider    = ""                   # NVIDIA or AMD
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
@@ -156,7 +147,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        # "Unreal+PixelStream"
+        "Unreal+PixelStream"
       ]
       customize = [
       ]
@@ -212,8 +203,8 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_D32ads_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
-      gpuProvider    = ""                   # NVIDIA or AMD
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
@@ -241,7 +232,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal"
+        "Unreal"
       ]
       customize = [
       ]
@@ -263,7 +254,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal+PixelStream"
+        "Unreal+PixelStream"
       ]
       customize = [
       ]

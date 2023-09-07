@@ -8,7 +8,7 @@ virtualMachineScaleSets = [
   {
     name = "LnxFarmC"
     machine = {
-      size  = "Standard_D32ads_v5"
+      size  = "Standard_HB120rs_v2"
       count = 2
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/2.0.0"
@@ -194,7 +194,7 @@ virtualMachineScaleSets = [
   {
     name = "" # "WinFarmC"
     machine = {
-      size  = "Standard_D32ads_v5"
+      size  = "Standard_HB120rs_v2"
       count = 2
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.0.0"

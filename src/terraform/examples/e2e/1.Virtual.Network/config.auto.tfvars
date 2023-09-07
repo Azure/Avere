@@ -19,8 +19,7 @@ computeNetwork = {
       ]
       serviceEndpoints = [
         "Microsoft.Storage",
-        "Microsoft.CognitiveServices",
-        "Microsoft.ContainerRegistry"
+        "Microsoft.CognitiveServices"
       ]
       serviceDelegation    = ""
       denyOutboundInternet = false
