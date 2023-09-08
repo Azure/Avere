@@ -45,7 +45,6 @@ $renderManager = $buildConfig.renderManager
 $renderEngines = $buildConfig.renderEngines
 $binStorageHost = $buildConfig.binStorage.host
 $binStorageAuth = $buildConfig.binStorage.auth
-$servicePassword = $buildConfig.servicePassword
 Write-Host "Machine Type: $machineType"
 Write-Host "GPU Provider: $gpuProvider"
 Write-Host "Render Manager: $renderManager"
@@ -356,7 +355,7 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): AD Domain"
   Install-WindowsFeature -Name "AD-Domain-Services" -IncludeManagementTools
   Write-Host "Customize (End): AD Domain"
-  if ("$renderManager" -like "*Deadline*" -or "$renderManager" -like "*RoyalRender*") {
+  if ("$renderManager" -like "*Deadline*") {
     Write-Host "Customize (Start): NFS Server"
     Install-WindowsFeature -Name "FS-NFS-Service"
     Write-Host "Customize (End): NFS Server"
@@ -433,48 +432,6 @@ if ("$renderManager" -like "*Deadline*") {
   Write-Host "Customize (End): Deadline Monitor"
 
   $binPaths += ";$binPathScheduler"
-}
-
-if ("$renderManager" -like "*RoyalRender*") {
-  $versionInfo = "9.0.08"
-  $installRoot = "\RoyalRender"
-  $binPathScheduler = "C:$installRoot\bin\win64"
-
-  Write-Host "Customize (Start): Royal Render Download"
-  $installFile = "RoyalRender__${versionInfo}__installer.zip"
-  $downloadUrl = "$binStorageHost/RoyalRender/$versionInfo/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Royal Render Download"
-
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Royal Render Server"
-    netsh advfirewall set public state off
-    $installType = "royal-render"
-    $installPath = "RoyalRender*"
-    $installFile = "rrSetup_win.exe"
-    $rrShareName = $installRoot.TrimStart("\")
-    $rrRootShare = "\\$(hostname)$installRoot"
-    New-Item -ItemType Directory -Path $installRoot
-    New-SmbShare -Name $rrShareName -Path "C:$installRoot" -FullAccess "Everyone"
-    StartProcess .\$installPath\$installPath\$installFile "-console -rrRoot $rrRootShare" $installType
-    Remove-SmbShare -Name $rrShareName -Force
-    New-NfsShare -Name "RoyalRender" -Path C:$installRoot -Permission ReadWrite
-    Write-Host "Customize (End): Royal Render Server"
-  } else {
-    $binPathScheduler = "T:\bin\win64"
-  }
-
-  $binPaths += ";$binPathScheduler"
-
-  Write-Host "Customize (Start): Royal Render Submitter"
-  $shortcutPath = "$env:AllUsersProfile\Desktop\Royal Render Submitter.lnk"
-  $scriptShell = New-Object -ComObject WScript.Shell
-  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-  $shortcut.WorkingDirectory = $binPathScheduler
-  $shortcut.TargetPath = "$binPathScheduler\rrSubmitter.exe"
-  $shortcut.Save()
-  Write-Host "Customize (End): Royal Render Submitter"
 }
 
 if ($machineType -eq "Farm") {

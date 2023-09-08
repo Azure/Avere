@@ -36,15 +36,6 @@ variable "resourceGroupName" {
   type = string
 }
 
-variable "serviceAccount" {
-  type = object(
-    {
-      name     = string
-      password = string
-    }
-  )
-}
-
 variable "privateDns" {
   type = object(
     {
@@ -85,12 +76,6 @@ data "azurerm_key_vault_secret" "admin_username" {
 data "azurerm_key_vault_secret" "admin_password" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.studio[0].id
-}
-
-data "azurerm_key_vault_secret" "service_password" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
-  name         = module.global.keyVault.secretName.servicePassword
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
@@ -137,8 +122,7 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
-  stateExistsNetwork     = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
-  serviceAccountPassword = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
+  stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
 resource "azurerm_resource_group" "scheduler" {

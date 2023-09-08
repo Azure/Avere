@@ -16,7 +16,6 @@ renderManager=$(echo $buildConfig | jq -r .renderManager)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
 binStorageHost=$(echo $buildConfig | jq -r .binStorage.host)
 binStorageAuth=$(echo $buildConfig | jq -r .binStorage.auth)
-servicePassword=$(echo $buildConfig | jq -r .servicePassword)
 echo "Machine Type: $machineType"
 echo "GPU Provider: $gpuProvider"
 echo "Render Manager: $renderManager"
@@ -270,7 +269,7 @@ if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (End): MoonRay"
 fi
 
-if [[ $machineType == Scheduler && ($renderManager == *Deadline* || $renderManager == *RoyalRender*) ]]; then
+if [[ $machineType == Scheduler && $renderManager == *Deadline* ]]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
   echo "Customize (End): NFS Server"
@@ -282,7 +281,6 @@ if [[ $renderManager == *Deadline* ]]; then
   serverMount="/DeadlineServer"
   databaseHost=$(hostname)
   databasePort=27017
-  databaseUser="dbService"
   databaseName="deadline10db"
   binPathScheduler="$installRoot/bin"
 
@@ -309,30 +307,15 @@ if [[ $renderManager == *Deadline* ]]; then
     sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $configFile
     sed -i "/bindIp: 0.0.0.0/a\  tls:" $configFile
     sed -i "/tls:/a\    mode: disabled" $configFile
+    sed -i "s/#security:/security:/" $configFile
+    sed -i "/security:/a\  authorization: disabled" $configFile
     systemctl --now enable mongod
     sleep 10s
     echo "Customize (End): Mongo DB Service"
 
-    echo "Customize (Start): Mongo DB User"
-    installType="mongo-create-user"
-    createUserScript="$installType.js"
-    echo "db = db.getSiblingDB(\"$databaseName\");" > $createUserScript
-    echo "db.createUser({" >> $createUserScript
-    echo "user: \"$databaseUser\"," >> $createUserScript
-    echo "pwd: \"$servicePassword\"," >> $createUserScript
-    echo "roles: [" >> $createUserScript
-    echo "{ role: \"dbOwner\", db: \"$databaseName\" }" >> $createUserScript
-    echo "]})" >> $createUserScript
-    mongo $createUserScript 2>&1 | tee $installType.log
-    if grep --silent --ignore-case exception $installType.log; then
-      exit 1
-    fi
-    echo "Customize (End): Mongo DB User"
-
     echo "Customize (Start): Deadline Server"
-    export DB_PASSWORD=$servicePassword
     installFile="DeadlineRepository-$versionInfo-linux-x64-installer.run"
-    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --installmongodb false --dbauth true --dbuser $databaseUser --dbpassword env:DB_PASSWORD
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --dbauth false --installmongodb false
     mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
     echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
@@ -350,41 +333,7 @@ if [[ $renderManager == *Deadline* ]]; then
   fi
   $installPath/$installFile $installArgs
   cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-  echo "$binPathScheduler/deadlinecommand -StoreDatabaseCredentials $databaseUser $servicePassword" >> $aaaProfile
   echo "Customize (End): Deadline Client"
-
-  binPaths="$binPaths:$binPathScheduler"
-fi
-
-if [[ $renderManager == *RoyalRender* ]]; then
-  versionInfo="9.0.08"
-  installRoot="/RoyalRender"
-  binPathScheduler="$installRoot/bin/lx64"
-
-  echo "Customize (Start): Royal Render Download"
-  installFile="RoyalRender__${versionInfo}__installer.zip"
-  downloadUrl="$binStorageHost/RoyalRender/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  unzip -q $installFile
-  echo "Customize (End): Royal Render Download"
-
-  dnf -y install fontconfig
-  dnf -y install xcb-util-wm
-  dnf -y install xcb-util-image
-  dnf -y install xcb-util-keysyms
-  dnf -y install xcb-util-renderutil
-  dnf -y install libxkbcommon-x11
-  if [ $machineType == Scheduler ]; then
-    echo "Customize (Start): Royal Render Server"
-    installPath="RoyalRender*"
-    installFile="rrSetup_linux"
-    chmod +x ./$installPath/$installFile
-    mkdir -p $installRoot
-    ./$installPath/$installFile -console -rrRoot $installRoot 2>&1 | tee royal-render.log
-    echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
-    exportfs -r
-    echo "Customize (End): Royal Render Server"
-  fi
 
   binPaths="$binPaths:$binPathScheduler"
 fi

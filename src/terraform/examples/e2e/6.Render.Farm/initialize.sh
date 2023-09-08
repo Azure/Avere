@@ -10,8 +10,6 @@ functionsData="${filebase64("../0.Global.Foundation/functions.sh")}"
 echo $functionsData | base64 --decode > $functionsCode
 source $functionsCode
 
-SetLocalUser ${serviceAccountName} ${serviceAccountPassword}
-
 fileSystemMounts='${jsonencode(fileSystemMounts)}'
 for fileSystemMount in $(echo $fileSystemMounts | jq -r '.[] | @base64'); do
   if [ $(GetEncodedValue $fileSystemMount .enable) == true ]; then
@@ -20,7 +18,7 @@ for fileSystemMount in $(echo $fileSystemMounts | jq -r '.[] | @base64'); do
 done
 mount -a
 
-EnableClientApp "${renderManager}" ${serviceAccountName} ${serviceAccountPassword}
+EnableClientApp "${renderManager}"
 
 if [ ${terminateNotification.enable} == true ]; then
   cronFilePath="/tmp/crontab"

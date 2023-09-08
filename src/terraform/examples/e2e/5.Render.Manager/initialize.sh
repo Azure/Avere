@@ -5,14 +5,6 @@ source /etc/profile.d/aaa.sh
 binDirectory="/usr/local/bin"
 cd $binDirectory
 
-useradd --system --password ${serviceAccountPassword} ${serviceAccountName}
-
-if [[ ${renderManager} == *RoyalRender* ]]; then
-  installType="royal-render-server"
-  rrServerconsole -initAndClose 2>&1 | tee $installType-init.log
-  rrWorkstation_installer -serviceServer -rrUser ${serviceAccountName} -rrUserPW ${serviceAccountPassword} 2>&1 | tee $installType-service.log
-fi
-
 serviceFile="aaaAutoScaler"
 dataFilePath="/var/lib/waagent/ovf-env.xml"
 dataFileText=$(xmllint --xpath "//*[local-name()='Environment']/*[local-name()='ProvisioningSection']/*[local-name()='LinuxProvisioningConfigurationSet']/*[local-name()='CustomData']/text()" $dataFilePath)

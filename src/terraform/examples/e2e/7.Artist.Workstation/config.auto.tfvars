@@ -67,10 +67,6 @@ virtualMachines = [
           {
             enable = true # Scheduler Deadline
             mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
-          },
-          {
-            enable = true # Scheduler Royal Render
-            mount  = "scheduler.artist.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
           }
         ]
         teradiciLicenseKey = ""
@@ -142,10 +138,6 @@ virtualMachines = [
   #         {
   #           enable = true # Scheduler Deadline
   #           mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
-  #         },
-  #         {
-  #           enable = true # Scheduler Royal Render
-  #           mount  = "scheduler.artist.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
   #         }
   #       ]
   #       teradiciLicenseKey = ""
@@ -217,10 +209,6 @@ virtualMachines = [
           {
             enable = true # Scheduler Deadline
             mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
-          },
-          {
-            enable = true # Scheduler Royal Render
-            mount  = "mount -o anon \\\\scheduler.artist.studio\\RoyalRender T:"
           }
         ]
         teradiciLicenseKey = ""
@@ -292,10 +280,6 @@ virtualMachines = [
   #         {
   #           enable = true # Scheduler Deadline
   #           mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
-  #         },
-  #         {
-  #           enable = true # Scheduler Royal Render
-  #           mount  = "mount -o anon \\\\scheduler.artist.studio\\RoyalRender T:"
   #         }
   #       ]
   #       teradiciLicenseKey = ""
@@ -306,11 +290,6 @@ virtualMachines = [
   #   }
   # }
 ]
-
-serviceAccount = {
-  name     = "aaaService"
-  password = "P@ssword1234"
-}
 
 ###############################################################################################
 # Traffic Manager (https://learn.microsoft.comazure/traffic-manager/traffic-manager-overview) #

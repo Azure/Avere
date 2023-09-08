@@ -191,9 +191,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   settings = jsonencode({
     script: "${base64encode(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager          = module.global.renderManager
-        serviceAccountName     = var.serviceAccount.name
-        serviceAccountPassword = local.serviceAccountPassword
+        renderManager = module.global.renderManager
       }))
     )}"
   })
@@ -236,9 +234,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   custom_data = base64encode(
     templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {
-      renderManager          = module.global.renderManager
-      serviceAccountName     = var.serviceAccount.name
-      serviceAccountPassword = local.serviceAccountPassword
+      renderManager = module.global.renderManager
     }))
   )
   network_interface_ids = [
@@ -273,9 +269,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
       templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager          = module.global.renderManager
-        serviceAccountName     = var.serviceAccount.name
-        serviceAccountPassword = local.serviceAccountPassword
+        renderManager = module.global.renderManager
       })), "UTF-16LE"
     )}"
   })

@@ -62,8 +62,6 @@ imageTemplates = [
       osDiskSizeGB   = 512
       renderEngines = [
       ]
-      customize = [
-      ]
     }
   },
   {
@@ -80,8 +78,6 @@ imageTemplates = [
       timeoutMinutes = 120
       osDiskSizeGB   = 512
       renderEngines = [
-      ]
-      customize = [
       ]
     }
   },
@@ -103,8 +99,6 @@ imageTemplates = [
         "Blender",
         "MoonRay"
       ]
-      customize = [
-      ]
     }
   },
   {
@@ -124,9 +118,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        # "Unreal"
-      ]
-      customize = [
+        "Unreal"
       ]
     }
   },
@@ -149,8 +141,6 @@ imageTemplates = [
         "MoonRay",
         "Unreal+PixelStream"
       ]
-      customize = [
-      ]
     }
   },
   # {
@@ -172,8 +162,6 @@ imageTemplates = [
   #       "MoonRay",
   #       "Unreal+PixelStream"
   #     ]
-  #     customize = [
-  #     ]
   #   }
   # },
   {
@@ -190,8 +178,6 @@ imageTemplates = [
       timeoutMinutes = 180
       osDiskSizeGB   = 512
       renderEngines = [
-      ]
-      customize = [
       ]
     }
   },
@@ -211,8 +197,6 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender"
-      ]
-      customize = [
       ]
     }
   },
@@ -234,9 +218,7 @@ imageTemplates = [
         "Blender",
         "Unreal"
       ]
-      customize = [
-      ]
-    }
+   }
   },
   {
     name = "WinArtistNVIDIA"
@@ -255,8 +237,6 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "Unreal+PixelStream"
-      ]
-      customize = [
       ]
     }
   },
@@ -278,25 +258,11 @@ imageTemplates = [
   #       "Blender",
   #       "Unreal+PixelStream"
   #     ]
-  #     customize = [
-  #     ]
   #   }
   # }
 ]
 
-servicePassword = "P@ssword1234"
-
 binStorage = {
   host = ""
   auth = ""
-}
-
-#######################################################################
-# Resource dependency configuration for pre-existing deployments only #
-#######################################################################
-
-computeNetwork = {
-  name              = ""
-  subnetName        = ""
-  resourceGroupName = ""
 }

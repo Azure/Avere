@@ -142,15 +142,6 @@ variable "virtualMachineScaleSets" {
   ))
 }
 
-variable "serviceAccount" {
-  type = object(
-    {
-      name     = string
-      password = string
-    }
-  )
-}
-
 variable "computeNetwork" {
   type = object(
     {
@@ -181,12 +172,6 @@ data "azurerm_key_vault_secret" "admin_username" {
 data "azurerm_key_vault_secret" "admin_password" {
   count        = module.global.keyVault.name != "" ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
-  key_vault_id = data.azurerm_key_vault.studio[0].id
-}
-
-data "azurerm_key_vault_secret" "service_password" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
-  name         = module.global.keyVault.secretName.servicePassword
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
@@ -250,7 +235,6 @@ locals {
       }
     }) if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux"
   ]
-  serviceAccountPassword = var.serviceAccount.password != "" ? var.serviceAccount.password : data.azurerm_key_vault_secret.service_password[0].value
 }
 
 resource "azurerm_resource_group" "farm" {
@@ -329,9 +313,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         script: "${base64encode(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-            renderManager          = module.global.renderManager
-            serviceAccountName     = var.serviceAccount.name
-            serviceAccountPassword = local.serviceAccountPassword
+            renderManager = module.global.renderManager
           }))
         )}"
       })
@@ -433,9 +415,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
           templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-            renderManager          = module.global.renderManager
-            serviceAccountName     = var.serviceAccount.name
-            serviceAccountPassword = local.serviceAccountPassword
+            renderManager = module.global.renderManager
           })), "UTF-16LE"
         )}"
       })

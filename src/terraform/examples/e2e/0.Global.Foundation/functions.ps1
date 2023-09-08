@@ -1,13 +1,5 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
-function SetLocalUser ($accountName, $accountPassword) {
-  $localUser = Get-LocalUser -Name $accountName -ErrorAction SilentlyContinue
-  if ($localUser -eq $null) {
-    $securePassword = ConvertTo-SecureString $accountPassword -AsPlainText -Force
-    New-LocalUser -Name $accountName -Password $securePassword -PasswordNeverExpires -AccountNeverExpires
-  }
-}
-
 function StartProcess ($filePath, $argumentList, $logFile) {
   if ($logFile -eq $null) {
     if ($argumentList -eq $null) {
@@ -51,17 +43,13 @@ function RegisterFileSystemMountPath {
   }
 }
 
-function EnableClientApp ($renderManager, $serviceAccountName, $serviceAccountPassword) {
+function EnableClientApp ($renderManager) {
   if ("$renderManager" -like "*Deadline*") {
     deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
   }
-  if ("$renderManager" -like "*RoyalRender*") {
-    $installType = "royal-render-client"
-    StartProcess rrWorkstation_installer.exe "-plugins -service -rrUser $serviceAccountName -rrUserPW $serviceAccountPassword -fwOut" $installType-service
-  }
 }
 
-function JoinDomainComputer ($domainName, $serverName, $adminUsername, $adminPassword) {
+function JoinActiveDirectory ($domainName, $serverName, $adminUsername, $adminPassword) {
   if ($domainName -ne "") {
     $securePassword = ConvertTo-SecureString $adminPassword -AsPlainText -Force
     $adminCredential = New-Object System.Management.Automation.PSCredential("$adminUsername@$domainName", $securePassword)

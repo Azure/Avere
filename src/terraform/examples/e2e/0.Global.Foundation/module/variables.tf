@@ -13,7 +13,7 @@ variable "resourceGroupName" {
 }
 
 variable "renderManager" {
-  default = "Deadline,RoyalRender"
+  default = "Deadline"
 }
 
 # Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction)
@@ -41,7 +41,6 @@ variable "keyVault" {
       gatewayConnection = "GatewayConnection"
       adminUsername     = "AdminUsername"
       adminPassword     = "AdminPassword"
-      servicePassword   = "ServicePassword"
     }
     keyName = {
       cacheEncryption = "CacheEncryption"

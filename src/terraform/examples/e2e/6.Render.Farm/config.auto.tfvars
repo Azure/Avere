@@ -72,10 +72,6 @@ virtualMachineScaleSets = [
           {
             enable = true # Scheduler Deadline
             mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
-          },
-          {
-            enable = true # Scheduler Royal Render
-            mount  = "scheduler.artist.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
           }
         ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
@@ -165,10 +161,6 @@ virtualMachineScaleSets = [
           {
             enable = true # Scheduler Deadline
             mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
-          },
-          {
-            enable = true # Scheduler Royal Render
-            mount  = "scheduler.artist.studio:/RoyalRender /RoyalRender nfs defaults 0 0"
           }
         ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
@@ -258,10 +250,6 @@ virtualMachineScaleSets = [
           {
             enable = true # Scheduler Deadline
             mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
-          },
-          {
-            enable = true # Scheduler Royal Render
-            mount  = "mount -o anon \\\\scheduler.artist.studio\\RoyalRender T:"
           }
         ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
@@ -351,10 +339,6 @@ virtualMachineScaleSets = [
           {
             enable = true # Scheduler Deadline
             mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
-          },
-          {
-            enable = true # Scheduler Royal Render
-            mount  = "mount -o anon \\\\scheduler.artist.studio\\RoyalRender T:"
           }
         ]
         terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
@@ -378,11 +362,6 @@ virtualMachineScaleSets = [
     }
   }
 ]
-
-serviceAccount = {
-  name     = "aaaService"
-  password = "P@ssword1234"
-}
 
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #

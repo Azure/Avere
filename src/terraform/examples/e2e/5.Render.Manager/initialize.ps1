@@ -3,9 +3,6 @@ $ErrorActionPreference = "Stop"
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
-$securePassword = ConvertTo-SecureString ${serviceAccountPassword} -AsPlainText -Force
-New-LocalUser -Name ${serviceAccountName} -Password $securePassword -PasswordNeverExpires -AccountNeverExpires
-
 function StartProcess ($filePath, $argumentList, $logFile) {
   Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
   Get-Content -Path $logFile-err.log | Tee-Object -FilePath "$logFile.log" -Append
@@ -15,12 +12,6 @@ function StartProcess ($filePath, $argumentList, $logFile) {
 
 if ("${renderManager}" -like "*Deadline*") {
   StartProcess sc.exe "start Deadline10DatabaseService" deadline-database-service
-}
-
-if ("${renderManager}" -like "*RoyalRender*") {
-  $installType = "royal-render-server"
-  StartProcess rrServerconsole.exe "-initAndClose" $installType-init
-  StartProcess rrWorkstation_installer.exe "-serviceServer -rrUser ${serviceAccountName} -rrUserPW ${serviceAccountPassword} -fwIn" $installType-service
 }
 
 $scriptFile = "C:\AzureData\aaaScaler.ps1"
