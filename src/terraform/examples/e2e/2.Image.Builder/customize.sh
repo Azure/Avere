@@ -200,7 +200,7 @@ fi
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then
   echo "Customize (Start): Unreal Engine Setup"
   dnf -y install libicu
-  versionInfo="5.2.1"
+  versionInfo="5.3.0"
   installType="unreal-engine"
   installPath="/usr/local/unreal"
   installFile="UnrealEngine-$versionInfo-release.tar.gz"
@@ -223,7 +223,7 @@ if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream*
   if [[ $renderEngines == *Unreal+PixelStream* ]]; then
     echo "Customize (Start): Unreal Pixel Streaming"
     dnf -y install coturn
-    versionInfo="5.2-0.6.5"
+    versionInfo="5.3-0.0.3"
     installType="unreal-stream"
     installFile="UE$versionInfo.tar.gz"
     downloadUrl="$binStorageHost/Unreal/PixelStream/$versionInfo/$installFile$binStorageAuth"

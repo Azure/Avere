@@ -268,7 +268,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $installType = "dotnet-fx3"
   StartProcess dism.exe "/Online /Enable-Feature /FeatureName:NetFX3 /All /NoRestart" $installType
   Set-Location -Path C:\
-  $versionInfo = "5.2.1"
+  $versionInfo = "5.3.0"
   $installType = "unreal-engine"
   $installFile = "UnrealEngine-$versionInfo-release.zip"
   $downloadUrl = "$binStorageHost/Unreal/$versionInfo/$installFile$binStorageAuth"
@@ -320,7 +320,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
 
   if ($renderEngines -contains "Unreal+PixelStream") {
     Write-Host "Customize (Start): Unreal Pixel Streaming"
-    $versionInfo = "5.2-0.6.5"
+    $versionInfo = "5.3-0.0.3"
     $installType = "unreal-stream"
     $installFile = "UE$versionInfo.zip"
     $downloadUrl = "$binStorageHost/Unreal/PixelStream/$versionInfo/$installFile$binStorageAuth"

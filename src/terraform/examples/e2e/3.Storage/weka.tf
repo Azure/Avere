@@ -142,9 +142,9 @@ data "azurerm_virtual_machine_scale_set" "weka" {
 locals {
   wekaImage = merge(var.weka.machine.image, {
     plan = {
-      publisher = lower(var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher, ""))
-      product   = lower(var.weka.machine.image.plan.product != "" ? var.weka.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer, ""))
-      name      = lower(var.weka.machine.image.plan.name != "" ? var.weka.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku, ""))
+      publisher = lower(var.weka.machine.image.plan.publisher != "" ? var.weka.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.publisher, ""))
+      product   = lower(var.weka.machine.image.plan.product != "" ? var.weka.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.offer, ""))
+      name      = lower(var.weka.machine.image.plan.name != "" ? var.weka.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.sku, ""))
     }
   })
   wekaObjectTier = merge(var.weka.objectTier, {

@@ -215,9 +215,9 @@ locals {
         image = {
           id = virtualMachine.machine.image.id
           plan = {
-            publisher = lower(virtualMachine.machine.image.plan.publisher != "" ? virtualMachine.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].publisher, ""))
-            product   = lower(virtualMachine.machine.image.plan.product != "" ? virtualMachine.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].offer, ""))
-            name      = lower(virtualMachine.machine.image.plan.name != "" ? virtualMachine.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionsLinux[0].sku, ""))
+            publisher = lower(virtualMachine.machine.image.plan.publisher != "" ? virtualMachine.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.publisher, ""))
+            product   = lower(virtualMachine.machine.image.plan.product != "" ? virtualMachine.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.offer, ""))
+            name      = lower(virtualMachine.machine.image.plan.name != "" ? virtualMachine.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.sku, ""))
           }
         }
       }

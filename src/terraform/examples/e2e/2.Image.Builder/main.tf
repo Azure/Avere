@@ -82,18 +82,8 @@ variable "binStorage" {
   )
 }
 
-data "http" "client_address" {
-  url = "https://api.ipify.org?format=json"
-}
-
 data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
-  resource_group_name = module.global.resourceGroupName
-}
-
-data "azurerm_key_vault" "studio" {
-  count               = module.global.keyVault.name != "" ? 1 : 0
-  name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
 }
 
@@ -192,8 +182,8 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         }
       },
       "variables": {
-        "imageBuilderApiVersion": "2022-07-01",
-        "imageGalleryApiVersion": "2023-07-03"
+        "apiVersionImageBuilder": "2022-07-01",
+        "apiVersionImageGallery": "2023-07-03"
       },
       "functions": [
         {
@@ -296,7 +286,7 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
         {
           "type": "Microsoft.VirtualMachineImages/imageTemplates",
           "name": "[parameters('imageTemplates')[copyIndex()].name]",
-          "apiVersion": "[variables('imageBuilderApiVersion')]",
+          "apiVersion": "[variables('apiVersionImageBuilder')]",
           "location": "[resourceGroup().location]",
           "identity": {
             "type": "UserAssigned",
@@ -312,13 +302,13 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
             },
             "source": {
               "type": "PlatformImage",
-              "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher]",
-              "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer]",
-              "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku]",
+              "publisher": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).identifier.publisher]",
+              "offer": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).identifier.offer]",
+              "sku": "[reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).identifier.sku]",
               "version": "[parameters('imageTemplates')[copyIndex()].image.inputVersion]",
-              "planInfo": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Linux'), json(concat('{\"planPublisher\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.publisher), '\", \"planProduct\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.offer), '\", \"planName\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).identifier.sku), '\"}')), json('null'))]"
+              "planInfo": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).osType, 'Linux'), json(concat('{\"planPublisher\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).identifier.publisher), '\", \"planProduct\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).identifier.offer), '\", \"planName\": \"', toLower(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).identifier.sku), '\"}')), json('null'))]"
             },
-            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('imageGalleryApiVersion')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('binStorage'), parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('binStorage'), parameters('renderManager')))]",
+            "customize": "[if(equals(reference(resourceId('Microsoft.Compute/galleries/images', parameters('imageGalleryName'), parameters('imageTemplates')[copyIndex()].image.definitionName), variables('apiVersionImageGallery')).osType, 'Windows'), fx.GetCustomizeCommandsWindows(parameters('imageTemplates')[copyIndex()], parameters('binStorage'), parameters('renderManager')), fx.GetCustomizeCommandsLinux(parameters('imageTemplates')[copyIndex()], parameters('binStorage'), parameters('renderManager')))]",
             "buildTimeoutInMinutes": "[parameters('imageTemplates')[copyIndex()].build.timeoutMinutes]",
             "distribute": [
               {
@@ -362,8 +352,8 @@ output "imageTemplates" {
   value = var.imageTemplates
 }
 
-output "imageDefinitionsLinux" {
-  value = [
+output "imageDefinitionLinux" {
+  value = one([
     for imageDefinition in var.imageGallery.imageDefinitions: imageDefinition if imageDefinition.type == "Linux"
-  ]
+  ])
 }
