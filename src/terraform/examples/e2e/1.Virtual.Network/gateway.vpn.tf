@@ -1,3 +1,7 @@
+###############################################################################################################
+# Virtual Network Gateway (VPN) (https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) #
+###############################################################################################################
+
 variable "vpnGateway" {
   type = object(
     {
@@ -40,10 +44,6 @@ variable "vpnGatewayLocal" {
     }
   )
 }
-
-#################################
-# Virtual Network Gateway (VPN) #
-#################################
 
 resource "azurerm_virtual_network_gateway" "vpn" {
   for_each = {

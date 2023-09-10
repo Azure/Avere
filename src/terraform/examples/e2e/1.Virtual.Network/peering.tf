@@ -1,3 +1,7 @@
+################################################################################################################
+# Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
+################################################################################################################
+
 variable "networkPeering" {
   type = object(
     {
@@ -7,10 +11,6 @@ variable "networkPeering" {
     }
   )
 }
-
-################################################################################################################
-# Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
-################################################################################################################
 
 resource "azurerm_virtual_network_peering" "network_peering_up" {
   count                        = var.networkPeering.enable ? length(local.virtualNetworks) - 1 : 0

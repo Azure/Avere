@@ -1,3 +1,7 @@
+#######################################################################################################################################
+# Virtual Network Gateway (ExpressRoute) (https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) #
+#######################################################################################################################################
+
 variable "expressRouteGateway" {
   type = object(
     {
@@ -16,10 +20,6 @@ variable "expressRouteGateway" {
     }
   )
 }
-
-##########################################
-# Virtual Network Gateway (ExpressRoute) #
-##########################################
 
 resource "azurerm_virtual_network_gateway" "express_route" {
   count               = var.networkGateway.type == "ExpressRoute" ? 1 : 0

@@ -1,3 +1,7 @@
+########################################################################
+# Bastion (https://learn.microsoft.com/azure/bastion/bastion-overview) #
+########################################################################
+
 variable "bastion" {
   type = object(
     {
@@ -12,10 +16,6 @@ variable "bastion" {
     }
   )
 }
-
-########################################################################
-# Bastion (https://learn.microsoft.com/azure/bastion/bastion-overview) #
-########################################################################
 
 resource "azurerm_network_security_group" "bastion" {
   for_each = {

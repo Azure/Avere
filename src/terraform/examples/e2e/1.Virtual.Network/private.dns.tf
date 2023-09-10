@@ -1,3 +1,7 @@
+############################################################################
+# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
+############################################################################
+
 variable "privateDns" {
   type = object(
     {
@@ -10,10 +14,6 @@ variable "privateDns" {
     }
   )
 }
-
-############################################################################
-# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
-############################################################################
 
 resource "azurerm_private_dns_zone" "studio" {
   count               = var.privateDns.zoneName != "" ? 1 : 0
@@ -33,4 +33,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
   depends_on = [
     azurerm_virtual_network.network
   ]
+}
+
+output "privateDns" {
+  value = var.virtualNetwork.name != "" ? null : var.privateDns
 }

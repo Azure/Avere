@@ -4,7 +4,7 @@ resourceGroupName = "ArtistAnywhere.Image" # Alphanumeric, underscores, hyphens,
 # Compute Gallery (https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) #
 ###############################################################################################
 
-imageGallery = {
+computeGallery = {
   name = "azstudio"
   imageDefinitions = [
     {

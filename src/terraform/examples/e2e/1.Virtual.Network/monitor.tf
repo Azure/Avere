@@ -1,3 +1,7 @@
+######################################################################
+# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
+######################################################################
+
 variable "monitor" {
   type = object(
     {
@@ -17,10 +21,6 @@ data "azurerm_application_insights" "studio" {
   name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
-
-######################################################################
-# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
-######################################################################
 
 resource "azurerm_private_dns_zone" "monitor" {
   count               = module.global.monitor.name != "" && var.monitor.enable ? 1 : 0

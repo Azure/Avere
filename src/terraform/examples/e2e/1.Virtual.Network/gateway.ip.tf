@@ -1,3 +1,7 @@
+###########################################################################################################
+# Public IP Addresses (https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-addresses) #
+###########################################################################################################
+
 data "azurerm_public_ip_prefix" "gateway" {
   count               = var.networkGateway.type != "" && var.networkGateway.ipPrefix.name != "" ? 1 : 0
   name                = var.networkGateway.ipPrefix.name
@@ -15,10 +19,6 @@ data "azurerm_public_ip" "gateway_2" {
   name                = var.networkGateway.ipAddresses[1].name
   resource_group_name = var.networkGateway.ipAddresses[1].resourceGroupName
 }
-
-###########################################################################################################
-# Public IP Addresses (https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-addresses) #
-###########################################################################################################
 
 resource "azurerm_public_ip" "vpn_gateway_1" {
   for_each = {
