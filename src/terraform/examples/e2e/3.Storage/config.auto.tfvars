@@ -13,14 +13,17 @@ dataLoadSource = {
 
 storageAccounts = [
   {
-    name                 = "azstudio1"        # Name must be globally unique (lowercase alphanumeric)
-    type                 = "BlockBlobStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
-    tier                 = "Premium"          # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
-    redundancy           = "LRS"              # https://learn.microsoft.com/azure/storage/common/storage-redundancy
-    enableHttpsOnly      = true               # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    enableBlobNfsV3      = true               # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    blobContainers = [                        # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    name                 = "azstudio1" # Name must be globally unique (lowercase alphanumeric)
+    type                 = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
+    tier                 = "Standard"  # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
+    redundancy           = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+    enableHttpsOnly      = true        # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    enableBlobNfsV3      = false       # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = false       # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    privateEndpointTypes = [ # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
+      "blob"
+    ]
+    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
         name           = "data"
         rootAcl        = "user::rwx,group::rwx,other::rwx"
@@ -38,14 +41,45 @@ storageAccounts = [
     ]
   },
   {
-    name                 = "azstudio2"   # Name must be globally unique (lowercase alphanumeric)
+    name                 = "azstudio2"        # Name must be globally unique (lowercase alphanumeric)
+    type                 = "BlockBlobStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
+    tier                 = "Premium"          # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
+    redundancy           = "LRS"              # https://learn.microsoft.com/azure/storage/common/storage-redundancy
+    enableHttpsOnly      = true               # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
+    enableBlobNfsV3      = true               # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    privateEndpointTypes = [ # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
+      "blob"
+    ]
+    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+      {
+        name           = "data"
+        rootAcl        = "user::rwx,group::rwx,other::rwx"
+        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
+        enableDataLoad = false
+      },
+      {
+        name           = "weka"
+        rootAcl        = "user::rwx,group::rwx,other::rwx"
+        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
+        enableDataLoad = false
+      }
+    ]
+    fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
+    ]
+  },
+  {
+    name                 = "azstudio3"   # Name must be globally unique (lowercase alphanumeric)
     type                 = "FileStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
     tier                 = "Premium"     # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
     redundancy           = "LRS"         # https://learn.microsoft.com/azure/storage/common/storage-redundancy
     enableHttpsOnly      = true          # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
     enableBlobNfsV3      = false         # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
     enableLargeFileShare = true          # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    blobContainers = [                   # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    privateEndpointTypes = [ # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
+      "file"
+    ]
+    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
     ]
     fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {

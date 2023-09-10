@@ -12,6 +12,7 @@ variable "storageAccounts" {
       enableHttpsOnly      = bool
       enableBlobNfsV3      = bool
       enableLargeFileShare = bool
+      privateEndpointTypes = list(string)
       blobContainers = list(object(
         {
           name           = string
@@ -36,7 +37,19 @@ variable "storageAccounts" {
 
 locals {
   serviceEndpointSubnets = !local.stateExistsNetwork ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
-  blobStorageAccount     = [for storageAccount in var.storageAccounts : storageAccount if storageAccount.type == "StorageV2" || storageAccount.type == "BlockBlobStorage"][0]
+  privateEndpoints = flatten([
+    for storageAccount in var.storageAccounts : [
+      for privateEndpointType in storageAccount.privateEndpointTypes : {
+        storageAccountName = storageAccount.name
+        storageAccountId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${azurerm_resource_group.storage.name}/providers/Microsoft.Storage/storageAccounts/${storageAccount.name}"
+        type               = privateEndpointType
+        dnsZoneId          = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${data.azurerm_resource_group.network.name}/providers/Microsoft.Network/privateDnsZones/privatelink.${privateEndpointType}.core.windows.net"
+      }
+    ]
+  ])
+  blobStorageAccounts = [
+    for storageAccount in var.storageAccounts : storageAccount if storageAccount.type == "StorageV2" || storageAccount.type == "BlockBlobStorage"
+  ]
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
@@ -45,6 +58,7 @@ locals {
         rootAclDefault     = blobContainer.rootAclDefault
         storageAccountName = storageAccount.name
         enableDataLoad     = blobContainer.enableDataLoad
+        enableFileSystem   = storageAccount.enableBlobNfsV3
       }
     ]
   ])
@@ -89,11 +103,28 @@ resource "azurerm_storage_account" "storage" {
   }
 }
 
-resource "time_sleep" "storage" {
+resource "azurerm_private_endpoint" "storage" {
   for_each = {
-    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount
+    for privateEndpoint in local.privateEndpoints : "${privateEndpoint.storageAccountName}.${privateEndpoint.type}" => privateEndpoint
   }
-  create_duration = "30s"
+  name                = each.value.storageAccountName
+  resource_group_name = azurerm_resource_group.storage.name
+  location            = azurerm_resource_group.storage.location
+  subnet_id           = local.storageSubnet.id
+  private_service_connection {
+    name                           = each.value.storageAccountName
+    private_connection_resource_id = each.value.storageAccountId
+    is_manual_connection           = false
+    subresource_names = [
+      each.value.type
+    ]
+  }
+  private_dns_zone_group {
+    name = each.value.storageAccountName
+    private_dns_zone_ids = [
+      each.value.dnsZoneId
+    ]
+  }
   depends_on = [
     azurerm_storage_account.storage
   ]
@@ -106,7 +137,7 @@ resource "azurerm_storage_container" "core" {
   name                 = each.value.name
   storage_account_name = each.value.storageAccountName
   depends_on = [
-    time_sleep.storage
+    azurerm_private_endpoint.storage
   ]
 }
 
@@ -120,13 +151,13 @@ resource "azurerm_storage_share" "core" {
   enabled_protocol     = each.value.accessProtocol
   quota                = each.value.size
   depends_on = [
-    time_sleep.storage
+    azurerm_private_endpoint.storage
   ]
 }
 
 resource "terraform_data" "storage_container_permission" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer if blobContainer.enableFileSystem
   }
   provisioner "local-exec" {
     command = "az storage fs access set --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.rootAcl}"
@@ -185,4 +216,8 @@ resource "terraform_data" "storage_share_file_data" {
   depends_on = [
     azurerm_storage_share.core
    ]
+}
+
+output "blobStorageAccounts" {
+  value = local.blobStorageAccounts
 }

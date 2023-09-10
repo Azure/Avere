@@ -1,5 +1,66 @@
 resourceGroupName = "ArtistAnywhere.Farm" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
+############################################################################
+# Batch (https://learn.microsoft.com/azure/batch/batch-technical-overview) #
+############################################################################
+
+batch = {
+  account = {
+    name         = "" # Set to a unique name to deploy Batch instead of VMSS
+    enablePublic = true
+  }
+  pools = [
+    {
+      name        = "LnxFarmC"
+      displayName = "Linux Render Farm (CPU)"
+      node = {
+        image = {
+          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/2.0.0"
+          agentId = "batch.node.el 9"
+        }
+        machine = {
+          size  = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
+          count = 2
+        }
+        enableInterNodeCommunication = false
+        deallocationMode             = "Terminate"
+      }
+      spot = {
+        enable = true
+      }
+    },
+    {
+      name        = "WinFarmC"
+      displayName = "Windows Render Farm (CPU)"
+      node = {
+        image = {
+          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.0.0"
+          agentId = "batch.node.windows amd64"
+        }
+        machine = {
+          size  = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
+          count = 2
+        }
+        enableInterNodeCommunication = false
+        deallocationMode             = "Terminate"
+      }
+      spot = {
+        enable = true
+      }
+    }
+  ]
+  keyVault = {
+    name                        = ""
+    type                        = "standard"
+    enableForDeployment         = true
+    enableForDiskEncryption     = true
+    enableForTemplateDeployment = true
+    enablePurgeProtection       = false
+    enableTrustedServices       = true
+    softDeleteRetentionDays     = 90
+  }
+}
+
 ######################################################################################################
 # Virtual Machine Scale Sets (https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) #
 ######################################################################################################
@@ -371,4 +432,9 @@ computeNetwork = {
   name              = ""
   subnetName        = ""
   resourceGroupName = ""
+}
+
+storageAccount = {
+  name               = ""
+  resourceGroupName  = ""
 }

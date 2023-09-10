@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.6"
+  required_version = ">= 1.5.7"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.71.0"
+      version = "~>3.72.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -19,6 +19,17 @@ provider "azurerm" {
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
+    }
+    key_vault {
+      purge_soft_delete_on_destroy                            = true
+      purge_soft_deleted_secrets_on_destroy                   = true
+      purge_soft_deleted_keys_on_destroy                      = true
+      purge_soft_deleted_certificates_on_destroy              = true
+      purge_soft_deleted_hardware_security_modules_on_destroy = true
+      recover_soft_deleted_key_vaults                         = true
+      recover_soft_deleted_secrets                            = true
+      recover_soft_deleted_keys                               = true
+      recover_soft_deleted_certificates                       = true
     }
     virtual_machine {
       delete_os_disk_on_deletion     = true
@@ -131,7 +142,6 @@ resource "azurerm_resource_group" "scheduler" {
 }
 
 resource "azurerm_private_dns_a_record" "scheduler" {
-  count               = var.batch.accountName != "" ? 0 :1
   name                = var.privateDns.aRecordName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name

@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 1.5.6"
+  required_version = ">= 1.5.7"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.71.0"
+      version = "~>3.72.0"
     }
   }
   backend "azurerm" {
@@ -80,6 +80,10 @@ variable "binStorage" {
       auth = string
     }
   )
+  validation {
+    condition     = var.binStorage.host != "" && var.binStorage.auth != ""
+    error_message = "Missing required deployment configuration."
+  }
 }
 
 data "azurerm_user_assigned_identity" "studio" {

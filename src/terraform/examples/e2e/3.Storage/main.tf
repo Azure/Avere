@@ -1,13 +1,9 @@
 terraform {
-  required_version = ">= 1.5.6"
+  required_version = ">= 1.5.7"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.71.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = "~>0.9.1"
+      version = "~>3.72.0"
     }
   }
   backend "azurerm" {
@@ -77,6 +73,8 @@ variable "storageNetwork" {
 data "http" "client_address" {
   url = "https://api.ipify.org?format=json"
 }
+
+data "azurerm_client_config" "studio" {}
 
 data "azurerm_user_assigned_identity" "studio" {
   name                = module.global.managedIdentity.name
@@ -168,9 +166,9 @@ data "azurerm_private_dns_zone" "network" {
 }
 
 locals {
-  stateExistsNetwork   = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
-  virtualNetworkSubnet = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
-  binDirectory         = "/usr/local/bin"
+  stateExistsNetwork = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
+  storageSubnet      = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
+  binDirectory       = "/usr/local/bin"
 }
 
 resource "azurerm_resource_group" "storage" {

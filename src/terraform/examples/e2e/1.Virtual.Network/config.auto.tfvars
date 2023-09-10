@@ -172,6 +172,14 @@ bastion = {
   enableShareableLink = false
 }
 
+######################################################################
+# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
+######################################################################
+
+monitor = {
+  enable = false
+}
+
 ###########################
 # Virtual Network Gateway #
 ###########################

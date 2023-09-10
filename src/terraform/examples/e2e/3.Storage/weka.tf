@@ -126,7 +126,7 @@ variable "weka" {
 
 data "azurerm_storage_account" "blob" {
   count               = var.weka.name.resource != "" ? 1 : 0
-  name                = local.blobStorageAccount.name
+  name                = local.blobStorageAccounts[0].name
   resource_group_name = azurerm_resource_group.storage.name
   depends_on = [
     azurerm_storage_account.storage
@@ -258,7 +258,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     ip_configuration {
       name      = "ipConfig"
       primary   = true
-      subnet_id = local.virtualNetworkSubnet.id
+      subnet_id = local.storageSubnet.id
     }
     enable_accelerated_networking = var.weka.network.enableAcceleration
   }

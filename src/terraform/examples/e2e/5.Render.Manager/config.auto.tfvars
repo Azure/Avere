@@ -1,16 +1,5 @@
 resourceGroupName = "ArtistAnywhere.Scheduler" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
-############################################################################
-# Batch (https://learn.microsoft.com/azure/batch/batch-technical-overview) #
-############################################################################
-
-batch = {
-  accountName = ""
-  networkAccess = {
-    enablePublic = true
-  }
-}
-
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
 #########################################################################
