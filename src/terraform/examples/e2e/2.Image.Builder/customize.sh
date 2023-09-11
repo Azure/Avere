@@ -24,12 +24,9 @@ echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
-dnf -y install gcc gcc-c++ perl bison flex elfutils-libelf-devel openssl-devel
-installFile="kernel-devel-5.14.0-70.17.1.el9_0.x86_64.rpm"
-downloadUrl="$binStorageHost/Linux/Rocky/$installFile$binStorageAuth"
-curl -o $installFile -L $downloadUrl
-rpm -i $installFile
-dnf -y install epel-release python3-devel cmake lsof unzip git bc
+dnf -y install kernel-devel-$(uname -r)
+dnf -y install gcc gcc-c++ perl openssl-devel
+dnf -y install python3-devel cmake lsof git bc
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation &> Workstation.log
   dnf -y module install nodejs:18
@@ -38,7 +35,7 @@ echo "Customize (End): Image Build Platform"
 
 if [ $machineType == Storage ]; then
   dnf -y install kernel-rpm-macros rpm-build python3-devel gcc-gfortran libtool pciutils tcl tk
-  installFile="MLNX_OFED_LINUX-23.04-1.1.3.0-rhel9.0-x86_64.tgz"
+  installFile="MLNX_OFED_LINUX-23.07-0.5.1.2-rhel9.2-x86_64.tgz"
   downloadUrl="$binStorageHost/NVIDIA/OFED/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile

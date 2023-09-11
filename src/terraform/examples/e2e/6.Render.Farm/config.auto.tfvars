@@ -389,7 +389,7 @@ batch = {
         deallocationMode             = "Terminate"
       }
       spot = {
-        enable = true
+        enable = false
       }
     },
     {
@@ -408,7 +408,7 @@ batch = {
         deallocationMode             = "Terminate"
       }
       spot = {
-        enable = true
+        enable = false
       }
     },
     {
@@ -427,7 +427,7 @@ batch = {
         deallocationMode             = "Terminate"
       }
       spot = {
-        enable = true
+        enable = false
       }
     },
     {
@@ -446,7 +446,7 @@ batch = {
         deallocationMode             = "Terminate"
       }
       spot = {
-        enable = true
+        enable = false
       }
     }
   ]

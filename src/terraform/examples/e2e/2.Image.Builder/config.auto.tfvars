@@ -11,9 +11,9 @@ computeGallery = {
       name       = "Linux"
       type       = "Linux"
       generation = "V2"
-      publisher  = "CIQ"
-      offer      = "Rocky"
-      sku        = "Rocky-9-0-Free"
+      publisher  = "AlmaLinux"
+      offer      = "AlmaLinux-x86_64"
+      sku        = "9-Gen2"
     },
     {
       name       = "WinServer"
@@ -93,7 +93,7 @@ imageTemplates = [
       gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 480
       renderEngines = [
         "PBRT",
         "Blender",
@@ -113,7 +113,7 @@ imageTemplates = [
       gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "2.1.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 480
       renderEngines = [
         "PBRT",
         "Blender",
@@ -193,7 +193,7 @@ imageTemplates = [
       gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 420
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 480
       renderEngines = [
         "PBRT",
         "Blender"
@@ -212,7 +212,7 @@ imageTemplates = [
       gpuProvider    = ""                        # NVIDIA or AMD
       outputVersion  = "2.1.0"
       timeoutMinutes = 420
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 480
       renderEngines = [
         "PBRT",
         "Blender",
