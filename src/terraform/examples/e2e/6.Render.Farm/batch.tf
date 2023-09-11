@@ -250,8 +250,8 @@ resource "azurerm_batch_pool" "farm" {
     subnet_id = data.azurerm_subnet.farm.id
   }
   fixed_scale {
-    target_dedicated_nodes    = each.value.spot.enabled ? 0 : each.value.node.machine.count
-    target_low_priority_nodes = each.value.spot.enabled ? each.value.node.machine.count : 0
+    target_dedicated_nodes    = each.value.spot.enable ? 0 : each.value.node.machine.count
+    target_low_priority_nodes = each.value.spot.enable ? each.value.node.machine.count : 0
     node_deallocation_method  = each.value.node.deallocationMode
   }
 }
