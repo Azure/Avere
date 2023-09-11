@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Solution Deployment Framework
 
-Azure Artist Anywhere (AAA) is a *modular and customizable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) deployment framework* for [rendering](https://azure.microsoft.com/solutions/high-performance-computing/rendering) and [gaming](https://azure.microsoft.com/solutions/gaming) solutions. Enable remote artist creativity with Azure [global scale](https://azure.microsoft.com/global-infrastructure) and distributed computing innovation via [HPC-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc) and [GPU-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu) infrastructure.
+Azure Artist Anywhere (AAA) is a *modular & customizable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) solution deployment framework* for Azure HPC & AI [Rendering](https://azure.microsoft.com/solutions/high-performance-computing/rendering). Enable remote artist creativity with Azure [global scale](https://azure.microsoft.com/global-infrastructure) and distributed computing innovation via [HPC-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc) and [GPU-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu) infrastructure.
 
 https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4
 
