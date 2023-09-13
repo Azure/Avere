@@ -28,7 +28,22 @@ variable "batch" {
                   count = number
                 }
               )
-              deallocationMode = string
+              osDisk = object(
+                {
+                  ephemeral = object(
+                    {
+                      enable = bool
+                    }
+                  )
+                }
+              )
+              deallocationMode   = string
+              maxConcurrentTasks = number
+            }
+          )
+          fillMode = object(
+            {
+              nodePack = bool
             }
           )
           spot = object(
@@ -45,12 +60,6 @@ variable "batch" {
 data "azuread_service_principal" "batch" {
   count        = var.batch.account.name != "" ? 1 : 0
   display_name = "Microsoft Azure Batch"
-}
-
-data "azurerm_private_dns_zone" "storage_blob" {
-  count               = var.batch.account.name != "" ? 1 : 0
-  name                = "privatelink.blob.core.windows.net"
-  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 data "azurerm_key_vault" "batch" {
@@ -111,12 +120,11 @@ resource "azurerm_role_assignment" "batch" {
 }
 
 resource "azurerm_batch_account" "scheduler" {
-  count                         = var.batch.account.name != "" ? 1 : 0
-  name                          = var.batch.account.name
-  resource_group_name           = azurerm_resource_group.farm.name
-  location                      = azurerm_resource_group.farm.location
-  pool_allocation_mode          = "UserSubscription"
-  public_network_access_enabled = false
+  count                = var.batch.account.name != "" ? 1 : 0
+  name                 = var.batch.account.name
+  resource_group_name  = azurerm_resource_group.farm.name
+  location             = azurerm_resource_group.farm.location
+  pool_allocation_mode = "UserSubscription"
   identity {
     type = "UserAssigned"
     identity_ids = [
@@ -160,6 +168,8 @@ resource "azurerm_batch_pool" "farm" {
   account_name             = azurerm_batch_account.scheduler[0].name
   vm_size                  = each.value.node.machine.size
   node_agent_sku_id        = each.value.node.image.agentId
+  max_tasks_per_node       = each.value.node.maxConcurrentTasks
+  os_disk_placement        = each.value.node.osDisk.ephemeral.enable ? "CacheDisk" : null
   inter_node_communication = "Disabled"
   identity {
     type = "UserAssigned"
@@ -172,6 +182,9 @@ resource "azurerm_batch_pool" "farm" {
   }
   network_configuration {
     subnet_id = data.azurerm_subnet.farm.id
+  }
+  task_scheduling_policy {
+    node_fill_type = each.value.fillMode.nodePack ? "Pack" : "Spread"
   }
   fixed_scale {
     target_dedicated_nodes    = each.value.spot.enable ? 0 : each.value.node.machine.count

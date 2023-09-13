@@ -31,12 +31,3 @@ resource "azurerm_express_route_circuit" "render" {
     family = var.expressRoute.circuit.unlimitedData ? "UnlimitedData" : "MeteredData"
   }
 }
-
-output "serviceKey" {
-  value     = azurerm_express_route_circuit.render.service_key
-  sensitive = true
-}
-
-output "serviceProviderProvisioningState" {
-  value = azurerm_express_route_circuit.render.service_provider_provisioning_state
-}

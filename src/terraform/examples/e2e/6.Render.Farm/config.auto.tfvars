@@ -384,61 +384,16 @@ batch = {
           size  = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
           count = 2
         }
-        deallocationMode = "Terminate"
-      }
-      spot = {
-        enable = true
-      }
-    },
-    {
-      name        = "" # "LnxFarmG"
-      displayName = "Linux Render Farm (GPU)"
-      node = {
-        image = {
-          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/2.1.0"
-          agentId = "batch.node.el 9"
+        osDisk = {
+          ephemeral = {
+            enable = true
+          }
         }
-        machine = {
-          size  = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
-          count = 2
-        }
-        deallocationMode = "Terminate"
+        deallocationMode   = "Terminate"
+        maxConcurrentTasks = 1
       }
-      spot = {
-        enable = true
-      }
-    },
-    {
-      name        = "WinFarmC"
-      displayName = "Windows Render Farm (CPU)"
-      node = {
-        image = {
-          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.0.0"
-          agentId = "batch.node.windows amd64"
-        }
-        machine = {
-          size  = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
-          count = 2
-        }
-        deallocationMode = "Terminate"
-      }
-      spot = {
-        enable = true
-      }
-    },
-    {
-      name        = "" # "WinFarmG"
-      displayName = "Windows Render Farm (GPU)"
-      node = {
-        image = {
-          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.1.0"
-          agentId = "batch.node.windows amd64"
-        }
-        machine = {
-          size  = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
-          count = 2
-        }
-        deallocationMode = "Terminate"
+      fillMode = {
+        nodePack = false
       }
       spot = {
         enable = true
