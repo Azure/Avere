@@ -43,10 +43,8 @@ function RegisterFileSystemMountPath {
   }
 }
 
-function EnableClientApp ($renderManager) {
-  if ("$renderManager" -like "*Deadline*") {
-    deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
-  }
+function EnableFarmClient () {
+  deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
 }
 
 function JoinActiveDirectory ($domainName, $serverName, $adminUsername, $adminPassword) {

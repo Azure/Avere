@@ -41,13 +41,13 @@ $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
 $buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
 $machineType = $buildConfig.machineType
 $gpuProvider = $buildConfig.gpuProvider
-$renderManager = $buildConfig.renderManager
+$batchService = $buildConfig.batchService
 $renderEngines = $buildConfig.renderEngines
 $binStorageHost = $buildConfig.binStorage.host
 $binStorageAuth = $buildConfig.binStorage.auth
 Write-Host "Machine Type: $machineType"
 Write-Host "GPU Provider: $gpuProvider"
-Write-Host "Render Manager: $renderManager"
+Write-Host "Batch Service: $batchService"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
@@ -355,11 +355,10 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (Start): AD Domain"
   Install-WindowsFeature -Name "AD-Domain-Services" -IncludeManagementTools
   Write-Host "Customize (End): AD Domain"
-  if ("$renderManager" -like "*Deadline*") {
-    Write-Host "Customize (Start): NFS Server"
-    Install-WindowsFeature -Name "FS-NFS-Service"
-    Write-Host "Customize (End): NFS Server"
-  }
+
+  Write-Host "Customize (Start): NFS Server"
+  Install-WindowsFeature -Name "FS-NFS-Service"
+  Write-Host "Customize (End): NFS Server"
 } else {
   Write-Host "Customize (Start): Active Directory Tools"
   $installType = "ad-tools"
@@ -372,7 +371,7 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-if ("$renderManager" -like "*Deadline*") {
+if ($batchService -eq "false") {
   $versionInfo = "10.3.0.9"
   $installRoot = "C:\Deadline"
   $databaseHost = $(hostname)

@@ -10,9 +10,7 @@ function StartProcess ($filePath, $argumentList, $logFile) {
   Remove-Item -Path $logFile-err.log, $logFile-out.log
 }
 
-if ("${renderManager}" -like "*Deadline*") {
-  StartProcess sc.exe "start Deadline10DatabaseService" deadline-database-service
-}
+StartProcess sc.exe "start Deadline10DatabaseService" deadline-database-service
 
 $scriptFile = "C:\AzureData\aaaScaler.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile

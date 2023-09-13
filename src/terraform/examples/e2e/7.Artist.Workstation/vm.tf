@@ -178,9 +178,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script = "${base64encode(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager = module.global.renderManager
-      }))
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {}))
     )}"
   })
   depends_on = [
@@ -252,9 +250,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager = module.global.renderManager
-      })), "UTF-16LE"
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {})), "UTF-16LE"
     )}"
   })
   depends_on = [

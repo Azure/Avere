@@ -18,7 +18,7 @@ for fileSystemMount in $(echo $fileSystemMounts | jq -r '.[] | @base64'); do
 done
 mount -a
 
-EnableClientApp "${renderManager}"
+EnableFarmClient
 
 if [ ${terminateNotification.enable} == true ]; then
   cronFilePath="/tmp/crontab"

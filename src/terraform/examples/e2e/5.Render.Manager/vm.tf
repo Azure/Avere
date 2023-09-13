@@ -140,9 +140,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   custom_data = base64encode(
-    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {
-      renderManager = module.global.renderManager
-    }))
+    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {}))
   )
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -190,9 +188,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script: "${base64encode(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager = module.global.renderManager
-      }))
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {}))
     )}"
   })
   depends_on = [
@@ -233,9 +229,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   admin_username      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   custom_data = base64encode(
-    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {
-      renderManager = module.global.renderManager
-    }))
+    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {}))
   )
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -268,9 +262,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-        renderManager = module.global.renderManager
-      })), "UTF-16LE"
+      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {})), "UTF-16LE"
     )}"
   })
   depends_on = [

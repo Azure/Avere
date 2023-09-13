@@ -201,9 +201,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         script: "${base64encode(
-          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-            renderManager = module.global.renderManager
-          }))
+          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {}))
         )}"
       })
     }
@@ -303,9 +301,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {
-            renderManager = module.global.renderManager
-          })), "UTF-16LE"
+          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {})), "UTF-16LE"
         )}"
       })
     }

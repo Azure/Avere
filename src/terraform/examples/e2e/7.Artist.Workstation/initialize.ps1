@@ -19,7 +19,7 @@ foreach ($fileSystemMount in $fileSystemMounts) {
 }
 RegisterFileSystemMountPath
 
-EnableClientApp "${renderManager}"
+EnableFarmClient
 
 if (${teradiciLicenseKey} != "") {
   $installFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"

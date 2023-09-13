@@ -19,7 +19,7 @@ foreach ($fileSystemMount in $fileSystemMounts) {
 }
 RegisterFileSystemMountPath
 
-EnableClientApp "${renderManager}"
+EnableFarmClient
 
 if ("${terminateNotification.enable}" -eq $true) {
   $taskName = "AAA Terminate Event Handler"

@@ -12,13 +12,13 @@ dnf -y install jq
 buildConfig=$(echo $buildConfigEncoded | base64 -d)
 machineType=$(echo $buildConfig | jq -r .machineType)
 gpuProvider=$(echo $buildConfig | jq -r .gpuProvider)
-renderManager=$(echo $buildConfig | jq -r .renderManager)
+batchService=$(echo $buildConfig | jq -r .batchService)
 renderEngines=$(echo $buildConfig | jq -c .renderEngines)
 binStorageHost=$(echo $buildConfig | jq -r .binStorage.host)
 binStorageAuth=$(echo $buildConfig | jq -r .binStorage.auth)
 echo "Machine Type: $machineType"
 echo "GPU Provider: $gpuProvider"
-echo "Render Manager: $renderManager"
+echo "Batch Service: $batchService"
 echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
@@ -266,13 +266,13 @@ if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (End): MoonRay"
 fi
 
-if [[ $machineType == Scheduler && $renderManager == *Deadline* ]]; then
+if [ $machineType == Scheduler ]; then
   echo "Customize (Start): NFS Server"
   systemctl --now enable nfs-server
   echo "Customize (End): NFS Server"
 fi
 
-if [[ $renderManager == *Deadline* ]]; then
+if [ $batchService == false ]; then
   versionInfo="10.3.0.9"
   installRoot="/Deadline"
   serverMount="/DeadlineServer"

@@ -11,7 +11,6 @@ function SetFileSystemMount {
   fi
 }
 
-function EnableClientApp {
-  renderManager="$1"
+function EnableFarmClient {
   curl http://data.artist.studio:14000/dist/v1/install | sh
 }

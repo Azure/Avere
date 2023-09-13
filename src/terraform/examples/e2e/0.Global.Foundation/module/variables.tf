@@ -12,10 +12,6 @@ variable "resourceGroupName" {
   default = "ArtistAnywhere" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 }
 
-variable "renderManager" {
-  default = "Deadline"
-}
-
 # Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction)
 variable "rootStorage" {
   default = {
@@ -63,10 +59,6 @@ output "regionNames" {
 
 output "resourceGroupName" {
   value = var.resourceGroupName
-}
-
-output "renderManager" {
-  value = var.renderManager
 }
 
 output "rootStorage" {

@@ -64,6 +64,7 @@ imageTemplates = [
       outputVersion  = "0.0.0"
       timeoutMinutes = 120
       osDiskSizeGB   = 512
+      batchService   = false
       renderEngines = [
       ]
     }
@@ -81,6 +82,7 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       timeoutMinutes = 120
       osDiskSizeGB   = 512
+      batchService   = false
       renderEngines = [
       ]
     }
@@ -93,11 +95,12 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_D96as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 480
+      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
@@ -118,6 +121,7 @@ imageTemplates = [
       outputVersion  = "2.1.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 480
+      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
@@ -139,6 +143,7 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
+      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
@@ -160,6 +165,7 @@ imageTemplates = [
   #     outputVersion  = "3.1.0"
   #     timeoutMinutes = 240
   #     osDiskSizeGB   = 1024
+  #     batchService   = false
   #     renderEngines = [
   #       "PBRT",
   #       "Blender",
@@ -181,6 +187,7 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       timeoutMinutes = 180
       osDiskSizeGB   = 512
+      batchService   = false
       renderEngines = [
       ]
     }
@@ -193,11 +200,12 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_D96as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 480
+      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender"
@@ -217,6 +225,7 @@ imageTemplates = [
       outputVersion  = "2.1.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 480
+      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
@@ -237,6 +246,7 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
+      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
@@ -257,6 +267,7 @@ imageTemplates = [
   #     outputVersion  = "3.1.0"
   #     timeoutMinutes = 420
   #     osDiskSizeGB   = 1024
+  #     batchService   = false
   #     renderEngines = [
   #       "PBRT",
   #       "Blender",
@@ -267,6 +278,6 @@ imageTemplates = [
 ]
 
 binStorage = {
-  host = "https://azstudio.blob.core.windows.net/bin"
-  auth = "?sv=2021-10-04&st=2023-07-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=MUjoOvHw%2B%2BxST1JJbzm%2BL%2FihLaQFhL1SFl4QlN6D1g8%3D"
+  host = ""
+  auth = ""
 }
