@@ -1,4 +1,4 @@
-regionName        = "WestUS2"
+regionName        = "WestUS"
 resourceGroupName = "AAA"
 
 ##########################################################################################
