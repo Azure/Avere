@@ -286,18 +286,6 @@ hammerspace = {
   }
 }
 
-####################################################################################################
-# Qumulo (https://azuremarketplace.microsoft.com/marketplace/apps/qumulo1584033880660.qumulo-saas) #
-####################################################################################################
-
-qumulo = {
-  name      = ""
-  planId    = "qumulo-on-azure-v1"
-  offerId   = "qumulo-saas"
-  termId    = "Monthly" # "Yearly"
-  autoRenew = true
-}
-
 #######################################################################
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################
