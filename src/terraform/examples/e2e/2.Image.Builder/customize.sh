@@ -25,8 +25,8 @@ echo "Customize (End): Image Build Parameters"
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
 dnf -y install kernel-devel-$(uname -r)
-dnf -y install gcc gcc-c++ perl openssl-devel
-dnf -y install python3-devel cmake lsof git bc
+dnf -y install gcc gcc-c++ perl python3-devel openssl-devel
+dnf -y install nfs-utils cmake lsof git bc
 if [ $machineType == Workstation ]; then
   dnf -y group install Workstation &> Workstation.log
   dnf -y module install nodejs:18
