@@ -79,6 +79,32 @@ resource "azurerm_private_endpoint" "key_vault" {
   ]
 }
 
+resource "azurerm_private_endpoint" "key_vault_batch" {
+  count               = module.global.keyVault.name != "" && var.virtualNetwork.name == "" ? 1 : 0
+  name                = "${data.azurerm_key_vault.studio[0].name}.vault.batch"
+  resource_group_name = azurerm_resource_group.network[0].name
+  location            = azurerm_resource_group.network[0].location
+  subnet_id           = "${azurerm_private_dns_zone_virtual_network_link.key_vault[0].virtual_network_id}/subnets/${local.computeNetworks[0].subnets[local.computeNetworks[0].subnetIndex.storage].name}"
+  private_service_connection {
+    name                           = data.azurerm_key_vault.batch[0].name
+    private_connection_resource_id = data.azurerm_key_vault.batch[0].id
+    is_manual_connection           = false
+    subresource_names = [
+      "vault"
+    ]
+  }
+  private_dns_zone_group {
+    name = data.azurerm_key_vault.batch[0].name
+    private_dns_zone_ids = [
+      azurerm_private_dns_zone.key_vault[0].id
+    ]
+  }
+  depends_on = [
+    azurerm_subnet.network,
+    azurerm_private_dns_zone_virtual_network_link.key_vault
+  ]
+}
+
 resource "azurerm_private_endpoint" "storage_blob" {
   for_each = {
     for subnet in local.storageSubnets : subnet.key => subnet if var.virtualNetwork.name == ""

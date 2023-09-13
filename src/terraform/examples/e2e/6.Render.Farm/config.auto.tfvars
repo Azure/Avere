@@ -369,8 +369,7 @@ virtualMachineScaleSets = [
 
 batch = {
   account = {
-    name         = "" # Set to a unique name to deploy Batch instead of VMSS
-    enablePublic = true
+    name = "" # Set to a unique name to deploy Batch instead of VMSS
   }
   pools = [
     {
@@ -385,11 +384,10 @@ batch = {
           size  = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
           count = 2
         }
-        enableInterNodeCommunication = false
-        deallocationMode             = "Terminate"
+        deallocationMode = "Terminate"
       }
       spot = {
-        enable = false
+        enable = true
       }
     },
     {
@@ -404,11 +402,10 @@ batch = {
           size  = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
           count = 2
         }
-        enableInterNodeCommunication = false
-        deallocationMode             = "Terminate"
+        deallocationMode = "Terminate"
       }
       spot = {
-        enable = false
+        enable = true
       }
     },
     {
@@ -423,11 +420,10 @@ batch = {
           size  = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
           count = 2
         }
-        enableInterNodeCommunication = false
-        deallocationMode             = "Terminate"
+        deallocationMode = "Terminate"
       }
       spot = {
-        enable = false
+        enable = true
       }
     },
     {
@@ -442,24 +438,13 @@ batch = {
           size  = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
           count = 2
         }
-        enableInterNodeCommunication = false
-        deallocationMode             = "Terminate"
+        deallocationMode = "Terminate"
       }
       spot = {
-        enable = false
+        enable = true
       }
     }
   ]
-  keyVault = {
-    name                        = ""
-    type                        = "standard"
-    enableForDeployment         = true
-    enableForDiskEncryption     = true
-    enableForTemplateDeployment = true
-    enablePurgeProtection       = false
-    enableTrustedServices       = true
-    softDeleteRetentionDays     = 90
-  }
 }
 
 #######################################################################

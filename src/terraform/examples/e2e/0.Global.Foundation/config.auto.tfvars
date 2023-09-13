@@ -14,9 +14,9 @@ rootStorage = {
 
 keyVault = {
   type                        = "standard"
-  enableForDeployment         = false
-  enableForDiskEncryption     = false
-  enableForTemplateDeployment = false
+  enableForDeployment         = true
+  enableForDiskEncryption     = true
+  enableForTemplateDeployment = true
   enablePurgeProtection       = false
   enableTrustedServices       = true
   softDeleteRetentionDays     = 90

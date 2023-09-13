@@ -14,6 +14,7 @@ computeGallery = {
       publisher  = "AlmaLinux"
       offer      = "AlmaLinux-x86_64"
       sku        = "9-Gen2"
+      enablePlan = false
     },
     {
       name       = "WinServer"
@@ -22,6 +23,7 @@ computeGallery = {
       publisher  = "MicrosoftWindowsServer"
       offer      = "WindowsServer"
       sku        = "2022-Datacenter-G2"
+      enablePlan = false
     },
     {
       name       = "WinFarm"
@@ -30,6 +32,7 @@ computeGallery = {
       publisher  = "MicrosoftWindowsDesktop"
       offer      = "Windows-10"
       sku        = "Win10-22H2-Pro-G2"
+      enablePlan = false
     },
     {
       name       = "WinArtist"
@@ -38,6 +41,7 @@ computeGallery = {
       publisher  = "MicrosoftWindowsDesktop"
       offer      = "Windows-11"
       sku        = "Win11-22H2-Pro"
+      enablePlan = false
     }
   ]
 }
@@ -89,7 +93,7 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_D96as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
@@ -189,7 +193,7 @@ imageTemplates = [
     }
     build = {
       machineType    = "Farm"
-      machineSize    = "Standard_HB120rs_v2" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      machineSize    = "Standard_D96as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                    # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 420
@@ -263,6 +267,6 @@ imageTemplates = [
 ]
 
 binStorage = {
-  host = ""
-  auth = ""
+  host = "https://azstudio.blob.core.windows.net/bin"
+  auth = "?sv=2021-10-04&st=2023-07-01T00%3A00%3A00Z&se=9999-12-31T00%3A00%3A00Z&sr=c&sp=r&sig=MUjoOvHw%2B%2BxST1JJbzm%2BL%2FihLaQFhL1SFl4QlN6D1g8%3D"
 }

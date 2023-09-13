@@ -41,6 +41,12 @@ data "azurerm_key_vault_secret" "gateway_connection" {
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
+data "azurerm_key_vault" "batch" {
+  count               = module.global.keyVault.name != "" ? 1 : 0
+  name                = "${module.global.keyVault.name}-batch"
+  resource_group_name = module.global.resourceGroupName
+}
+
 data "azurerm_storage_account" "studio" {
   name                = module.global.rootStorage.accountName
   resource_group_name = module.global.resourceGroupName
