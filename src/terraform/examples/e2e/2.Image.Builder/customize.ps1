@@ -354,7 +354,7 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-if ($batchService -eq "false") {
+if (!$batchService) {
   $versionInfo = "10.3.0.9"
   $installRoot = "C:\Deadline"
   $databaseHost = $(hostname)
