@@ -25,11 +25,11 @@ echo "Customize (End): Image Build Parameters"
 echo "Customize (Start): Image Build Platform"
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
 dnf -y install kernel-devel-$(uname -r)
-dnf -y install gcc gcc-c++ perl python3-devel openssl-devel
+dnf -y install gcc gcc-c++ python3-devel openssl-devel
 dnf -y install nfs-utils cmake lsof git bc
 if [ $machineType == Workstation ]; then
-  dnf -y group install Workstation &> Workstation.log
-  dnf -y module install nodejs:18
+  dnf -y group install workstation &> workstation.log
+  dnf -y module install nodejs
 fi
 echo "Customize (End): Image Build Platform"
 
@@ -40,15 +40,6 @@ if [ $machineType == Storage ]; then
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   ./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --skip-repo --force 2>&1 | tee mellanox-ofed.log
-fi
-
-if [[ $machineType == Storage || $machineType == Scheduler ]]; then
-  echo "Customize (Start): Azure CLI"
-  installType="azure-cli"
-  rpm --import https://packages.microsoft.com/keys/microsoft.asc
-  dnf -y install https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-  dnf -y install $installType 2>&1 | tee $installType.log
-  echo "Customize (End): Azure CLI"
 fi
 
 if [ "$gpuProvider" == NVIDIA ]; then
@@ -90,6 +81,15 @@ if [ "$gpuProvider" == NVIDIA ]; then
   echo "Customize (End): NVIDIA OptiX"
 fi
 
+if [[ $machineType == Storage || $machineType == Scheduler ]]; then
+  echo "Customize (Start): Azure CLI"
+  installType="azure-cli"
+  rpm --import https://packages.microsoft.com/keys/microsoft.asc
+  dnf -y install https://packages.microsoft.com/config/rhel/9.0/packages-microsoft-prod.rpm
+  dnf -y install $installType 2>&1 | tee $installType.log
+  echo "Customize (End): Azure CLI"
+fi
+
 if [[ $renderEngines == *Maya* ]]; then
   echo "Customize (Start): Maya"
   dnf -y install mesa-libGL
@@ -113,36 +113,21 @@ if [[ $renderEngines == *Maya* ]]; then
 fi
 
 if [[ $renderEngines == *PBRT* ]]; then
-  installPath="/usr/local/pbrt"
-
-  # echo "Customize (Start): PBRT v3"
-  # versionInfo="v3"
-  # installType="pbrt-$versionInfo"
-  # installPathV3="$installPath/$versionInfo"
-  # git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
-  # mkdir -p $installPathV3
-  # cmake -B $installPathV3 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
-  # make -C $installPathV3 2>&1 | tee $installType-make.log
-  # ln -s $installPathV3/pbrt $installPath/pbrt3
-  # echo "Customize (End): PBRT v3"
-
-  echo "Customize (Start): PBRT v4"
+  echo "Customize (Start): PBRT"
   dnf -y install mesa-libGL-devel
   dnf -y install libXrandr-devel
   dnf -y install libXinerama-devel
   dnf -y install libXcursor-devel
   dnf -y install libXi-devel
   versionInfo="v4"
-  installType="pbrt-$versionInfo"
-  installPathV4="$installPath/$versionInfo"
+  installType="pbrt"
+  installPath="/usr/local/pbrt"
   git clone --recursive https://github.com/mmp/$installType.git 2>&1 | tee $installType-git.log
-  mkdir -p $installPathV4
-  cmake -B $installPathV4 -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
-  make -C $installPathV4 2>&1 | tee $installType-make.log
-  ln -s $installPathV4/pbrt $installPath/pbrt4
-  echo "Customize (End): PBRT v4"
-
+  mkdir -p $installPath
+  cmake -B $installPath -S $binDirectory/$installType 2>&1 | tee $installType-cmake.log
+  make -C $installPath 2>&1 | tee $installType-make.log
   binPaths="$binPaths:$installPath"
+  echo "Customize (End): PBRT"
 fi
 
 if [[ $renderEngines == *Houdini* ]]; then

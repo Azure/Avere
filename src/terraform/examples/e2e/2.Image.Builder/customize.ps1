@@ -34,15 +34,7 @@ Write-Host "Batch Service: $batchService"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
-if ($machineType -eq "Storage" -or $machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): Azure CLI"
-  $installType = "azure-cli"
-  $installFile = "$installType.msi"
-  $downloadUrl = "https://aka.ms/installazurecliwindows"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-  Write-Host "Customize (End): Azure CLI"
-}
+Write-Host "Customize (Start): Image Build Platform"
 
 Write-Host "Customize (Start): Chocolatey"
 $installType = "chocolatey"
@@ -87,6 +79,8 @@ $binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\Bui
 $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin\amd64"
 $binPaths += ";$binPathCMake;$binPathMSBuild"
 Write-Host "Customize (End): Visual Studio Build Tools"
+
+Write-Host "Customize (End): Image Build Platform"
 
 if ($gpuProvider -eq "AMD") {
   $installType = "amd-gpu"
@@ -151,6 +145,16 @@ if ($gpuProvider -eq "AMD") {
   Write-Host "Customize (End): NVIDIA OptiX"
 }
 
+if ($machineType -eq "Storage" -or $machineType -eq "Scheduler") {
+  Write-Host "Customize (Start): Azure CLI"
+  $installType = "azure-cli"
+  $installFile = "$installType.msi"
+  $downloadUrl = "https://aka.ms/installazurecliwindows"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
+  Write-Host "Customize (End): Azure CLI"
+}
+
 if ($renderEngines -contains "Maya") {
   Write-Host "Customize (Start): Maya"
   $versionInfo = "2024_0_1"
@@ -165,31 +169,16 @@ if ($renderEngines -contains "Maya") {
 }
 
 if ($renderEngines -contains "PBRT") {
-  $installPath = "C:\Program Files\PBRT"
-
-  # Write-Host "Customize (Start): PBRT v3"
-  # $versionInfo = "v3"
-  # $installType = "pbrt-$versionInfo"
-  # $installPathV3 = "$installPath\$versionInfo"
-  # StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" $installType-git
-  # New-Item -ItemType Directory -Path $installPathV3 -Force
-  # StartProcess $binPathCMake\cmake.exe "-B ""$installPathV3"" -S $binDirectory\$installType" $installType-cmake
-  # StartProcess $binPathMSBuild\MSBuild.exe """$installPathV3\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
-  # New-Item -ItemType SymbolicLink -Target $installPathV3\Release\pbrt.exe -Path $installPath\pbrt3.exe
-  # Write-Host "Customize (End): PBRT v3"
-
-  Write-Host "Customize (Start): PBRT v4"
+  Write-Host "Customize (Start): PBRT"
   $versionInfo = "v4"
-  $installType = "pbrt-$versionInfo"
-  $installPathV4 = "$installPath\$versionInfo"
+  $installType = "pbrt"
+  $installPath = "C:\Program Files\PBRT"
   StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" $installType-git
-  New-Item -ItemType Directory -Path $installPathV4 -Force
-  StartProcess $binPathCMake\cmake.exe "-B ""$installPathV4"" -S $binDirectory\$installType" $installType-cmake
-  StartProcess $binPathMSBuild\MSBuild.exe """$installPathV4\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
-  New-Item -ItemType SymbolicLink -Target $installPathV4\Release\pbrt.exe -Path $installPath\pbrt4.exe
-  Write-Host "Customize (End): PBRT v4"
-
-  $binPaths += ";$installPath"
+  New-Item -ItemType Directory -Path $installPath -Force
+  StartProcess $binPathCMake\cmake.exe "-B ""$installPath"" -S $binDirectory\$installType" $installType-cmake
+  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
+  $binPaths += ";$installPath\Release"
+  Write-Host "Customize (End): PBRT"
 }
 
 if ($renderEngines -contains "Houdini") {
