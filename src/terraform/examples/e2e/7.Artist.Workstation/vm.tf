@@ -72,7 +72,7 @@ variable "virtualMachines" {
                   mount  = string
                 }
               ))
-              teradiciLicenseKey = string
+              pcoipLicenseKey = string
             }
           )
         }

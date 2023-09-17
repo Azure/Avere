@@ -412,14 +412,14 @@ if ($machineType -eq "Farm") {
 }
 
 if ($machineType -eq "Workstation") {
-  Write-Host "Customize (Start): Teradici PCoIP"
-  $versionInfo = "23.06"
+  Write-Host "Customize (Start): HP Anyware"
+  $versionInfo = "23.08"
   $installType = if ([string]::IsNullOrEmpty($gpuProvider)) {"pcoip-agent-standard"} else {"pcoip-agent-graphics"}
-  $installFile = "${installType}_$versionInfo.3.exe"
+  $installFile = "${installType}_$versionInfo.2.exe"
   $downloadUrl = "$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   StartProcess .\$installFile "/S /NoPostReboot /Force" "$binDirectory\$installType"
-  Write-Host "Customize (End): Teradici PCoIP"
+  Write-Host "Customize (End): HP Anyware"
 }
 
 if ($binPaths -ne "") {

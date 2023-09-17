@@ -69,7 +69,7 @@ virtualMachines = [
             mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
           }
         ]
-        teradiciLicenseKey = ""
+        pcoipLicenseKey = ""
       }
     }
     monitorExtension = {
@@ -140,7 +140,7 @@ virtualMachines = [
   #           mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
   #         }
   #       ]
-  #       teradiciLicenseKey = ""
+  #       pcoipLicenseKey = ""
   #     }
   #   }
   #   monitorExtension = {
@@ -211,7 +211,7 @@ virtualMachines = [
             mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
           }
         ]
-        teradiciLicenseKey = ""
+        pcoipLicenseKey = ""
       }
     }
     monitorExtension = {
@@ -282,7 +282,7 @@ virtualMachines = [
   #           mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
   #         }
   #       ]
-  #       teradiciLicenseKey = ""
+  #       pcoipLicenseKey = ""
   #     }
   #   }
   #   monitorExtension = {

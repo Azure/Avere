@@ -357,10 +357,10 @@ echo "Customize (End): Deadline Client"
 binPaths="$binPaths:$binPathScheduler"
 
 if [ $machineType == Workstation ]; then
-  echo "Customize (Start): Teradici PCoIP"
-  versionInfo="23.06"
+  echo "Customize (Start): HP Anyware"
+  versionInfo="23.08"
   [ "$gpuProvider" == "" ] && installType=pcoip-agent-standard || installType=pcoip-agent-graphics
-  installFile="pcoip-agent-offline-rocky8.8_23.06.3-1.el8.x86_64.tar.gz"
+  installFile="pcoip-agent-offline-rhel9.2_$versionInfo.2-1.el9.x86_64.tar.gz"
   downloadUrl="$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   mkdir -p $installType
@@ -368,7 +368,7 @@ if [ $machineType == Workstation ]; then
   cd $installType
   StartProcess "./install-pcoip-agent.sh $installType usb-vhci" $binDirectory/$installType
   cd $binDirectory
-  echo "Customize (End): Teradici PCoIP"
+  echo "Customize (End): HP Anyware"
 fi
 
 if [ "$binPaths" != "" ]; then

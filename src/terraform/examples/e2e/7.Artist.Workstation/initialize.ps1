@@ -21,9 +21,9 @@ RegisterFileSystemMountPath $binDirectory
 
 EnableFarmClient
 
-if (${teradiciLicenseKey} != "") {
+if (${pcoipLicenseKey} != "") {
   $installFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"
-  StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File ""$installFile"" -RegistrationCode ${teradiciLicenseKey}" $binDirectory/pcoip-agent-license
+  StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File ""$installFile"" -RegistrationCode ${pcoipLicenseKey}" $binDirectory/pcoip-agent-license
 }
 
 if ("${activeDirectory.domainName}" -ne "") {
