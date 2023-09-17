@@ -64,7 +64,6 @@ imageTemplates = [
       outputVersion  = "0.0.0"
       timeoutMinutes = 120
       osDiskSizeGB   = 512
-      batchService   = false
       renderEngines = [
       ]
     }
@@ -82,7 +81,6 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       timeoutMinutes = 120
       osDiskSizeGB   = 512
-      batchService   = false
       renderEngines = [
       ]
     }
@@ -100,7 +98,6 @@ imageTemplates = [
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 480
-      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
@@ -121,12 +118,11 @@ imageTemplates = [
       outputVersion  = "2.1.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 480
-      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
         "MoonRay",
-        # "Unreal"
+        "Unreal"
       ]
     }
   },
@@ -143,37 +139,35 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       timeoutMinutes = 240
       osDiskSizeGB   = 1024
-      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
         "MoonRay",
-        # "Unreal+PixelStream"
+        "Unreal+PixelStream"
       ]
     }
   },
-  # {
-  #   name = "LnxArtistAMD"
-  #   image = {
-  #     definitionName = "Linux"
-  #     inputVersion   = "Latest"
-  #   }
-  #   build = {
-  #     machineType    = "Workstation"
-  #     machineSize    = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
-  #     gpuProvider    = "AMD"                      # NVIDIA or AMD
-  #     outputVersion  = "3.1.0"
-  #     timeoutMinutes = 240
-  #     osDiskSizeGB   = 1024
-  #     batchService   = false
-  #     renderEngines = [
-  #       "PBRT",
-  #       "Blender",
-  #       "MoonRay",
-  #       "Unreal+PixelStream"
-  #     ]
-  #   }
-  # },
+  {
+    name = "LnxArtistAMD"
+    image = {
+      definitionName = "Linux"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "Workstation"
+      machineSize    = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "AMD"                      # NVIDIA or AMD
+      outputVersion  = "3.1.0"
+      timeoutMinutes = 240
+      osDiskSizeGB   = 1024
+      renderEngines = [
+        "PBRT",
+        "Blender",
+        "MoonRay",
+        "Unreal+PixelStream"
+      ]
+    }
+  },
   {
     name = "WinScheduler"
     image = {
@@ -187,7 +181,6 @@ imageTemplates = [
       outputVersion  = "1.0.0"
       timeoutMinutes = 180
       osDiskSizeGB   = 512
-      batchService   = false
       renderEngines = [
       ]
     }
@@ -205,7 +198,6 @@ imageTemplates = [
       outputVersion  = "2.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 480
-      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender"
@@ -225,11 +217,10 @@ imageTemplates = [
       outputVersion  = "2.1.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 480
-      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal"
+        "Unreal"
       ]
    }
   },
@@ -246,35 +237,33 @@ imageTemplates = [
       outputVersion  = "3.0.0"
       timeoutMinutes = 420
       osDiskSizeGB   = 1024
-      batchService   = false
       renderEngines = [
         "PBRT",
         "Blender",
-        # "Unreal+PixelStream"
+        "Unreal+PixelStream"
       ]
     }
   },
-  # {
-  #   name = "WinArtistAMD"
-  #   image = {
-  #     definitionName = "WinArtist"
-  #     inputVersion   = "Latest"
-  #   }
-  #   build = {
-  #     machineType    = "Workstation"
-  #     machineSize    = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
-  #     gpuProvider    = "AMD"                      # NVIDIA or AMD
-  #     outputVersion  = "3.1.0"
-  #     timeoutMinutes = 420
-  #     osDiskSizeGB   = 1024
-  #     batchService   = false
-  #     renderEngines = [
-  #       "PBRT",
-  #       "Blender",
-  #       "Unreal+PixelStream"
-  #     ]
-  #   }
-  # }
+  {
+    name = "WinArtistAMD"
+    image = {
+      definitionName = "WinArtist"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "Workstation"
+      machineSize    = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "AMD"                      # NVIDIA or AMD
+      outputVersion  = "3.1.0"
+      timeoutMinutes = 420
+      osDiskSizeGB   = 1024
+      renderEngines = [
+        "PBRT",
+        "Blender",
+        "Unreal+PixelStream"
+      ]
+    }
+  }
 ]
 
 binStorage = {

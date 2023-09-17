@@ -3,14 +3,7 @@ $ErrorActionPreference = "Stop"
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
-function StartProcess ($filePath, $argumentList, $logFile) {
-  Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
-  Get-Content -Path $logFile-err.log | Tee-Object -FilePath "$logFile.log" -Append
-  Get-Content -Path $logFile-out.log | Tee-Object -FilePath "$logFile.log" -Append
-  Remove-Item -Path $logFile-err.log, $logFile-out.log
-}
-
-StartProcess sc.exe "start Deadline10DatabaseService" deadline-database-service
+Start-Process -FilePath sc.exe -ArgumentList "start Deadline10DatabaseService"
 
 $scriptFile = "C:\AzureData\aaaScaler.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile

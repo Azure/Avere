@@ -57,26 +57,6 @@ variable "storageNetwork" {
   )
 }
 
-variable "networkGateway" {
-  type = object(
-    {
-      type = string
-      ipPrefix = object(
-        {
-          name              = string
-          resourceGroupName = string
-        }
-      )
-      ipAddresses = list(object(
-        {
-          name              = string
-          resourceGroupName = string
-        }
-      ))
-    }
-  )
-}
-
 variable "virtualNetwork" {
   type = object(
     {
@@ -145,24 +125,6 @@ locals {
   virtualNetworksSubnetsSecurity = [
     for subnet in local.virtualNetworksSubnets : subnet if subnet.name != "GatewaySubnet" && subnet.name != "AzureBastionSubnet" && subnet.serviceDelegation == ""
   ]
-  virtualGatewayNetworks = var.virtualNetwork.name != "" ? [
-    merge(var.virtualNetwork, {
-      key             = "${var.virtualNetwork.regionName}.${var.virtualNetwork.name}"
-      resourceGroupId = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}"
-    })
-  ] : [
-    for virtualNetwork in var.vpnGateway.enableVnet2Vnet ? local.virtualNetworks : [local.virtualNetworks[0]] : merge({}, {
-      key               = "${virtualNetwork.regionName}.${virtualNetwork.name}"
-      name              = virtualNetwork.name
-      regionName        = virtualNetwork.regionName
-      resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${virtualNetwork.resourceGroupName}"
-      resourceGroupName = virtualNetwork.resourceGroupName
-    })
-  ]
-  virtualGatewayNetworkNames = [
-    for virtualGatewayNetwork in local.virtualGatewayNetworks : virtualGatewayNetwork.name
-  ]
-  virtualGatewayActiveActive = var.networkGateway.type == "Vpn" && var.vpnGateway.enableActiveActive
 }
 
 resource "azurerm_virtual_network" "network" {

@@ -180,40 +180,16 @@ monitor = {
   enable = false
 }
 
-###########################
-# Virtual Network Gateway #
-###########################
-
-networkGateway = {
-  type = ""
-  //type = "Vpn"          # https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways
-  //type = "ExpressRoute" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways
-
-  ipPrefix = { # https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-address-prefix
-    name              = ""
-    resourceGroupName = ""
-  }
-  ipAddresses = [ # https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-addresses
-    {
-      name              = "azstudio"
-      resourceGroupName = "ArtistAnywhere"
-    },
-    {
-      name              = ""
-      resourceGroupName = ""
-    }
-  ]
-}
-
 ###############################################################################################################
 # Virtual Network Gateway (VPN) (https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) #
 ###############################################################################################################
 
 vpnGateway = {
-  sku                = "VpnGw2AZ"
+  enable             = false
+  sku                = "VpnGw2"
   type               = "RouteBased"
   generation         = "Generation2"
-  sharedKey          = "GatewayConnection"
+  sharedKey          = ""
   enableBgp          = false
   enableVnet2Vnet    = false
   enableActiveActive = false
@@ -241,21 +217,6 @@ vpnGatewayLocal = {
     asn            = 0
     peerWeight     = 0
     peeringAddress = ""
-  }
-}
-
-#######################################################################################################################################
-# Virtual Network Gateway (ExpressRoute) (https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) #
-#######################################################################################################################################
-
-expressRouteGateway = {
-  sku = "" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
-  connection = {
-    circuitId        = "" # Expected format = "/subscriptions/[subscription_id]/resourceGroups/[resource_group_name]/providers/Microsoft.Network/expressRouteCircuits/[circuit_name]"
-    authorizationKey = ""
-    fastPath = { # https://learn.microsoft.com/azure/expressroute/about-fastpath
-      enable = false
-    }
   }
 }
 

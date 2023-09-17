@@ -21,5 +21,5 @@ mount -a
 EnableFarmClient
 
 if [ "${teradiciLicenseKey}" != "" ]; then
-  /sbin/pcoip-register-host --registration-code=${teradiciLicenseKey} 2>&1 | tee pcoip-agent-license.log
+  StartProcess "/sbin/pcoip-register-host --registration-code=${teradiciLicenseKey}" $binDirectory/pcoip-agent-license
 fi

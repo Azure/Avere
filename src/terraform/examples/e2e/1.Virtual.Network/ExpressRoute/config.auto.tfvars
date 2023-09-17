@@ -1,17 +1,33 @@
-regionName        = "WestUS"
-resourceGroupName = "AAA"
-
 ##########################################################################################
 # ExpressRoute (https://learn.microsoft.com/azure/expressroute/expressroute-introduction #
 ##########################################################################################
 
-expressRoute = {
-  circuit = {
-    name            = "LA"
-    serviceTier     = "Standard"
-    serviceProvider = "Sohonet"
-    peeringLocation = "Los Angeles"
-    bandwidthMbps   = 50
-    unlimitedData   = false
+regionName        = "WestUS3"
+resourceGroupName = "ArtistAnywhere.Network"
+
+#######################################################################################################
+# ExpressRoute Circuit (https://learn.microsoft.com/azure/expressroute/expressroute-circuit-peerings) #
+#######################################################################################################
+
+expressRouteCircuit = {
+  name            = ""
+  serviceTier     = "Standard" # https://learn.microsoft.com/azure/expressroute/plan-manage-cost#local-vs-standard-vs-premium
+  serviceProvider = ""
+  peeringLocation = ""
+  bandwidthMbps   = 50
+  unlimitedData   = false
+}
+
+#####################################################################################################################
+# ExpressRoute Gateway (https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) #
+#####################################################################################################################
+
+expressRouteGateway = {
+  name            = ""
+  serviceSku      = "Standard" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
+  networkSubnetId = ""
+  circuitConnection = {
+    fastPath = false # https://learn.microsoft.com/azure/expressroute/about-fastpath
+    authKey  = ""
   }
 }

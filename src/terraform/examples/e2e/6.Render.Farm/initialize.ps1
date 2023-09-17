@@ -17,7 +17,7 @@ foreach ($fileSystemMount in $fileSystemMounts) {
     SetFileSystemMount $fileSystemMount.mount
   }
 }
-RegisterFileSystemMountPath
+RegisterFileSystemMountPath $binDirectory
 
 EnableFarmClient
 

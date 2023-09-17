@@ -17,13 +17,13 @@ foreach ($fileSystemMount in $fileSystemMounts) {
     SetFileSystemMount $fileSystemMount.mount
   }
 }
-RegisterFileSystemMountPath
+RegisterFileSystemMountPath $binDirectory
 
 EnableFarmClient
 
 if (${teradiciLicenseKey} != "") {
   $installFile = "C:\Program Files\Teradici\PCoIP Agent\pcoip-register-host.ps1"
-  StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File ""$installFile"" -RegistrationCode ${teradiciLicenseKey}" pcoip-agent-license
+  StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File ""$installFile"" -RegistrationCode ${teradiciLicenseKey}" $binDirectory/pcoip-agent-license
 }
 
 if ("${activeDirectory.domainName}" -ne "") {

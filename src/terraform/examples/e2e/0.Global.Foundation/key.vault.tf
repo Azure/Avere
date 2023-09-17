@@ -74,7 +74,7 @@ resource "azurerm_key_vault" "studio" {
   }
 }
 
-resource "azurerm_key_vault_secret" "secrets" {
+resource "azurerm_key_vault_secret" "studio" {
   for_each = {
     for secret in var.keyVault.secrets : secret.name => secret if module.global.keyVault.name != ""
   }
@@ -83,7 +83,7 @@ resource "azurerm_key_vault_secret" "secrets" {
   key_vault_id = azurerm_key_vault.studio[0].id
 }
 
-resource "azurerm_key_vault_key" "keys" {
+resource "azurerm_key_vault_key" "studio" {
   for_each = {
     for key in var.keyVault.keys : key.name => key if module.global.keyVault.name != ""
   }
@@ -94,7 +94,7 @@ resource "azurerm_key_vault_key" "keys" {
   key_vault_id = azurerm_key_vault.studio[0].id
 }
 
-resource "azurerm_key_vault_certificate" "certificates" {
+resource "azurerm_key_vault_certificate" "studio" {
   for_each = {
     for certificate in var.keyVault.certificates : certificate.name => certificate if module.global.keyVault.name != ""
   }

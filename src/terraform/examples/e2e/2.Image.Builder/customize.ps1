@@ -24,13 +24,11 @@ $buildConfigBytes = [System.Convert]::FromBase64String($buildConfigEncoded)
 $buildConfig = [System.Text.Encoding]::UTF8.GetString($buildConfigBytes) | ConvertFrom-Json
 $machineType = $buildConfig.machineType
 $gpuProvider = $buildConfig.gpuProvider
-$batchService = $buildConfig.batchService
 $renderEngines = $buildConfig.renderEngines
 $binStorageHost = $buildConfig.binStorage.host
 $binStorageAuth = $buildConfig.binStorage.auth
 Write-Host "Machine Type: $machineType"
 Write-Host "GPU Provider: $gpuProvider"
-Write-Host "Batch Service: $batchService"
 Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
@@ -41,26 +39,26 @@ $installType = "chocolatey"
 $installFile = "$installType.ps1"
 $downloadUrl = "https://community.chocolatey.org/install.ps1"
 (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File .\$installFile" $installType
+StartProcess PowerShell.exe "-ExecutionPolicy Unrestricted -File .\$installFile" "$binDirectory\$installType"
 $binPathChoco = "C:\ProgramData\chocolatey"
 $binPaths += ";$binPathChoco"
 Write-Host "Customize (End): Chocolatey"
 
 Write-Host "Customize (Start): Python"
 $installType = "python"
-StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
+StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" "$binDirectory\$installType"
 Write-Host "Customize (End): Python"
 
 if ($machineType -eq "Workstation") {
   Write-Host "Customize (Start): Node.js"
   $installType = "nodejs"
-  StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
+  StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" "$binDirectory\$installType"
   Write-Host "Customize (End): Node.js"
 }
 
 Write-Host "Customize (Start): Git"
 $installType = "git"
-StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" $installType
+StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" "$binDirectory\$installType"
 $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
@@ -74,7 +72,7 @@ $downloadUrl = "$binStorageHost/VS/$versionInfo/$installFile$binStorageAuth"
 $componentIds = "--add Microsoft.VisualStudio.Component.Windows11SDK.22621"
 $componentIds += " --add Microsoft.VisualStudio.Component.VC.CMake.Project"
 $componentIds += " --add Microsoft.Component.MSBuild"
-StartProcess .\$installFile "$componentIds --quiet --norestart" $installType
+StartProcess .\$installFile "$componentIds --quiet --norestart" "$binDirectory\$installType"
 $binPathCMake = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin"
 $binPathMSBuild = "C:\Program Files (x86)\Microsoft Visual Studio\$versionInfo\BuildTools\MSBuild\Current\Bin\amd64"
 $binPaths += ";$binPathCMake;$binPathMSBuild"
@@ -120,7 +118,7 @@ if ($gpuProvider -eq "AMD") {
   Write-Host "Customize (End): NVIDIA GPU (GRID)"
 
   Write-Host "Customize (Start): NVIDIA GPU (CUDA)"
-  $versionInfo = "12.2.0"
+  $versionInfo = "12.2.2"
   $installType = "nvidia-gpu-cuda"
   $installFile = "cuda_${versionInfo}_windows_network.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/CUDA/$versionInfo/$installFile$binStorageAuth"
@@ -129,9 +127,9 @@ if ($gpuProvider -eq "AMD") {
   Write-Host "Customize (End): NVIDIA GPU (CUDA)"
 
   Write-Host "Customize (Start): NVIDIA OptiX"
-  $versionInfo = "7.7.0"
+  $versionInfo = "8.0.0"
   $installType = "nvidia-optix"
-  $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64-32649046.exe"
+  $installFile = "NVIDIA-OptiX-SDK-$versionInfo-win64.exe"
   $downloadUrl = "$binStorageHost/NVIDIA/OptiX/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   StartProcess .\$installFile "/S" $null
@@ -139,8 +137,8 @@ if ($gpuProvider -eq "AMD") {
   $buildDirectory = "$sdkDirectory\build"
   New-Item -ItemType Directory $buildDirectory
   $versionInfo = "v12.2"
-  StartProcess $binPathCMake\cmake.exe "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" $installType-cmake
-  StartProcess $binPathMSBuild\MSBuild.exe """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" $installType-msbuild
+  StartProcess $binPathCMake\cmake.exe "-B ""$buildDirectory"" -S ""$sdkDirectory"" -D CUDA_TOOLKIT_ROOT_DIR=""C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\$versionInfo""" "$binDirectory\$installType-cmake"
+  StartProcess $binPathMSBuild\MSBuild.exe """$buildDirectory\OptiX-Samples.sln"" -p:Configuration=Release" "$binDirectory\$installType-msbuild"
   $binPaths += ";$buildDirectory\bin\Release"
   Write-Host "Customize (End): NVIDIA OptiX"
 }
@@ -158,11 +156,12 @@ if ($machineType -eq "Storage" -or $machineType -eq "Scheduler") {
 if ($renderEngines -contains "Maya") {
   Write-Host "Customize (Start): Maya"
   $versionInfo = "2024_0_1"
+  $installType = "maya"
   $installFile = "Autodesk_Maya_${versionInfo}_Update_Windows_64bit_dlm.zip"
   $downloadUrl = "$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   Expand-Archive -Path $installFile
-  Start-Process -FilePath .\Autodesk_Maya*\Autodesk_Maya*\Setup.exe -ArgumentList "--silent"
+  Start-Process -FilePath .\Autodesk_Maya*\Autodesk_Maya*\Setup.exe -ArgumentList "--silent" -RedirectStandardOutput $installType-out -RedirectStandardError $installType-err
   Start-Sleep -Seconds 600
   $binPaths += ";C:\Program Files\Autodesk\Maya2024\bin"
   Write-Host "Customize (End): Maya"
@@ -173,10 +172,10 @@ if ($renderEngines -contains "PBRT") {
   $versionInfo = "v4"
   $installType = "pbrt"
   $installPath = "C:\Program Files\PBRT"
-  StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" $installType-git
+  StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" "$binDirectory\$installType-git"
   New-Item -ItemType Directory -Path $installPath -Force
-  StartProcess $binPathCMake\cmake.exe "-B ""$installPath"" -S $binDirectory\$installType" $installType-cmake
-  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\PBRT-$versionInfo.sln"" -p:Configuration=Release" $installType-msbuild
+  StartProcess $binPathCMake\cmake.exe "-B ""$installPath"" -S $binDirectory\$installType" "$binDirectory\$installType-cmake"
+  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\PBRT-$versionInfo.sln"" -p:Configuration=Release" "$binDirectory\$installType-msbuild"
   $binPaths += ";$installPath\Release"
   Write-Host "Customize (End): PBRT"
 }
@@ -200,7 +199,7 @@ if ($renderEngines -contains "Houdini") {
   if ($renderEngines -contains "Unreal") {
     $installArgs += " /EngineUnreal=Yes"
   }
-  StartProcess .\$installFile "/S /AcceptEULA=$versionEULA $installArgs" $installType
+  StartProcess .\$installFile "/S /AcceptEULA=$versionEULA $installArgs" "$binDirectory\$installType"
   $binPaths += ";C:\Program Files\Side Effects Software\Houdini $versionInfo\bin"
   Write-Host "Customize (End): Houdini"
 }
@@ -233,12 +232,12 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $componentIds += " --add Microsoft.VisualStudio.Workload.NativeCrossPlat"
   $componentIds += " --add Microsoft.VisualStudio.Workload.ManagedDesktop"
   $componentIds += " --add Microsoft.VisualStudio.Workload.Universal"
-  StartProcess .\$installFile "$componentIds --quiet --norestart" $installType
+  StartProcess .\$installFile "$componentIds --quiet --norestart" "$binDirectory\$installType"
   Write-Host "Customize (End): Visual Studio Workloads"
 
   Write-Host "Customize (Start): Unreal Engine Setup"
   $installType = "dotnet-fx3"
-  StartProcess dism.exe "/Online /Enable-Feature /FeatureName:NetFX3 /All /NoRestart" $installType
+  StartProcess dism.exe "/Online /Enable-Feature /FeatureName:NetFX3 /All /NoRestart" "$binDirectory\$installType"
   Set-Location -Path C:\
   $versionInfo = "5.3.0"
   $installType = "unreal-engine"
@@ -268,7 +267,7 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
 
-  StartProcess $installFile $null $installType-setup
+  StartProcess $installFile $null "$binDirectory\$installType-setup"
   Write-Host "Customize (End): Unreal Engine Setup"
 
   Write-Host "Customize (Start): Unreal Project Files Generate"
@@ -281,13 +280,13 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
   $scriptFileText = Get-Content -Path $scriptFilePath
   $scriptFileText = $scriptFileText.Replace("pause", "rem pause")
   Set-Content -Path $scriptFilePath -Value $scriptFileText
-  StartProcess $installFile $null unreal-project-files-generate
+  StartProcess $installFile $null "$binDirectory\unreal-project-files-generate"
   Write-Host "Customize (End): Unreal Project Files Generate"
 
   Write-Host "Customize (Start): Unreal Engine Build"
   [System.Environment]::SetEnvironmentVariable("MSBuildEnableWorkloadResolver", "false")
   [System.Environment]::SetEnvironmentVariable("MSBuildSDKsPath", "$installPath\Engine\Binaries\ThirdParty\DotNet\6.0.302\windows\sdk\6.0.302\Sdks")
-  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\UE5.sln"" -p:Configuration=""Development Editor"" -p:Platform=Win64 -restore" $installType-msbuild
+  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\UE5.sln"" -p:Configuration=""Development Editor"" -p:Platform=Win64 -restore" "$binDirectory\$installType-msbuild"
   Write-Host "Customize (End): Unreal Engine Build"
 
   if ($renderEngines -contains "Unreal+PixelStream") {
@@ -299,11 +298,11 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
     Expand-Archive -Path $installFile
     $installFile = "UE$versionInfo\PixelStreamingInfrastructure-UE$versionInfo\SignallingWebServer\platform_scripts\cmd\setup.bat"
-    StartProcess .\$installFile $null $installType-signalling
+    StartProcess .\$installFile $null "$binDirectory\$installType-signalling"
     $installFile = "UE$versionInfo\PixelStreamingInfrastructure-UE$versionInfo\Matchmaker\platform_scripts\cmd\setup.bat"
-    StartProcess .\$installFile $null $installType-matchmaker
+    StartProcess .\$installFile $null "$binDirectory\$installType-matchmaker"
     $installFile = "UE$versionInfo\PixelStreamingInfrastructure-UE$versionInfo\SFU\platform_scripts\cmd\setup.bat"
-    StartProcess .\$installFile $null $installType-sfu
+    StartProcess .\$installFile $null "$binDirectory\$installType-sfu"
     Write-Host "Customize (End): Unreal Pixel Streaming"
   }
 
@@ -334,76 +333,75 @@ if ($machineType -eq "Scheduler") {
 } else {
   Write-Host "Customize (Start): Active Directory Tools"
   $installType = "ad-tools"
-  StartProcess dism.exe "/Online /Add-Capability /CapabilityName:Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0 /NoRestart" $installType
+  StartProcess dism.exe "/Online /Add-Capability /CapabilityName:Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0 /NoRestart" "$binDirectory\$installType"
   Write-Host "Customize (End): Active Directory Tools"
 
   Write-Host "Customize (Start): NFS Client"
   $installType = "nfs-client"
-  StartProcess dism.exe "/Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All /NoRestart" $installType
+  StartProcess dism.exe "/Online /Enable-Feature /FeatureName:ClientForNFS-Infrastructure /All /NoRestart" "$binDirectory\$installType"
   Write-Host "Customize (End): NFS Client"
 }
 
-if (!$batchService) {
-  $versionInfo = "10.3.0.9"
-  $installRoot = "C:\Deadline"
-  $databaseHost = $(hostname)
-  $databasePort = 27100
-  $databasePath = "C:\DeadlineDatabase"
-  $certificateFile = "Deadline10Client.pfx"
-  $binPathScheduler = "$installRoot\bin"
+$versionInfo = "10.3.0.9"
+$installRoot = "C:\Deadline"
+$databaseHost = $(hostname)
+$databasePort = 27100
+$databasePath = "C:\DeadlineDatabase"
+$certificateFile = "Deadline10Client.pfx"
+$binPathScheduler = "$installRoot\bin"
 
-  Write-Host "Customize (Start): Deadline Download"
-  $installFile = "Deadline-$versionInfo-windows-installers.zip"
-  $downloadUrl = "$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  Expand-Archive -Path $installFile
-  Write-Host "Customize (End): Deadline Download"
+Write-Host "Customize (Start): Deadline Download"
+$installFile = "Deadline-$versionInfo-windows-installers.zip"
+$downloadUrl = "$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
+(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+Expand-Archive -Path $installFile
+Write-Host "Customize (End): Deadline Download"
 
-  Set-Location -Path Deadline*
-  if ($machineType -eq "Scheduler") {
-    Write-Host "Customize (Start): Deadline Server"
-    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$databasePort
-    $installType = "deadline-repository"
-    $installFile = "DeadlineRepository-$versionInfo-windows-installer.exe"
-    StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true" $null
-    Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-repository.log
-    Copy-Item -Path $databasePath\certs\$certificateFile -Destination $installRoot\$certificateFile
-    New-NfsShare -Name "Deadline" -Path $installRoot -Permission ReadWrite
-    Write-Host "Customize (End): Deadline Server"
-  }
-
-  Write-Host "Customize (Start): Deadline Client"
-  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$binPathScheduler\deadlineworker.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$binPathScheduler\deadlinemonitor.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$binPathScheduler\deadlinelauncher.exe"
-  $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
-  $installArgs = "--mode unattended --prefix $installRoot"
-  if ($machineType -eq "Scheduler") {
-    $installArgs = "$installArgs --slavestartup false --launcherservice false"
-  } else {
-    if ($machineType -eq "Farm") {
-      $workerStartup = "true"
-    } else {
-      $workerStartup = "false"
-    }
-    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
-  }
-  StartProcess .\$installFile $installArgs $null
-  Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\deadline-client.log
-  Set-Location -Path $binDirectory
-  Write-Host "Customize (End): Deadline Client"
-
-  Write-Host "Customize (Start): Deadline Monitor"
-  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
-  $scriptShell = New-Object -ComObject WScript.Shell
-  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
-  $shortcut.WorkingDirectory = $binPathScheduler
-  $shortcut.TargetPath = "$binPathScheduler\deadlinemonitor.exe"
-  $shortcut.Save()
-  Write-Host "Customize (End): Deadline Monitor"
-
-  $binPaths += ";$binPathScheduler"
+Set-Location -Path Deadline*
+if ($machineType -eq "Scheduler") {
+  Write-Host "Customize (Start): Deadline Server"
+  netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$databasePort
+  $installType = "deadline-repository"
+  $installFile = "DeadlineRepository-$versionInfo-windows-installer.exe"
+  StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true" "$binDirectory\$installType"
+  Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
+  Copy-Item -Path $databasePath\certs\$certificateFile -Destination $installRoot\$certificateFile
+  New-NfsShare -Name "Deadline" -Path $installRoot -Permission ReadWrite
+  Write-Host "Customize (End): Deadline Server"
 }
+
+Write-Host "Customize (Start): Deadline Client"
+netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$binPathScheduler\deadlineworker.exe"
+netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$binPathScheduler\deadlinemonitor.exe"
+netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$binPathScheduler\deadlinelauncher.exe"
+$installType = "deadline-client"
+$installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
+$installArgs = "--mode unattended --prefix $installRoot"
+if ($machineType -eq "Scheduler") {
+  $installArgs = "$installArgs --slavestartup false --launcherservice false"
+} else {
+  if ($machineType -eq "Farm") {
+    $workerStartup = "true"
+  } else {
+    $workerStartup = "false"
+  }
+  $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+}
+StartProcess .\$installFile $installArgs "$binDirectory\$installType"
+Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
+Set-Location -Path $binDirectory
+Write-Host "Customize (End): Deadline Client"
+
+Write-Host "Customize (Start): Deadline Monitor"
+$shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
+$scriptShell = New-Object -ComObject WScript.Shell
+$shortcut = $scriptShell.CreateShortcut($shortcutPath)
+$shortcut.WorkingDirectory = $binPathScheduler
+$shortcut.TargetPath = "$binPathScheduler\deadlinemonitor.exe"
+$shortcut.Save()
+Write-Host "Customize (End): Deadline Monitor"
+
+$binPaths += ";$binPathScheduler"
 
 if ($machineType -eq "Farm") {
   Write-Host "Customize (Start): Privacy Experience"
@@ -420,7 +418,7 @@ if ($machineType -eq "Workstation") {
   $installFile = "${installType}_$versionInfo.3.exe"
   $downloadUrl = "$binStorageHost/Teradici/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess .\$installFile "/S /NoPostReboot /Force" $installType
+  StartProcess .\$installFile "/S /NoPostReboot /Force" "$binDirectory\$installType"
   Write-Host "Customize (End): Teradici PCoIP"
 }
 

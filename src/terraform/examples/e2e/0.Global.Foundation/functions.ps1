@@ -9,13 +9,11 @@ function StartProcess ($filePath, $argumentList, $logFile) {
     }
   } else {
     if ($argumentList -eq $null) {
-      Start-Process -FilePath $filePath -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
+      Start-Process -FilePath $filePath -Wait -RedirectStandardOutput $logFile-out -RedirectStandardError $logFile-err
     } else {
-      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardError $logFile-err.log -RedirectStandardOutput $logFile-out.log
+      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardOutput $logFile-out -RedirectStandardError $logFile-err
     }
-    Get-Content -Path $logFile-err.log | Tee-Object -FilePath "$logFile.log" -Append
-    Get-Content -Path $logFile-out.log | Tee-Object -FilePath "$logFile.log" -Append
-    Remove-Item -Path $logFile-err.log, $logFile-out.log
+    Get-Content -Path $logFile-err | Write-Host
   }
 }
 
@@ -33,9 +31,9 @@ function SetFileSystemMount ($fileSystemMount) {
   }
 }
 
-function RegisterFileSystemMountPath {
+function RegisterFileSystemMountPath ($binDirectory) {
   if (FileExists $fileSystemMountPath) {
-    StartProcess $fileSystemMountPath $null file-system-mount
+    StartProcess $fileSystemMountPath $null "$binDirectory\file-system-mount"
     $taskName = "AAA File System Mount"
     $taskAction = New-ScheduledTaskAction -Execute $fileSystemMountPath
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup

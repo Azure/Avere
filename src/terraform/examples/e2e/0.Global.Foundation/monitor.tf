@@ -29,6 +29,9 @@ resource "azurerm_log_analytics_workspace" "monitor" {
   retention_in_days          = var.monitor.retentionDays
   internet_ingestion_enabled = false
   internet_query_enabled     = false
+  depends_on = [
+    azurerm_key_vault_secret.studio
+  ]
 }
 
 resource "azurerm_application_insights" "monitor" {

@@ -1,3 +1,10 @@
+function StartProcess {
+  command="$1"
+  logFile=$2
+  $command 1>> $logFile.out 2>> $logFile.err
+  cat $logFile.err
+}
+
 function GetEncodedValue {
   echo $1 | base64 -d | jq -r $2
 }

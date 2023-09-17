@@ -20,7 +20,6 @@ variable "imageTemplates" {
           outputVersion  = string
           timeoutMinutes = number
           osDiskSizeGB   = number
-          batchService   = bool
           renderEngines  = list(string)
         }
       )
@@ -125,6 +124,11 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "File",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/0.Global.Foundation/functions.sh",
+                    "destination": "/tmp/functions.sh"
+                  },
+                  {
+                    "type": "File",
                     "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/2.Image.Builder/customize.sh",
                     "destination": "/tmp/customize.sh"
                   },
@@ -164,6 +168,11 @@ resource "azurerm_resource_group_template_deployment" "image_builder" {
                   },
                   {
                     "type": "WindowsRestart"
+                  },
+                  {
+                    "type": "File",
+                    "sourceUri": "https://raw.githubusercontent.com/Azure/Avere/main/src/terraform/examples/e2e/0.Global.Foundation/functions.ps1",
+                    "destination": "C:\\AzureData\\functions.ps1"
                   },
                   {
                     "type": "File",
