@@ -188,7 +188,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 ### 8.2 [Blender](https://www.blender.org) [Splash Screen (3.4)](https://www.blender.org/download/demo-files/#splash)
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.4.jpg" />
+  <img src=".github/images/blender-splash-3.4.png" />
 </p>
 
 #### 8.2.1 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
