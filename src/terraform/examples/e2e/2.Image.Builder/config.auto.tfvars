@@ -52,7 +52,7 @@ computeGallery = {
 
 imageTemplates = [
   {
-    name = "LnxStorage"
+    name = "LnxStorageCPU"
     image = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -62,6 +62,23 @@ imageTemplates = [
       machineSize    = "Standard_L8as_v3" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                 # NVIDIA or AMD
       outputVersion  = "0.0.0"
+      timeoutMinutes = 120
+      osDiskSizeGB   = 512
+      renderEngines = [
+      ]
+    }
+  },
+  {
+    name = "LnxStorageGPU"
+    image = {
+      definitionName = "Linux"
+      inputVersion   = "Latest"
+    }
+    build = {
+      machineType    = "Storage"
+      machineSize    = "Standard_NG8ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
+      gpuProvider    = "AMD"                     # NVIDIA or AMD
+      outputVersion  = "0.1.0"
       timeoutMinutes = 120
       osDiskSizeGB   = 512
       renderEngines = [

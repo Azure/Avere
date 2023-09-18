@@ -153,6 +153,31 @@ if ($machineType -eq "Storage" -or $machineType -eq "Scheduler") {
   Write-Host "Customize (End): Azure CLI"
 }
 
+if ($renderEngines -contains "PBRT") {
+  Write-Host "Customize (Start): PBRT"
+  $versionInfo = "v4"
+  $installType = "pbrt"
+  $installPath = "C:\Program Files\PBRT"
+  New-Item -ItemType Directory -Path $installPath -Force
+  StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType-$versionInfo.git" "$binDirectory\$installType-git"
+  StartProcess $binPathCMake\cmake.exe "-B ""$installPath"" -S $binDirectory\$installType-$versionInfo" "$binDirectory\$installType-cmake"
+  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\PBRT-$versionInfo.sln"" -p:Configuration=Release" "$binDirectory\$installType-msbuild"
+  $binPaths += ";$installPath\Release"
+  Write-Host "Customize (End): PBRT"
+}
+
+if ($renderEngines -contains "Blender") {
+  Write-Host "Customize (Start): Blender"
+  $versionInfo = "3.6.2"
+  $installType = "blender"
+  $installFile = "$installType-$versionInfo-windows-x64.msi"
+  $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
+  $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.6"
+  Write-Host "Customize (End): Blender"
+}
+
 if ($renderEngines -contains "Maya") {
   Write-Host "Customize (Start): Maya"
   $versionInfo = "2024_0_1"
@@ -165,19 +190,6 @@ if ($renderEngines -contains "Maya") {
   Start-Sleep -Seconds 600
   $binPaths += ";C:\Program Files\Autodesk\Maya2024\bin"
   Write-Host "Customize (End): Maya"
-}
-
-if ($renderEngines -contains "PBRT") {
-  Write-Host "Customize (Start): PBRT"
-  $versionInfo = "v4"
-  $installType = "pbrt"
-  $installPath = "C:\Program Files\PBRT"
-  StartProcess $binPathGit\git.exe "clone --recursive https://github.com/mmp/$installType.git" "$binDirectory\$installType-git"
-  New-Item -ItemType Directory -Path $installPath -Force
-  StartProcess $binPathCMake\cmake.exe "-B ""$installPath"" -S $binDirectory\$installType" "$binDirectory\$installType-cmake"
-  StartProcess $binPathMSBuild\MSBuild.exe """$installPath\PBRT-$versionInfo.sln"" -p:Configuration=Release" "$binDirectory\$installType-msbuild"
-  $binPaths += ";$installPath\Release"
-  Write-Host "Customize (End): PBRT"
 }
 
 if ($renderEngines -contains "Houdini") {
@@ -202,18 +214,6 @@ if ($renderEngines -contains "Houdini") {
   StartProcess .\$installFile "/S /AcceptEULA=$versionEULA $installArgs" "$binDirectory\$installType"
   $binPaths += ";C:\Program Files\Side Effects Software\Houdini $versionInfo\bin"
   Write-Host "Customize (End): Houdini"
-}
-
-if ($renderEngines -contains "Blender") {
-  Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.6.2"
-  $installType = "blender"
-  $installFile = "$installType-$versionInfo-windows-x64.msi"
-  $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
-  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-  StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-  $binPaths += ";C:\Program Files\Blender Foundation\Blender 3.6"
-  Write-Host "Customize (End): Blender"
 }
 
 if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+PixelStream") {
@@ -342,66 +342,68 @@ if ($machineType -eq "Scheduler") {
   Write-Host "Customize (End): NFS Client"
 }
 
-$versionInfo = "10.3.0.9"
-$installRoot = "C:\Deadline"
-$databaseHost = $(hostname)
-$databasePort = 27100
-$databasePath = "C:\DeadlineDatabase"
-$certificateFile = "Deadline10Client.pfx"
-$binPathScheduler = "$installRoot\bin"
+if ($machineType -ne "Storage") {
+  $versionInfo = "10.3.0.9"
+  $installRoot = "C:\Deadline"
+  $databaseHost = $(hostname)
+  $databasePort = 27100
+  $databasePath = "C:\DeadlineDatabase"
+  $certificateFile = "Deadline10Client.pfx"
+  $binPathScheduler = "$installRoot\bin"
 
-Write-Host "Customize (Start): Deadline Download"
-$installFile = "Deadline-$versionInfo-windows-installers.zip"
-$downloadUrl = "$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
-(New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-Expand-Archive -Path $installFile
-Write-Host "Customize (End): Deadline Download"
+  Write-Host "Customize (Start): Deadline Download"
+  $installFile = "Deadline-$versionInfo-windows-installers.zip"
+  $downloadUrl = "$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
+  (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
+  Expand-Archive -Path $installFile
+  Write-Host "Customize (End): Deadline Download"
 
-Set-Location -Path Deadline*
-if ($machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): Deadline Server"
-  netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$databasePort
-  $installType = "deadline-repository"
-  $installFile = "DeadlineRepository-$versionInfo-windows-installer.exe"
-  StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true" "$binDirectory\$installType"
-  Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
-  Copy-Item -Path $databasePath\certs\$certificateFile -Destination $installRoot\$certificateFile
-  New-NfsShare -Name "Deadline" -Path $installRoot -Permission ReadWrite
-  Write-Host "Customize (End): Deadline Server"
-}
-
-Write-Host "Customize (Start): Deadline Client"
-netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$binPathScheduler\deadlineworker.exe"
-netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$binPathScheduler\deadlinemonitor.exe"
-netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$binPathScheduler\deadlinelauncher.exe"
-$installType = "deadline-client"
-$installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
-$installArgs = "--mode unattended --prefix $installRoot"
-if ($machineType -eq "Scheduler") {
-  $installArgs = "$installArgs --slavestartup false --launcherservice false"
-} else {
-  if ($machineType -eq "Farm") {
-    $workerStartup = "true"
-  } else {
-    $workerStartup = "false"
+  Set-Location -Path Deadline*
+  if ($machineType -eq "Scheduler") {
+    Write-Host "Customize (Start): Deadline Server"
+    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$databasePort
+    $installType = "deadline-repository"
+    $installFile = "DeadlineRepository-$versionInfo-windows-installer.exe"
+    StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true" "$binDirectory\$installType"
+    Move-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
+    Copy-Item -Path $databasePath\certs\$certificateFile -Destination $installRoot\$certificateFile
+    New-NfsShare -Name "Deadline" -Path $installRoot -Permission ReadWrite
+    Write-Host "Customize (End): Deadline Server"
   }
-  $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+
+  Write-Host "Customize (Start): Deadline Client"
+  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$binPathScheduler\deadlineworker.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$binPathScheduler\deadlinemonitor.exe"
+  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$binPathScheduler\deadlinelauncher.exe"
+  $installType = "deadline-client"
+  $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
+  $installArgs = "--mode unattended --prefix $installRoot"
+  if ($machineType -eq "Scheduler") {
+    $installArgs = "$installArgs --slavestartup false --launcherservice false"
+  } else {
+    if ($machineType -eq "Farm") {
+      $workerStartup = "true"
+    } else {
+      $workerStartup = "false"
+    }
+    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+  }
+  StartProcess .\$installFile $installArgs "$binDirectory\$installType"
+  Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): Deadline Client"
+
+  Write-Host "Customize (Start): Deadline Monitor"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = $binPathScheduler
+  $shortcut.TargetPath = "$binPathScheduler\deadlinemonitor.exe"
+  $shortcut.Save()
+  Write-Host "Customize (End): Deadline Monitor"
+
+  $binPaths += ";$binPathScheduler"
 }
-StartProcess .\$installFile $installArgs "$binDirectory\$installType"
-Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
-Set-Location -Path $binDirectory
-Write-Host "Customize (End): Deadline Client"
-
-Write-Host "Customize (Start): Deadline Monitor"
-$shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
-$scriptShell = New-Object -ComObject WScript.Shell
-$shortcut = $scriptShell.CreateShortcut($shortcutPath)
-$shortcut.WorkingDirectory = $binPathScheduler
-$shortcut.TargetPath = "$binPathScheduler\deadlinemonitor.exe"
-$shortcut.Save()
-Write-Host "Customize (End): Deadline Monitor"
-
-$binPaths += ";$binPathScheduler"
 
 if ($machineType -eq "Farm") {
   Write-Host "Customize (Start): Privacy Experience"

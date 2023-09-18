@@ -36,12 +36,14 @@ fi
 echo "Customize (End): Image Build Platform"
 
 if [ $machineType == Storage ]; then
+  echo "Customize (Start): NVIDIA OFED"
   dnf -y install kernel-rpm-macros rpm-build libtool gcc-gfortran pciutils tcl tk
   installFile="MLNX_OFED_LINUX-23.07-0.5.1.2-rhel9.2-x86_64.tgz"
   downloadUrl="$binStorageHost/NVIDIA/OFED/$installFile$binStorageAuth"
   curl -o $installFile -L $downloadUrl
   tar -xzf $installFile
   StartProcess "./MLNX_OFED*/mlnxofedinstall --without-fw-update --add-kernel-support --skip-repo --force" $binDirectory/mellanox-ofed
+  echo "Customize (End): NVIDIA OFED"
 fi
 
 if [ "$gpuProvider" == NVIDIA ]; then
@@ -93,6 +95,45 @@ if [[ $machineType == Storage || $machineType == Scheduler ]]; then
   echo "Customize (End): Azure CLI"
 fi
 
+if [[ $renderEngines == *PBRT* ]]; then
+  echo "Customize (Start): PBRT"
+  dnf -y install mesa-libGL-devel
+  dnf -y install libXrandr-devel
+  dnf -y install libXinerama-devel
+  dnf -y install libXcursor-devel
+  dnf -y install libXi-devel
+  versionInfo="v4"
+  installType="pbrt"
+  installPath="/usr/local/pbrt"
+  mkdir -p $installPath
+  StartProcess "git clone --recursive https://github.com/mmp/$installType-$versionInfo.git" $binDirectory/$installType-git
+  StartProcess "cmake -B $installPath -S $binDirectory/$installType-$versionInfo" $binDirectory/$installType-cmake
+  StartProcess "make -C $installPath" $binDirectory/$installType-make
+  binPaths="$binPaths:$installPath"
+  echo "Customize (End): PBRT"
+fi
+
+if [[ $renderEngines == *Blender* ]]; then
+  echo "Customize (Start): Blender"
+  dnf -y install mesa-libGL
+  dnf -y install libXxf86vm
+  dnf -y install libXfixes
+  dnf -y install libXi
+  dnf -y install libSM
+  versionInfo="3.6.2"
+  versionType="linux-x64"
+  installType="blender"
+  installPath="/usr/local/$installType"
+  installFile="$installType-$versionInfo-$versionType.tar.xz"
+  downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xJf $installFile
+  mkdir -p $installPath
+  mv $installType-$versionInfo-$versionType/* $installPath
+  binPaths="$binPaths:$installPath"
+  echo "Customize (End): Blender"
+fi
+
 if [[ $renderEngines == *Maya* ]]; then
   echo "Customize (Start): Maya"
   dnf -y install mesa-libGL
@@ -113,24 +154,6 @@ if [[ $renderEngines == *Maya* ]]; then
   StartProcess "./$installType/Setup --silent" $binDirectory/$installType
   binPaths="$binPaths:/usr/autodesk/maya/bin"
   echo "Customize (End): Maya"
-fi
-
-if [[ $renderEngines == *PBRT* ]]; then
-  echo "Customize (Start): PBRT"
-  dnf -y install mesa-libGL-devel
-  dnf -y install libXrandr-devel
-  dnf -y install libXinerama-devel
-  dnf -y install libXcursor-devel
-  dnf -y install libXi-devel
-  versionInfo="v4"
-  installType="pbrt"
-  installPath="/usr/local/pbrt"
-  StartProcess "git clone --recursive https://github.com/mmp/$installType.git" $binDirectory/$installType-git
-  mkdir -p $installPath
-  StartProcess "cmake -B $installPath -S $binDirectory/$installType" $binDirectory/$installType-cmake
-  StartProcess "make -C $installPath" $binDirectory/$installType-make
-  binPaths="$binPaths:$installPath"
-  echo "Customize (End): PBRT"
 fi
 
 if [[ $renderEngines == *Houdini* ]]; then
@@ -159,27 +182,6 @@ if [[ $renderEngines == *Houdini* ]]; then
   StartProcess "./houdini*/houdini.install --auto-install --make-dir --no-install-license --accept-EULA $versionEULA $desktopMenus $mayaPlugIn $unrealPlugIn" $binDirectory/$installType
   binPaths="$binPaths:/opt/hfs$versionInfo/bin"
   echo "Customize (End): Houdini"
-fi
-
-if [[ $renderEngines == *Blender* ]]; then
-  echo "Customize (Start): Blender"
-  dnf -y install mesa-libGL
-  dnf -y install libXxf86vm
-  dnf -y install libXfixes
-  dnf -y install libXi
-  dnf -y install libSM
-  versionInfo="3.6.2"
-  versionType="linux-x64"
-  installType="blender"
-  installPath="/usr/local/$installType"
-  installFile="$installType-$versionInfo-$versionType.tar.xz"
-  downloadUrl="$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xJf $installFile
-  mkdir -p $installPath
-  mv $installType-$versionInfo-$versionType/* $installPath
-  binPaths="$binPaths:$installPath"
-  echo "Customize (End): Blender"
 fi
 
 if [[ $renderEngines == *MoonRay* ]]; then
@@ -295,66 +297,68 @@ if [ $machineType == Scheduler ]; then
   echo "Customize (End): NFS Server"
 fi
 
-versionInfo="10.3.0.9"
-installRoot="/Deadline"
-serverMount="/DeadlineServer"
-databaseHost=$(hostname)
-databasePort=27017
-databaseName="deadline10db"
-binPathScheduler="$installRoot/bin"
+if [ $machineType != Storage ]; then
+  versionInfo="10.3.0.9"
+  installRoot="/Deadline"
+  serverMount="/DeadlineServer"
+  databaseHost=$(hostname)
+  databasePort=27017
+  databaseName="deadline10db"
+  binPathScheduler="$installRoot/bin"
 
-echo "Customize (Start): Deadline Download"
-installFile="Deadline-$versionInfo-linux-installers.tar"
-installPath=$(echo ${installFile%.tar})
-downloadUrl="$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
-curl -o $installFile -L $downloadUrl
-mkdir -p $installPath
-tar -xzf $installFile -C $installPath
-echo "Customize (End): Deadline Download"
+  echo "Customize (Start): Deadline Download"
+  installFile="Deadline-$versionInfo-linux-installers.tar"
+  installPath=$(echo ${installFile%.tar})
+  downloadUrl="$binStorageHost/Deadline/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  mkdir -p $installPath
+  tar -xzf $installFile -C $installPath
+  echo "Customize (End): Deadline Download"
 
-if [ $machineType == Scheduler ]; then
-  echo "Customize (Start): Mongo DB Service"
-  repoPath="/etc/yum.repos.d/mongodb.repo"
-  echo "[mongodb-org-4.4]" > $repoPath
-  echo "name=MongoDB 4.4" >> $repoPath
-  echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.4/x86_64/" >> $repoPath
-  echo "gpgcheck=1" >> $repoPath
-  echo "enabled=1" >> $repoPath
-  echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc" >> $repoPath
-  dnf -y install mongodb-org
-  configFile="/etc/mongod.conf"
-  sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $configFile
-  sed -i "/bindIp: 0.0.0.0/a\  tls:" $configFile
-  sed -i "/tls:/a\    mode: disabled" $configFile
-  sed -i "s/#security:/security:/" $configFile
-  sed -i "/security:/a\  authorization: disabled" $configFile
-  systemctl --now enable mongod
-  sleep 10s
-  echo "Customize (End): Mongo DB Service"
+  if [ $machineType == Scheduler ]; then
+    echo "Customize (Start): Mongo DB Service"
+    repoPath="/etc/yum.repos.d/mongodb.repo"
+    echo "[mongodb-org-4.4]" > $repoPath
+    echo "name=MongoDB 4.4" >> $repoPath
+    echo "baseurl=https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.4/x86_64/" >> $repoPath
+    echo "gpgcheck=1" >> $repoPath
+    echo "enabled=1" >> $repoPath
+    echo "gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc" >> $repoPath
+    dnf -y install mongodb-org
+    configFile="/etc/mongod.conf"
+    sed -i "s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/" $configFile
+    sed -i "/bindIp: 0.0.0.0/a\  tls:" $configFile
+    sed -i "/tls:/a\    mode: disabled" $configFile
+    sed -i "s/#security:/security:/" $configFile
+    sed -i "/security:/a\  authorization: disabled" $configFile
+    systemctl --now enable mongod
+    sleep 10s
+    echo "Customize (End): Mongo DB Service"
 
-  echo "Customize (Start): Deadline Server"
-  installFile="DeadlineRepository-$versionInfo-linux-x64-installer.run"
-  $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --dbauth false --installmongodb false
-  mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
-  echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
-  exportfs -r
-  echo "Customize (End): Deadline Server"
+    echo "Customize (Start): Deadline Server"
+    installFile="DeadlineRepository-$versionInfo-linux-x64-installer.run"
+    $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --dbauth false --installmongodb false
+    mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
+    echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+    exportfs -r
+    echo "Customize (End): Deadline Server"
+  fi
+
+  echo "Customize (Start): Deadline Client"
+  installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
+  installArgs="--mode unattended --prefix $installRoot --repositorydir $serverMount"
+  if [ $machineType == Scheduler ]; then
+    installArgs="$installArgs --slavestartup false --launcherdaemon false"
+  else
+    [ $machineType == Farm ] && workerStartup=true || workerStartup=false
+    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+  fi
+  $installPath/$installFile $installArgs
+  cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+  echo "Customize (End): Deadline Client"
+
+  binPaths="$binPaths:$binPathScheduler"
 fi
-
-echo "Customize (Start): Deadline Client"
-installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
-installArgs="--mode unattended --prefix $installRoot --repositorydir $serverMount"
-if [ $machineType == Scheduler ]; then
-  installArgs="$installArgs --slavestartup false --launcherdaemon false"
-else
-  [ $machineType == Farm ] && workerStartup=true || workerStartup=false
-  installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
-fi
-$installPath/$installFile $installArgs
-cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-echo "Customize (End): Deadline Client"
-
-binPaths="$binPaths:$binPathScheduler"
 
 if [ $machineType == Workstation ]; then
   echo "Customize (Start): HP Anyware"
