@@ -28,10 +28,6 @@ For example, the following sample images were [rendered on Azure](https://user-i
 </p>
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.6.jpg" />
-</p>
-
-<p align="center">
   <img src=".github/images/blender-splash-3.4.png" />
 </p>
 
@@ -189,22 +185,22 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"```
 
-### 8.2 [Blender](https://www.blender.org) [Splash Screen (3.6)](https://www.blender.org/download/demo-files/#splash)
+### 8.2 [Blender](https://www.blender.org) [Splash Screen (3.4)](https://www.blender.org/download/demo-files/#splash)
 
 <p align="center">
-  <img src=".github/images/blender-splash-3.6.jpg" />
+  <img src=".github/images/blender-splash-3.4.jpg" />
 </p>
 
 #### 8.2.1 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.6/splash.blend --render-output /mnt/data/write/blender/3.6/splash --enable-autoexec --render-frame 1"```
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
 
 #### 8.2.2 Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background R:\blender\3.6\splash.blend --render-output W:\blender\3.6\splash --enable-autoexec --render-frame 1"```
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1"```
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com
