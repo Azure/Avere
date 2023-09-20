@@ -1,8 +1,8 @@
 param (
   [string] $buildConfigEncoded
 )
-Write-Host "Customize (Start): AAA"
-#$ErrorActionPreference = "Stop"
+
+$ErrorActionPreference = "Stop"
 
 $binPaths = ""
 $binDirectory = "C:\Users\Public\Downloads"
