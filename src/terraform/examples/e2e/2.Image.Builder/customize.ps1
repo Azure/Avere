@@ -323,18 +323,27 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
 }
 
 if ($machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): AD Domain"
+  Write-Host "Customize (Start): AD Domain Services"
   Install-WindowsFeature -Name "AD-Domain-Services" -IncludeManagementTools
-  Write-Host "Customize (End): AD Domain"
+  Write-Host "Customize (End): AD Domain Services"
+
+  Write-Host "Customize (Start): AD Users & Computers"
+  $shortcutPath = "$env:AllUsersProfile\Desktop\AD Users & Computers.lnk"
+  $scriptShell = New-Object -ComObject WScript.Shell
+  $shortcut = $scriptShell.CreateShortcut($shortcutPath)
+  $shortcut.WorkingDirectory = "%HOMEDRIVE%%HOMEPATH%"
+  $shortcut.TargetPath = "%SystemRoot%\system32\dsa.msc"
+  $shortcut.Save()
+  Write-Host "Customize (End): AD Users & Computers"
 
   Write-Host "Customize (Start): NFS Server"
   Install-WindowsFeature -Name "FS-NFS-Service"
   Write-Host "Customize (End): NFS Server"
 } else {
-  Write-Host "Customize (Start): Active Directory Tools"
-  $installType = "ad-tools"
+  Write-Host "Customize (Start): AD Tools"
+  $installType = "ad-tools" # RSAT: Active Directory Domain Services and Lightweight Directory Services Tools
   StartProcess dism.exe "/Online /Add-Capability /CapabilityName:Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0 /NoRestart" "$binDirectory\$installType"
-  Write-Host "Customize (End): Active Directory Tools"
+  Write-Host "Customize (End): AD Tools"
 
   Write-Host "Customize (Start): NFS Client"
   $installType = "nfs-client"
