@@ -5,7 +5,8 @@
 variable "virtualMachines" {
   type = list(object(
     {
-      name = string
+      enable = bool
+      name   = string
       machine = object(
         {
           size = string
@@ -52,34 +53,40 @@ variable "virtualMachines" {
           )
         }
       )
-      customExtension = object(
+      extension = object(
         {
-          enable   = bool
-          fileName = string
-          parameters = object(
+          initialize = object(
             {
-              activeDirectory = object(
+              enable   = bool
+              fileName = string
+              parameters = object(
                 {
-                  domainName    = string
-                  serverName    = string
-                  adminUsername = string
-                  adminPassword = string
+                  fileSystemMounts = list(object(
+                    {
+                      enable = bool
+                      mount  = string
+                    }
+                  ))
+                  pcoipLicenseKey = string
+                  activeDirectory = object(
+                    {
+                      enable        = bool
+                      domainName    = string
+                      serverName    = string
+                      orgUnitPath   = string
+                      adminUsername = string
+                      adminPassword = string
+                    }
+                  )
                 }
               )
-              fileSystemMounts = list(object(
-                {
-                  enable = bool
-                  mount  = string
-                }
-              ))
-              pcoipLicenseKey = string
             }
           )
-        }
-      )
-      monitorExtension = object(
-        {
-          enable = bool
+          monitor = object(
+            {
+              enable = bool
+            }
+          )
         }
       )
     }
@@ -94,19 +101,19 @@ locals {
         image = {
           id = virtualMachine.machine.image.id
           plan = {
-            publisher = lower(virtualMachine.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachine.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.publisher, ""))
-            product   = lower(virtualMachine.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachine.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.offer, ""))
-            name      = lower(virtualMachine.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachine.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.sku, ""))
+            publisher = lower(virtualMachine.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.publisher, ""))
+            product   = lower(virtualMachine.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.offer, ""))
+            name      = lower(virtualMachine.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.sku, ""))
           }
         }
       }
-    }) if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
+    }) if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
   ]
 }
 
 resource "azurerm_network_interface" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
@@ -115,7 +122,7 @@ resource "azurerm_network_interface" "workstation" {
     name                          = "ipConfig"
     subnet_id                     = data.azurerm_subnet.workstation.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = var.trafficManager.profile.name != "" ? azurerm_public_ip.workstation[each.value.name].id : null
+    public_ip_address_id          = var.trafficManager.enable ? azurerm_public_ip.workstation[each.value.name].id : null
   }
   enable_accelerated_networking = each.value.network.enableAcceleration
 }
@@ -168,7 +175,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Initialize"
   type                       = "CustomScript"
@@ -178,7 +185,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script = "${base64encode(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {}))
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {}))
     )}"
   })
   depends_on = [
@@ -188,7 +195,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -209,7 +216,7 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
 
 resource "azurerm_windows_virtual_machine" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
@@ -240,7 +247,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Initialize"
   type                       = "CustomScriptExtension"
@@ -250,7 +257,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {})), "UTF-16LE"
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {})), "UTF-16LE"
     )}"
   })
   depends_on = [
@@ -260,7 +267,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"

@@ -5,7 +5,8 @@
 variable "virtualMachineScaleSets" {
   type = list(object(
     {
-      name = string
+      enable = bool
+      name   = string
       machine = object(
         {
           size  = string
@@ -22,6 +23,12 @@ variable "virtualMachineScaleSets" {
               )
             }
           )
+        }
+      )
+      spot = object(
+        {
+          enable         = bool
+          evictionPolicy = string
         }
       )
       network = object(
@@ -59,53 +66,53 @@ variable "virtualMachineScaleSets" {
           )
         }
       )
-      customExtension = object(
+      extension = object(
         {
-          enable   = bool
-          fileName = string
-          parameters = object(
+          initialize = object(
             {
-              activeDirectory = object(
+              enable   = bool
+              fileName = string
+              parameters = object(
                 {
-                  domainName    = string
-                  serverName    = string
-                  adminUsername = string
-                  adminPassword = string
-                }
-              )
-              fileSystemMounts = list(object(
-                {
-                  enable = bool
-                  mount  = string
-                }
-              ))
-              terminateNotification = object(
-                {
-                  enable       = bool
-                  delayTimeout = string
+                  fileSystemMounts = list(object(
+                    {
+                      enable = bool
+                      mount  = string
+                    }
+                  ))
+                  activeDirectory = object(
+                    {
+                      enable        = bool
+                      domainName    = string
+                      serverName    = string
+                      orgUnitPath   = string
+                      adminUsername = string
+                      adminPassword = string
+                    }
+                  )
+                  terminateNotification = object(
+                    {
+                      enable       = bool
+                      delayTimeout = string
+                    }
+                  )
                 }
               )
             }
           )
-        }
-      )
-      healthExtension = object(
-        {
-          enable      = bool
-          protocol    = string
-          port        = number
-          requestPath = string
-        }
-      )
-      monitorExtension = object(
-        {
-          enable = bool
-        }
-      )
-      spot = object(
-        {
-          enable         = bool
-          evictionPolicy = string
+          health = object (
+            {
+              enable      = bool
+              protocol    = string
+              port        = number
+              requestPath = string
+            }
+          )
+          monitor = object (
+            {
+              enable = bool
+            }
+          )
         }
       )
     }
@@ -121,13 +128,13 @@ locals {
         image = {
           id = virtualMachineScaleSet.machine.image.id
           plan = {
-            publisher = lower(virtualMachineScaleSet.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.publisher, ""))
-            product   = lower(virtualMachineScaleSet.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.offer, ""))
-            name      = lower(virtualMachineScaleSet.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.sku, ""))
+            publisher = lower(virtualMachineScaleSet.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.publisher, ""))
+            product   = lower(virtualMachineScaleSet.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.offer, ""))
+            name      = lower(virtualMachineScaleSet.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.sku, ""))
           }
         }
       }
-    }) if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Linux" && var.batch.account.name == ""
+    }) if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Linux" && var.batch.account.name == ""
   ]
 }
 
@@ -192,7 +199,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic extension {
-    for_each = each.value.customExtension.enable ? [1] : []
+    for_each = each.value.extension.initialize.enable ? [1] : []
     content {
       name                       = "Initialize"
       type                       = "CustomScript"
@@ -201,13 +208,13 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         script: "${base64encode(
-          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {}))
+          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {}))
         )}"
       })
     }
   }
   dynamic extension {
-    for_each = each.value.healthExtension.enable ? [1] : []
+    for_each = each.value.extension.health.enable ? [1] : []
     content {
       name                       = "Health"
       type                       = "ApplicationHealthLinux"
@@ -215,14 +222,14 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.0"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        protocol    = each.value.healthExtension.protocol
-        port        = each.value.healthExtension.port
-        requestPath = each.value.healthExtension.requestPath
+        protocol    = each.value.extension.health.protocol
+        port        = each.value.extension.health.port
+        requestPath = each.value.extension.health.requestPath
       })
     }
   }
   dynamic extension {
-    for_each = each.value.monitorExtension.enable && module.global.monitor.name != "" ? [1] : []
+    for_each = each.value.extension.monitor.enable && module.global.monitor.name != "" ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorLinuxAgent"
@@ -238,17 +245,17 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic termination_notification {
-    for_each = each.value.customExtension.parameters.terminateNotification.enable ? [1] : []
+    for_each = each.value.extension.initialize.parameters.terminateNotification.enable ? [1] : []
     content {
-      enabled = each.value.customExtension.parameters.terminateNotification.enable
-      timeout = each.value.customExtension.parameters.terminateNotification.delayTimeout
+      enabled = each.value.extension.initialize.parameters.terminateNotification.enable
+      timeout = each.value.extension.initialize.parameters.terminateNotification.delayTimeout
     }
   }
 }
 
 resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   for_each = {
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.name != "" && virtualMachineScaleSet.operatingSystem.type == "Windows" && var.batch.account.name == ""
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Windows" && var.batch.account.name == ""
   }
   name                   = each.value.name
   resource_group_name    = azurerm_resource_group.farm.name
@@ -292,7 +299,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     ]
   }
   dynamic extension {
-    for_each = each.value.customExtension.enable ? [1] : []
+    for_each = each.value.extension.initialize.enable ? [1] : []
     content {
       name                       = "Initialize"
       type                       = "CustomScriptExtension"
@@ -301,13 +308,13 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-          templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {})), "UTF-16LE"
+          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {})), "UTF-16LE"
         )}"
       })
     }
   }
   dynamic extension {
-    for_each = each.value.healthExtension.enable ? [1] : []
+    for_each = each.value.extension.health.enable ? [1] : []
     content {
       name                       = "Health"
       type                       = "ApplicationHealthWindows"
@@ -315,14 +322,14 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type_handler_version       = "1.0"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        protocol    = each.value.healthExtension.protocol
-        port        = each.value.healthExtension.port
-        requestPath = each.value.healthExtension.requestPath
+        protocol    = each.value.extension.health.protocol
+        port        = each.value.extension.health.port
+        requestPath = each.value.extension.health.requestPath
       })
     }
   }
   dynamic extension {
-    for_each = each.value.monitorExtension.enable && module.global.monitor.name != "" ? [1] : []
+    for_each = each.value.extension.monitor.enable && module.global.monitor.name != "" ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorWindowsAgent"
@@ -338,10 +345,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic termination_notification {
-    for_each = each.value.customExtension.parameters.terminateNotification.enable ? [1] : []
+    for_each = each.value.extension.initialize.parameters.terminateNotification.enable ? [1] : []
     content {
-      enabled = each.value.customExtension.parameters.terminateNotification.enable
-      timeout = each.value.customExtension.parameters.terminateNotification.delayTimeout
+      enabled = each.value.extension.initialize.parameters.terminateNotification.enable
+      timeout = each.value.extension.initialize.parameters.terminateNotification.delayTimeout
     }
   }
 }

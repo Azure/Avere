@@ -1,15 +1,9 @@
-$ErrorActionPreference = "Stop"
-
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
 $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
-
-if ("${activeDirectory.domainName}" -ne "") {
-  JoinActiveDirectory "${activeDirectory.domainName}" "${activeDirectory.serverName}" "${activeDirectory.adminUsername}" "${activeDirectory.adminPassword}"
-}
 
 $fileSystemMounts = ConvertFrom-Json -InputObject '${jsonencode(fileSystemMounts)}'
 foreach ($fileSystemMount in $fileSystemMounts) {
@@ -29,6 +23,8 @@ if ("${terminateNotification.enable}" -eq $true) {
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
 }
 
-if ("${activeDirectory.domainName}" -ne "") {
-  Restart-Computer -Force
+if ("${activeDirectory.enable}" -eq $true) {
+  # Retry 5 10 {
+    JoinActiveDirectory ${activeDirectory.domainName} ${activeDirectory.serverName} "${activeDirectory.orgUnitPath}" ${activeDirectory.adminUsername} ${activeDirectory.adminPassword}
+  # }
 }

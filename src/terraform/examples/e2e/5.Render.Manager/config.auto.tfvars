@@ -6,7 +6,8 @@ resourceGroupName = "ArtistAnywhere.Scheduler" # Alphanumeric, underscores, hyph
 
 virtualMachines = [
   {
-    name = "LnxScheduler"
+    enable = false
+    name   = "LnxScheduler"
     machine = {
       size = "Standard_D8as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       image = {
@@ -38,32 +39,36 @@ virtualMachines = [
         disable = false
       }
     }
-    customExtension = {
-      enable   = true
-      fileName = "initialize.sh"
-      parameters = {
-        activeDirectory = {
-          domainName    = ""
-          adminPassword = ""
-        }
-        autoScale = {
-          enable                   = false
-          fileName                 = "scale.sh"
-          resourceGroupName        = "ArtistAnywhere.Farm"
-          scaleSetName             = "LnxFarmC"
-          scaleSetMachineCountMax  = 100
-          jobWaitThresholdSeconds  = 300
-          workerIdleDeleteSeconds  = 600
-          detectionIntervalSeconds = 60
+    extension = {
+      initialize = {
+        enable   = true
+        fileName = "initialize.sh"
+        parameters = {
+          activeDirectory = {
+            enable        = false
+            domainName    = ""
+            adminPassword = ""
+          }
+          autoScale = {
+            enable                   = false
+            fileName                 = "scale.sh"
+            resourceGroupName        = "ArtistAnywhere.Farm"
+            scaleSetName             = "LnxFarmC"
+            scaleSetMachineCountMax  = 100
+            jobWaitThresholdSeconds  = 300
+            workerIdleDeleteSeconds  = 600
+            detectionIntervalSeconds = 60
+          }
         }
       }
-    }
-    monitorExtension = {
-      enable = false
+      monitor = {
+        enable = false
+      }
     }
   },
   {
-    name = "" # "WinScheduler"
+    enable = false
+    name   = "WinScheduler"
     machine = {
        size = "Standard_D8as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
        image = {
@@ -95,28 +100,31 @@ virtualMachines = [
         disable = false
       }
     }
-    customExtension = {
-      enable   = true
-      fileName = "initialize.ps1"
-      parameters = {
-        activeDirectory = {
-          domainName    = "artist.studio"
-          adminPassword = "P@ssword1234"
-        }
-        autoScale = {
-          enable                   = false
-          fileName                 = "scale.ps1"
-          resourceGroupName        = "ArtistAnywhere.Farm"
-          scaleSetName             = "WinFarmC"
-          scaleSetMachineCountMax  = 100
-          jobWaitThresholdSeconds  = 300
-          workerIdleDeleteSeconds  = 600
-          detectionIntervalSeconds = 60
+    extension = {
+      initialize = {
+        enable   = true
+        fileName = "initialize.ps1"
+        parameters = {
+          activeDirectory = {
+            enable        = true
+            domainName    = "artist.studio"
+            adminPassword = "P@ssword1234"
+          }
+          autoScale = {
+            enable                   = false
+            fileName                 = "scale.ps1"
+            resourceGroupName        = "ArtistAnywhere.Farm"
+            scaleSetName             = "WinFarmC"
+            scaleSetMachineCountMax  = 100
+            jobWaitThresholdSeconds  = 300
+            workerIdleDeleteSeconds  = 600
+            detectionIntervalSeconds = 60
+          }
         }
       }
-    }
-    monitorExtension = {
-      enable = false
+      monitor = {
+        enable = false
+      }
     }
   }
 ]

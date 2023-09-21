@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>3.73.0"
     }
+    azapi = {
+      source = "azure/azapi"
+      version = "~>1.9.0"
+    }
   }
   backend "azurerm" {
     key = "2.Image.Builder"
@@ -15,9 +19,6 @@ provider "azurerm" {
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
-    }
-    template_deployment {
-      delete_nested_items_during_deletion = true
     }
   }
 }

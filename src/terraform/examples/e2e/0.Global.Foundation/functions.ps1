@@ -1,19 +1,19 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
 function StartProcess ($filePath, $argumentList, $logFile) {
-  if ($logFile -eq $null) {
-    if ($argumentList -eq $null) {
-      Start-Process -FilePath $filePath -Wait
-    } else {
-      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait
-    }
-  } else {
-    if ($argumentList -eq $null) {
-      Start-Process -FilePath $filePath -Wait -RedirectStandardOutput $logFile-out -RedirectStandardError $logFile-err
-    } else {
+  if ($logFile) {
+    if ($argumentList) {
       Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -RedirectStandardOutput $logFile-out -RedirectStandardError $logFile-err
+    } else {
+      Start-Process -FilePath $filePath -Wait -RedirectStandardOutput $logFile-out -RedirectStandardError $logFile-err
     }
     Get-Content -Path $logFile-err | Write-Host
+  } else {
+    if ($argumentList) {
+      Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait
+    } else {
+      Start-Process -FilePath $filePath -Wait
+    }
   }
 }
 
@@ -45,14 +45,40 @@ function EnableFarmClient () {
   deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
 }
 
-function JoinActiveDirectory ($domainName, $serverName, $adminUsername, $adminPassword) {
-  if ($domainName -ne "") {
-    $securePassword = ConvertTo-SecureString $adminPassword -AsPlainText -Force
-    $adminCredential = New-Object System.Management.Automation.PSCredential("$adminUsername@$domainName", $securePassword)
-    $adComputer = Get-ADComputer -Identity $(hostname) -Server $serverName -Credential $adminCredential -ErrorAction SilentlyContinue
-    if ($adComputer -ne $null) {
-      Remove-ADObject -Identity $adComputer -Recursive -Confirm:$false
+function JoinActiveDirectory ($domainName, $serverName, $orgUnitPath, $adminUsername, $adminPassword) {
+  if ($adminUsername -notlike "*@*") {
+    $adminUsername = "$adminUsername@$domainName"
+  }
+  $securePassword = ConvertTo-SecureString $adminPassword -AsPlainText -Force
+  $adminCredential = New-Object System.Management.Automation.PSCredential($adminUsername, $securePassword)
+
+  $adComputer = Get-ADComputer -Identity $(hostname) -Server $serverName -Credential $adminCredential -ErrorAction SilentlyContinue
+  if ($adComputer) {
+    Remove-ADObject -Identity $adComputer -Recursive -Confirm:$false
+    Start-Sleep -Seconds 5
+  }
+
+  if ($orgUnitPath -ne "") {
+    Add-Computer -DomainName $domainName -Server $serverName -Credential $adminCredential -OUPath $orgUnitPath -Force -PassThru -Verbose -Restart
+  } else {
+    Add-Computer -DomainName $domainName -Server $serverName -Credential $adminCredential -Force -PassThru -Verbose -Restart
+  }
+}
+
+function Retry ($delaySeconds, $maxCount, $scriptBlock) {
+  $count = 0
+  $exception = $null
+  do {
+    $count++
+    try {
+      $scriptBlock.Invoke()
+      $exception = $null
+    } catch {
+      $exception = $_.Exception
+      Start-Sleep -Seconds $delaySeconds
     }
-    Add-Computer -DomainName $domainName -Server $serverName -Credential $adminCredential -Force -PassThru -Verbose
+  } while ($count -lt $maxCount)
+  if ($exception) {
+    throw $exception
   }
 }

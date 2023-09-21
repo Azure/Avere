@@ -1,5 +1,3 @@
-$ErrorActionPreference = "Stop"
-
 $binDirectory = "C:\Users\Public\Downloads"
 Set-Location -Path $binDirectory
 
@@ -20,7 +18,7 @@ if ("${autoScale.enable}" -ne $false) {
 }
 Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Settings $taskSettings -User System -Force
 
-if ("${activeDirectory.domainName}" -ne "") {
+if ("${activeDirectory.enable}" -eq $true) {
   $securePassword = ConvertTo-SecureString ${activeDirectory.adminPassword} -AsPlainText -Force
   Install-ADDSForest -DomainName "${activeDirectory.domainName}" -SafeModeAdministratorPassword $securePassword -InstallDns -Force
 }

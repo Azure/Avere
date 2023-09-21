@@ -35,6 +35,7 @@ variable "resourceGroupName" {
 variable "trafficManager" {
   type = object(
     {
+      enable = bool
       profile = object(
         {
           name              = string
@@ -136,7 +137,7 @@ resource "azurerm_resource_group" "workstation" {
 ###############################################################################################
 
 resource "azurerm_traffic_manager_profile" "workstation" {
-  count                  = var.trafficManager.profile.name != "" ? 1 : 0
+  count                  = var.trafficManager.enable ? 1 : 0
   name                   = var.trafficManager.profile.name
   resource_group_name    = azurerm_resource_group.workstation.name
   traffic_routing_method = var.trafficManager.profile.routingMethod
@@ -154,7 +155,7 @@ resource "azurerm_traffic_manager_profile" "workstation" {
 
 resource "azurerm_traffic_manager_external_endpoint" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if var.trafficManager.profile.name != "" && virtualMachine.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && var.trafficManager.enable
   }
   name       = each.value.name
   target     = azurerm_public_ip.workstation[each.value.name].ip_address
@@ -167,7 +168,7 @@ resource "azurerm_traffic_manager_external_endpoint" "workstation" {
 
 resource "azurerm_public_ip" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if var.trafficManager.profile.name != "" && virtualMachine.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && var.trafficManager.enable
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
@@ -182,6 +183,6 @@ output "resourceGroupName" {
 
 output "trafficManager" {
   value = {
-    fqdn = var.trafficManager.profile.name != "" ? azurerm_traffic_manager_profile.workstation[0].fqdn : ""
+    fqdn = var.trafficManager.enable ? azurerm_traffic_manager_profile.workstation[0].fqdn : ""
   }
 }

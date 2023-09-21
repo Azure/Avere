@@ -6,8 +6,6 @@ param (
   [int] $workerIdleDeleteSeconds
 )
 
-$ErrorActionPreference = "Stop"
-
 az login --identity
 
 $queuedTasks = 0

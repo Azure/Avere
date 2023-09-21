@@ -48,7 +48,7 @@ The following local installation prerequisites are required for the AAA solution
 1. Run `cd ~/e2e/0.Global.Foundation` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `module/backend.config` for your deployment
 1. Review and edit the config values in `module/variables.tf` for your deployment
-   * If a Key Vault name is specified [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L40), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
+   * If a Key Vault name is specified [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L35), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
 1. Review and edit the config values in `config.auto.tfvars` for your deployment
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)

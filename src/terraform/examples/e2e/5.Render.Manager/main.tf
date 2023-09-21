@@ -142,12 +142,15 @@ resource "azurerm_resource_group" "scheduler" {
 }
 
 resource "azurerm_private_dns_a_record" "scheduler" {
+  for_each = {
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable
+  }
   name                = var.privateDns.aRecordName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
   ttl                 = var.privateDns.ttlSeconds
   records = [
-    azurerm_network_interface.scheduler[local.virtualMachineNames[0]].private_ip_address
+    azurerm_network_interface.scheduler[each.value.name].private_ip_address
   ]
 }
 

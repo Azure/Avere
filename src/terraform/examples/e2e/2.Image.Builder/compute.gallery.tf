@@ -6,9 +6,8 @@ variable "computeGallery" {
   type = object(
     {
       name = string
-      imageDefinitions = list(object(
+      imageDefinition = map(object(
         {
-          name       = string
           type       = string
           generation = string
           publisher  = string
@@ -21,29 +20,27 @@ variable "computeGallery" {
   )
 }
 
-resource "azurerm_shared_image_gallery" "gallery" {
+resource "azurerm_shared_image_gallery" "studio" {
   name                = var.computeGallery.name
   resource_group_name = azurerm_resource_group.image.name
   location            = azurerm_resource_group.image.location
 }
 
-resource "azurerm_shared_image" "definitions" {
-  count               = length(var.computeGallery.imageDefinitions)
-  name                = var.computeGallery.imageDefinitions[count.index].name
+resource "azurerm_shared_image" "studio" {
+  for_each            = var.computeGallery.imageDefinition
+  name                = each.key
   resource_group_name = azurerm_resource_group.image.name
   location            = azurerm_resource_group.image.location
-  gallery_name        = azurerm_shared_image_gallery.gallery.name
-  os_type             = var.computeGallery.imageDefinitions[count.index].type
-  hyper_v_generation  = var.computeGallery.imageDefinitions[count.index].generation
+  gallery_name        = azurerm_shared_image_gallery.studio.name
+  os_type             = each.value.type
+  hyper_v_generation  = each.value.generation
   identifier {
-    publisher = var.computeGallery.imageDefinitions[count.index].publisher
-    offer     = var.computeGallery.imageDefinitions[count.index].offer
-    sku       = var.computeGallery.imageDefinitions[count.index].sku
+    publisher = each.value.publisher
+    offer     = each.value.offer
+    sku       = each.value.sku
   }
 }
 
-output "imageDefinitionLinux" {
-  value = one([
-    for imageDefinition in var.computeGallery.imageDefinitions: imageDefinition if imageDefinition.type == "Linux"
-  ])
+output "imageDefinition" {
+  value = var.computeGallery.imageDefinition
 }

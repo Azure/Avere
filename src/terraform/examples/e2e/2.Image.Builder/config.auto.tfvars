@@ -6,36 +6,32 @@ resourceGroupName = "ArtistAnywhere.Image" # Alphanumeric, underscores, hyphens,
 
 computeGallery = {
   name = "azstudio"
-  imageDefinitions = [
-    {
-      name       = "Linux"
+  imageDefinition = {
+    Linux = {
       type       = "Linux"
       generation = "V2"
       publisher  = "AlmaLinux"
       offer      = "AlmaLinux-x86_64"
       sku        = "9-Gen2"
       enablePlan = false
-    },
-    {
-      name       = "WinServer"
+    }
+    WinServer = {
       type       = "Windows"
       generation = "V2"
       publisher  = "MicrosoftWindowsServer"
       offer      = "WindowsServer"
       sku        = "2022-Datacenter-G2"
       enablePlan = false
-    },
-    {
-      name       = "WinFarm"
+    }
+    WinFarm = {
       type       = "Windows"
       generation = "V2"
       publisher  = "MicrosoftWindowsDesktop"
       offer      = "Windows-10"
       sku        = "Win10-22H2-Pro-G2"
       enablePlan = false
-    },
-    {
-      name       = "WinArtist"
+    }
+    WinArtist = {
       type       = "Windows"
       generation = "V2"
       publisher  = "MicrosoftWindowsDesktop"
@@ -43,7 +39,7 @@ computeGallery = {
       sku        = "Win11-22H2-Pro"
       enablePlan = false
     }
-  ]
+  }
 }
 
 #############################################################################################
@@ -53,7 +49,7 @@ computeGallery = {
 imageTemplates = [
   {
     name = "LnxStorageCPU"
-    image = {
+    source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
@@ -70,7 +66,7 @@ imageTemplates = [
   },
   {
     name = "LnxStorageGPU"
-    image = {
+    source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
@@ -87,7 +83,7 @@ imageTemplates = [
   },
   {
     name = "LnxScheduler"
-    image = {
+    source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
@@ -104,7 +100,7 @@ imageTemplates = [
   },
   {
     name = "LnxFarmCPU"
-    image = {
+    source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
@@ -124,7 +120,7 @@ imageTemplates = [
   },
   {
     name = "LnxFarmGPU"
-    image = {
+    source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
@@ -145,7 +141,7 @@ imageTemplates = [
   },
   {
     name = "LnxArtistNVIDIA"
-    image = {
+    source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
@@ -166,7 +162,7 @@ imageTemplates = [
   },
   {
     name = "LnxArtistAMD"
-    image = {
+    source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
     }
@@ -187,7 +183,7 @@ imageTemplates = [
   },
   {
     name = "WinScheduler"
-    image = {
+    source = {
       definitionName = "WinServer"
       inputVersion   = "Latest"
     }
@@ -196,7 +192,7 @@ imageTemplates = [
       machineSize    = "Standard_D8as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                 # NVIDIA or AMD
       outputVersion  = "1.0.0"
-      timeoutMinutes = 180
+      timeoutMinutes = 240
       osDiskSizeGB   = 512
       renderEngines = [
       ]
@@ -204,7 +200,7 @@ imageTemplates = [
   },
   {
     name = "WinFarmCPU"
-    image = {
+    source = {
       definitionName = "WinFarm"
       inputVersion   = "Latest"
     }
@@ -213,7 +209,7 @@ imageTemplates = [
       machineSize    = "Standard_D96as_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                  # NVIDIA or AMD
       outputVersion  = "2.0.0"
-      timeoutMinutes = 420
+      timeoutMinutes = 360
       osDiskSizeGB   = 480
       renderEngines = [
         "PBRT",
@@ -223,7 +219,7 @@ imageTemplates = [
   },
   {
     name = "WinFarmGPU"
-    image = {
+    source = {
       definitionName = "WinFarm"
       inputVersion   = "Latest"
     }
@@ -232,7 +228,7 @@ imageTemplates = [
       machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = ""                        # NVIDIA or AMD
       outputVersion  = "2.1.0"
-      timeoutMinutes = 420
+      timeoutMinutes = 360
       osDiskSizeGB   = 480
       renderEngines = [
         "PBRT",
@@ -243,7 +239,7 @@ imageTemplates = [
   },
   {
     name = "WinArtistNVIDIA"
-    image = {
+    source = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"
     }
@@ -252,7 +248,7 @@ imageTemplates = [
       machineSize    = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "3.0.0"
-      timeoutMinutes = 420
+      timeoutMinutes = 360
       osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",
@@ -263,7 +259,7 @@ imageTemplates = [
   },
   {
     name = "WinArtistAMD"
-    image = {
+    source = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"
     }
@@ -272,7 +268,7 @@ imageTemplates = [
       machineSize    = "Standard_NG32ads_V620_v1" # https://learn.microsoft.com/azure/virtual-machines/sizes
       gpuProvider    = "AMD"                      # NVIDIA or AMD
       outputVersion  = "3.1.0"
-      timeoutMinutes = 420
+      timeoutMinutes = 360
       osDiskSizeGB   = 1024
       renderEngines = [
         "PBRT",

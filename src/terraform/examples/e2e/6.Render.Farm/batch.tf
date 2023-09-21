@@ -41,14 +41,14 @@ variable "batch" {
               maxConcurrentTasks = number
             }
           )
-          fillMode = object(
-            {
-              nodePack = bool
-            }
-          )
           spot = object(
             {
               enable = bool
+            }
+          )
+          fillMode = object(
+            {
+              nodePack = bool
             }
           )
         }
@@ -183,13 +183,13 @@ resource "azurerm_batch_pool" "farm" {
   network_configuration {
     subnet_id = data.azurerm_subnet.farm.id
   }
-  task_scheduling_policy {
-    node_fill_type = each.value.fillMode.nodePack ? "Pack" : "Spread"
-  }
   fixed_scale {
     target_dedicated_nodes    = each.value.spot.enable ? 0 : each.value.node.machine.count
     target_low_priority_nodes = each.value.spot.enable ? each.value.node.machine.count : 0
     node_deallocation_method  = each.value.node.deallocationMode
+  }
+  task_scheduling_policy {
+    node_fill_type = each.value.fillMode.nodePack ? "Pack" : "Spread"
   }
 }
 

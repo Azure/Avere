@@ -5,7 +5,8 @@
 variable "virtualMachines" {
   type = list(object(
     {
-      name = string
+      enable = bool
+      name   = string
       machine = object(
         {
           size = string
@@ -53,37 +54,42 @@ variable "virtualMachines" {
           )
         }
       )
-      customExtension = object(
+      extension = object(
         {
-          enable   = bool
-          fileName = string
-          parameters = object(
+          initialize = object(
             {
-              activeDirectory = object(
+              enable   = bool
+              fileName = string
+              parameters = object(
                 {
-                  domainName    = string
-                  adminPassword = string
-                }
-              )
-              autoScale = object(
-                {
-                  enable                   = bool
-                  fileName                 = string
-                  resourceGroupName        = string
-                  scaleSetName             = string
-                  scaleSetMachineCountMax  = number
-                  jobWaitThresholdSeconds  = number
-                  workerIdleDeleteSeconds  = number
-                  detectionIntervalSeconds = number
+                  activeDirectory = object(
+                    {
+                      enable        = bool
+                      domainName    = string
+                      adminPassword = string
+                    }
+                  )
+                  autoScale = object(
+                    {
+                      enable                   = bool
+                      fileName                 = string
+                      resourceGroupName        = string
+                      scaleSetName             = string
+                      scaleSetMachineCountMax  = number
+                      jobWaitThresholdSeconds  = number
+                      workerIdleDeleteSeconds  = number
+                      detectionIntervalSeconds = number
+                    }
+                  )
                 }
               )
             }
           )
-        }
-      )
-      monitorExtension = object(
-        {
-          enable = bool
+          monitor = object(
+            {
+              enable = bool
+            }
+          )
         }
       )
     }
@@ -98,22 +104,19 @@ locals {
         image = {
           id = virtualMachine.machine.image.id
           plan = {
-            publisher = lower(virtualMachine.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachine.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.publisher, ""))
-            product   = lower(virtualMachine.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachine.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.offer, ""))
-            name      = lower(virtualMachine.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.enablePlan, false) ? virtualMachine.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinitionLinux.sku, ""))
+            publisher = lower(virtualMachine.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.publisher, ""))
+            product   = lower(virtualMachine.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.offer, ""))
+            name      = lower(virtualMachine.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.sku, ""))
           }
         }
       }
-    }) if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Linux"
-  ]
-  virtualMachineNames = [
-    for virtualMachine in var.virtualMachines : virtualMachine.name if virtualMachine.name != ""
+    }) if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
   ]
 }
 
 resource "azurerm_network_interface" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
@@ -140,7 +143,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
   admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   custom_data = base64encode(
-    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {}))
+    templatefile(each.value.extension.initialize.parameters.autoScale.fileName, merge(each.value.extension.initialize.parameters, {}))
   )
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -178,7 +181,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Initialize"
   type                       = "CustomScript"
@@ -188,7 +191,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script: "${base64encode(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {}))
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {}))
     )}"
   })
   depends_on = [
@@ -198,7 +201,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -219,7 +222,7 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
 
 resource "azurerm_windows_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
@@ -229,7 +232,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
   admin_username      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
   admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   custom_data = base64encode(
-    templatefile(each.value.customExtension.parameters.autoScale.fileName, merge(each.value.customExtension.parameters, {}))
+    templatefile(each.value.extension.initialize.parameters.autoScale.fileName, merge(each.value.extension.initialize.parameters, {}))
   )
   network_interface_ids = [
     "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -252,7 +255,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.customExtension.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Initialize"
   type                       = "CustomScriptExtension"
@@ -262,7 +265,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.customExtension.fileName, merge(each.value.customExtension.parameters, {})), "UTF-16LE"
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {})), "UTF-16LE"
     )}"
   })
   depends_on = [
@@ -272,7 +275,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.name != "" && virtualMachine.monitorExtension.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"
