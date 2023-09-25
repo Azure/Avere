@@ -96,24 +96,6 @@ variable "virtualMachines" {
   ))
 }
 
-locals {
-  virtualMachinesLinux = [
-    for virtualMachine in var.virtualMachines : merge(virtualMachine, {
-      machine = {
-        size = virtualMachine.machine.size
-        image = {
-          id = virtualMachine.machine.image.id
-          plan = {
-            publisher = lower(virtualMachine.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.publisher, ""))
-            product   = lower(virtualMachine.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.offer, ""))
-            name      = lower(virtualMachine.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachine.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.sku, ""))
-          }
-        }
-      }
-    }) if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
-  ]
-}
-
 resource "azurerm_network_interface" "scheduler" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable
@@ -132,7 +114,7 @@ resource "azurerm_network_interface" "scheduler" {
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in local.virtualMachinesLinux : virtualMachine.name => virtualMachine
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.scheduler.name

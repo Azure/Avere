@@ -119,28 +119,9 @@ variable "virtualMachineScaleSets" {
   ))
 }
 
-locals {
-  virtualMachineScaleSetsLinux = [
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet, {
-      machine = {
-        size  = virtualMachineScaleSet.machine.size
-        count = virtualMachineScaleSet.machine.count
-        image = {
-          id = virtualMachineScaleSet.machine.image.id
-          plan = {
-            publisher = lower(virtualMachineScaleSet.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.publisher, ""))
-            product   = lower(virtualMachineScaleSet.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.offer, ""))
-            name      = lower(virtualMachineScaleSet.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? virtualMachineScaleSet.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.sku, ""))
-          }
-        }
-      }
-    }) if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Linux" && var.batch.account.name == ""
-  ]
-}
-
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   for_each = {
-    for virtualMachineScaleSet in local.virtualMachineScaleSetsLinux : virtualMachineScaleSet.name => virtualMachineScaleSet
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Linux" && var.batch.account.name == ""
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name

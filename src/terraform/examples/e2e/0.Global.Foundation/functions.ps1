@@ -73,6 +73,7 @@ function Retry ($delaySeconds, $maxCount, $scriptBlock) {
     try {
       $scriptBlock.Invoke()
       $exception = $null
+      exit
     } catch {
       $exception = $_.Exception
       Start-Sleep -Seconds $delaySeconds

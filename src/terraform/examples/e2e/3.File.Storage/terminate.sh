@@ -15,13 +15,13 @@ vmNameUrl="$metadataUrl/instance/compute/name?api-version=2021-12-13&format=text
 instanceName=$(curl --silent --header Metadata:true $vmNameUrl)
 scheduledEvents=$(curl --silent --header Metadata:true $eventsUrl | jq -c .Events)
 
-function GetEncodedValue {
+function GetEventValue {
   echo $scheduledEvent | base64 -d | jq -r $1
 }
 
 for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
-  eventType=$(GetEncodedValue .EventType)
-  eventScope=$(GetEncodedValue .Resources[0])
+  eventType=$(GetEventValue .EventType)
+  eventScope=$(GetEventValue .Resources[0])
 
   if [[ $eventType == Terminate && $eventScope == $instanceName ]]; then
     az login --identity
@@ -75,9 +75,9 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
     fi
 
     if [[ $drivesRemoved == true && $containersRemoved == true ]]; then
-      eventId=$(GetEncodedValue .EventId)
-      eventData="{\"StartRequests\":[{\"EventId\":\"$eventId\"}]}"
-      curl --silent --request POST --header Metadata:true --header Content-Type:application/json --data $eventData $eventsUrl &> $logDirectory/$instanceName-event-$eventId.log
+      eventId=$(GetEventValue .EventId)
+      requestData="{\"StartRequests\":[{\"EventId\":\"$eventId\"}]}"
+      curl --silent --request POST --header Metadata:true --header Content-Type:application/json --data $requestData $eventsUrl &> $logDirectory/$instanceName-event-$eventId.log
     fi
   fi
 done

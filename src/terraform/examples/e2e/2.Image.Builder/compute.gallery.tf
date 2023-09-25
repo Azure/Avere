@@ -13,7 +13,6 @@ variable "computeGallery" {
           publisher  = string
           offer      = string
           sku        = string
-          enablePlan = bool
         }
       ))
     }

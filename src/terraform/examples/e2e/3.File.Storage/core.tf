@@ -13,22 +13,22 @@ variable "storageAccounts" {
       enableBlobNfsV3      = bool
       enableLargeFileShare = bool
       privateEndpointTypes = list(string)
+      fileShares = list(object(
+        {
+          name           = string
+          sizeGiB        = number
+          accessTier     = string
+          accessProtocol = string
+          enableFileLoad = bool
+        }
+      ))
       blobContainers = list(object(
         {
           name           = string
           rootAcl        = string
           rootAclDefault = string
-          enableDataLoad = bool
+          enableFileLoad = bool
 
-        }
-      ))
-      fileShares = list(object(
-        {
-          name           = string
-          tier           = string
-          sizeGiB        = number
-          protocol       = string
-          enableDataLoad = bool
         }
       ))
     }
@@ -47,6 +47,18 @@ locals {
       }
     ]
   ])
+  fileShares = flatten([
+    for storageAccount in var.storageAccounts : [
+      for fileShare in storageAccount.fileShares : {
+        name               = fileShare.name
+        size               = fileShare.sizeGiB
+        accessTier         = fileShare.accessTier
+        accessProtocol     = fileShare.accessProtocol
+        storageAccountName = storageAccount.name
+        enableFileLoad     = fileShare.enableFileLoad
+      }
+    ]
+  ])
   blobStorageAccounts = [
     for storageAccount in var.storageAccounts : storageAccount if storageAccount.type == "StorageV2" || storageAccount.type == "BlockBlobStorage"
   ]
@@ -57,20 +69,8 @@ locals {
         rootAcl            = blobContainer.rootAcl
         rootAclDefault     = blobContainer.rootAclDefault
         storageAccountName = storageAccount.name
-        enableDataLoad     = blobContainer.enableDataLoad
+        enableFileLoad     = blobContainer.enableFileLoad
         enableFileSystem   = storageAccount.enableBlobNfsV3
-      }
-    ]
-  ])
-  fileShares = flatten([
-    for storageAccount in var.storageAccounts : [
-      for fileShare in storageAccount.fileShares : {
-        name               = fileShare.name
-        tier               = fileShare.tier
-        size               = fileShare.sizeGiB
-        accessProtocol     = fileShare.protocol
-        storageAccountName = storageAccount.name
-        enableDataLoad     = fileShare.enableDataLoad
       }
     ]
   ])
@@ -130,26 +130,50 @@ resource "azurerm_private_endpoint" "storage" {
   ]
 }
 
+resource "azurerm_storage_share" "core" {
+  for_each = {
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare
+  }
+  name                 = each.value.name
+  access_tier          = each.value.accessTier
+  enabled_protocol     = each.value.accessProtocol
+  storage_account_name = each.value.storageAccountName
+  quota                = each.value.size
+  depends_on = [
+    azurerm_private_endpoint.storage
+  ]
+}
+
+resource "terraform_data" "file_share_load_root" {
+  for_each = {
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare if var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName == "" && fileShare.enableFileLoad
+  }
+  provisioner "local-exec" {
+    command = "az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-share ${each.value.name}"
+  }
+  depends_on = [
+    azurerm_storage_share.core
+   ]
+}
+
+resource "terraform_data" "file_share_load_blob" {
+  for_each = {
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare if var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName != "" && fileShare.enableFileLoad
+  }
+  provisioner "local-exec" {
+    command = "az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --source-blob ${var.fileLoadSource.blobName} --recursive --account-name ${each.value.storageAccountName} --destination-share ${each.value.name} --destination-file-path ${var.fileLoadSource.blobName}"
+  }
+  depends_on = [
+    azurerm_storage_share.core
+   ]
+}
+
 resource "azurerm_storage_container" "core" {
   for_each = {
     for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer
   }
   name                 = each.value.name
   storage_account_name = each.value.storageAccountName
-  depends_on = [
-    azurerm_private_endpoint.storage
-  ]
-}
-
-resource "azurerm_storage_share" "core" {
-  for_each = {
-    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare
-  }
-  name                 = each.value.name
-  access_tier          = each.value.tier
-  storage_account_name = each.value.storageAccountName
-  enabled_protocol     = each.value.accessProtocol
-  quota                = each.value.size
   depends_on = [
     azurerm_private_endpoint.storage
   ]
@@ -170,51 +194,27 @@ resource "terraform_data" "storage_container_permission" {
    ]
 }
 
-resource "terraform_data" "storage_container_data" {
+resource "terraform_data" "blob_container_load_root" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer if blobContainer.name == "data" && var.dataLoadSource.accountName != "" && var.dataLoadSource.blobName == "" && blobContainer.enableDataLoad
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer if var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName == "" && blobContainer.enableFileLoad
   }
   provisioner "local-exec" {
-    command = "az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name}"
+    command = "az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name}"
   }
   depends_on = [
     azurerm_storage_container.core
    ]
 }
 
-resource "terraform_data" "storage_container_blob_data" {
+resource "terraform_data" "blob_container_load_blob" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer if blobContainer.name == "data" && var.dataLoadSource.accountName != "" && var.dataLoadSource.blobName != "" && blobContainer.enableDataLoad
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}.${blobContainer.name}" => blobContainer if var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName != "" && blobContainer.enableFileLoad
   }
   provisioner "local-exec" {
-    command = "az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --source-blob ${var.dataLoadSource.blobName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name} --destination-blob ${var.dataLoadSource.blobName}"
+    command = "az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --source-blob ${var.fileLoadSource.blobName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name} --destination-blob ${var.fileLoadSource.blobName}"
   }
   depends_on = [
     azurerm_storage_container.core
-   ]
-}
-
-resource "terraform_data" "storage_share_data" {
-  for_each = {
-    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare if fileShare.name == "data" && var.dataLoadSource.accountName != "" && var.dataLoadSource.blobName == "" && fileShare.enableDataLoad
-  }
-  provisioner "local-exec" {
-    command = "az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-share ${each.value.name}"
-  }
-  depends_on = [
-    azurerm_storage_share.core
-   ]
-}
-
-resource "terraform_data" "storage_share_file_data" {
-  for_each = {
-    for fileShare in local.fileShares : "${fileShare.storageAccountName}.${fileShare.name}" => fileShare if fileShare.name == "data" && var.dataLoadSource.accountName != "" && var.dataLoadSource.blobName != "" && fileShare.enableDataLoad
-  }
-  provisioner "local-exec" {
-    command = "az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --source-blob ${var.dataLoadSource.blobName} --recursive --account-name ${each.value.storageAccountName} --destination-share ${each.value.name} --destination-file-path ${var.dataLoadSource.blobName}"
-  }
-  depends_on = [
-    azurerm_storage_share.core
    ]
 }
 

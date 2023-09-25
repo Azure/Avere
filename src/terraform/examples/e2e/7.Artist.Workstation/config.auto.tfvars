@@ -45,20 +45,20 @@ virtualMachines = [
         parameters = {
           fileSystemMounts = [
             {
-              enable = false # Storage Read
-              mount  = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+              enable = false # File Storage Read
+              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
             },
             {
-              enable = false # Storage Read Cache
-              mount  = "cache.artist.studio:/mnt/data /mnt/data nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              enable = false # File Cache Read
+              mount  = "cache.artist.studio:/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
-              enable = false # Storage Write
-              mount  = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+              enable = false # File Storage Write
+              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
             },
             {
-              enable = false # Storage Write Cache
-              mount  = "cache.artist.studio:/mnt/data /mnt/data nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              enable = false # File Cache Write
+              mount  = "cache.artist.studio:/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
               enable = true # Scheduler Deadline
@@ -121,20 +121,20 @@ virtualMachines = [
         parameters = {
           fileSystemMounts = [
             {
-              enable = false # Storage Read
-              mount  = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+              enable = false # File Storage Read
+              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
             },
             {
-              enable = false # Storage Read Cache
-              mount  = "cache.artist.studio:/mnt/data /mnt/data nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              enable = false # File Cache Read
+              mount  = "cache.artist.studio:/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
-              enable = false # Storage Write
-              mount  = "data.artist.studio/default /mnt/data wekafs net=udp 0 0"
+              enable = false # File Storage Write
+              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
             },
             {
-              enable = false # Storage Write Cache
-              mount  = "cache.artist.studio:/mnt/data /mnt/data nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              enable = false # File Cache Write
+              mount  = "cache.artist.studio:/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
               enable = true # Scheduler Deadline
@@ -197,20 +197,20 @@ virtualMachines = [
         parameters = {
           fileSystemMounts = [
             {
-              enable = false # Storage Read
-              mount  = "mount -o anon \\\\data.artist.studio\\default R:"
+              enable = false # File Storage Read
+              mount  = "mount -o anon \\\\content.artist.studio\\default R:"
             },
             {
-              enable = false # Storage Read Cache
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+              enable = false # File Cache Read
+              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
             },
             {
-              enable = false # Storage Write
-              mount  = "mount -o anon \\\\data.artist.studio\\default W:"
+              enable = false # File Storage Write
+              mount  = "mount -o anon \\\\content.artist.studio\\default W:"
             },
             {
-              enable = false # Storage Write Cache
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
+              enable = false # File Cache Write
+              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
             },
             {
               enable = true # Scheduler Deadline
@@ -273,20 +273,20 @@ virtualMachines = [
         parameters = {
           fileSystemMounts = [
             {
-              enable = false # Storage Read
-              mount  = "mount -o anon \\\\data.artist.studio\\default R:"
+              enable = false # File Storage Read
+              mount  = "mount -o anon \\\\content.artist.studio\\default R:"
             },
             {
-              enable = false # Storage Read Cache
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data R:"
+              enable = false # File Cache Read
+              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
             },
             {
-              enable = false # Storage Write
-              mount  = "mount -o anon \\\\data.artist.studio\\default W:"
+              enable = false # File Storage Write
+              mount  = "mount -o anon \\\\content.artist.studio\\default W:"
             },
             {
-              enable = false # Storage Write Cache
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\data W:"
+              enable = false # File Cache Write
+              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
             },
             {
               enable = true # Scheduler Deadline

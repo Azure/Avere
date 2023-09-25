@@ -7,15 +7,15 @@ https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-
 The following *core solution principles* are implemented throughout the Azure Artist Anywhere (AAA) solution deployment framework.
 * Defense-in-depth layered security model across [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview), [Private Link](https://learn.microsoft.com/azure/private-link/private-link-overview) / [Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview), [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview), etc
 * Any custom or 3rd-party software (such as a render manager, render engines, etc) in a [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) custom image is supported
-* Clean separation of AAA module deployment configuration files (**config.auto.tfvars**) and code template files (**main.tf**) via [Terraform](https://www.terraform.io)
+* Clean separation of AAA module deployment configuration files (***config.auto.tfvars***) and resource template files (****.tf***) via [Terraform](https://www.terraform.io)
 
 | **Module Name** | **Module Description** | **Is Module Required<br>for Burst Render?<br>(*Compute Only*)** | **Is Module Required<br>for Full Solution?<br>(*Compute & Storage*)** |
 | - | - | - | - |
 | [0&#160;Global&#160;Foundation](#0-global-foundation) | Defines&#160;global&#160;config&#160;([Azure&#160;region(s)](https://azure.microsoft.com/regions))&#160;and&#160;core&#160;solution resources ([Terraform state storage](https://developer.hashicorp.com/terraform/language/settings/backends/azurerm), [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), etc). | Yes | Yes |
 | [1 Virtual Network](#1-virtual-network) | Deploys [Virtual Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview), [Private DNS](https://learn.microsoft.com/azure/dns/private-dns-overview), [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview), etc with [VPN](https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpngateways) or [ExpressRoute](https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways) gateway services. | Yes,&#160;if&#160;[Virtual&#160;Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed | Yes,&#160;if&#160;[Virtual&#160;Network](https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) not yet deployed |
 | [2 Image Builder](#2-image-builder) | Deploys [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries) image definitions and templates<br />for building custom images via the [Image Builder](https://learn.microsoft.com/azure/virtual-machines/image-builder-overview) service. | No, use your custom images via [image.id](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.Render.Farm/config.auto.tfvars#L14) | No, use your custom images via [image.id](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.Render.Farm/config.auto.tfvars#L14) |
-| [3 Storage](#3-storage) | Deploys native ([Blob [NFS]](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction) or [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)) or hosted ([Weka](https://azuremarketplace.microsoft.com/marketplace/apps/weka1652213882079.weka_data_platform) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5)) storage with optional sample scene data loaded for [PBRT](https://pbrt.org), [Blender](https://www.blender.org) and/or [MoonRay](https://openmoonray.org) rendering. | No | Yes |
-| [4 Storage Cache](#4-storage-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) storage cluster for highly-available and scalable on-premises file caching on-demand. | Yes | No |
+| [3 File Storage](#3-file-storage) | Deploys native ([Blob [NFS]](https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support), [Files](https://learn.microsoft.com/azure/storage/files/storage-files-introduction) or [NetApp Files](https://learn.microsoft.com/azure/azure-netapp-files/azure-netapp-files-introduction)) or hosted ([Weka](https://azuremarketplace.microsoft.com/marketplace/apps/weka1652213882079.weka_data_platform) or [Hammerspace](https://azuremarketplace.microsoft.com/marketplace/apps/hammerspace.hammerspace_4_6_5)) storage with optional sample scene data loaded for [PBRT](https://pbrt.org), [Blender](https://www.blender.org) and/or [MoonRay](https://openmoonray.org) rendering. | No | Yes |
+| [4 File Cache](#4-file-cache) | Deploys [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) or [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) storage cluster for highly-available and scalable on-premises file caching on-demand. | Yes | No |
 | [5 Render Manager](#5-render-manager) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines) for render job management<br/>via any 3rd-party rendering job scheduling software. | No | No |
 | [6 Render Farm](#6-render-farm) | Deploys  [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) or [Batch](https://learn.microsoft.com/azure/batch/batch-technical-overview) for highly-scalable Linux and/or Windows render farm compute. | Yes | Yes |
 | [7&#160;Artist&#160;Workstation](#7-artist-workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or<br>[Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations with [HP Anyware](https://www.teradici.com). | No | No |
@@ -36,16 +36,13 @@ For example, the following sample images were [rendered on Azure](https://user-i
 The following local installation prerequisites are required for the AAA solution deployment framework.<br>
 1. Make sure the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your PATH environment variable.
 1. Make sure the [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) is installed locally and accessible in your PATH environment variable.
-1. Download the AAA end-to-end (e2e) solution source files via the following GitHub download link.
-   * https://downgit.github.io/#/home?url=https://github.com/Azure/Avere/tree/main/src/terraform/examples/e2e
-   * Unzip the downloaded `e2e.zip` file to your user home directory (`~/`).<br>Note that all local source file references below are relative to `~/e2e/`
 1. Run `az account show` to ensure your current Azure subscription session context is set as expected. Verify the `id` property.<br>To change your current Azure subscription session context, run `az account set --subscription <subscriptionId>`
+1. Download this GitHub repository to your local workstation, which enables easy module configuration and deployment.
 
 ## 0 Global Foundation
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/0.Global.Foundation` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `module/backend.config` for your deployment
 1. Review and edit the config values in `module/variables.tf` for your deployment
    * If a Key Vault name is specified [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L35), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
@@ -56,9 +53,8 @@ The following local installation prerequisites are required for the AAA solution
 
 ## 1 Virtual Network
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/1.Virtual.Network` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
@@ -66,9 +62,8 @@ The following local installation prerequisites are required for the AAA solution
 
 ## 2 Image Builder
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/2.Image.Builder` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
@@ -76,21 +71,19 @@ The following local installation prerequisites are required for the AAA solution
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 1. After image template deployment, use the Azure portal or [Image Builder CLI](https://learn.microsoft.com/cli/azure/image/builder#az-image-builder-run) to start image build runs
 
-## 3 Storage
+## 3 File Storage
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/3.Storage` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
 
-## 4 Storage Cache
+## 4 File Cache
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/4.Storage.Cache` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
 1. For [Avere vFXT](https://learn.microsoft.com/azure/avere-vfxt/avere-vfxt-overview) deployment only (i.e., the following step does *not* apply to [HPC Cache](https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) deployment),
    * Make sure you have at least 96 cores (32 cores x 3 nodes) quota available for [Esv3](https://learn.microsoft.com/azure/virtual-machines/ev3-esv3-series#esv3-series) machines in your Azure subscription.
@@ -127,9 +120,8 @@ The following local installation prerequisites are required for the AAA solution
 
 ## 5 Render Manager
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/5.Render.Manager` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
@@ -139,9 +131,8 @@ The following local installation prerequisites are required for the AAA solution
 
 ## 6 Render Farm
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/6.Render.Farm` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute (*Spot*) cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
@@ -152,9 +143,8 @@ The following local installation prerequisites are required for the AAA solution
 
 ## 7 Artist Workstation
 
-### Deployment Steps
+### Module Configuration & Deployment
 
-1. Run `cd ~/e2e/7.Artist.Workstation` in a local shell (Bash or PowerShell)
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
@@ -177,7 +167,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt -arguments "--outfile /mnt/data/write/pbrt/moana/island-v4.png /mnt/data/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
+```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt -arguments "--outfile /mnt/content/write/pbrt/moana/island-v4.png /mnt/content/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
 #### 8.1.2 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
@@ -195,7 +185,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/data/read/blender/3.4/splash.blend --render-output /mnt/data/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/content/read/blender/3.4/splash.blend --render-output /mnt/content/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
 
 #### 8.2.2 Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 

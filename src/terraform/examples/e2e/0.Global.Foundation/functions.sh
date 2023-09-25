@@ -19,5 +19,5 @@ function SetFileSystemMount {
 }
 
 function EnableFarmClient {
-  curl http://data.artist.studio:14000/dist/v1/install | sh
+  curl http://content.artist.studio:14000/dist/v1/install | sh
 }

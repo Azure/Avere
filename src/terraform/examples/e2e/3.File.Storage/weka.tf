@@ -140,13 +140,6 @@ data "azurerm_virtual_machine_scale_set" "weka" {
 }
 
 locals {
-  wekaImage = merge(var.weka.machine.image, {
-    plan = {
-      publisher = lower(var.weka.machine.image.plan.publisher != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? var.weka.machine.image.plan.publisher : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.publisher, ""))
-      product   = lower(var.weka.machine.image.plan.product != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? var.weka.machine.image.plan.product : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.offer, ""))
-      name      = lower(var.weka.machine.image.plan.name != "" && try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.enablePlan, false) ? var.weka.machine.image.plan.name : try(data.terraform_remote_state.image.outputs.imageDefinition.Linux.sku, ""))
-    }
-  })
   wekaObjectTier = merge(var.weka.objectTier, {
     storage = {
       accountName   = var.weka.objectTier.storage.accountName != "" ? var.weka.objectTier.storage.accountName : try(data.azurerm_storage_account.blob[0].name, "")
@@ -331,11 +324,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     }
   }
   dynamic plan {
-    for_each = local.wekaImage.plan.name != "" ? [1] : []
+    for_each = var.weka.machine.image.plan.name != "" ? [1] : []
     content {
-      publisher = local.wekaImage.plan.publisher
-      product   = local.wekaImage.plan.product
-      name      = local.wekaImage.plan.name
+      publisher = var.weka.machine.image.plan.publisher
+      product   = var.weka.machine.image.plan.product
+      name      = var.weka.machine.image.plan.name
     }
   }
   dynamic admin_ssh_key {
@@ -351,7 +344,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   ]
 }
 
-resource "azurerm_private_dns_a_record" "data" {
+resource "azurerm_private_dns_a_record" "content" {
   count               = var.weka.name.resource != "" ? 1 : 0
   name                = var.weka.network.privateDnsZone.recordSetName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
@@ -460,8 +453,8 @@ resource "terraform_data" "weka_file_system" {
   ]
 }
 
-resource "terraform_data" "weka_data_load" {
-  count = var.weka.name.resource != "" && var.dataLoadSource.accountName != "" ? 1 : 0
+resource "terraform_data" "weka_load" {
+  count = var.weka.name.resource != "" && var.fileLoadSource.accountName != "" ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
@@ -471,13 +464,13 @@ resource "terraform_data" "weka_data_load" {
   provisioner "remote-exec" {
     inline = [
       "sudo weka agent install-agent",
-      "mountPath=/mnt/${var.dataLoadSource.containerName}",
+      "mountPath=/mnt/${var.fileLoadSource.containerName}",
       "sudo mkdir -p $mountPath",
       "sudo mount -t wekafs ${var.weka.fileSystem.name} $mountPath",
-      "if [ \"${var.dataLoadSource.blobName}\" != \"\" ]; then",
-      "  sudo az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --source-blob ${var.dataLoadSource.blobName} --recursive --destination /mnt/${var.dataLoadSource.containerName}",
+      "if [ \"${var.fileLoadSource.blobName}\" != \"\" ]; then",
+      "  sudo az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --source-blob ${var.fileLoadSource.blobName} --recursive --destination /mnt/${var.fileLoadSource.containerName}",
       "else",
-      "  sudo az storage copy --source-account-name ${var.dataLoadSource.accountName} --source-account-key ${var.dataLoadSource.accountKey} --source-container ${var.dataLoadSource.containerName} --recursive --destination /mnt",
+      "  sudo az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --recursive --destination /mnt",
       "fi"
     ]
   }

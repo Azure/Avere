@@ -116,7 +116,7 @@ data "terraform_remote_state" "storage" {
     resource_group_name  = module.global.resourceGroupName
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "3.Storage"
+    key                  = "3.File.Storage"
   }
 }
 

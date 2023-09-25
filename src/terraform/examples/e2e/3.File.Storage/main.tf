@@ -7,7 +7,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "3.Storage"
+    key = "3.File.Storage"
   }
 }
 
@@ -40,7 +40,7 @@ variable "resourceGroupName" {
   type = string
 }
 
-variable "dataLoadSource" {
+variable "fileLoadSource" {
   type = object(
     {
       accountName   = string

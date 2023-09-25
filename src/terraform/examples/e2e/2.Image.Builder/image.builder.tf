@@ -93,6 +93,11 @@ resource "azapi_resource" "image_builder" {
         sku       = var.computeGallery.imageDefinition[each.value.source.definitionName].sku
         version   = each.value.source.inputVersion
       }
+      optimize = {
+        vmBoot = {
+          state = "Enabled"
+        }
+      }
       customize = each.value.source.definitionName == "Linux" ? [
         {
           type = "Shell"

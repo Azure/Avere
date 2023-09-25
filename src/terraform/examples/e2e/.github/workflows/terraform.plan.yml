@@ -12,8 +12,8 @@ on:
         - 0.Global.Foundation
         - 1.Virtual.Network
         - 2.Image.Builder
-        - 3.Storage
-        - 4.Storage.Cache
+        - 3.File.Storage
+        - 4.File.Cache
         - 5.Render.Manager
         - 6.Render.Farm
         - 7.Artist.Workstation

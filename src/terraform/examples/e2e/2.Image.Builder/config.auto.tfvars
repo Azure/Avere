@@ -13,7 +13,6 @@ computeGallery = {
       publisher  = "AlmaLinux"
       offer      = "AlmaLinux-x86_64"
       sku        = "9-Gen2"
-      enablePlan = false
     }
     WinServer = {
       type       = "Windows"
@@ -21,7 +20,6 @@ computeGallery = {
       publisher  = "MicrosoftWindowsServer"
       offer      = "WindowsServer"
       sku        = "2022-Datacenter-G2"
-      enablePlan = false
     }
     WinFarm = {
       type       = "Windows"
@@ -29,7 +27,6 @@ computeGallery = {
       publisher  = "MicrosoftWindowsDesktop"
       offer      = "Windows-10"
       sku        = "Win10-22H2-Pro-G2"
-      enablePlan = false
     }
     WinArtist = {
       type       = "Windows"
@@ -37,7 +34,6 @@ computeGallery = {
       publisher  = "MicrosoftWindowsDesktop"
       offer      = "Windows-11"
       sku        = "Win11-22H2-Pro"
-      enablePlan = false
     }
   }
 }

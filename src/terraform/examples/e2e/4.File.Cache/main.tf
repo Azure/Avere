@@ -15,7 +15,7 @@ terraform {
     }
   }
   backend "azurerm" {
-    key = "4.Storage.Cache"
+    key = "4.File.Cache"
   }
 }
 
