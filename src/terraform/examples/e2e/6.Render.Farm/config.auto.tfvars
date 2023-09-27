@@ -14,6 +14,7 @@ virtualMachineScaleSets = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/2.0.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -55,7 +56,7 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "content.artist.studio/default /mnt/content/read wekafs net=udp 0 0"
+              mount  = "azstudio1.file.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Read
@@ -63,7 +64,7 @@ virtualMachineScaleSets = [
             },
             {
               enable = false # File Storage Write
-              mount  = "content.artist.studio/default /mnt/content/write wekafs net=udp 0 0"
+              mount  = "azstudio1.file.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Write
@@ -108,6 +109,7 @@ virtualMachineScaleSets = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/2.1.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -149,7 +151,7 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "content.artist.studio/default /mnt/content/read wekafs net=udp 0 0"
+              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Read
@@ -157,7 +159,7 @@ virtualMachineScaleSets = [
             },
             {
               enable = false # File Storage Write
-              mount  = "content.artist.studio/default /mnt/content/write wekafs net=udp 0 0"
+              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Write
@@ -243,7 +245,7 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "mount -o anon \\\\content.artist.studio\\default R:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content R:"
             },
             {
               enable = false # File Cache Read
@@ -251,7 +253,7 @@ virtualMachineScaleSets = [
             },
             {
               enable = false # File Storage Write
-              mount  = "mount -o anon \\\\content.artist.studio\\default W:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content W:"
             },
             {
               enable = false # File Cache Write
@@ -337,7 +339,7 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "mount -o anon \\\\content.artist.studio\\default R:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content R:"
             },
             {
               enable = false # File Cache Read
@@ -345,7 +347,7 @@ virtualMachineScaleSets = [
             },
             {
               enable = false # File Storage Write
-              mount  = "mount -o anon \\\\content.artist.studio\\default W:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content W:"
             },
             {
               enable = false # File Cache Write
@@ -388,11 +390,17 @@ virtualMachineScaleSets = [
 ############################################################################
 
 batch = {
+  enable = false
   account = {
-    name = "" # Set to a unique name to deploy Batch instead of VMSS
+    name = "azstudio"
+    storage = {
+      accountName       = ""
+      resourceGroupName = ""
+    }
   }
   pools = [
     {
+      enable      = false
       name        = "LnxFarmC"
       displayName = "Linux Render Farm (CPU)"
       node = {
@@ -418,8 +426,116 @@ batch = {
       fillMode = {
         nodePack = false
       }
+    },
+    {
+      enable      = false
+      name        = "LnxFarmG"
+      displayName = "Linux Render Farm (GPU)"
+      node = {
+        image = {
+          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/2.1.0"
+          agentId = "batch.node.el 9"
+        }
+        machine = {
+          size  = "Standard_NV18ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
+          count = 2
+        }
+        osDisk = {
+          ephemeral = {
+            enable = true # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
+          }
+        }
+        deallocationMode   = "Terminate"
+        maxConcurrentTasks = 1
+      }
+      spot = {
+        enable = false # https://learn.microsoft.com/azure/batch/batch-spot-vms
+      }
+      fillMode = {
+        nodePack = false
+      }
+    },
+    {
+      enable      = false
+      name        = "WinFarmC"
+      displayName = "Windows Render Farm (CPU)"
+      node = {
+        image = {
+          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.0.0"
+          agentId = "batch.node.windows amd64"
+        }
+        machine = {
+          size  = "Standard_HB120rs_v3" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
+          count = 2
+        }
+        osDisk = {
+          ephemeral = {
+            enable = true # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
+          }
+        }
+        deallocationMode   = "Terminate"
+        maxConcurrentTasks = 1
+      }
+      spot = {
+        enable = true # https://learn.microsoft.com/azure/batch/batch-spot-vms
+      }
+      fillMode = {
+        nodePack = false
+      }
+    },
+    {
+      enable      = false
+      name        = "WinFarmG"
+      displayName = "Windows Render Farm (GPU)"
+      node = {
+        image = {
+          id      = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.1.0"
+          agentId = "batch.node.windows amd64"
+        }
+        machine = {
+          size  = "Standard_NV18ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
+          count = 2
+        }
+        osDisk = {
+          ephemeral = {
+            enable = true # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
+          }
+        }
+        deallocationMode   = "Terminate"
+        maxConcurrentTasks = 1
+      }
+      spot = {
+        enable = false # https://learn.microsoft.com/azure/batch/batch-spot-vms
+      }
+      fillMode = {
+        nodePack = false
+      }
     }
   ]
+}
+
+###########################################################################
+# Open AI (https://learn.microsoft.com/azure/ai-services/openai/overview) #
+###########################################################################
+
+openAI = {
+  enable      = false
+  regionName  = "CanadaEast"
+  accountName = ""
+  domainName  = ""
+  serviceTier = "S0"
+  modelDeployments = [
+    {
+      enable  = true
+      name    = "gpt-4"
+      format  = "OpenAI"
+      version = ""
+      scale   = "Standard"
+    }
+  ]
+  storage = {
+    enable = false
+  }
 }
 
 #######################################################################
@@ -427,12 +543,14 @@ batch = {
 #######################################################################
 
 computeNetwork = {
+  enable            = false
   name              = ""
   subnetName        = ""
   resourceGroupName = ""
 }
 
 storageAccount = {
+  enable             = false
   name               = ""
   resourceGroupName  = ""
 }

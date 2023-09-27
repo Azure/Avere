@@ -13,6 +13,7 @@ virtualMachines = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/3.0.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -46,7 +47,7 @@ virtualMachines = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
+              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Read
@@ -54,7 +55,7 @@ virtualMachines = [
             },
             {
               enable = false # File Storage Write
-              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
+              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Write
@@ -89,6 +90,7 @@ virtualMachines = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/3.1.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -122,7 +124,7 @@ virtualMachines = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
+              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Read
@@ -130,7 +132,7 @@ virtualMachines = [
             },
             {
               enable = false # File Storage Write
-              mount  = "content.artist.studio/default /mnt/content wekafs net=udp 0 0"
+              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Write
@@ -165,6 +167,7 @@ virtualMachines = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinArtist/versions/3.0.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -198,7 +201,7 @@ virtualMachines = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "mount -o anon \\\\content.artist.studio\\default R:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content R:"
             },
             {
               enable = false # File Cache Read
@@ -206,7 +209,7 @@ virtualMachines = [
             },
             {
               enable = false # File Storage Write
-              mount  = "mount -o anon \\\\content.artist.studio\\default W:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content W:"
             },
             {
               enable = false # File Cache Write
@@ -241,6 +244,7 @@ virtualMachines = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinArtist/versions/3.1.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -274,7 +278,7 @@ virtualMachines = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "mount -o anon \\\\content.artist.studio\\default R:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content R:"
             },
             {
               enable = false # File Cache Read
@@ -282,7 +286,7 @@ virtualMachines = [
             },
             {
               enable = false # File Storage Write
-              mount  = "mount -o anon \\\\content.artist.studio\\default W:"
+              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content W:"
             },
             {
               enable = false # File Cache Write
@@ -333,6 +337,7 @@ trafficManager = {
 #######################################################################
 
 computeNetwork = {
+  enable            = false
   name              = ""
   subnetName        = ""
   resourceGroupName = ""

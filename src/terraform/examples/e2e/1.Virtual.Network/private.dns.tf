@@ -36,5 +36,5 @@ resource "azurerm_private_dns_zone_virtual_network_link" "network" {
 }
 
 output "privateDns" {
-  value = var.virtualNetwork.name != "" ? null : var.privateDns
+  value = var.virtualNetwork.enable ? null : var.privateDns
 }

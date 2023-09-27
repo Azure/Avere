@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.73.0"
+      version = "~>3.74.0"
     }
   }
   backend "azurerm" {
@@ -43,6 +43,7 @@ variable "resourceGroupName" {
 variable "fileLoadSource" {
   type = object(
     {
+      enable        = bool
       accountName   = string
       accountKey    = string
       containerName = string
@@ -54,6 +55,7 @@ variable "fileLoadSource" {
 variable "storageNetwork" {
   type = object(
     {
+      enable              = bool
       name                = string
       resourceGroupName   = string
       subnetNamePrimary   = string
@@ -82,25 +84,25 @@ data "azurerm_user_assigned_identity" "studio" {
 }
 
 data "azurerm_key_vault" "studio" {
-  count               = module.global.keyVault.name != "" ? 1 : 0
+  count               = module.global.keyVault.enable ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
+  count        = module.global.keyVault.enable ? 1 : 0
   name         = module.global.keyVault.secretName.adminUsername
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
+  count        = module.global.keyVault.enable ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  count               = module.global.monitor.name != "" ? 1 : 0
+  count               = module.global.monitor.enable ? 1 : 0
   name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
@@ -130,45 +132,44 @@ data "azurerm_resource_group" "network" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                = !local.stateExistsNetwork ? var.storageNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
-  resource_group_name = !local.stateExistsNetwork ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+  name                = var.storageNetwork.enable ? var.storageNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = var.storageNetwork.enable ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_virtual_network" "storage" {
-  count               = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
-  name                = !local.stateExistsNetwork ? var.storageNetwork.name : data.terraform_remote_state.network.outputs.storageNetwork.name
-  resource_group_name = !local.stateExistsNetwork ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+  count               = var.storageNetwork.enable|| data.terraform_remote_state.network.outputs.storageNetwork.enable ? 1 : 0
+  name                = var.storageNetwork.enable ? var.storageNetwork.name : data.terraform_remote_state.network.outputs.storageNetwork.name
+  resource_group_name = var.storageNetwork.enable ? var.storageNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "compute_storage" {
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.storage].name
+  name                 = var.storageNetwork.enable ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.storage].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 data "azurerm_subnet" "storage_primary" {
-  count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.primary].name
+  count                = var.storageNetwork.enable || data.terraform_remote_state.network.outputs.storageNetwork.enable ? 1 : 0
+  name                 = var.storageNetwork.enable ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.primary].name
   resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage[0].name
 }
 
 data "azurerm_subnet" "storage_secondary" {
-  count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.secondary].name
+  count                = var.storageNetwork.enable || data.terraform_remote_state.network.outputs.storageNetwork.enable ? 1 : 0
+  name                 = var.storageNetwork.enable ? var.storageNetwork.subnetNameSecondary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.secondary].name
   resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage[0].name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                = !local.stateExistsNetwork ? var.storageNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
+  name                = var.storageNetwork.enable ? var.storageNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
   resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
 locals {
-  stateExistsNetwork = var.storageNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
-  storageSubnet      = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
-  binDirectory       = "/usr/local/bin"
+  storageSubnet = try(data.azurerm_subnet.storage_primary[0], data.azurerm_subnet.compute_storage)
+  binDirectory  = "/usr/local/bin"
 }
 
 resource "azurerm_resource_group" "storage" {

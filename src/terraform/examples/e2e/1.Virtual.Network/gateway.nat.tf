@@ -4,15 +4,15 @@
 
 resource "azurerm_nat_gateway" "compute" {
   count               = var.computeNetwork.enableNatGateway ? 1 : 0
-  name                = "${local.computeNetworks[0].name}.Gateway"
+  name                = "${local.computeNetworks[0].name}-Gateway"
   resource_group_name = local.computeNetworks[0].resourceGroupName
   location            = local.computeNetworks[0].regionName
   sku_name            = "Standard"
 }
 
 resource "azurerm_nat_gateway" "storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.name != "" ? 1 : 0
-  name                = "${local.storageNetwork.name}.Gateway"
+  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
+  name                = "${local.storageNetwork.name}-Gateway"
   resource_group_name = local.storageNetwork.resourceGroupName
   location            = local.storageNetwork.regionName
   sku_name            = "Standard"
@@ -25,7 +25,7 @@ resource "azurerm_nat_gateway_public_ip_association" "compute" {
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.name != "" ? 1 : 0
+  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
   nat_gateway_id       = azurerm_nat_gateway.storage[0].id
   public_ip_address_id = azurerm_public_ip.nat_gateway_storage[0].id
 }

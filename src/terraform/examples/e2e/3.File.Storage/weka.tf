@@ -5,6 +5,7 @@
 variable "weka" {
   type = object(
     {
+      enable   = bool
       apiToken = string
       name = object(
         {
@@ -21,6 +22,7 @@ variable "weka" {
               id = string
               plan = object(
                 {
+                  enable    = bool
                   publisher = string
                   product   = string
                   name      = string
@@ -49,12 +51,14 @@ variable "weka" {
       )
       objectTier = object(
         {
+          enable  = bool
           percent = number
           storage = object(
             {
-              accountName   = string
-              accountKey    = string
-              containerName = string
+              accountName    = string
+              accountKey     = string
+              containerName  = string
+              enableFileLoad = bool
             }
           )
         }
@@ -111,7 +115,7 @@ variable "weka" {
       license = object(
         {
           key = string
-          payg = object(
+          payGo = object(
             {
               planId    = string
               secretKey = string
@@ -125,7 +129,7 @@ variable "weka" {
 }
 
 data "azurerm_storage_account" "blob" {
-  count               = var.weka.name.resource != "" ? 1 : 0
+  count               = var.weka.enable ? 1 : 0
   name                = local.blobStorageAccounts[0].name
   resource_group_name = azurerm_resource_group.storage.name
   depends_on = [
@@ -134,7 +138,7 @@ data "azurerm_storage_account" "blob" {
 }
 
 data "azurerm_virtual_machine_scale_set" "weka" {
-  count               = var.weka.name.resource != "" ? 1 : 0
+  count               = var.weka.enable ? 1 : 0
   name                = azurerm_linux_virtual_machine_scale_set.weka[0].name
   resource_group_name = azurerm_linux_virtual_machine_scale_set.weka[0].resource_group_name
 }
@@ -197,42 +201,42 @@ locals {
 }
 
 resource "azurerm_resource_group" "weka" {
-  count    = var.weka.name.resource != "" ? 1 : 0
+  count    = var.weka.enable ? 1 : 0
   name     = "${var.resourceGroupName}.Weka"
   location = azurerm_resource_group.storage.location
 }
 
 resource "azurerm_role_assignment" "weka_virtual_machine_contributor" {
-  count                = var.weka.name.resource != "" ? 1 : 0
+  count                = var.weka.enable ? 1 : 0
   role_definition_name = "Virtual Machine Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#virtual-machine-contributor
   principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
   scope                = azurerm_resource_group.weka[0].id
 }
 
 resource "azurerm_role_assignment" "weka_private_dns_zone_contributor" {
-  count                = var.weka.name.resource != "" ? 1 : 0
+  count                = var.weka.enable ? 1 : 0
   role_definition_name = "Private DNS Zone Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#private-dns-zone-contributor
   principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
   scope                = data.azurerm_resource_group.network.id
 }
 
 resource "azurerm_proximity_placement_group" "weka" {
-  count               = var.weka.name.resource != "" ? 1 : 0
+  count               = var.weka.enable ? 1 : 0
   name                = var.weka.name.resource
   resource_group_name = azurerm_resource_group.weka[0].name
   location            = azurerm_resource_group.weka[0].location
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "weka" {
-  count                           = var.weka.name.resource != "" ? 1 : 0
+  count                           = var.weka.enable ? 1 : 0
   name                            = var.weka.name.resource
   resource_group_name             = azurerm_resource_group.weka[0].name
   location                        = azurerm_resource_group.weka[0].location
   sku                             = var.weka.machine.size
   instances                       = var.weka.machine.count
   source_image_id                 = var.weka.machine.image.id
-  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : var.weka.adminLogin.userName
-  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
+  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : var.weka.adminLogin.userName
+  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
   disable_password_authentication = var.weka.adminLogin.passwordAuth.disable
   proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   single_placement_group          = false
@@ -324,7 +328,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     }
   }
   dynamic plan {
-    for_each = var.weka.machine.image.plan.name != "" ? [1] : []
+    for_each = var.weka.machine.image.plan.enable ? [1] : []
     content {
       publisher = var.weka.machine.image.plan.publisher
       product   = var.weka.machine.image.plan.product
@@ -345,7 +349,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
 }
 
 resource "azurerm_private_dns_a_record" "content" {
-  count               = var.weka.name.resource != "" ? 1 : 0
+  count               = var.weka.enable ? 1 : 0
   name                = var.weka.network.privateDnsZone.recordSetName
   resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.network.name
@@ -354,7 +358,7 @@ resource "azurerm_private_dns_a_record" "content" {
 }
 
 resource "terraform_data" "weka_cluster_create" {
-  count = var.weka.name.resource != "" ? 1 : 0
+  count = var.weka.enable ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
@@ -376,7 +380,7 @@ resource "terraform_data" "weka_cluster_create" {
 }
 
 resource "terraform_data" "weka_container_setup" {
-  count = var.weka.name.resource != "" ? var.weka.machine.count : 0
+  count = var.weka.enable ? var.weka.machine.count : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[count.index].private_ip_address
@@ -399,7 +403,7 @@ resource "terraform_data" "weka_container_setup" {
 }
 
 resource "terraform_data" "weka_cluster_start" {
-  count = var.weka.name.resource != "" ? 1 : 0
+  count = var.weka.enable ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
@@ -413,8 +417,8 @@ resource "terraform_data" "weka_cluster_start" {
       "weka cloud enable ${var.weka.supportUrl != "" ? "--cloud-url=${var.weka.supportUrl}" : ""}",
       "if [ \"${var.weka.license.key}\" != \"\" ]; then",
       "  weka cluster license set ${var.weka.license.key} 2>&1 | tee weka-cluster-license.log",
-      "elif [ \"${var.weka.license.payg.planId}\" != \"\" ]; then",
-      "  weka cluster license payg ${var.weka.license.payg.planId} ${var.weka.license.payg.secretKey} 2>&1 | tee weka-cluster-license.log",
+      "elif [ \"${var.weka.license.payGo.planId}\" != \"\" ]; then",
+      "  weka cluster license payg ${var.weka.license.payGo.planId} ${var.weka.license.payGo.secretKey} 2>&1 | tee weka-cluster-license.log",
       "fi",
       "weka cluster start-io"
     ]
@@ -425,7 +429,7 @@ resource "terraform_data" "weka_cluster_start" {
 }
 
 resource "terraform_data" "weka_file_system" {
-  count = var.weka.name.resource != "" ? 1 : 0
+  count = var.weka.enable ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
@@ -435,12 +439,14 @@ resource "terraform_data" "weka_file_system" {
   provisioner "remote-exec" {
     inline = [
       "ioStatus=$(weka status --json | jq -r .io_status)",
-      "if [ \"$ioStatus\" == \"STARTED\" ]; then",
+      "if [ $ioStatus == STARTED ]; then",
       "  source ${local.wekaFileSystemScript}",
       "  fileSystemGroupName=${var.weka.fileSystem.groupName}",
       "  fileSystemAuthRequired=${var.weka.fileSystem.authRequired ? "yes" : "no"}",
       "  fileSystemContainerName=${local.wekaObjectTier.storage.containerName}",
-      "  weka fs tier s3 add $fileSystemContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
+      "  if [ ${local.wekaObjectTier.enable} == true ]; then",
+      "    weka fs tier s3 add $fileSystemContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
+      "  fi",
       "  weka fs group create $fileSystemGroupName",
       "  weka fs create $fileSystemName $fileSystemGroupName \"$fileSystemTotalBytes\"B --obs-name $fileSystemContainerName --ssd-capacity \"$fileSystemDriveBytes\"B --auth-required $fileSystemAuthRequired",
       "fi",
@@ -454,7 +460,7 @@ resource "terraform_data" "weka_file_system" {
 }
 
 resource "terraform_data" "weka_load" {
-  count = var.weka.name.resource != "" && var.fileLoadSource.accountName != "" ? 1 : 0
+  count = var.weka.enable && var.weka.objectTier.storage.enableFileLoad && var.fileLoadSource.enable ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address
@@ -480,5 +486,5 @@ resource "terraform_data" "weka_load" {
 }
 
 output "resourceGroupNameWeka" {
-  value = var.weka.name.resource != "" ? azurerm_resource_group.weka[0].name : ""
+  value = var.weka.enable ? azurerm_resource_group.weka[0].name : ""
 }

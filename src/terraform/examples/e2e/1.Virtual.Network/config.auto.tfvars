@@ -88,7 +88,8 @@ computeNetwork = {
 }
 
 storageNetwork = {
-  name = "" # Set to "" to skip storage network deployment
+  enable = false
+  name   = ""
   addressSpace = [
     "10.0.0.0/16"
   ]
@@ -225,6 +226,7 @@ vpnGatewayLocal = {
 #######################################################################
 
 virtualNetwork = {
+  enable            = false
   name              = ""
   regionName        = ""
   resourceGroupName = ""

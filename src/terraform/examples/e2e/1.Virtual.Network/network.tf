@@ -33,6 +33,7 @@ variable "computeNetwork" {
 variable "storageNetwork" {
   type = object(
     {
+      enable       = bool
       name         = string
       addressSpace = list(string)
       dnsAddresses = list(string)
@@ -60,6 +61,7 @@ variable "storageNetwork" {
 variable "virtualNetwork" {
   type = object(
     {
+      enable            = bool
       name              = string
       regionName        = string
       resourceGroupName = string
@@ -70,14 +72,14 @@ variable "virtualNetwork" {
 locals {
   computeNetworks = [
     for regionName in module.global.regionNames : merge(var.computeNetwork, {
-      key               = "${regionName}.${var.computeNetwork.name}"
+      key               = "${regionName}-${var.computeNetwork.name}"
       regionName        = regionName
       resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${regionName}" : var.resourceGroupName}"
       resourceGroupName = length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${regionName}" : var.resourceGroupName
     })
   ]
   storageNetwork = merge(var.storageNetwork, {
-    key               = "${module.global.regionNames[0]}.${var.storageNetwork.name}"
+    key               = "${module.global.regionNames[0]}-${var.storageNetwork.name}"
     regionName        = module.global.regionNames[0]
     resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.resourceGroupName}"
     resourceGroupName = var.resourceGroupName
@@ -85,7 +87,7 @@ locals {
   computeNetworksSubnets = flatten([
     for computeNetwork in local.computeNetworks : [
       for subnet in computeNetwork.subnets : merge(subnet, {
-        key                = "${computeNetwork.key}.${subnet.name}"
+        key                = "${computeNetwork.key}-${subnet.name}"
         regionName         = computeNetwork.regionName
         resourceGroupId    = computeNetwork.resourceGroupId
         resourceGroupName  = computeNetwork.resourceGroupName
@@ -94,7 +96,7 @@ locals {
     ]
   ])
   computeNetworkStorageSubnet = merge(local.computeNetworks[0].subnets[var.computeNetwork.subnetIndex.storage], {
-    key = "${local.computeNetworks[0].key}.${local.computeNetworks[0].subnets[var.computeNetwork.subnetIndex.storage].name}"
+    key = "${local.computeNetworks[0].key}-${local.computeNetworks[0].subnets[var.computeNetwork.subnetIndex.storage].name}"
     regionName         = local.computeNetworks[0].regionName
     resourceGroupId    = local.computeNetworks[0].resourceGroupId
     resourceGroupName  = local.computeNetworks[0].resourceGroupName
@@ -102,19 +104,19 @@ locals {
   })
   storageNetworkSubnets = [
     for subnet in local.storageNetwork.subnets : merge(subnet, {
-      key                = "${local.storageNetwork.key}.${subnet.name}"
+      key                = "${local.storageNetwork.key}-${subnet.name}"
       regionName         = local.storageNetwork.regionName
       resourceGroupId    = local.storageNetwork.resourceGroupId
       resourceGroupName  = local.storageNetwork.resourceGroupName
       virtualNetworkName = local.storageNetwork.name
-    }) if subnet.name != "GatewaySubnet" && local.storageNetwork.name != ""
+    }) if subnet.name != "GatewaySubnet" && local.storageNetwork.enable
   ]
   storageSubnets  = setunion(local.storageNetworkSubnets, [local.computeNetworkStorageSubnet])
-  virtualNetworks = local.storageNetwork.name != "" ? merge(local.storageNetwork, local.computeNetworks) : local.computeNetworks
+  virtualNetworks = local.storageNetwork.enable ? merge(local.storageNetwork, local.computeNetworks) : local.computeNetworks
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for subnet in virtualNetwork.subnets : merge(subnet, {
-        key                = "${virtualNetwork.key}.${subnet.name}"
+        key                = "${virtualNetwork.key}-${subnet.name}"
         regionName         = virtualNetwork.regionName
         resourceGroupId    = virtualNetwork.resourceGroupId
         resourceGroupName  = virtualNetwork.resourceGroupName
@@ -170,7 +172,7 @@ resource "azurerm_network_security_group" "network" {
   for_each = {
     for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if var.virtualNetwork.name == ""
   }
-  name                = "${each.value.virtualNetworkName}.${each.value.name}"
+  name                = "${each.value.virtualNetworkName}-${each.value.name}"
   resource_group_name = each.value.resourceGroupName
   location            = each.value.regionName
   security_rule {
@@ -293,7 +295,7 @@ resource "azurerm_subnet_network_security_group_association" "network" {
     for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if var.virtualNetwork.name == ""
   }
   subnet_id                 = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
-  network_security_group_id = "${each.value.resourceGroupId}/providers/Microsoft.Network/networkSecurityGroups/${each.value.virtualNetworkName}.${each.value.name}"
+  network_security_group_id = "${each.value.resourceGroupId}/providers/Microsoft.Network/networkSecurityGroups/${each.value.virtualNetworkName}-${each.value.name}"
   depends_on = [
     azurerm_subnet.network,
     azurerm_network_security_group.network
@@ -301,11 +303,11 @@ resource "azurerm_subnet_network_security_group_association" "network" {
 }
 
 output "computeNetwork" {
-  value = var.virtualNetwork.name != "" ? null : local.computeNetworks[0]
+  value = var.virtualNetwork.enable ? null : local.computeNetworks[0]
 }
 
 output "storageNetwork" {
-  value = var.virtualNetwork.name != "" ? null : local.storageNetwork
+  value = var.virtualNetwork.enable ? null : local.storageNetwork
 }
 
 output "storageEndpointSubnets" {

@@ -47,14 +47,14 @@ variable "vpnGatewayLocal" {
 }
 
 locals {
-  virtualGatewayNetworks = var.virtualNetwork.name != "" ? [
+  virtualGatewayNetworks = var.virtualNetwork.enable ? [
     merge(var.virtualNetwork, {
-      key             = "${var.virtualNetwork.regionName}.${var.virtualNetwork.name}"
+      key             = "${var.virtualNetwork.regionName}-${var.virtualNetwork.name}"
       resourceGroupId = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}"
     })
   ] : [
     for virtualNetwork in var.vpnGateway.enableVnet2Vnet ? local.virtualNetworks : [local.virtualNetworks[0]] : merge({}, {
-      key               = "${virtualNetwork.regionName}.${virtualNetwork.name}"
+      key               = "${virtualNetwork.regionName}-${virtualNetwork.name}"
       name              = virtualNetwork.name
       regionName        = virtualNetwork.regionName
       resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${virtualNetwork.resourceGroupName}"
@@ -112,13 +112,13 @@ resource "azurerm_virtual_network_gateway" "vpn" {
 
 resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_up" {
   count                           = var.vpnGateway.enable && var.vpnGateway.enableVnet2Vnet && length(local.virtualGatewayNetworks) > 1 ? length(local.virtualGatewayNetworks) - 1 : 0
-  name                            = "${local.virtualGatewayNetworks[count.index].name}.${local.virtualGatewayNetworks[count.index + 1].name}"
+  name                            = "${local.virtualGatewayNetworks[count.index].name}-${local.virtualGatewayNetworks[count.index + 1].name}"
   resource_group_name             = azurerm_resource_group.network[0].name
   location                        = local.virtualGatewayNetworks[count.index].regionName
   type                            = "Vnet2Vnet"
   virtual_network_gateway_id      = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index].name}"
   peer_virtual_network_gateway_id = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index + 1].name}"
-  shared_key                      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
+  shared_key                      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
   depends_on = [
     azurerm_virtual_network_gateway.vpn
   ]
@@ -126,13 +126,13 @@ resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_up" {
 
 resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_down" {
   count                           = var.vpnGateway.enable && var.vpnGateway.enableVnet2Vnet && length(local.virtualGatewayNetworks) > 1 ? length(local.virtualGatewayNetworks) - 1 : 0
-  name                            = "${local.virtualGatewayNetworks[count.index + 1].name}.${local.virtualGatewayNetworks[count.index].name}"
+  name                            = "${local.virtualGatewayNetworks[count.index + 1].name}-${local.virtualGatewayNetworks[count.index].name}"
   resource_group_name             = azurerm_resource_group.network[0].name
   location                        = local.virtualGatewayNetworks[count.index + 1].regionName
   type                            = "Vnet2Vnet"
   virtual_network_gateway_id      = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index + 1].name}"
   peer_virtual_network_gateway_id = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index].name}"
-  shared_key                      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
+  shared_key                      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
   depends_on = [
     azurerm_virtual_network_gateway.vpn
   ]

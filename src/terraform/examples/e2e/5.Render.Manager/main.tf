@@ -3,11 +3,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.73.0"
+      version = "~>3.74.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~>2.42.0"
+      version = "~>2.43.0"
     }
   }
   backend "azurerm" {
@@ -73,25 +73,25 @@ data "azurerm_user_assigned_identity" "studio" {
 }
 
 data "azurerm_key_vault" "studio" {
-  count               = module.global.keyVault.name != "" ? 1 : 0
+  count               = module.global.keyVault.enable ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "admin_username" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
+  count        = module.global.keyVault.enable ? 1 : 0
   name         = module.global.keyVault.secretName.adminUsername
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault_secret" "admin_password" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
+  count        = module.global.keyVault.enable ? 1 : 0
   name         = module.global.keyVault.secretName.adminPassword
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_log_analytics_workspace" "monitor" {
-  count               = module.global.monitor.name != "" ? 1 : 0
+  count               = module.global.monitor.enable ? 1 : 0
   name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
@@ -117,23 +117,19 @@ data "terraform_remote_state" "image" {
 }
 
 data "azurerm_virtual_network" "compute" {
-  name                = !local.stateExistsNetwork ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
-  resource_group_name = !local.stateExistsNetwork ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+  name                = var.computeNetwork.enable ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
+  resource_group_name = var.computeNetwork.enable ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = !local.stateExistsNetwork ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
+  name                 = var.computeNetwork.enable ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.compute.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                = !local.stateExistsNetwork ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
+  name                = var.computeNetwork.enable ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
   resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
-}
-
-locals {
-  stateExistsNetwork = var.computeNetwork.name != "" ? false : try(length(data.terraform_remote_state.network.outputs) > 0, false)
 }
 
 resource "azurerm_resource_group" "scheduler" {

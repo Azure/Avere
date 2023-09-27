@@ -16,6 +16,7 @@ variable "virtualMachineScaleSets" {
               id = string
               plan = object(
                 {
+                  enable    = bool
                   publisher = string
                   product   = string
                   name      = string
@@ -129,8 +130,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   sku                             = each.value.machine.size
   instances                       = each.value.machine.count
   source_image_id                 = each.value.machine.image.id
-  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   priority                        = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
@@ -165,7 +166,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     ]
   }
   dynamic plan {
-    for_each = each.value.machine.image.plan.name != "" ? [1] : []
+    for_each = each.value.machine.image.plan.enable ? [1] : []
     content {
       publisher = each.value.machine.image.plan.publisher
       product   = each.value.machine.image.plan.product
@@ -210,7 +211,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic extension {
-    for_each = each.value.extension.monitor.enable && module.global.monitor.name != "" ? [1] : []
+    for_each = each.value.extension.monitor.enable && module.global.monitor.enable ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorLinuxAgent"
@@ -244,8 +245,8 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   sku                    = each.value.machine.size
   instances              = each.value.machine.count
   source_image_id        = each.value.machine.image.id
-  admin_username         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password         = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username         = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password         = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   priority               = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
   custom_data            = base64encode(templatefile("../0.Global.Foundation/functions.ps1", {}))
@@ -310,7 +311,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
     }
   }
   dynamic extension {
-    for_each = each.value.extension.monitor.enable && module.global.monitor.name != "" ? [1] : []
+    for_each = each.value.extension.monitor.enable && module.global.monitor.enable ? [1] : []
     content {
       name                       = "Monitor"
       type                       = "AzureMonitorWindowsAgent"

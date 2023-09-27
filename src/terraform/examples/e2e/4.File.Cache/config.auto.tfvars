@@ -62,7 +62,8 @@ vfxtCache = {
 
 storageTargetsNfs = [
   {
-    name        = "" # "RenderFarm"
+    enable      = false
+    name        = "Content"
     storageHost = ""
     hpcCache = {
       usageModel = "WRITE_AROUND" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
@@ -85,12 +86,13 @@ storageTargetsNfs = [
 
 storageTargetsNfsBlob = [
   {
-    name       = "" # "RenderFarm"
+    enable     = false
+    name       = "Content"
     clientPath = "/mnt/content"
     usageModel = "WRITE_AROUND" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
     storage = {
       resourceGroupName = "ArtistAnywhere.Storage"
-      accountName       = "azstudio3"
+      accountName       = "azstudio1"
       containerName     = "content"
     }
   }

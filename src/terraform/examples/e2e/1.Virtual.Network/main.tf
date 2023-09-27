@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.73.0"
+      version = "~>3.74.0"
     }
   }
   backend "azurerm" {
@@ -30,19 +30,19 @@ variable "resourceGroupName" {
 data "azurerm_client_config" "studio" {}
 
 data "azurerm_key_vault" "studio" {
-  count               = module.global.keyVault.name != "" ? 1 : 0
+  count               = module.global.keyVault.enable ? 1 : 0
   name                = module.global.keyVault.name
   resource_group_name = module.global.resourceGroupName
 }
 
 data "azurerm_key_vault_secret" "gateway_connection" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
+  count        = module.global.keyVault.enable ? 1 : 0
   name         = module.global.keyVault.secretName.gatewayConnection
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 
 data "azurerm_key_vault" "batch" {
-  count               = module.global.keyVault.name != "" ? 1 : 0
+  count               = module.global.keyVault.enable ? 1 : 0
   name                = "${module.global.keyVault.name}-batch"
   resource_group_name = module.global.resourceGroupName
 }
@@ -53,11 +53,11 @@ data "azurerm_storage_account" "studio" {
 }
 
 resource "azurerm_resource_group" "network" {
-  count    = var.virtualNetwork.name != "" ? 1 : length(module.global.regionNames)
+  count    = var.virtualNetwork.enable ? 1 : length(module.global.regionNames)
   name     = length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${module.global.regionNames[count.index]}" : var.resourceGroupName
   location = module.global.regionNames[count.index]
 }
 
 output "resourceGroupName" {
-  value = var.virtualNetwork.name != "" ? "" : azurerm_resource_group.network[0].name
+  value = var.virtualNetwork.enable ? "" : azurerm_resource_group.network[0].name
 }

@@ -1,6 +1,7 @@
 resourceGroupName = "ArtistAnywhere.Storage" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 fileLoadSource = {
+  enable        = false
   accountName   = ""
   accountKey    = ""
   containerName = ""
@@ -13,18 +14,37 @@ fileLoadSource = {
 
 storageAccounts = [
   {
+    enable               = true
     name                 = "azstudio1" # Name must be globally unique (lowercase alphanumeric)
     type                 = "StorageV2" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
     tier                 = "Standard"  # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
     redundancy           = "LRS"       # https://learn.microsoft.com/azure/storage/common/storage-redundancy
     enableHttpsOnly      = true        # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    enableBlobNfsV3      = false       # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = true       # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
+    enableBlobNfsV3      = true        # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
+    enableLargeFileShare = true        # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
     privateEndpointTypes = [ # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
-      "blob"
+      "blob",
+      "file"
+    ]
+    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+      {
+        enable         = true
+        name           = "content"
+        rootAcl        = "user::rwx,group::rwx,other::rwx"
+        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
+        enableFileLoad = false
+      },
+      {
+        enable         = true
+        name           = "weka"
+        rootAcl        = "user::rwx,group::rwx,other::rwx"
+        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
+        enableFileLoad = false
+      }
     ]
     fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
+        enable         = true
         name           = "content"
         sizeGiB        = 5120
         accessTier     = "TransactionOptimized"
@@ -32,22 +52,9 @@ storageAccounts = [
         enableFileLoad = false
       }
     ]
-    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
-      {
-        name           = "content"
-        rootAcl        = "user::rwx,group::rwx,other::rwx"
-        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
-        enableFileLoad = false
-      },
-      {
-        name           = "weka"
-        rootAcl        = "user::rwx,group::rwx,other::rwx"
-        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
-        enableFileLoad = false
-      }
-    ]
   },
   {
+    enable               = true
     name                 = "azstudio2"   # Name must be globally unique (lowercase alphanumeric)
     type                 = "FileStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
     tier                 = "Premium"     # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
@@ -58,42 +65,15 @@ storageAccounts = [
     privateEndpointTypes = [ # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
       "file"
     ]
+    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
+    ]
     fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
+        enable         = true
         name           = "content"
         sizeGiB        = 5120
         accessTier     = "Premium"
         accessProtocol = "NFS"
-        enableFileLoad = false
-      }
-    ]
-    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
-    ]
-  },
-  {
-    name                 = "azstudio3"        # Name must be globally unique (lowercase alphanumeric)
-    type                 = "BlockBlobStorage" # https://learn.microsoft.com/azure/storage/common/storage-account-overview
-    tier                 = "Premium"          # https://learn.microsoft.com/azure/storage/common/storage-account-overview#performance-tiers
-    redundancy           = "LRS"              # https://learn.microsoft.com/azure/storage/common/storage-redundancy
-    enableHttpsOnly      = true               # https://learn.microsoft.com/azure/storage/common/storage-require-secure-transfer
-    enableBlobNfsV3      = true               # https://learn.microsoft.com/azure/storage/blobs/network-file-system-protocol-support
-    enableLargeFileShare = false              # https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share#advanced
-    privateEndpointTypes = [ # https://learn.microsoft.com/azure/storage/common/storage-private-endpoints
-      "blob"
-    ]
-    fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
-    ]
-    blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
-      {
-        name           = "content"
-        rootAcl        = "user::rwx,group::rwx,other::rwx"
-        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
-        enableFileLoad = false
-      },
-      {
-        name           = "weka"
-        rootAcl        = "user::rwx,group::rwx,other::rwx"
-        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
         enableFileLoad = false
       }
     ]
@@ -105,9 +85,10 @@ storageAccounts = [
 #######################################################################################################
 
 weka = {
+  enable   = false
   apiToken = ""
   name = {
-    resource = ""
+    resource = "azstudio"
     display  = "Azure Artist Anywhere"
   }
   machine = {
@@ -116,6 +97,7 @@ weka = {
     image = {
       id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/Linux/versions/0.0.0"
       plan = {
+        enable    = false
         publisher = ""
         product   = ""
         name      = ""
@@ -134,11 +116,13 @@ weka = {
     delayTimeout = "PT15M"
   }
   objectTier = {
+    enable  = true
     percent = 80
     storage = {
-      accountName   = ""
-      accountKey    = ""
-      containerName = "weka"
+      accountName    = ""
+      accountKey     = ""
+      containerName  = "weka"
+      enableFileLoad = false
     }
   }
   fileSystem = {
@@ -178,7 +162,7 @@ weka = {
   }
   license = {
     key = ""
-    payg = {
+    payGo = {
       planId    = ""
       secretKey = ""
     }
@@ -191,14 +175,17 @@ weka = {
 #######################################################################################################
 
 netAppAccount = {
-  name = ""
+  enable = false
+  name   = ""
   capacityPools = [
     {
+      enable       = false
       name         = "CapacityPool"
       sizeTiB      = 4
       serviceLevel = "Standard"
       volumes = [
         {
+          enable       = false
           name         = "Content"
           sizeGiB      = 4096
           serviceLevel = "Standard"
@@ -298,6 +285,7 @@ hammerspace = {
 #######################################################################
 
 storageNetwork = {
+  enable              = false
   name                = ""
   resourceGroupName   = ""
   subnetNamePrimary   = ""

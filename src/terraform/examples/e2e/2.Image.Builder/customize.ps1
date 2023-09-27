@@ -144,13 +144,13 @@ if ($gpuProvider -eq "AMD") {
 }
 
 if ($machineType -eq "Storage" -or $machineType -eq "Scheduler") {
-  Write-Host "Customize (Start): Azure CLI"
+  Write-Host "Customize (Start): Azure CLI (x64)"
   $installType = "azure-cli"
   $installFile = "$installType.msi"
-  $downloadUrl = "https://aka.ms/installazurecliwindows"
+  $downloadUrl = "https://aka.ms/installazurecliwindowsx64"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   StartProcess $installFile "/quiet /norestart /log $installType.log" $null
-  Write-Host "Customize (End): Azure CLI"
+  Write-Host "Customize (End): Azure CLI (x64)"
 }
 
 if ($renderEngines -contains "PBRT") {

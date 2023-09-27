@@ -54,7 +54,7 @@ resource "azurerm_public_ip" "nat_gateway_compute" {
 }
 
 resource "azurerm_public_ip" "nat_gateway_storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.name != "" ? 1 : 0
+  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
   name                = azurerm_nat_gateway.storage[0].name
   resource_group_name = local.storageNetwork.resourceGroupName
   location            = local.storageNetwork.regionName

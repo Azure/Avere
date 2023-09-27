@@ -5,6 +5,7 @@
 variable "monitor" {
   type = object(
     {
+      enable = bool
       workspace = object(
         {
           sku = string
@@ -21,7 +22,7 @@ variable "monitor" {
 }
 
 resource "azurerm_log_analytics_workspace" "monitor" {
-  count                      = module.global.monitor.name != "" ? 1 : 0
+  count                      = module.global.monitor.enable ? 1 : 0
   name                       = module.global.monitor.name
   resource_group_name        = azurerm_resource_group.studio.name
   location                   = azurerm_resource_group.studio.location
@@ -35,7 +36,7 @@ resource "azurerm_log_analytics_workspace" "monitor" {
 }
 
 resource "azurerm_application_insights" "monitor" {
-  count                      = module.global.monitor.name != "" ? 1 : 0
+  count                      = module.global.monitor.enable ? 1 : 0
   name                       = module.global.monitor.name
   resource_group_name        = azurerm_resource_group.studio.name
   location                   = azurerm_resource_group.studio.location
@@ -50,11 +51,11 @@ output "monitor" {
   value = {
     workspace = {
       name = module.global.monitor.name
-      id   = module.global.monitor.name != "" ? azurerm_log_analytics_workspace.monitor[0].workspace_id : ""
+      id   = module.global.monitor.enable ? azurerm_log_analytics_workspace.monitor[0].workspace_id : ""
     }
     insight = {
       name = module.global.monitor.name
-      id   = module.global.monitor.name != "" ? azurerm_application_insights.monitor[0].app_id : ""
+      id   = module.global.monitor.enable ? azurerm_application_insights.monitor[0].app_id : ""
     }
   }
 }

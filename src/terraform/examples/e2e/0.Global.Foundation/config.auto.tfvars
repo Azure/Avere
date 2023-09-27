@@ -13,6 +13,7 @@ rootStorage = {
 ############################################################################
 
 keyVault = {
+  enable                      = true
   type                        = "standard"
   enableForDeployment         = true
   enableForDiskEncryption     = true
@@ -58,6 +59,7 @@ keyVault = {
 ######################################################################
 
 monitor = {
+  enable = true
   workspace = {
     sku = "PerGB2018"
   }

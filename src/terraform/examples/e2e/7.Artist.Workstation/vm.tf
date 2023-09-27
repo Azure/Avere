@@ -15,6 +15,7 @@ variable "virtualMachines" {
               id = string
               plan = object(
                 {
+                  enable    = bool
                   publisher = string
                   product   = string
                   name      = string
@@ -118,8 +119,8 @@ resource "azurerm_linux_virtual_machine" "workstation" {
   location                        = azurerm_resource_group.workstation.location
   size                            = each.value.machine.size
   source_image_id                 = each.value.machine.image.id
-  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -136,7 +137,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
     ]
   }
   dynamic plan {
-    for_each = each.value.machine.image.plan.name != "" ? [1] : []
+    for_each = each.value.machine.image.plan.enable ? [1] : []
     content {
       publisher = each.value.machine.image.plan.publisher
       product   = each.value.machine.image.plan.product
@@ -177,7 +178,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
 
 resource "azurerm_virtual_machine_extension" "monitor_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Linux" && module.global.monitor.enable
   }
   name                       = "Monitor"
   type                       = "AzureMonitorLinuxAgent"
@@ -205,8 +206,8 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   location            = azurerm_resource_group.workstation.location
   size                = each.value.machine.size
   source_image_id     = each.value.machine.image.id
-  admin_username      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password      = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   custom_data         = base64encode(templatefile("../0.Global.Foundation/functions.ps1", {}))
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -249,7 +250,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
 
 resource "azurerm_virtual_machine_extension" "monitor_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.name != ""
+    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.monitor.enable && virtualMachine.operatingSystem.type == "Windows" && module.global.monitor.enable
   }
   name                       = "Monitor"
   type                       = "AzureMonitorWindowsAgent"

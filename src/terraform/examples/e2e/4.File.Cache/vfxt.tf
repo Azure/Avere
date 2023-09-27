@@ -89,8 +89,8 @@ module "vfxt_controller" {
   create_resource_group             = false
   resource_group_name               = var.resourceGroupName
   location                          = module.global.regionNames[0]
-  admin_username                    = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : var.vfxtCache.cluster.adminUsername
-  admin_password                    = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
+  admin_username                    = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : var.vfxtCache.cluster.adminUsername
+  admin_password                    = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
   ssh_key_data                      = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   # user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.studio.id
   virtual_network_name              = data.azurerm_virtual_network.compute.name
@@ -122,8 +122,8 @@ resource "avere_vfxt" "cache" {
   # user_assigned_managed_identity  = data.azurerm_user_assigned_identity.studio.id
   controller_address              = module.vfxt_controller[count.index].controller_address
   controller_admin_username       = module.vfxt_controller[count.index].controller_username
-  controller_admin_password       = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
-  vfxt_admin_password             = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
+  controller_admin_password       = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
+  vfxt_admin_password             = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
   vfxt_ssh_key_data               = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   support_uploads_company_name    = var.vfxtCache.support.companyName
   enable_support_uploads          = var.vfxtCache.support.enableLogUpload
@@ -137,7 +137,7 @@ resource "avere_vfxt" "cache" {
   node_size                       = var.enableDevMode ? "unsupported_test_SKU" : "prod_sku"
   dynamic core_filer {
     for_each = {
-      for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if storageTargetNfs.name != ""
+      for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if storageTargetNfs.enable
     }
     content {
       name                      = core_filer.value["name"]

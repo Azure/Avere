@@ -5,14 +5,17 @@
 variable "netAppAccount" {
   type = object(
     {
-      name = string
+      enable = bool
+      name   = string
       capacityPools = list(object(
         {
+          enable       = bool
           name         = string
           sizeTiB      = number
           serviceLevel = string
           volumes = list(object(
             {
+              enable       = bool
               name         = string
               sizeGiB      = number
               serviceLevel = string
@@ -37,8 +40,8 @@ variable "netAppAccount" {
 }
 
 data "azurerm_subnet" "storage_netapp" {
-  count                = (!local.stateExistsNetwork && var.storageNetwork.name != "") || (local.stateExistsNetwork && data.terraform_remote_state.network.outputs.storageNetwork.name != "") ? 1 : 0
-  name                 = !local.stateExistsNetwork ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.netAppFiles].name
+  count                = var.storageNetwork.enable || data.terraform_remote_state.network.outputs.storageNetwork.enable ? 1 : 0
+  name                 = var.storageNetwork.enable ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.netAppFiles].name
   resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
   virtual_network_name = data.azurerm_virtual_network.storage[0].name
 }
@@ -48,19 +51,19 @@ locals {
     for capacityPool in var.netAppAccount.capacityPools : [
       for volume in capacityPool.volumes : merge(volume, {
         capacityPoolName = capacityPool.name
-      }) if volume.name != ""
-    ] if capacityPool.name != "" && var.netAppAccount.name != ""
+      }) if volume.enable
+    ] if var.netAppAccount.enable && capacityPool.enable
   ])
 }
 
 resource "azurerm_resource_group" "netapp_files" {
-  count    = var.netAppAccount.name != "" ? 1 : 0
+  count    = var.netAppAccount.enable ? 1 : 0
   name     = "${var.resourceGroupName}.NetAppFiles"
   location = azurerm_resource_group.storage.location
 }
 
 resource "azurerm_netapp_account" "storage" {
-  count               = var.netAppAccount.name != "" ? 1 : 0
+  count               = var.netAppAccount.enable ? 1 : 0
   name                = var.netAppAccount.name
   resource_group_name = azurerm_resource_group.netapp_files[0].name
   location            = azurerm_resource_group.netapp_files[0].location
@@ -68,7 +71,7 @@ resource "azurerm_netapp_account" "storage" {
 
 resource "azurerm_netapp_pool" "storage" {
   for_each = {
-    for capacityPool in var.netAppAccount.capacityPools : capacityPool.name => capacityPool if var.netAppAccount.name != ""
+    for capacityPool in var.netAppAccount.capacityPools : capacityPool.name => capacityPool if var.netAppAccount.enable && capacityPool.enable
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.netapp_files[0].name
@@ -83,7 +86,7 @@ resource "azurerm_netapp_pool" "storage" {
 
 resource "azurerm_netapp_volume" "storage" {
   for_each = {
-    for volume in local.netAppVolumes : "${volume.capacityPoolName}.${volume.name}" => volume
+    for volume in local.netAppVolumes : "${volume.capacityPoolName}-${volume.name}" => volume
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.netapp_files[0].name
@@ -112,5 +115,5 @@ resource "azurerm_netapp_volume" "storage" {
 }
 
 output "resourceGroupNameNetAppFiles" {
-  value = var.netAppAccount.name != "" ? azurerm_resource_group.netapp_files[0].name : ""
+  value = var.netAppAccount.enable ? azurerm_resource_group.netapp_files[0].name : ""
 }

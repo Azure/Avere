@@ -23,6 +23,7 @@ expressRouteCircuit = {
 #####################################################################################################################
 
 expressRouteGateway = {
+  enable          = false
   name            = ""
   serviceSku      = "Standard" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   networkSubnetId = ""

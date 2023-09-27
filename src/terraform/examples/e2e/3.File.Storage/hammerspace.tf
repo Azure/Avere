@@ -255,8 +255,8 @@ resource "azurerm_linux_virtual_machine" "storage_metadata" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   availability_set_id             = azurerm_availability_set.storage_metadata[0].id
   proximity_placement_group_id    = azurerm_proximity_placement_group.storage[0].id
@@ -302,8 +302,8 @@ resource "azurerm_linux_virtual_machine" "storage_data" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
+  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   availability_set_id             = azurerm_availability_set.storage_data[0].id
   proximity_placement_group_id    = azurerm_proximity_placement_group.storage[0].id
@@ -377,7 +377,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "storage_data" {
 #   settings = jsonencode({
 #     "script": "${base64encode(
 #       templatefile("initialize.sh", {
-#         adminPassword = module.global.keyVault.name != "" ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+#         adminPassword = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
 #       })
 #     )}"
 #   })

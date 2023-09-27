@@ -5,6 +5,7 @@
 variable "keyVault" {
   type = object(
     {
+      enable                      = bool
       type                        = string
       enableForDeployment         = bool
       enableForDiskEncryption     = bool
@@ -53,7 +54,7 @@ data "azuread_service_principal" "batch" {
 }
 
 resource "azurerm_key_vault" "studio" {
-  count                           = module.global.keyVault.name != "" ? 1 : 0
+  count                           = module.global.keyVault.enable ? 1 : 0
   name                            = module.global.keyVault.name
   resource_group_name             = azurerm_resource_group.studio.name
   location                        = azurerm_resource_group.studio.location
@@ -76,7 +77,7 @@ resource "azurerm_key_vault" "studio" {
 
 resource "azurerm_key_vault_secret" "studio" {
   for_each = {
-    for secret in var.keyVault.secrets : secret.name => secret if module.global.keyVault.name != ""
+    for secret in var.keyVault.secrets : secret.name => secret if module.global.keyVault.enable
   }
   name         = each.value.name
   value        = each.value.value
@@ -85,7 +86,7 @@ resource "azurerm_key_vault_secret" "studio" {
 
 resource "azurerm_key_vault_key" "studio" {
   for_each = {
-    for key in var.keyVault.keys : key.name => key if module.global.keyVault.name != ""
+    for key in var.keyVault.keys : key.name => key if module.global.keyVault.enable
   }
   name         = each.value.name
   key_type     = each.value.type
@@ -96,7 +97,7 @@ resource "azurerm_key_vault_key" "studio" {
 
 resource "azurerm_key_vault_certificate" "studio" {
   for_each = {
-    for certificate in var.keyVault.certificates : certificate.name => certificate if module.global.keyVault.name != ""
+    for certificate in var.keyVault.certificates : certificate.name => certificate if module.global.keyVault.enable
   }
   name         = each.value.name
   key_vault_id = azurerm_key_vault.studio[0].id
@@ -122,7 +123,7 @@ resource "azurerm_key_vault_certificate" "studio" {
 }
 
 resource "azurerm_key_vault" "batch" {
-  count                           = module.global.keyVault.name != "" ? 1 : 0
+  count                           = module.global.keyVault.enable ? 1 : 0
   name                            = "${module.global.keyVault.name}-batch"
   resource_group_name             = azurerm_resource_group.studio.name
   location                        = azurerm_resource_group.studio.location
@@ -144,7 +145,7 @@ resource "azurerm_key_vault" "batch" {
 }
 
 resource "azurerm_key_vault_access_policy" "batch" {
-  count        = module.global.keyVault.name != "" ? 1 : 0
+  count        = module.global.keyVault.enable ? 1 : 0
   key_vault_id = azurerm_key_vault.batch[0].id
   tenant_id    = data.azurerm_client_config.studio.tenant_id
   object_id    = data.azuread_service_principal.batch.object_id

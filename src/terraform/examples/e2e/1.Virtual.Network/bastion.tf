@@ -21,7 +21,7 @@ resource "azurerm_network_security_group" "bastion" {
   for_each = {
     for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && var.virtualNetwork.name == ""
   }
-  name                = "${each.value.name}.Bastion"
+  name                = "${each.value.name}-Bastion"
   resource_group_name = each.value.resourceGroupName
   location            = each.value.regionName
   security_rule {

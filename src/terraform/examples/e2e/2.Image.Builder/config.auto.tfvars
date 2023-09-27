@@ -131,7 +131,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        "Unreal"
+        #"Unreal"
       ]
     }
   },
@@ -152,7 +152,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        "Unreal+PixelStream"
+        #"Unreal+PixelStream"
       ]
     }
   },
@@ -173,7 +173,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        "Unreal+PixelStream"
+        #"Unreal+PixelStream"
       ]
     }
   },
@@ -229,7 +229,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        "Unreal"
+        #"Unreal"
       ]
    }
   },
@@ -249,7 +249,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        "Unreal+PixelStream"
+        #"Unreal+PixelStream"
       ]
     }
   },
@@ -269,7 +269,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        "Unreal+PixelStream"
+        #"Unreal+PixelStream"
       ]
     }
   }
