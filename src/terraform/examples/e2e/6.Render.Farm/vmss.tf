@@ -67,6 +67,16 @@ variable "virtualMachineScaleSets" {
           )
         }
       )
+      activeDirectory = object(
+        {
+          enable        = bool
+          domainName    = string
+          serverName    = string
+          orgUnitPath   = string
+          adminUsername = string
+          adminPassword = string
+        }
+      )
       extension = object(
         {
           initialize = object(
@@ -81,16 +91,6 @@ variable "virtualMachineScaleSets" {
                       mount  = string
                     }
                   ))
-                  activeDirectory = object(
-                    {
-                      enable        = bool
-                      domainName    = string
-                      serverName    = string
-                      orgUnitPath   = string
-                      adminUsername = string
-                      adminPassword = string
-                    }
-                  )
                   terminateNotification = object(
                     {
                       enable       = bool
@@ -122,24 +122,25 @@ variable "virtualMachineScaleSets" {
 
 locals {
   virtualMachineScaleSets = [
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet,
       {
         adminLogin = {
-          userName = virtualMachineScaleSet.adminLogin.userName != "" ? virtualMachineScaleSet.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          userName     = virtualMachineScaleSet.adminLogin.userName != "" ? virtualMachineScaleSet.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
           userPassword = virtualMachineScaleSet.adminLogin.userPassword != "" ? virtualMachineScaleSet.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-        }
-        extension = {
-          initialize = {
-            parameters = {
-              activeDirectory = {
-                adminUsername = virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-                adminPassword = virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-              }
-            }
+          sshPublicKey = virtualMachineScaleSet.adminLogin.sshPublicKey
+          passwordAuth = {
+            disable = virtualMachineScaleSet.adminLogin.passwordAuth.disable
           }
         }
-      },
-      virtualMachineScaleSet
+        activeDirectory = {
+          enable        = virtualMachineScaleSet.activeDirectory.enable
+          domainName    = virtualMachineScaleSet.activeDirectory.domainName
+          serverName    = virtualMachineScaleSet.activeDirectory.serverName
+          orgUnitPath   = virtualMachineScaleSet.activeDirectory.orgUnitPath
+          adminUsername = virtualMachineScaleSet.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          adminPassword = virtualMachineScaleSet.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        }
+      }
     )
   ]
 }
@@ -214,7 +215,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         script: "${base64encode(
-          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {}))
+          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
+            {
+              activeDirectory = each.value.activeDirectory
+            }
+          ))
         )}"
       })
     }
@@ -314,7 +319,11 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {})), "UTF-16LE"
+          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
+            {
+              activeDirectory = each.value.activeDirectory
+            }
+          )), "UTF-16LE"
         )}"
       })
     }

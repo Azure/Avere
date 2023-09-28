@@ -40,16 +40,16 @@ virtualMachines = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = false
+      domainName    = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
         fileName = "initialize.sh"
         parameters = {
-          activeDirectory = {
-            enable        = false
-            domainName    = ""
-            adminPassword = ""
-          }
           autoScale = {
             enable                   = false
             fileName                 = "scale.sh"
@@ -102,16 +102,16 @@ virtualMachines = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = true
+      domainName    = "artist.studio"
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
         fileName = "initialize.ps1"
         parameters = {
-          activeDirectory = {
-            enable        = true
-            domainName    = "artist.studio"
-            adminPassword = ""
-          }
           autoScale = {
             enable                   = false
             fileName                 = "scale.ps1"

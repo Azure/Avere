@@ -48,6 +48,14 @@ virtualMachineScaleSets = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = false
+      domainName    = ""
+      serverName    = ""
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -75,14 +83,6 @@ virtualMachineScaleSets = [
               mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
             }
           ]
-          activeDirectory = {
-            enable        = false
-            domainName    = ""
-            serverName    = ""
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
             enable       = true
             delayTimeout = "PT5M"
@@ -143,6 +143,14 @@ virtualMachineScaleSets = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = false
+      domainName    = ""
+      serverName    = ""
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -170,14 +178,6 @@ virtualMachineScaleSets = [
               mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
             }
           ]
-          activeDirectory = {
-            enable        = false
-            domainName    = ""
-            serverName    = ""
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
             enable       = true
             delayTimeout = "PT5M"
@@ -238,6 +238,14 @@ virtualMachineScaleSets = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = true
+      domainName    = "artist.studio"
+      serverName    = "WinScheduler"
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -265,14 +273,6 @@ virtualMachineScaleSets = [
               mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
             }
           ]
-          activeDirectory = {
-            enable        = true
-            domainName    = "artist.studio"
-            serverName    = "WinScheduler"
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
             enable       = true
             delayTimeout = "PT5M"
@@ -333,6 +333,14 @@ virtualMachineScaleSets = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = true
+      domainName    = "artist.studio"
+      serverName    = "WinScheduler"
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -360,14 +368,6 @@ virtualMachineScaleSets = [
               mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
             }
           ]
-          activeDirectory = {
-            enable        = true
-            domainName    = "artist.studio"
-            serverName    = "WinScheduler"
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
             enable       = true
             delayTimeout = "PT5M"

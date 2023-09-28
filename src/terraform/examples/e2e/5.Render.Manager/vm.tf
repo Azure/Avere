@@ -55,6 +55,13 @@ variable "virtualMachines" {
           )
         }
       )
+      activeDirectory = object(
+        {
+          enable        = bool
+          domainName    = string
+          adminPassword = string
+        }
+      )
       extension = object(
         {
           initialize = object(
@@ -63,13 +70,6 @@ variable "virtualMachines" {
               fileName = string
               parameters = object(
                 {
-                  activeDirectory = object(
-                    {
-                      enable        = bool
-                      domainName    = string
-                      adminPassword = string
-                    }
-                  )
                   autoScale = object(
                     {
                       enable                   = bool
@@ -99,23 +99,22 @@ variable "virtualMachines" {
 
 locals {
   virtualMachines = [
-    for virtualMachine in var.virtualMachines : merge(
+    for virtualMachine in var.virtualMachines : merge(virtualMachine,
       {
         adminLogin = {
-          userName = virtualMachine.adminLogin.userName != "" ? virtualMachine.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          userName     = virtualMachine.adminLogin.userName != "" ? virtualMachine.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
           userPassword = virtualMachine.adminLogin.userPassword != "" ? virtualMachine.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-        }
-        extension = {
-          initialize = {
-            parameters = {
-              activeDirectory = {
-                adminPassword = virtualMachine.extension.initialize.parameters.activeDirectory.adminPassword != "" ? virtualMachine.extension.initialize.parameters.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-              }
-            }
+          sshPublicKey = virtualMachine.adminLogin.sshPublicKey
+          passwordAuth = {
+            disable = virtualMachine.adminLogin.passwordAuth.disable
           }
         }
-      },
-      virtualMachine
+        activeDirectory = {
+          enable        = virtualMachine.activeDirectory.enable
+          domainName    = virtualMachine.activeDirectory.domainName
+          adminPassword = virtualMachine.activeDirectory.adminPassword != "" ? virtualMachine.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        }
+      }
     )
   ]
 }
@@ -197,7 +196,11 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script: "${base64encode(
-      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {}))
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
+        {
+          activeDirectory = each.value.activeDirectory
+        }
+      ))
     )}"
   })
   depends_on = [
@@ -271,7 +274,11 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {})), "UTF-16LE"
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
+        {
+          activeDirectory = each.value.activeDirectory
+        }
+      )), "UTF-16LE"
     )}"
   })
   depends_on = [

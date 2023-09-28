@@ -39,6 +39,14 @@ virtualMachines = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = false
+      domainName    = ""
+      serverName    = ""
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -67,14 +75,6 @@ virtualMachines = [
             }
           ]
           pcoipLicenseKey = ""
-          activeDirectory = {
-            enable        = false
-            domainName    = ""
-            serverName    = ""
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
         }
       }
       monitor = {
@@ -116,6 +116,14 @@ virtualMachines = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = false
+      domainName    = ""
+      serverName    = ""
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -144,14 +152,6 @@ virtualMachines = [
             }
           ]
           pcoipLicenseKey = ""
-          activeDirectory = {
-            enable        = false
-            domainName    = ""
-            serverName    = ""
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
         }
       }
       monitor = {
@@ -193,6 +193,14 @@ virtualMachines = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = false
+      domainName    = "artist.studio"
+      serverName    = "WinScheduler"
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -221,14 +229,6 @@ virtualMachines = [
             }
           ]
           pcoipLicenseKey = ""
-          activeDirectory = {
-            enable        = false
-            domainName    = "artist.studio"
-            serverName    = "WinScheduler"
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
         }
       }
       monitor = {
@@ -270,6 +270,14 @@ virtualMachines = [
         disable = false
       }
     }
+    activeDirectory = {
+      enable        = false
+      domainName    = "artist.studio"
+      serverName    = "WinScheduler"
+      orgUnitPath   = ""
+      adminUsername = ""
+      adminPassword = ""
+    }
     extension = {
       initialize = {
         enable   = true
@@ -298,14 +306,6 @@ virtualMachines = [
             }
           ]
           pcoipLicenseKey = ""
-          activeDirectory = {
-            enable        = false
-            domainName    = "artist.studio"
-            serverName    = "WinScheduler"
-            orgUnitPath   = ""
-            adminUsername = ""
-            adminPassword = ""
-          }
         }
       }
       monitor = {
