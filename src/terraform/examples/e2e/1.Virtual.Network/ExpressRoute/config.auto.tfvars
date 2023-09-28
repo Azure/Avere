@@ -10,6 +10,7 @@ resourceGroupName = "ArtistAnywhere.Network"
 #######################################################################################################
 
 expressRouteCircuit = {
+  enable          = false
   name            = ""
   serviceTier     = "Standard" # https://learn.microsoft.com/azure/expressroute/plan-manage-cost#local-vs-standard-vs-premium
   serviceProvider = ""
@@ -28,7 +29,8 @@ expressRouteGateway = {
   serviceSku      = "Standard" # https://learn.microsoft.com/azure/expressroute/expressroute-about-virtual-network-gateways#gwsku
   networkSubnetId = ""
   circuitConnection = {
-    fastPath = false # https://learn.microsoft.com/azure/expressroute/about-fastpath
-    authKey  = ""
+    circuitId        = ""
+    authorizationKey = ""
+    enableFastPath   = false # https://learn.microsoft.com/azure/expressroute/about-fastpath
   }
 }

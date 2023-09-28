@@ -45,23 +45,29 @@ function EnableFarmClient () {
   deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
 }
 
-function JoinActiveDirectory ($domainName, $serverName, $orgUnitPath, $adminUsername, $adminPassword) {
+function JoinActiveDirectory ($domainName, $domainServerName, $orgUnitPath, $adminUsername, $adminPassword) {
   if ($adminUsername -notlike "*@*") {
     $adminUsername = "$adminUsername@$domainName"
   }
   $securePassword = ConvertTo-SecureString $adminPassword -AsPlainText -Force
   $adminCredential = New-Object System.Management.Automation.PSCredential($adminUsername, $securePassword)
 
-  $adComputer = Get-ADComputer -Identity $(hostname) -Server $serverName -Credential $adminCredential -ErrorAction SilentlyContinue
-  if ($adComputer) {
-    Remove-ADObject -Identity $adComputer -Recursive -Confirm:$false
+  try {
+    $localComputerName = $(hostname)
+    $adComputer = Get-ADComputer -Identity $localComputerName -Server $domainServerName -Credential $adminCredential
+    Remove-ADObject -Identity $adComputer -Server $domainServerName -Recursive -Confirm:$false
     Start-Sleep -Seconds 5
+    $adComputer = null
+  } catch {
+    if ($adComputer) {
+      Write-Error "Error occurred while trying to remove the $localComputerName computer AD object."
+    }
   }
 
   if ($orgUnitPath -ne "") {
-    Add-Computer -DomainName $domainName -Server $serverName -Credential $adminCredential -OUPath $orgUnitPath -Force -PassThru -Verbose -Restart
+    Add-Computer -DomainName $domainName -Server $domainServerName -Credential $adminCredential -OUPath $orgUnitPath -Force -PassThru -Verbose -Restart
   } else {
-    Add-Computer -DomainName $domainName -Server $serverName -Credential $adminCredential -Force -PassThru -Verbose -Restart
+    Add-Computer -DomainName $domainName -Server $domainServerName -Credential $adminCredential -Force -PassThru -Verbose -Restart
   }
 }
 

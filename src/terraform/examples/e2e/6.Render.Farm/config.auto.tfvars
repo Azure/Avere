@@ -49,12 +49,12 @@ virtualMachineScaleSets = [
       }
     }
     activeDirectory = {
-      enable        = false
-      domainName    = ""
-      serverName    = ""
-      orgUnitPath   = ""
-      adminUsername = ""
-      adminPassword = ""
+      enable           = false
+      domainName       = ""
+      domainServerName = ""
+      orgUnitPath      = ""
+      adminUsername    = ""
+      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -64,23 +64,23 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "azstudio1.file.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              mount  = "azstudio1.file.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Read
-              mount  = "cache.artist.studio:/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              mount  = "cache.artist.studio/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
               enable = false # File Storage Write
-              mount  = "azstudio1.file.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              mount  = "azstudio1.file.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Write
-              mount  = "cache.artist.studio:/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              mount  = "cache.artist.studio/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
-              enable = true # Scheduler Deadline
-              mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
+              enable = true # Job Scheduler
+              mount  = "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
             }
           ]
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
@@ -144,12 +144,12 @@ virtualMachineScaleSets = [
       }
     }
     activeDirectory = {
-      enable        = false
-      domainName    = ""
-      serverName    = ""
-      orgUnitPath   = ""
-      adminUsername = ""
-      adminPassword = ""
+      enable           = false
+      domainName       = ""
+      domainServerName = ""
+      orgUnitPath      = ""
+      adminUsername    = ""
+      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -159,23 +159,23 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              mount  = "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Read
-              mount  = "cache.artist.studio:/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              mount  = "cache.artist.studio/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
               enable = false # File Storage Write
-              mount  = "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              mount  = "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
             },
             {
               enable = false # File Cache Write
-              mount  = "cache.artist.studio:/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              mount  = "cache.artist.studio/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
             },
             {
-              enable = true # Scheduler Deadline
-              mount  = "scheduler.artist.studio:/Deadline /DeadlineServer nfs defaults 0 0"
+              enable = true # Job Scheduler
+              mount  = "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
             }
           ]
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
@@ -239,12 +239,12 @@ virtualMachineScaleSets = [
       }
     }
     activeDirectory = {
-      enable        = true
-      domainName    = "artist.studio"
-      serverName    = "WinScheduler"
-      orgUnitPath   = ""
-      adminUsername = ""
-      adminPassword = ""
+      enable           = true
+      domainName       = "artist.studio"
+      domainServerName = "WinScheduler"
+      orgUnitPath      = ""
+      adminUsername    = ""
+      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -254,7 +254,7 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content R:"
+              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content R:"
             },
             {
               enable = false # File Cache Read
@@ -262,14 +262,14 @@ virtualMachineScaleSets = [
             },
             {
               enable = false # File Storage Write
-              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content W:"
+              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content W:"
             },
             {
               enable = false # File Cache Write
               mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
             },
             {
-              enable = true # Scheduler Deadline
+              enable = true # Job Scheduler
               mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
             }
           ]
@@ -334,12 +334,12 @@ virtualMachineScaleSets = [
       }
     }
     activeDirectory = {
-      enable        = true
-      domainName    = "artist.studio"
-      serverName    = "WinScheduler"
-      orgUnitPath   = ""
-      adminUsername = ""
-      adminPassword = ""
+      enable           = true
+      domainName       = "artist.studio"
+      domainServerName = "WinScheduler"
+      orgUnitPath      = ""
+      adminUsername    = ""
+      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -349,7 +349,7 @@ virtualMachineScaleSets = [
           fileSystemMounts = [
             {
               enable = false # File Storage Read
-              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content R:"
+              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content R:"
             },
             {
               enable = false # File Cache Read
@@ -357,14 +357,14 @@ virtualMachineScaleSets = [
             },
             {
               enable = false # File Storage Write
-              mount  = "mount -o anon \\\\azstudio1.blob.core.windows.net:\\azstudio1\\content W:"
+              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content W:"
             },
             {
               enable = false # File Cache Write
               mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
             },
             {
-              enable = true # Scheduler Deadline
+              enable = true # Job Scheduler
               mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
             }
           ]

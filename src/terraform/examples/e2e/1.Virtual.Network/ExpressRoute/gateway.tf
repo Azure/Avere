@@ -11,8 +11,9 @@ variable "expressRouteGateway" {
       networkSubnetId = string
       circuitConnection = object(
         {
-          authKey  = string
-          fastPath = bool
+          circuitId        = string
+          authorizationKey = string
+          enableFastPath   = bool
         }
       )
     }
@@ -49,7 +50,7 @@ resource "azurerm_virtual_network_gateway_connection" "express_route" {
   location                     = azurerm_resource_group.express_route.location
   type                         = "ExpressRoute"
   virtual_network_gateway_id   = azurerm_virtual_network_gateway.express_route[0].id
-  express_route_circuit_id     = azurerm_express_route_circuit.render.id
-  express_route_gateway_bypass = var.expressRouteGateway.circuitConnection.fastPath
-  authorization_key            = var.expressRouteGateway.circuitConnection.authKey
+  express_route_circuit_id     = var.expressRouteGateway.circuitConnection.circuitId != "" ? var.expressRouteGateway.circuitConnection.circuitId : azurerm_express_route_circuit.render[0].id
+  express_route_gateway_bypass = var.expressRouteGateway.circuitConnection.enableFastPath
+  authorization_key            = var.expressRouteGateway.circuitConnection.authorizationKey
 }

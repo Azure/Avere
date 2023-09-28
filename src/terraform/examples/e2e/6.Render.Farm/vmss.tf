@@ -69,12 +69,12 @@ variable "virtualMachineScaleSets" {
       )
       activeDirectory = object(
         {
-          enable        = bool
-          domainName    = string
-          serverName    = string
-          orgUnitPath   = string
-          adminUsername = string
-          adminPassword = string
+          enable           = bool
+          domainName       = string
+          domainServerName = string
+          orgUnitPath      = string
+          adminUsername    = string
+          adminPassword    = string
         }
       )
       extension = object(
@@ -133,12 +133,12 @@ locals {
           }
         }
         activeDirectory = {
-          enable        = virtualMachineScaleSet.activeDirectory.enable
-          domainName    = virtualMachineScaleSet.activeDirectory.domainName
-          serverName    = virtualMachineScaleSet.activeDirectory.serverName
-          orgUnitPath   = virtualMachineScaleSet.activeDirectory.orgUnitPath
-          adminUsername = virtualMachineScaleSet.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          adminPassword = virtualMachineScaleSet.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+          enable           = virtualMachineScaleSet.activeDirectory.enable
+          domainName       = virtualMachineScaleSet.activeDirectory.domainName
+          domainServerName = virtualMachineScaleSet.activeDirectory.domainServerName
+          orgUnitPath      = virtualMachineScaleSet.activeDirectory.orgUnitPath
+          adminUsername    = virtualMachineScaleSet.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          adminPassword    = virtualMachineScaleSet.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
         }
       }
     )

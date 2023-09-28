@@ -5,6 +5,7 @@
 variable "expressRouteCircuit" {
   type = object(
     {
+      enable          = bool
       name            = string
       serviceTier     = string
       serviceProvider = string
@@ -16,6 +17,7 @@ variable "expressRouteCircuit" {
 }
 
 resource "azurerm_express_route_circuit" "render" {
+  count                 = var.expressRouteCircuit.enable ? 1 : 0
   name                  = var.expressRouteCircuit.name
   resource_group_name   = azurerm_resource_group.express_route.name
   location              = azurerm_resource_group.express_route.location
@@ -29,10 +31,10 @@ resource "azurerm_express_route_circuit" "render" {
 }
 
 output "serviceKey" {
-  value     = azurerm_express_route_circuit.render.service_key
+  value     = var.expressRouteCircuit.enable ? azurerm_express_route_circuit.render[0].service_key : ""
   sensitive = true
 }
 
 output "serviceProviderProvisioningState" {
-  value = azurerm_express_route_circuit.render.service_provider_provisioning_state
+  value = var.expressRouteCircuit.enable ? azurerm_express_route_circuit.render[0].service_provider_provisioning_state : ""
 }

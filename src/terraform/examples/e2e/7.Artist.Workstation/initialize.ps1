@@ -22,6 +22,6 @@ if ("${pcoipLicenseKey}" -ne "") {
 
 if ("${activeDirectory.enable}" -eq $true) {
   Retry 5 10 {
-    JoinActiveDirectory ${activeDirectory.domainName} ${activeDirectory.serverName} "${activeDirectory.orgUnitPath}" ${activeDirectory.adminUsername} ${activeDirectory.adminPassword}
+    JoinActiveDirectory ${activeDirectory.domainName} ${activeDirectory.domainServerName} "${activeDirectory.orgUnitPath}" ${activeDirectory.adminUsername} ${activeDirectory.adminPassword}
   }
 }

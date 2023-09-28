@@ -63,6 +63,11 @@ $binPathGit = "C:\Program Files\Git\bin"
 $binPaths += ";$binPathGit"
 Write-Host "Customize (End): Git"
 
+Write-Host "Customize (Start): 7-Zip"
+$installType = "7zip"
+StartProcess $binPathChoco\choco.exe "install $installType --confirm --no-progress" "$binDirectory\$installType"
+Write-Host "Customize (End): 7-Zip"
+
 Write-Host "Customize (Start): Visual Studio Build Tools"
 $versionInfo = "2022"
 $installType = "vs-build-tools"

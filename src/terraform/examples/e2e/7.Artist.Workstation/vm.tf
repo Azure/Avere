@@ -56,12 +56,12 @@ variable "virtualMachines" {
       )
       activeDirectory = object(
         {
-          enable        = bool
-          domainName    = string
-          serverName    = string
-          orgUnitPath   = string
-          adminUsername = string
-          adminPassword = string
+          enable           = bool
+          domainName       = string
+          domainServerName = string
+          orgUnitPath      = string
+          adminUsername    = string
+          adminPassword    = string
         }
       )
       extension = object(
@@ -107,12 +107,12 @@ locals {
           }
         }
         activeDirectory = {
-          enable        = virtualMachine.activeDirectory.enable
-          domainName    = virtualMachine.activeDirectory.domainName
-          serverName    = virtualMachine.activeDirectory.serverName
-          orgUnitPath   = virtualMachine.activeDirectory.orgUnitPath
-          adminUsername = virtualMachine.activeDirectory.adminUsername != "" ? virtualMachine.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          adminPassword = virtualMachine.activeDirectory.adminPassword != "" ? virtualMachine.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+          enable           = virtualMachine.activeDirectory.enable
+          domainName       = virtualMachine.activeDirectory.domainName
+          domainServerName = virtualMachine.activeDirectory.domainServerName
+          orgUnitPath      = virtualMachine.activeDirectory.orgUnitPath
+          adminUsername    = virtualMachine.activeDirectory.adminUsername != "" ? virtualMachine.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          adminPassword    = virtualMachine.activeDirectory.adminPassword != "" ? virtualMachine.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
         }
       }
     )
