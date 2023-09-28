@@ -97,6 +97,29 @@ variable "virtualMachines" {
   ))
 }
 
+locals {
+  virtualMachines = [
+    for virtualMachine in var.virtualMachines : merge(
+      {
+        adminLogin = {
+          userName = virtualMachine.adminLogin.userName != "" ? virtualMachine.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          userPassword = virtualMachine.adminLogin.userPassword != "" ? virtualMachine.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        }
+        extension = {
+          initialize = {
+            parameters = {
+              activeDirectory = {
+                adminPassword = virtualMachine.extension.initialize.parameters.activeDirectory.adminPassword != "" ? virtualMachine.extension.initialize.parameters.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+              }
+            }
+          }
+        }
+      },
+      virtualMachine
+    )
+  ]
+}
+
 resource "azurerm_network_interface" "scheduler" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable
@@ -115,15 +138,15 @@ resource "azurerm_network_interface" "scheduler" {
 
 resource "azurerm_linux_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.scheduler.name
   location                        = azurerm_resource_group.scheduler.location
   source_image_id                 = each.value.machine.image.id
   size                            = each.value.machine.size
-  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = each.value.adminLogin.userName
+  admin_password                  = each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   custom_data = base64encode(
     templatefile(each.value.extension.initialize.parameters.autoScale.fileName, merge(each.value.extension.initialize.parameters, {}))
@@ -164,7 +187,7 @@ resource "azurerm_linux_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Initialize"
   type                       = "CustomScript"
@@ -205,15 +228,15 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
 
 resource "azurerm_windows_virtual_machine" "scheduler" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.scheduler.name
   location            = azurerm_resource_group.scheduler.location
   source_image_id     = each.value.machine.image.id
   size                = each.value.machine.size
-  admin_username      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username      = each.value.adminLogin.userName
+  admin_password      = each.value.adminLogin.userPassword
   custom_data = base64encode(
     templatefile(each.value.extension.initialize.parameters.autoScale.fileName, merge(each.value.extension.initialize.parameters, {}))
   )
@@ -238,7 +261,7 @@ resource "azurerm_windows_virtual_machine" "scheduler" {
 
 resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Initialize"
   type                       = "CustomScriptExtension"

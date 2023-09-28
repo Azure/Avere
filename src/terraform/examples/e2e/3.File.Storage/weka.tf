@@ -144,6 +144,15 @@ data "azurerm_virtual_machine_scale_set" "weka" {
 }
 
 locals {
+  weka = merge(
+    {
+      adminLogin = {
+        userName = var.weka.adminLogin.userName != "" ? var.weka.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        userPassword = var.weka.adminLogin.userPassword != "" ? var.weka.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+      }
+    },
+    var.weka
+  )
   wekaObjectTier = merge(var.weka.objectTier, {
     storage = {
       accountName   = var.weka.objectTier.storage.accountName != "" ? var.weka.objectTier.storage.accountName : try(data.azurerm_storage_account.blob[0].name, "")
@@ -235,8 +244,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   sku                             = var.weka.machine.size
   instances                       = var.weka.machine.count
   source_image_id                 = var.weka.machine.image.id
-  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : var.weka.adminLogin.userName
-  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : var.weka.adminLogin.userPassword
+  admin_username                  = local.weka.adminLogin.userName
+  admin_password                  = local.weka.adminLogin.userPassword
   disable_password_authentication = var.weka.adminLogin.passwordAuth.disable
   proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   single_placement_group          = false
@@ -460,7 +469,7 @@ resource "terraform_data" "weka_file_system" {
 }
 
 resource "terraform_data" "weka_load" {
-  count = var.weka.enable && var.weka.objectTier.storage.enableFileLoad && var.fileLoadSource.enable ? 1 : 0
+  count = var.weka.enable && var.weka.objectTier.storage.enableFileLoad ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address

@@ -41,8 +41,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -136,8 +136,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -204,6 +204,7 @@ virtualMachineScaleSets = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.0.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -230,8 +231,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -269,8 +270,8 @@ virtualMachineScaleSets = [
             domainName    = "artist.studio"
             serverName    = "WinScheduler"
             orgUnitPath   = ""
-            adminUsername = "azadmin"
-            adminPassword = "P@ssword1234"
+            adminUsername = ""
+            adminPassword = ""
           }
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
             enable       = true
@@ -298,6 +299,7 @@ virtualMachineScaleSets = [
       image = {
         id = "/subscriptions/5cc0d8f1-3643-410c-8646-1a2961134bd3/resourceGroups/ArtistAnywhere.Image/providers/Microsoft.Compute/galleries/azstudio/images/WinFarm/versions/2.1.0"
         plan = {
+          enable    = false
           publisher = ""
           product   = ""
           name      = ""
@@ -324,8 +326,8 @@ virtualMachineScaleSets = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -363,8 +365,8 @@ virtualMachineScaleSets = [
             domainName    = "artist.studio"
             serverName    = "WinScheduler"
             orgUnitPath   = ""
-            adminUsername = "azadmin"
-            adminPassword = "P@ssword1234"
+            adminUsername = ""
+            adminPassword = ""
           }
           terminateNotification = { # https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-terminate-notification
             enable       = true

@@ -42,6 +42,15 @@ variable "vfxtCache" {
 # }
 
 locals {
+  vfxtCache = merge(
+    {
+      cluster = {
+        adminUsername = var.vfxtCache.cluster.adminUsername != "" ? var.vfxtCache.cluster.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        adminPassword = var.vfxtCache.cluster.adminPassword != "" ? var.vfxtCache.cluster.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+      }
+    },
+    var.vfxtCache
+  )
   vfxtControllerAddress   = cidrhost(data.azurerm_subnet.cache.address_prefixes[0], 39)
   vfxtVServerFirstAddress = cidrhost(data.azurerm_subnet.cache.address_prefixes[0], 40)
   vfxtVServerAddressCount = 12

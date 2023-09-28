@@ -94,6 +94,30 @@ variable "virtualMachines" {
   ))
 }
 
+locals {
+  virtualMachines = [
+    for virtualMachine in var.virtualMachines : merge(
+      {
+        adminLogin = {
+          userName = virtualMachine.adminLogin.userName != "" ? virtualMachine.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          userPassword = virtualMachine.adminLogin.userPassword != "" ? virtualMachine.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        }
+        extension = {
+          initialize = {
+            parameters = {
+              activeDirectory = {
+                adminUsername = virtualMachine.extension.initialize.parameters.activeDirectory.adminUsername != "" ? virtualMachine.extension.initialize.parameters.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+                adminPassword = virtualMachine.extension.initialize.parameters.activeDirectory.adminUsername != "" ? virtualMachine.extension.initialize.parameters.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+              }
+            }
+          }
+        }
+      },
+      virtualMachine
+    )
+  ]
+}
+
 resource "azurerm_network_interface" "workstation" {
   for_each = {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable
@@ -112,15 +136,15 @@ resource "azurerm_network_interface" "workstation" {
 
 resource "azurerm_linux_virtual_machine" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.workstation.name
   location                        = azurerm_resource_group.workstation.location
   size                            = each.value.machine.size
   source_image_id                 = each.value.machine.image.id
-  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = each.value.adminLogin.userName
+  admin_password                  = each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -158,7 +182,7 @@ resource "azurerm_linux_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "initialize_linux" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Linux"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Linux"
   }
   name                       = "Initialize"
   type                       = "CustomScript"
@@ -199,15 +223,15 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
 
 resource "azurerm_windows_virtual_machine" "workstation" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                = each.value.name
   resource_group_name = azurerm_resource_group.workstation.name
   location            = azurerm_resource_group.workstation.location
   size                = each.value.machine.size
   source_image_id     = each.value.machine.image.id
-  admin_username      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username      = each.value.adminLogin.userName
+  admin_password      = each.value.adminLogin.userPassword
   custom_data         = base64encode(templatefile("../0.Global.Foundation/functions.ps1", {}))
   network_interface_ids = [
     "${azurerm_resource_group.workstation.id}/providers/Microsoft.Network/networkInterfaces/${each.value.name}"
@@ -230,7 +254,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
 
 resource "azurerm_virtual_machine_extension" "initialize_windows" {
   for_each = {
-    for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Windows"
+    for virtualMachine in local.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable && virtualMachine.extension.initialize.enable && virtualMachine.operatingSystem.type == "Windows"
   }
   name                       = "Initialize"
   type                       = "CustomScriptExtension"

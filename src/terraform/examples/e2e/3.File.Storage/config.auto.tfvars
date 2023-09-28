@@ -1,7 +1,6 @@
 resourceGroupName = "ArtistAnywhere.Storage" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 fileLoadSource = {
-  enable        = false
   accountName   = ""
   accountKey    = ""
   containerName = ""
@@ -153,8 +152,8 @@ weka = {
     requestPath = "/ui"
   }
   adminLogin = {
-    userName     = "azadmin"
-    userPassword = "P@ssword1234"
+    userName     = ""
+    userPassword = ""
     sshPublicKey = "" # "ssh-rsa ..."
     passwordAuth = {
       disable = false
@@ -240,8 +239,8 @@ hammerspace = {
       sizeGB      = 256
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -270,8 +269,8 @@ hammerspace = {
       count       = 2
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false

@@ -59,6 +59,7 @@ variable "privateDns" {
 variable "computeNetwork" {
   type = object(
     {
+      enable             = bool
       name               = string
       subnetName         = string
       resourceGroupName  = string

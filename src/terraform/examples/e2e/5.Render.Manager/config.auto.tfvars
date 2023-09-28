@@ -33,8 +33,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -95,8 +95,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -110,7 +110,7 @@ virtualMachines = [
           activeDirectory = {
             enable        = true
             domainName    = "artist.studio"
-            adminPassword = "P@ssword1234"
+            adminPassword = ""
           }
           autoScale = {
             enable                   = false
@@ -145,6 +145,7 @@ privateDns = {
 #######################################################################
 
 computeNetwork = {
+  enable             = false
   name               = ""
   subnetName         = ""
   resourceGroupName  = ""

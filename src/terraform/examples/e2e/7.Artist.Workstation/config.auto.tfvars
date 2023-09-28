@@ -32,8 +32,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -109,8 +109,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -186,8 +186,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -222,12 +222,12 @@ virtualMachines = [
           ]
           pcoipLicenseKey = ""
           activeDirectory = {
-            enable        = true
+            enable        = false
             domainName    = "artist.studio"
             serverName    = "WinScheduler"
             orgUnitPath   = ""
-            adminUsername = "azadmin"
-            adminPassword = "P@ssword1234"
+            adminUsername = ""
+            adminPassword = ""
           }
         }
       }
@@ -263,8 +263,8 @@ virtualMachines = [
       }
     }
     adminLogin = {
-      userName     = "azadmin"
-      userPassword = "P@ssword1234"
+      userName     = ""
+      userPassword = ""
       sshPublicKey = "" # "ssh-rsa ..."
       passwordAuth = {
         disable = false
@@ -299,12 +299,12 @@ virtualMachines = [
           ]
           pcoipLicenseKey = ""
           activeDirectory = {
-            enable        = true
+            enable        = false
             domainName    = "artist.studio"
             serverName    = "WinScheduler"
             orgUnitPath   = ""
-            adminUsername = "azadmin"
-            adminPassword = "P@ssword1234"
+            adminUsername = ""
+            adminPassword = ""
           }
         }
       }

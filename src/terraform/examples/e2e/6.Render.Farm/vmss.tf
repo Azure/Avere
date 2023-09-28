@@ -120,9 +120,33 @@ variable "virtualMachineScaleSets" {
   ))
 }
 
+locals {
+  virtualMachineScaleSets = [
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(
+      {
+        adminLogin = {
+          userName = virtualMachineScaleSet.adminLogin.userName != "" ? virtualMachineScaleSet.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          userPassword = virtualMachineScaleSet.adminLogin.userPassword != "" ? virtualMachineScaleSet.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        }
+        extension = {
+          initialize = {
+            parameters = {
+              activeDirectory = {
+                adminUsername = virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+                adminPassword = virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.extension.initialize.parameters.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+              }
+            }
+          }
+        }
+      },
+      virtualMachineScaleSet
+    )
+  ]
+}
+
 resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   for_each = {
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Linux" && var.batch.account.name == ""
+    for virtualMachineScaleSet in local.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Linux"
   }
   name                            = each.value.name
   resource_group_name             = azurerm_resource_group.farm.name
@@ -130,8 +154,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
   sku                             = each.value.machine.size
   instances                       = each.value.machine.count
   source_image_id                 = each.value.machine.image.id
-  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = each.value.adminLogin.userName
+  admin_password                  = each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   priority                        = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy                 = each.value.spot.enable ? each.value.spot.evictionPolicy : null
@@ -237,7 +261,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
 
 resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   for_each = {
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Windows" && var.batch.account.name == ""
+    for virtualMachineScaleSet in local.virtualMachineScaleSets : virtualMachineScaleSet.name => virtualMachineScaleSet if virtualMachineScaleSet.enable && virtualMachineScaleSet.operatingSystem.type == "Windows"
   }
   name                   = each.value.name
   resource_group_name    = azurerm_resource_group.farm.name
@@ -245,8 +269,8 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
   sku                    = each.value.machine.size
   instances              = each.value.machine.count
   source_image_id        = each.value.machine.image.id
-  admin_username         = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password         = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username         = each.value.adminLogin.userName
+  admin_password         = each.value.adminLogin.userPassword
   priority               = each.value.spot.enable ? "Spot" : "Regular"
   eviction_policy        = each.value.spot.enable ? each.value.spot.evictionPolicy : null
   custom_data            = base64encode(templatefile("../0.Global.Foundation/functions.ps1", {}))

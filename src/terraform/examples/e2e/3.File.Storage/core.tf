@@ -176,7 +176,7 @@ resource "terraform_data" "storage_container_permission" {
 
 resource "terraform_data" "blob_container_load_root" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if var.fileLoadSource.enable && var.fileLoadSource.blobName == "" && blobContainer.enableFileLoad
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.enableFileLoad && var.fileLoadSource.blobName == ""
   }
   provisioner "local-exec" {
     environment = {
@@ -191,7 +191,7 @@ resource "terraform_data" "blob_container_load_root" {
 
 resource "terraform_data" "blob_container_load_blob" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if var.fileLoadSource.enable && var.fileLoadSource.blobName != "" && blobContainer.enableFileLoad
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.enableFileLoad && var.fileLoadSource.blobName != ""
   }
   provisioner "local-exec" {
     environment = {
@@ -220,7 +220,7 @@ resource "azurerm_storage_share" "core" {
 
 resource "terraform_data" "file_share_load_root" {
   for_each = {
-    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if var.fileLoadSource.enable && var.fileLoadSource.blobName == "" && fileShare.enableFileLoad
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if fileShare.enableFileLoad && var.fileLoadSource.blobName == ""
   }
   provisioner "local-exec" {
     environment = {
@@ -235,7 +235,7 @@ resource "terraform_data" "file_share_load_root" {
 
 resource "terraform_data" "file_share_load_blob" {
   for_each = {
-    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if var.fileLoadSource.enable && var.fileLoadSource.blobName != "" && fileShare.enableFileLoad
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if fileShare.enableFileLoad && var.fileLoadSource.blobName != ""
   }
   provisioner "local-exec" {
     environment = {

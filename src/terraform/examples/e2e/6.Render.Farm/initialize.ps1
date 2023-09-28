@@ -24,7 +24,7 @@ if ("${terminateNotification.enable}" -eq $true) {
 }
 
 if ("${activeDirectory.enable}" -eq $true) {
-  # Retry 5 10 {
+  Retry 5 10 {
     JoinActiveDirectory ${activeDirectory.domainName} ${activeDirectory.serverName} "${activeDirectory.orgUnitPath}" ${activeDirectory.adminUsername} ${activeDirectory.adminPassword}
-  # }
+  }
 }

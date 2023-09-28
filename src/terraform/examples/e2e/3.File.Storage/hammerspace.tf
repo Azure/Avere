@@ -105,16 +105,30 @@ locals {
     version   = "22.08.18"
   }
   hammerspaceMetadataNodes = [
-    for i in range(var.hammerspace.metadata.machine.count) : merge(var.hammerspace.metadata, {
-      index = i
-      name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}"
-    }) if var.hammerspace.namePrefix != ""
+    for i in range(var.hammerspace.metadata.machine.count) : merge(
+      {
+        index = i
+        name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}"
+        adminLogin = {
+          userName = var.hammerspace.adminLogin.userName != "" ? var.hammerspace.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          userPassword = var.hammerspace.adminLogin.userPassword != "" ? var.hammerspace.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        }
+      },
+      var.hammerspace.metadata
+    ) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDataNodes = [
-    for i in range(var.hammerspace.data.machine.count) : merge(var.hammerspace.data, {
-      index = i
-      name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}"
-    }) if var.hammerspace.namePrefix != ""
+    for i in range(var.hammerspace.data.machine.count) : merge(
+      {
+        index = i
+        name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}"
+        adminLogin = {
+          userName = var.hammerspace.adminLogin.userName != "" ? var.hammerspace.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+          userPassword = var.hammerspace.adminLogin.userPassword != "" ? var.hammerspace.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        }
+      },
+      var.hammerspace.data
+    ) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDataDisks = [
     for i in range(var.hammerspace.data.machine.count * var.hammerspace.data.dataDisk.count) : merge(var.hammerspace.data, {
@@ -255,8 +269,8 @@ resource "azurerm_linux_virtual_machine" "storage_metadata" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = each.value.adminLogin.userName
+  admin_password                  = each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   availability_set_id             = azurerm_availability_set.storage_metadata[0].id
   proximity_placement_group_id    = azurerm_proximity_placement_group.storage[0].id
@@ -302,8 +316,8 @@ resource "azurerm_linux_virtual_machine" "storage_data" {
   resource_group_name             = azurerm_resource_group.hammerspace[0].name
   location                        = azurerm_resource_group.hammerspace[0].location
   size                            = each.value.machine.size
-  admin_username                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_username[0].value : each.value.adminLogin.userName
-  admin_password                  = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
+  admin_username                  = each.value.adminLogin.userName
+  admin_password                  = each.value.adminLogin.userPassword
   disable_password_authentication = each.value.adminLogin.passwordAuth.disable
   availability_set_id             = azurerm_availability_set.storage_data[0].id
   proximity_placement_group_id    = azurerm_proximity_placement_group.storage[0].id

@@ -43,7 +43,6 @@ variable "resourceGroupName" {
 variable "fileLoadSource" {
   type = object(
     {
-      enable        = bool
       accountName   = string
       accountKey    = string
       containerName = string
