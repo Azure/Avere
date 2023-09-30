@@ -239,7 +239,10 @@ if [[ $renderEngines == *MoonRay* ]]; then
   StartProcess "cmake --install $installRoot/build --prefix /installs$installRoot" $binDirectory/$installType-install
   echo "Customize (End): MoonRay Build"
 
-  echo "source /installs$installRoot/scripts/setup.sh" >> $aaaProfile
+  envSetupFile="/installs$installRoot/scripts/setup.sh"
+  if [ FileExists $envSetupFile ]; then
+    echo "source $envSetupFile" >> $aaaProfile
+  fi
   cd $binDirectory
   echo "Customize (End): MoonRay"
 fi

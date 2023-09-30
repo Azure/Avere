@@ -27,28 +27,32 @@ storageAccounts = [
     ]
     blobContainers = [ # https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction
       {
-        enable         = true
-        name           = "content"
-        rootAcl        = "user::rwx,group::rwx,other::rwx"
-        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
-        enableFileLoad = false
+        enable    = true
+        name      = "content"
+        loadFiles = false
+        fileSystem = {
+          enable  = true
+          rootAcl = "user::rwx,group::rwx,other::rwx"
+        }
       },
       {
-        enable         = true
-        name           = "weka"
-        rootAcl        = "user::rwx,group::rwx,other::rwx"
-        rootAclDefault = "default:user::rwx,group::rwx,other::rwx"
-        enableFileLoad = false
+        enable    = true
+        name      = "weka"
+        loadFiles = false
+        fileSystem = {
+          enable  = false
+          rootAcl = ""
+        }
       }
     ]
     fileShares = [ # https://learn.microsoft.com/azure/storage/files/storage-files-introduction
       {
         enable         = true
         name           = "content"
-        sizeGiB        = 5120
+        sizeGB         = 5120
         accessTier     = "TransactionOptimized"
         accessProtocol = "SMB"
-        enableFileLoad = false
+        loadFiles      = false
       }
     ]
   },
@@ -70,10 +74,10 @@ storageAccounts = [
       {
         enable         = true
         name           = "content"
-        sizeGiB        = 5120
+        sizeGB         = 5120
         accessTier     = "Premium"
         accessProtocol = "NFS"
-        enableFileLoad = false
+        loadFiles      = false
       }
     ]
   }
@@ -118,10 +122,9 @@ weka = {
     enable  = true
     percent = 80
     storage = {
-      accountName    = ""
-      accountKey     = ""
-      containerName  = "weka"
-      enableFileLoad = false
+      accountName   = ""
+      accountKey    = ""
+      containerName = "weka"
     }
   }
   fileSystem = {
@@ -129,6 +132,7 @@ weka = {
     groupName    = "default"
     autoScale    = false
     authRequired = false
+    loadFiles    = false
   }
   osDisk = {
     storageType = "Premium_LRS"
@@ -186,7 +190,7 @@ netAppAccount = {
         {
           enable       = false
           name         = "Content"
-          sizeGiB      = 4096
+          sizeGB       = 4096
           serviceLevel = "Standard"
           mountPath    = "content"
           protocols = [

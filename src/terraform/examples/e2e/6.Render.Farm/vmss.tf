@@ -85,10 +85,10 @@ variable "virtualMachineScaleSets" {
               fileName = string
               parameters = object(
                 {
-                  fileSystemMounts = list(object(
+                  fileSystems = list(object(
                     {
                       enable = bool
-                      mount  = string
+                      mounts = list(string)
                     }
                   ))
                   terminateNotification = object(

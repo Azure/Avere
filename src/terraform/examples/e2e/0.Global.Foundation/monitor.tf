@@ -5,7 +5,6 @@
 variable "monitor" {
   type = object(
     {
-      enable = bool
       workspace = object(
         {
           sku = string

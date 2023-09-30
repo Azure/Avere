@@ -21,17 +21,29 @@ function FileExists ($filePath) {
   return Test-Path -PathType Leaf -Path $filePath
 }
 
-function SetFileSystemMount ($fileSystemMount) {
+function SetFileSystems ($binDirectory, $fileSystemsJson) {
+  $fileSystems = ConvertFrom-Json -InputObject $fileSystemsJson
+  foreach ($fileSystem in $fileSystems) {
+    if ($fileSystem.enable -eq $true) {
+      SetFileSystemMounts $fileSystem.mounts
+    }
+  }
+  RegisterFileSystemMounts $binDirectory
+}
+
+function SetFileSystemMounts ($fileSystemMounts) {
   if (!(FileExists $fileSystemMountPath)) {
     New-Item -ItemType File -Path $fileSystemMountPath
   }
   $mountScript = Get-Content -Path $fileSystemMountPath
-  if ($mountScript -eq $null -or $mountScript -notlike "*$fileSystemMount*") {
-    Add-Content -Path $fileSystemMountPath -Value $fileSystemMount
+  foreach ($fileSystemMount in $fileSystemMounts) {
+    if ($mountScript -eq $null -or $mountScript -notlike "*$fileSystemMount*") {
+      Add-Content -Path $fileSystemMountPath -Value $fileSystemMount
+    }
   }
 }
 
-function RegisterFileSystemMountPath ($binDirectory) {
+function RegisterFileSystemMounts ($binDirectory) {
   if (FileExists $fileSystemMountPath) {
     StartProcess $fileSystemMountPath $null "$binDirectory\file-system-mount"
     $taskName = "AAA File System Mount"

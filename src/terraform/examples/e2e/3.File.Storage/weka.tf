@@ -55,10 +55,9 @@ variable "weka" {
           percent = number
           storage = object(
             {
-              accountName    = string
-              accountKey     = string
-              containerName  = string
-              enableFileLoad = bool
+              accountName   = string
+              accountKey    = string
+              containerName = string
             }
           )
         }
@@ -69,6 +68,7 @@ variable "weka" {
           groupName    = string
           autoScale    = bool
           authRequired = bool
+          loadFiles    = bool
         }
       )
       osDisk = object(
@@ -469,7 +469,7 @@ resource "terraform_data" "weka_file_system" {
 }
 
 resource "terraform_data" "weka_load" {
-  count = var.weka.enable && var.weka.objectTier.storage.enableFileLoad ? 1 : 0
+  count = var.weka.enable && var.weka.fileSystem.loadFiles && var.fileLoadSource.accountName != "" ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address

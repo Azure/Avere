@@ -17,7 +17,7 @@ variable "netAppAccount" {
             {
               enable       = bool
               name         = string
-              sizeGiB      = number
+              sizeGB       = number
               serviceLevel = string
               mountPath    = string
               protocols    = list(string)
@@ -91,7 +91,7 @@ resource "azurerm_netapp_volume" "storage" {
   name                = each.value.name
   resource_group_name = azurerm_resource_group.netapp_files[0].name
   location            = azurerm_resource_group.netapp_files[0].location
-  storage_quota_in_gb = each.value.sizeGiB
+  storage_quota_in_gb = each.value.sizeGB
   service_level       = each.value.serviceLevel
   volume_path         = each.value.mountPath
   protocols           = each.value.protocols

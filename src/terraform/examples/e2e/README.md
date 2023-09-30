@@ -45,7 +45,7 @@ The following local installation prerequisites are required for the AAA solution
 
 1. Review and edit the config values in `module/backend.config` for your deployment
 1. Review and edit the config values in `module/variables.tf` for your deployment
-   * If a Key Vault name is specified [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L35), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
+   * If Key Vault is enabled [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L35), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
 1. Review and edit the config values in `config.auto.tfvars` for your deployment
 1. Run `terraform init` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
@@ -136,7 +136,7 @@ The following local installation prerequisites are required for the AAA solution
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute (*Spot*) cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
-   * Make sure the **fileSystemMounts** config has the correct values for your deployment environment.
+   * Make sure the **fileSystems** config has the correct values for your target storage environment.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
@@ -148,7 +148,7 @@ The following local installation prerequisites are required for the AAA solution
 1. Review and edit the config values in `config.auto.tfvars` for your deployment.
    * Make sure you have sufficient compute cores quota available in your Azure subscription.
    * Make sure the **image.id** config references the correct custom image in your Azure subscription.
-   * Make sure the **fileSystemMounts** config has the correct values for your deployment environment.
+   * Make sure the **fileSystems** config has the correct values for your target storage environment.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the current local directory (append `-upgrade` if older providers are detected)
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
 1. Review the displayed Terraform deployment plan to add, change and/or destroy Azure resources *before* confirming
@@ -173,7 +173,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt.exe -arguments "--outfile W:\pbrt\moana\island-v4.png R:\pbrt\moana\island\pbrt-v4\island.pbrt"```
+```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt.exe -arguments "--outfile X:\pbrt\moana\island-v4.png X:\pbrt\moana\island\pbrt-v4\island.pbrt"```
 
 ### 8.2 [Blender](https://www.blender.org) [Splash Screen (3.4)](https://www.blender.org/download/demo-files/#splash)
 
@@ -191,6 +191,6 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender.exe -arguments "--background R:\blender\3.4\splash.blend --render-output W:\blender\3.4\splash --enable-autoexec --render-frame 1"```
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender.exe -arguments "--background X:\blender\3.4\splash.blend --render-output X:\blender\3.4\splash --enable-autoexec --render-frame 1"```
 
 If you have any questions or issues, please contact rick.shahid@microsoft.com

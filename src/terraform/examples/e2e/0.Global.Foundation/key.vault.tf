@@ -5,7 +5,6 @@
 variable "keyVault" {
   type = object(
     {
-      enable                      = bool
       type                        = string
       enableForDeployment         = bool
       enableForDiskEncryption     = bool

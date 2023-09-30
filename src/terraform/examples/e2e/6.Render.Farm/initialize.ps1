@@ -5,13 +5,7 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-$fileSystemMounts = ConvertFrom-Json -InputObject '${jsonencode(fileSystemMounts)}'
-foreach ($fileSystemMount in $fileSystemMounts) {
-  if ($fileSystemMount.enable -eq $true) {
-    SetFileSystemMount $fileSystemMount.mount
-  }
-}
-RegisterFileSystemMountPath $binDirectory
+SetFileSystems $binDirectory '${jsonencode(fileSystems)}'
 
 EnableFarmClient
 

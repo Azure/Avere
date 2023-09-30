@@ -52,26 +52,30 @@ virtualMachines = [
         enable   = true
         fileName = "initialize.sh"
         parameters = {
-          fileSystemMounts = [
+          fileSystems = [
             {
-              enable = false # File Storage Read
-              mount  = "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              enable = false # File Storage Read & Write
+              mounts = [
+                "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              ]
             },
             {
               enable = false # File Cache Read
-              mount  = "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-            },
-            {
-              enable = false # File Storage Write
-              mount  = "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              mounts = [
+                "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              ]
             },
             {
               enable = false # File Cache Write
-              mount  = "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              mounts = [
+                "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              ]
             },
             {
               enable = true # Job Scheduler
-              mount  = "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
+              mounts = [
+                "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
+              ]
             }
           ]
           pcoipLicenseKey = ""
@@ -129,26 +133,30 @@ virtualMachines = [
         enable   = true
         fileName = "initialize.sh"
         parameters = {
-          fileSystemMounts = [
+          fileSystems = [
             {
-              enable = false # File Storage Read
-              mount  = "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              enable = false # File Storage Read & Write
+              mounts = [
+                "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              ]
             },
             {
               enable = false # File Cache Read
-              mount  = "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-            },
-            {
-              enable = false # File Storage Write
-              mount  = "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+              mounts = [
+                "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              ]
             },
             {
               enable = false # File Cache Write
-              mount  = "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              mounts = [
+                "cache.artist.studio/mnt/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+              ]
             },
             {
               enable = true # Job Scheduler
-              mount  = "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
+              mounts = [
+                "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
+              ]
             }
           ]
           pcoipLicenseKey = ""
@@ -206,26 +214,30 @@ virtualMachines = [
         enable   = true
         fileName = "initialize.ps1"
         parameters = {
-          fileSystemMounts = [
+          fileSystems = [
             {
-              enable = false # File Storage Read
-              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content R:"
+              enable = false # File Storage Read & Write
+              mounts = [
+                "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content X:"
+              ]
             },
             {
               enable = false # File Cache Read
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
-            },
-            {
-              enable = false # File Storage Write
-              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content W:"
+              mounts = [
+                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
+              ]
             },
             {
               enable = false # File Cache Write
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
+              mounts = [
+                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
+              ]
             },
             {
               enable = true # Job Scheduler
-              mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+              mounts = [
+                "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+              ]
             }
           ]
           pcoipLicenseKey = ""
@@ -283,26 +295,30 @@ virtualMachines = [
         enable   = true
         fileName = "initialize.ps1"
         parameters = {
-          fileSystemMounts = [
+          fileSystems = [
             {
-              enable = false # File Storage Read
-              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content R:"
+              enable = false # File Storage Read & Write
+              mounts = [
+                "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content X:"
+              ]
             },
             {
               enable = false # File Cache Read
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
-            },
-            {
-              enable = false # File Storage Write
-              mount  = "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content W:"
+              mounts = [
+                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
+              ]
             },
             {
               enable = false # File Cache Write
-              mount  = "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
+              mounts = [
+                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
+              ]
             },
             {
               enable = true # Job Scheduler
-              mount  = "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+              mounts = [
+                "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+              ]
             }
           ]
           pcoipLicenseKey = ""
