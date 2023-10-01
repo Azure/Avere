@@ -56,7 +56,7 @@ virtualMachines = [
             {
               enable = false # File Storage Read & Write
               mounts = [
-                "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+                "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
               ]
             },
             {
@@ -137,7 +137,7 @@ virtualMachines = [
             {
               enable = false # File Storage Read & Write
               mounts = [
-                "azstudio1.blob.core.windows.net/azstudio1/content /mnt/content nfs sec=sys,vers=4,minorversion=1 0 0"
+                "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
               ]
             },
             {

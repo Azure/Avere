@@ -9,6 +9,7 @@ if [ "${wekaClusterName}" != "" ]; then
   installPath="/opt/weka"
   mkdir -p $installPath
   echo "LABEL=$volumeLabel $installPath ext4 defaults 0 2" >> /etc/fstab
+  system daemon-reload
   mount -a
 
   curl https://${wekaApiToken}@get.weka.io/dist/v1/install/${wekaVersion}/${wekaVersion} | sh

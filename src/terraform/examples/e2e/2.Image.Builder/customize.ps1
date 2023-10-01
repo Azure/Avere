@@ -33,6 +33,7 @@ Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
 Write-Host "Customize (Start): Image Build Platform"
+netsh advfirewall firewall set allprofiles state off
 
 Write-Host "Customize (Start): Chocolatey"
 $installType = "chocolatey"
@@ -316,7 +317,6 @@ if ($renderEngines -contains "Unreal" -or $renderEngines -contains "Unreal+Pixel
 
   if ($machineType -eq "Workstation") {
     Write-Host "Customize (Start): Unreal Editor"
-    netsh advfirewall firewall add rule name="Allow Unreal Editor" dir=in action=allow program="$binPathUnreal\UnrealEditor.exe"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Unreal Editor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell
     $shortcut = $scriptShell.CreateShortcut($shortcutPath)
@@ -375,7 +375,6 @@ if ($machineType -ne "Storage") {
   Set-Location -Path Deadline*
   if ($machineType -eq "Scheduler") {
     Write-Host "Customize (Start): Deadline Server"
-    netsh advfirewall firewall add rule name="Allow Deadline Database" dir=in action=allow protocol=TCP localport=$databasePort
     $installType = "deadline-repository"
     $installFile = "DeadlineRepository-$versionInfo-windows-installer.exe"
     StartProcess .\$installFile "--mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --mongodir $databasePath --installmongodb true" "$binDirectory\$installType"
@@ -386,9 +385,6 @@ if ($machineType -ne "Storage") {
   }
 
   Write-Host "Customize (Start): Deadline Client"
-  netsh advfirewall firewall add rule name="Allow Deadline Worker" dir=in action=allow program="$binPathScheduler\deadlineworker.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Monitor" dir=in action=allow program="$binPathScheduler\deadlinemonitor.exe"
-  netsh advfirewall firewall add rule name="Allow Deadline Launcher" dir=in action=allow program="$binPathScheduler\deadlinelauncher.exe"
   $installType = "deadline-client"
   $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
   $installArgs = "--mode unattended --prefix $installRoot"

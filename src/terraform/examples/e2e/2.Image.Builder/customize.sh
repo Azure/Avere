@@ -24,6 +24,7 @@ echo "Render Engines: $renderEngines"
 echo "Customize (End): Image Build Parameters"
 
 echo "Customize (Start): Image Build Platform"
+systemctl --now disable firewalld
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
 StartProcess "dnf -y install kernel-devel-$(uname -r)" $binDirectory/$installType
 StartProcess "dnf -y install gcc gcc-c++ python3-devel openssl-devel" $binDirectory/$installType
@@ -342,8 +343,6 @@ if [ $machineType != Storage ]; then
     installFile="DeadlineRepository-$versionInfo-linux-x64-installer.run"
     StartProcess "$installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --dbauth false --installmongodb false" $binDirectory/$installType
     mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
-    chown -R root $installRoot
-    chgrp -R root $installRoot
     echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
     echo "Customize (End): Deadline Server"
