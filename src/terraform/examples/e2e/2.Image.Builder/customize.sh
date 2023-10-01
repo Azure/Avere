@@ -335,13 +335,15 @@ if [ $machineType != Storage ]; then
     sed -i "s/#security:/security:/" $configFile
     sed -i "/security:/a\  authorization: disabled" $configFile
     systemctl --now enable mongod
-    sleep 10s
+    sleep 5s
     echo "Customize (End): Mongo DB Service"
 
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$versionInfo-linux-x64-installer.run"
     $installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --dbauth false --installmongodb false
     mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
+    chown -R root $installRoot
+    chgrp -R root $installRoot
     echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
     echo "Customize (End): Deadline Server"

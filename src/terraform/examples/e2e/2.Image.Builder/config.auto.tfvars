@@ -55,7 +55,7 @@ imageTemplates = [
       gpuProvider    = ""                 # NVIDIA or AMD
       outputVersion  = "0.0.0"
       timeoutMinutes = 120
-      osDiskSizeGB   = 512
+      osDiskSizeGB   = 0
       renderEngines = [
       ]
     }
@@ -72,7 +72,7 @@ imageTemplates = [
       gpuProvider    = "AMD"                     # NVIDIA or AMD
       outputVersion  = "0.1.0"
       timeoutMinutes = 120
-      osDiskSizeGB   = 512
+      osDiskSizeGB   = 0
       renderEngines = [
       ]
     }
@@ -89,7 +89,7 @@ imageTemplates = [
       gpuProvider    = ""                 # NVIDIA or AMD
       outputVersion  = "1.0.0"
       timeoutMinutes = 120
-      osDiskSizeGB   = 512
+      osDiskSizeGB   = 0
       renderEngines = [
       ]
     }
@@ -106,7 +106,7 @@ imageTemplates = [
       gpuProvider    = ""                  # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender",
@@ -126,7 +126,7 @@ imageTemplates = [
       gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "2.1.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender",
@@ -147,7 +147,7 @@ imageTemplates = [
       gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "3.0.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender",
@@ -168,7 +168,7 @@ imageTemplates = [
       gpuProvider    = "AMD"                      # NVIDIA or AMD
       outputVersion  = "3.1.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender",
@@ -189,7 +189,7 @@ imageTemplates = [
       gpuProvider    = ""                 # NVIDIA or AMD
       outputVersion  = "1.0.0"
       timeoutMinutes = 240
-      osDiskSizeGB   = 512
+      osDiskSizeGB   = 0
       renderEngines = [
       ]
     }
@@ -206,7 +206,7 @@ imageTemplates = [
       gpuProvider    = ""                  # NVIDIA or AMD
       outputVersion  = "2.0.0"
       timeoutMinutes = 360
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender"
@@ -225,7 +225,7 @@ imageTemplates = [
       gpuProvider    = ""                        # NVIDIA or AMD
       outputVersion  = "2.1.0"
       timeoutMinutes = 360
-      osDiskSizeGB   = 480
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender",
@@ -245,7 +245,7 @@ imageTemplates = [
       gpuProvider    = "NVIDIA"                  # NVIDIA or AMD
       outputVersion  = "3.0.0"
       timeoutMinutes = 360
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender",
@@ -265,7 +265,7 @@ imageTemplates = [
       gpuProvider    = "AMD"                      # NVIDIA or AMD
       outputVersion  = "3.1.0"
       timeoutMinutes = 360
-      osDiskSizeGB   = 1024
+      osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
         "Blender",
