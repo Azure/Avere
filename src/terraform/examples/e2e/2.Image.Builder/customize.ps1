@@ -357,7 +357,7 @@ if ($machineType -eq "Scheduler") {
 }
 
 if ($machineType -ne "Storage") {
-  $versionInfo = "10.3.0.9"
+  $versionInfo = "10.3.0.13"
   $installRoot = "C:\Deadline"
   $databaseHost = $(hostname)
   $databasePort = 27100

@@ -103,6 +103,7 @@ storageTargetsNfsBlob = [
 #######################################################################
 
 computeNetwork = {
+  enable             = false
   name               = ""
   subnetName         = ""
   resourceGroupName  = ""

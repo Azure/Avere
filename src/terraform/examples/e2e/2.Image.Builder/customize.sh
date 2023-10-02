@@ -28,7 +28,7 @@ systemctl --now disable firewalld
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/" /etc/selinux/config
 StartProcess "dnf -y install kernel-devel-$(uname -r)" $binDirectory/$installType
 StartProcess "dnf -y install gcc gcc-c++ python3-devel openssl-devel" $binDirectory/$installType
-StartProcess "dnf -y install perl cmake lsof git bc nfs-utils" $binDirectory/$installType
+StartProcess "dnf -y install perl cmake lsof bzip2 git bc nfs-utils" $binDirectory/$installType
 if [ $machineType == Workstation ]; then
   echo "Customize (Start): Image Build Platform (Workstation)"
   StartProcess "dnf -y group install workstation" $binDirectory/$installType
@@ -301,9 +301,9 @@ if [ $machineType == Scheduler ]; then
 fi
 
 if [ $machineType != Storage ]; then
-  versionInfo="10.3.0.9"
-  installRoot="/Deadline"
-  serverMount="/DeadlineServer"
+  versionInfo="10.3.0.13"
+  installRoot="/deadline"
+  serverMount="/mnt/deadline"
   databaseHost=$(hostname)
   databasePort=27017
   databaseName="deadline10db"

@@ -71,19 +71,19 @@ virtualMachineScaleSets = [
             {
               enable = false # File Cache Read
               mounts = [
-                "cache.artist.studio/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+                "cache.artist.studio:/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
               ]
             },
             {
               enable = false # File Cache Write
               mounts = [
-                "cache.artist.studio/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+                "cache.artist.studio:/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
               ]
             },
             {
               enable = true # Job Scheduler
               mounts = [
-                "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
+                "scheduler.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
               ]
             }
           ]
@@ -170,19 +170,19 @@ virtualMachineScaleSets = [
             {
               enable = false # File Cache Read
               mounts = [
-                "cache.artist.studio/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+                "cache.artist.studio:/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
               ]
             },
             {
               enable = false # File Cache Write
               mounts = [
-                "cache.artist.studio/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+                "cache.artist.studio:/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
               ]
             },
             {
               enable = true # Job Scheduler
               mounts = [
-                "scheduler.artist.studio/Deadline /DeadlineServer nfs defaults 0 0"
+                "scheduler.artist.studio:/deadline /mnt/deadline nfs defaults 0 0"
               ]
             }
           ]

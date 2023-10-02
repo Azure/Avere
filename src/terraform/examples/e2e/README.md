@@ -167,7 +167,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt -arguments "--outfile /mnt/content/write/pbrt/moana/island-v4.png /mnt/content/read/pbrt/moana/island/pbrt-v4/island.pbrt"```
+```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt -arguments "--outfile /mnt/content/pbrt/moana/island-v4.png /mnt/content/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
 #### 8.1.2 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
@@ -185,7 +185,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 
-```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/content/read/blender/3.4/splash.blend --render-output /mnt/content/write/blender/3.4/splash --enable-autoexec --render-frame 1"```
+```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/content/blender/3.4/splash.blend --render-output /mnt/content/blender/3.4/splash --enable-autoexec --render-frame 1"```
 
 #### 8.2.2 Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
