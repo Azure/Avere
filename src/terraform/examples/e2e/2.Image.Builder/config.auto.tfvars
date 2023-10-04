@@ -110,7 +110,8 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        "MoonRay"
+        "MoonRay",
+        "RenderMan"
       ]
     }
   },
@@ -131,7 +132,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        #"Unreal"
+        "RenderMan"
       ]
     }
   },
@@ -152,7 +153,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        #"Unreal+PixelStream"
+        "RenderMan"
       ]
     }
   },
@@ -173,7 +174,7 @@ imageTemplates = [
         "PBRT",
         "Blender",
         "MoonRay",
-        #"Unreal+PixelStream"
+        "RenderMan"
       ]
     }
   },
@@ -209,7 +210,8 @@ imageTemplates = [
       osDiskSizeGB   = 360
       renderEngines = [
         "PBRT",
-        "Blender"
+        "Blender",
+        "RenderMan"
       ]
     }
   },
@@ -229,7 +231,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        #"Unreal"
+        "RenderMan"
       ]
    }
   },
@@ -249,7 +251,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        #"Unreal+PixelStream"
+        "RenderMan"
       ]
     }
   },
@@ -269,7 +271,7 @@ imageTemplates = [
       renderEngines = [
         "PBRT",
         "Blender",
-        #"Unreal+PixelStream"
+        "RenderMan"
       ]
     }
   }

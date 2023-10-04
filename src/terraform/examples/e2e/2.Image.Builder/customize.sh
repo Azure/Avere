@@ -137,56 +137,6 @@ if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (End): Blender"
 fi
 
-if [[ $renderEngines == *Maya* ]]; then
-  echo "Customize (Start): Maya"
-  versionInfo="2024_0_1"
-  installType="autodesk-maya"
-  installFile="Autodesk_Maya_${versionInfo}_Update_Linux_64bit.tgz"
-  downloadUrl="$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  mkdir -p $installType
-  tar -xzf $installFile -C $installType
-  StartProcess "dnf -y install mesa-libGL" $binDirectory/$installType
-  StartProcess "dnf -y install mesa-libGLU" $binDirectory/$installType
-  StartProcess "dnf -y install alsa-lib" $binDirectory/$installType
-  StartProcess "dnf -y install libXxf86vm" $binDirectory/$installType
-  StartProcess "dnf -y install libXmu" $binDirectory/$installType
-  StartProcess "dnf -y install libXpm" $binDirectory/$installType
-  StartProcess "dnf -y install libnsl" $binDirectory/$installType
-  StartProcess "dnf -y install gtk3" $binDirectory/$installType
-  StartProcess "./$installType/Setup --silent" $binDirectory/$installType
-  binPaths="$binPaths:/usr/autodesk/maya/bin"
-  echo "Customize (End): Maya"
-fi
-
-if [[ $renderEngines == *Houdini* ]]; then
-  echo "Customize (Start): Houdini"
-  versionInfo="19.5.569"
-  versionEULA="2021-10-13"
-  installType="houdini"
-  installFile="$installType-$versionInfo-linux_x86_64_gcc9.3.tar.gz"
-  downloadUrl="$binStorageHost/Houdini/$versionInfo/$installFile$binStorageAuth"
-  curl -o $installFile -L $downloadUrl
-  tar -xzf $installFile
-  [[ $machineType == Workstation ]] && desktopMenus=--install-menus || desktopMenus=--no-install-menus
-  [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
-  [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
-  StartProcess "dnf -y install mesa-libGL" $binDirectory/$installType
-  StartProcess "dnf -y install libXcomposite" $binDirectory/$installType
-  StartProcess "dnf -y install libXdamage" $binDirectory/$installType
-  StartProcess "dnf -y install libXrandr" $binDirectory/$installType
-  StartProcess "dnf -y install libXcursor" $binDirectory/$installType
-  StartProcess "dnf -y install libXi" $binDirectory/$installType
-  StartProcess "dnf -y install libXtst" $binDirectory/$installType
-  StartProcess "dnf -y install libXScrnSaver" $binDirectory/$installType
-  StartProcess "dnf -y install alsa-lib" $binDirectory/$installType
-  StartProcess "dnf -y install libnsl" $binDirectory/$installType
-  StartProcess "dnf -y install avahi" $binDirectory/$installType
-  StartProcess "./houdini*/houdini.install --auto-install --make-dir --no-install-license --accept-EULA $versionEULA $desktopMenus $mayaPlugIn $unrealPlugIn" $binDirectory/$installType
-  binPaths="$binPaths:/opt/hfs$versionInfo/bin"
-  echo "Customize (End): Houdini"
-fi
-
 if [[ $renderEngines == *MoonRay* ]]; then
   echo "Customize (Start): MoonRay"
   installRoot="/moonray"
@@ -245,6 +195,67 @@ if [[ $renderEngines == *MoonRay* ]]; then
   fi
   cd $binDirectory
   echo "Customize (End): MoonRay"
+fi
+
+if [[ $renderEngines == *RenderMan* ]]; then
+  echo "Customize (Start): RenderMan"
+  versionInfo="25.2.0"
+  installType="renderman"
+  installFile="RenderMan-InstallerNCR-${versionInfo}_2282810-linuxRHEL7_gcc93icc219.x86_64.rpm"
+  downloadUrl="$binStorageHost/RenderMan/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  StartProcess "rpm -i $installFile" $binDirectory/$installType
+  echo "Customize (End): RenderMan"
+fi
+
+if [[ $renderEngines == *Maya* ]]; then
+  echo "Customize (Start): Maya"
+  versionInfo="2024_0_1"
+  installType="autodesk-maya"
+  installFile="Autodesk_Maya_${versionInfo}_Update_Linux_64bit.tgz"
+  downloadUrl="$binStorageHost/Maya/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  mkdir -p $installType
+  tar -xzf $installFile -C $installType
+  StartProcess "dnf -y install mesa-libGL" $binDirectory/$installType
+  StartProcess "dnf -y install mesa-libGLU" $binDirectory/$installType
+  StartProcess "dnf -y install alsa-lib" $binDirectory/$installType
+  StartProcess "dnf -y install libXxf86vm" $binDirectory/$installType
+  StartProcess "dnf -y install libXmu" $binDirectory/$installType
+  StartProcess "dnf -y install libXpm" $binDirectory/$installType
+  StartProcess "dnf -y install libnsl" $binDirectory/$installType
+  StartProcess "dnf -y install gtk3" $binDirectory/$installType
+  StartProcess "./$installType/Setup --silent" $binDirectory/$installType
+  binPaths="$binPaths:/usr/autodesk/maya/bin"
+  echo "Customize (End): Maya"
+fi
+
+if [[ $renderEngines == *Houdini* ]]; then
+  echo "Customize (Start): Houdini"
+  versionInfo="19.5.569"
+  versionEULA="2021-10-13"
+  installType="houdini"
+  installFile="$installType-$versionInfo-linux_x86_64_gcc9.3.tar.gz"
+  downloadUrl="$binStorageHost/Houdini/$versionInfo/$installFile$binStorageAuth"
+  curl -o $installFile -L $downloadUrl
+  tar -xzf $installFile
+  [[ $machineType == Workstation ]] && desktopMenus=--install-menus || desktopMenus=--no-install-menus
+  [[ $renderEngines == *Maya* ]] && mayaPlugIn=--install-engine-maya || mayaPlugIn=--no-install-engine-maya
+  [[ $renderEngines == *Unreal* ]] && unrealPlugIn=--install-engine-unreal || unrealPlugIn=--no-install-engine-unreal
+  StartProcess "dnf -y install mesa-libGL" $binDirectory/$installType
+  StartProcess "dnf -y install libXcomposite" $binDirectory/$installType
+  StartProcess "dnf -y install libXdamage" $binDirectory/$installType
+  StartProcess "dnf -y install libXrandr" $binDirectory/$installType
+  StartProcess "dnf -y install libXcursor" $binDirectory/$installType
+  StartProcess "dnf -y install libXi" $binDirectory/$installType
+  StartProcess "dnf -y install libXtst" $binDirectory/$installType
+  StartProcess "dnf -y install libXScrnSaver" $binDirectory/$installType
+  StartProcess "dnf -y install alsa-lib" $binDirectory/$installType
+  StartProcess "dnf -y install libnsl" $binDirectory/$installType
+  StartProcess "dnf -y install avahi" $binDirectory/$installType
+  StartProcess "./houdini*/houdini.install --auto-install --make-dir --no-install-license --accept-EULA $versionEULA $desktopMenus $mayaPlugIn $unrealPlugIn" $binDirectory/$installType
+  binPaths="$binPaths:/opt/hfs$versionInfo/bin"
+  echo "Customize (End): Houdini"
 fi
 
 if [[ $renderEngines == *Unreal* ]] || [[ $renderEngines == *Unreal+PixelStream* ]]; then

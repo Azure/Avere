@@ -538,19 +538,17 @@ batch = {
 
 azureOpenAI = {
   enable      = false
-  regionName  = "CanadaEast"
+  regionName  = "EastUS"
   accountName = "azstudio"
   domainName  = ""
   serviceTier = "S0"
-  modelDeployments = [
-    {
-      enable  = true
-      name    = "gpt-4"
-      format  = "OpenAI"
-      version = ""
-      scale   = "Standard"
-    }
-  ]
+  chatModel = {
+    enable  = true
+    name    = "gpt-35-turbo"
+    format  = "OpenAI"
+    version = ""
+    scale   = "Standard"
+  }
   storage = {
     enable = false
   }

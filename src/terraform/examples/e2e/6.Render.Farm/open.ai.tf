@@ -10,7 +10,7 @@ variable "azureOpenAI" {
       accountName = string
       domainName  = string
       serviceTier = string
-      modelDeployments = list(object(
+      chatModel = object(
         {
           enable  = bool
           name    = string
@@ -18,7 +18,7 @@ variable "azureOpenAI" {
           version = string
           scale   = string
         }
-      ))
+      )
       storage = object(
         {
           enable = bool
@@ -50,20 +50,17 @@ resource "azurerm_cognitive_account" "open_ai" {
   }
 }
 
-resource "azurerm_cognitive_deployment" "open_ai" {
-  for_each = {
-    for modelDeployment in var.azureOpenAI.modelDeployments : modelDeployment.name => modelDeployment if var.azureOpenAI.enable && modelDeployment.enable
-  }
-  name                   = each.value.name
-  cognitive_account_id   = azurerm_cognitive_account.open_ai[0].id
-  # version_upgrade_option = "OnceCurrentVersionExpired"
+resource "azurerm_cognitive_deployment" "open_ai_chat" {
+  count                = var.azureOpenAI.enable && var.azureOpenAI.chatModel.enable ? 1 : 0
+  name                 = var.azureOpenAI.chatModel.name
+  cognitive_account_id = azurerm_cognitive_account.open_ai[0].id
   model {
-    name    = each.value.name
-    format  = each.value.format
-    version = each.value.version
+    name    = var.azureOpenAI.chatModel.name
+    format  = var.azureOpenAI.chatModel.format
+    version = var.azureOpenAI.chatModel.version
   }
   scale {
-    type = each.value.scale
+    type = var.azureOpenAI.chatModel.scale
   }
 }
 

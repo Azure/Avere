@@ -84,7 +84,7 @@ resource "azurerm_function_app_function" "image_generate" {
   })
   test_data = jsonencode({
     chat = {
-      modelName      = "gpt-4"
+      modelName      = var.azureOpenAI.chatModel.name
       historyContext = "You are the lead singer in a rock band"
       requestMessage = "What do you look like"
     }
