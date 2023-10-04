@@ -167,10 +167,7 @@ resource "terraform_data" "blob_container_file_system" {
     for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.fileSystemEnable
   }
   provisioner "local-exec" {
-    command = <<-AZ
-      az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl "default:${each.value.fileSystemRootAcl}"
-      az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.fileSystemRootAcl}
-    AZ
+    command = "az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl default:${each.value.fileSystemRootAcl}"
   }
   depends_on = [
     azurerm_storage_container.core

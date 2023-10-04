@@ -63,21 +63,15 @@ virtualMachineScaleSets = [
         parameters = {
           fileSystems = [
             {
-              enable = false # File Storage Read & Write
+              enable = false # File Storage
               mounts = [
                 "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
               ]
             },
             {
-              enable = false # File Cache Read
+              enable = false # File Cache
               mounts = [
-                "cache.artist.studio:/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-              ]
-            },
-            {
-              enable = false # File Cache Write
-              mounts = [
-                "cache.artist.studio:/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+                "cache.artist.studio:/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
               ]
             },
             {
@@ -162,21 +156,15 @@ virtualMachineScaleSets = [
         parameters = {
           fileSystems = [
             {
-              enable = false # File Storage Read & Write
+              enable = false # File Storage
               mounts = [
                 "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
               ]
             },
             {
-              enable = false # File Cache Read
+              enable = false # File Cache
               mounts = [
-                "cache.artist.studio:/mnt/content /mnt/content/read nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
-              ]
-            },
-            {
-              enable = false # File Cache Write
-              mounts = [
-                "cache.artist.studio:/mnt/content /mnt/content/write nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
+                "cache.artist.studio:/content /mnt/content nfs hard,proto=tcp,mountproto=tcp,retry=30,nolock 0 0"
               ]
             },
             {
@@ -261,21 +249,15 @@ virtualMachineScaleSets = [
         parameters = {
           fileSystems = [
             {
-              enable = false # File Storage Read & Write
+              enable = false # File Storage
               mounts = [
                 "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content X:"
               ]
             },
             {
-              enable = false # File Cache Read
+              enable = false # File Cache
               mounts = [
-                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
-              ]
-            },
-            {
-              enable = false # File Cache Write
-              mounts = [
-                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
+                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content H:"
               ]
             },
             {
@@ -360,21 +342,15 @@ virtualMachineScaleSets = [
         parameters = {
           fileSystems = [
             {
-              enable = false # File Storage Read & Write
+              enable = false # File Storage
               mounts = [
                 "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content X:"
               ]
             },
             {
-              enable = false # File Cache Read
+              enable = false # File Cache
               mounts = [
-                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content R:"
-              ]
-            },
-            {
-              enable = false # File Cache Write
-              mounts = [
-                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content W:"
+                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content H:"
               ]
             },
             {

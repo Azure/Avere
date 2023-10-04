@@ -88,7 +88,7 @@ storageTargetsNfsBlob = [
   {
     enable     = false
     name       = "Content"
-    clientPath = "/mnt/content"
+    clientPath = "/content"
     usageModel = "READ_ONLY" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
     storage = {
       resourceGroupName = "ArtistAnywhere.Storage"
