@@ -532,14 +532,14 @@ batch = {
   ]
 }
 
-###########################################################################
-# Open AI (https://learn.microsoft.com/azure/ai-services/openai/overview) #
-###########################################################################
+################################################################################
+# Azure OpenAI (https://learn.microsoft.com/azure/ai-services/openai/overview) #
+################################################################################
 
-openAI = {
+azureOpenAI = {
   enable      = false
   regionName  = "CanadaEast"
-  accountName = ""
+  accountName = "azstudio"
   domainName  = ""
   serviceTier = "S0"
   modelDeployments = [
@@ -553,6 +553,18 @@ openAI = {
   ]
   storage = {
     enable = false
+  }
+}
+
+#####################################################
+# https://learn.microsoft.com/azure/azure-functions #
+#####################################################
+
+functionApp = {
+  name = "azstudio"
+  servicePlan = {
+    computeTier = "S1"
+    alwaysOn    = true
   }
 }
 

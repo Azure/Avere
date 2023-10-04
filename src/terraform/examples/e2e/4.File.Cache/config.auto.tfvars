@@ -2,7 +2,7 @@ resourceGroupName = "ArtistAnywhere.Cache" # Alphanumeric, underscores, hyphens,
 
 cacheName      = "cache" # Set to a uniquely identifiable cache cluster name
 enableHPCCache = true    # Enables HPC Cache (PaaS) instead of Avere vFXT (IaaS)
-enableDevMode  = false   # Enables non-production resource deployment for testing
+enableDevMode  = false   # Enables non-production deployment of Avere vFXT (IaaS)
 
 ##############################################################################
 # HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
@@ -66,10 +66,10 @@ storageTargetsNfs = [
     name        = "Content"
     storageHost = ""
     hpcCache = {
-      usageModel = "WRITE_AROUND" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
+      usageModel = "READ_ONLY" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
     }
     vfxtCache = {
-      cachePolicy    = "Clients Bypassing the Cluster"
+      cachePolicy    = "Read Caching"
       nfsConnections = 4
       customSettings = [
       ]
@@ -89,7 +89,7 @@ storageTargetsNfsBlob = [
     enable     = false
     name       = "Content"
     clientPath = "/mnt/content"
-    usageModel = "WRITE_AROUND" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
+    usageModel = "READ_ONLY" # https://learn.microsoft.com/azure/hpc-cache/cache-usage-models
     storage = {
       resourceGroupName = "ArtistAnywhere.Storage"
       accountName       = "azstudio1"

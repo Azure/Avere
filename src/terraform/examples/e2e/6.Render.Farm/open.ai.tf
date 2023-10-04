@@ -1,8 +1,8 @@
-###########################################################################
-# Open AI (https://learn.microsoft.com/azure/ai-services/openai/overview) #
-###########################################################################
+################################################################################
+# Azure OpenAI (https://learn.microsoft.com/azure/ai-services/openai/overview) #
+################################################################################
 
-variable "openAI" {
+variable "azureOpenAI" {
   type = object(
     {
       enable      = bool
@@ -29,12 +29,12 @@ variable "openAI" {
 }
 
 resource "azurerm_cognitive_account" "open_ai" {
-  count                 = var.openAI.enable ? 1 : 0
-  name                  = var.openAI.accountName
-  resource_group_name   = azurerm_resource_group.farm.name
-  location              = var.openAI.regionName
-  custom_subdomain_name = var.openAI.domainName != "" ? var.openAI.domainName : null
-  sku_name              = var.openAI.serviceTier
+  count                 = var.azureOpenAI.enable ? 1 : 0
+  name                  = var.azureOpenAI.accountName
+  resource_group_name   = azurerm_resource_group.farm_ai[0].name
+  location              = var.azureOpenAI.regionName
+  custom_subdomain_name = var.azureOpenAI.domainName != "" ? var.azureOpenAI.domainName : null
+  sku_name              = var.azureOpenAI.serviceTier
   kind                  = "OpenAI"
   identity {
     type = "UserAssigned"
@@ -43,7 +43,7 @@ resource "azurerm_cognitive_account" "open_ai" {
     ]
   }
   dynamic storage {
-    for_each = var.openAI.storage.enable ? [1] : []
+    for_each = var.azureOpenAI.storage.enable ? [1] : []
     content {
       storage_account_id = data.azurerm_storage_account.studio.id
     }
@@ -52,7 +52,7 @@ resource "azurerm_cognitive_account" "open_ai" {
 
 resource "azurerm_cognitive_deployment" "open_ai" {
   for_each = {
-    for modelDeployment in var.openAI.modelDeployments : modelDeployment.name => modelDeployment if var.openAI.enable && modelDeployment.enable
+    for modelDeployment in var.azureOpenAI.modelDeployments : modelDeployment.name => modelDeployment if var.azureOpenAI.enable && modelDeployment.enable
   }
   name                   = each.value.name
   cognitive_account_id   = azurerm_cognitive_account.open_ai[0].id
@@ -67,6 +67,8 @@ resource "azurerm_cognitive_deployment" "open_ai" {
   }
 }
 
-output "openAI" {
-  value = var.openAI.enable ? azurerm_cognitive_account.open_ai[0].endpoint : ""
+output "azureOpenAI" {
+  value = {
+    endpoint = var.azureOpenAI.enable ? azurerm_cognitive_account.open_ai[0].endpoint : ""
+  }
 }

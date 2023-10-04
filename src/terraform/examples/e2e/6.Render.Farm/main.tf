@@ -125,6 +125,11 @@ data "terraform_remote_state" "storage" {
   }
 }
 
+data "azurerm_application_insights" "studio" {
+  name                = module.global.monitor.name
+  resource_group_name = module.global.resourceGroupName
+}
+
 data "azurerm_virtual_network" "compute" {
   name                = var.computeNetwork.enable ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
   resource_group_name = var.computeNetwork.enable ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
@@ -141,7 +146,7 @@ data "azurerm_private_dns_zone" "studio" {
   resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
 }
 
-data "azurerm_storage_account" "scheduler" {
+data "azurerm_storage_account" "studio" {
   name                = var.storageAccount.enable ? var.storageAccount.name : data.terraform_remote_state.storage.outputs.blobStorageAccounts[0].name
   resource_group_name = var.storageAccount.enable ? var.storageAccount.resourceGroupName : data.terraform_remote_state.storage.outputs.resourceGroupName
 }
@@ -149,6 +154,18 @@ data "azurerm_storage_account" "scheduler" {
 resource "azurerm_resource_group" "farm" {
   name     = var.resourceGroupName
   location = module.global.regionNames[0]
+}
+
+resource "azurerm_resource_group" "farm_ai" {
+  count    = var.azureOpenAI.enable ? 1 : 0
+  name     = "${azurerm_resource_group.farm.name}.AI"
+  location = azurerm_resource_group.farm.location
+}
+
+resource "azurerm_resource_group" "farm_batch" {
+  count    = var.batch.enable ? 1 : 0
+  name     = "${azurerm_resource_group.farm.name}.Batch"
+  location = azurerm_resource_group.farm.location
 }
 
 output "resourceGroupName" {

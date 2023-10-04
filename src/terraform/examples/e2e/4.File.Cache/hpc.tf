@@ -79,6 +79,14 @@ resource "azurerm_hpc_cache" "cache" {
   ]
 }
 
+resource "time_sleep" "blob_nfs_target_rbac" {
+  create_duration = "30s"
+  depends_on = [
+    azurerm_role_assignment.storage_account,
+    azurerm_role_assignment.storage_blob_data
+  ]
+}
+
 resource "azurerm_hpc_cache_nfs_target" "storage" {
   for_each = {
     for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if var.enableHPCCache && storageTargetNfs.enable
@@ -108,4 +116,7 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   storage_container_id = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
   usage_model          = each.value.usageModel
   namespace_path       = each.value.clientPath
+  depends_on = [
+    time_sleep.blob_nfs_target_rbac
+  ]
 }

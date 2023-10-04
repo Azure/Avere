@@ -76,16 +76,6 @@ data "azurerm_key_vault" "batch" {
   resource_group_name = module.global.resourceGroupName
 }
 
-data "azurerm_storage_account" "batch" {
-  count               = var.batch.enable ? 1 : 0
-  name                = local.storageAccount.name
-  resource_group_name = local.storageAccount.resourceGroupName
-}
-
-locals {
-  storageAccount = try(data.terraform_remote_state.storage.outputs.blobStorageAccounts[0], merge({"name" = var.batch.account.storage.accountName}, {"resourceGroupName" = var.batch.account.storage.resourceGroupName}))
-}
-
 ###############################################################################################
 # Private Endpoint (https://learn.microsoft.com/azure/private-link/private-endpoint-overview) #
 ###############################################################################################
@@ -99,7 +89,7 @@ resource "azurerm_private_dns_zone" "batch" {
 resource "azurerm_private_dns_zone_virtual_network_link" "batch" {
   count                 = var.batch.enable ? 1 : 0
   name                  = "${data.azurerm_virtual_network.compute.name}-batch"
-  resource_group_name   = azurerm_resource_group.farm.name
+  resource_group_name   = azurerm_resource_group.farm_batch[0].name
   private_dns_zone_name = azurerm_private_dns_zone.batch[0].name
   virtual_network_id    = data.azurerm_virtual_network.compute.id
 }
@@ -107,8 +97,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "batch" {
 resource "azurerm_private_endpoint" "batch_account" {
   count               = var.batch.enable ? 1 : 0
   name                = "${var.batch.account.name}-batchAccount"
-  resource_group_name = azurerm_resource_group.farm.name
-  location            = azurerm_resource_group.farm.location
+  resource_group_name = azurerm_resource_group.farm_batch[0].name
+  location            = azurerm_resource_group.farm_batch[0].location
   subnet_id           = data.azurerm_subnet.farm.id
   private_service_connection {
     name                           = azurerm_batch_account.scheduler[0].name
@@ -129,8 +119,8 @@ resource "azurerm_private_endpoint" "batch_account" {
 resource "azurerm_private_endpoint" "batch_node" {
   count               = var.batch.enable ? 1 : 0
   name                = "${var.batch.account.name}-batchNode"
-  resource_group_name = azurerm_resource_group.farm.name
-  location            = azurerm_resource_group.farm.location
+  resource_group_name = azurerm_resource_group.farm_batch[0].name
+  location            = azurerm_resource_group.farm_batch[0].location
   subnet_id           = data.azurerm_subnet.farm.id
   private_service_connection {
     name                           = azurerm_batch_account.scheduler[0].name
@@ -162,8 +152,8 @@ resource "azurerm_role_assignment" "batch" {
 resource "azurerm_batch_account" "scheduler" {
   count                = var.batch.enable ? 1 : 0
   name                 = var.batch.account.name
-  resource_group_name  = azurerm_resource_group.farm.name
-  location             = azurerm_resource_group.farm.location
+  resource_group_name  = azurerm_resource_group.farm_batch[0].name
+  location             = azurerm_resource_group.farm_batch[0].location
   pool_allocation_mode = "UserSubscription"
   identity {
     type = "UserAssigned"
@@ -191,7 +181,7 @@ resource "azurerm_batch_account" "scheduler" {
     id  = data.azurerm_key_vault.batch[0].id
     url = data.azurerm_key_vault.batch[0].vault_uri
   }
-  storage_account_id                  = data.azurerm_storage_account.batch[0].id
+  storage_account_id                  = data.azurerm_storage_account.studio.id
   storage_account_node_identity       = data.azurerm_user_assigned_identity.studio.id
   storage_account_authentication_mode = "BatchAccountManagedIdentity"
   depends_on = [
@@ -205,7 +195,7 @@ resource "azurerm_batch_pool" "farm" {
   }
   name                     = each.value.name
   display_name             = each.value.displayName != "" ? each.value.displayName : each.value.name
-  resource_group_name      = azurerm_resource_group.farm.name
+  resource_group_name      = azurerm_resource_group.farm_batch[0].name
   account_name             = azurerm_batch_account.scheduler[0].name
   vm_size                  = each.value.node.machine.size
   node_agent_sku_id        = each.value.node.image.agentId
@@ -234,6 +224,8 @@ resource "azurerm_batch_pool" "farm" {
   }
 }
 
-output "batchAccountEndpoint" {
-  value = var.batch.enable ? azurerm_batch_account.scheduler[0].account_endpoint : ""
+output "batchAccount" {
+  value = {
+    endpoint = var.batch.enable ? azurerm_batch_account.scheduler[0].account_endpoint : ""
+  }
 }
