@@ -2,7 +2,6 @@ $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
 function InitializeClient ($enableWeka) {
   if ($enableWeka) {
-    #curl http://content.artist.studio:14000/dist/v1/install | sh
   }
 }
 
