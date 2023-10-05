@@ -167,7 +167,7 @@ Now that deployment of the AAA solution framework is complete, this final sectio
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt -arguments "--outfile /mnt/content/pbrt/moana/island-v4.png /mnt/content/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
-#### 8.1.2 Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
+#### 8.1.2 Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
 
 *The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
 

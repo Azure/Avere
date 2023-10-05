@@ -188,7 +188,7 @@ if ($renderEngines -contains "RenderMan") {
   Write-Host "Customize (Start): RenderMan"
   $versionInfo = "25.2.0"
   $installType = "renderman"
-  $installFile = "RenderMan-InstallerNCR-${versionInfo}_2272018-windows10_vc15icc216.x86_64.msi"
+  $installFile = "RenderMan-InstallerNCR-${versionInfo}_2282810-windows10_vc15icc216.x86_64.msi"
   $downloadUrl = "$binStorageHost/RenderMan/$versionInfo/$installFile$binStorageAuth"
   (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
   StartProcess $installFile "/quiet /norestart /log $installType.log" $null
