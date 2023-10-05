@@ -5,9 +5,10 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-SetFileSystems $binDirectory '${jsonencode(fileSystems)}'
+$enableWeka = $false
+InitializeClient $enableWeka
 
-EnableFarmClient
+SetFileSystems $binDirectory '${jsonencode(fileSystems)}'
 
 if ("${terminateNotification.enable}" -eq $true) {
   $taskName = "AAA Terminate Event Handler"

@@ -17,7 +17,7 @@ variable "hpcCache" {
       )
       encryption = object(
         {
-          keyName   = string
+          enable    = bool
           rotateKey = bool
         }
       )
@@ -71,8 +71,8 @@ resource "azurerm_hpc_cache" "cache" {
       search_domain = var.hpcCache.dns.searchDomain != "" ? var.hpcCache.dns.searchDomain : null
     }
   }
-  key_vault_key_id                           = var.hpcCache.encryption.keyName != "" ? data.azurerm_key_vault_key.cache_encryption[0].id : null
-  automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.keyName != "" ? var.hpcCache.encryption.rotateKey : null
+  key_vault_key_id                           = var.hpcCache.encryption.enable ? data.azurerm_key_vault_key.cache_encryption[0].id : null
+  automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enable ? var.hpcCache.encryption.rotateKey : null
   depends_on = [
     azurerm_role_assignment.storage_account,
     azurerm_role_assignment.storage_blob_data

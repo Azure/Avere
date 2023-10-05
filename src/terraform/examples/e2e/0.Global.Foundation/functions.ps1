@@ -1,5 +1,11 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
+function InitializeClient ($enableWeka) {
+  if ($enableWeka) {
+    #curl http://content.artist.studio:14000/dist/v1/install | sh
+  }
+}
+
 function StartProcess ($filePath, $argumentList, $logFile) {
   if ($logFile) {
     if ($argumentList) {
@@ -24,7 +30,7 @@ function FileExists ($filePath) {
 function SetFileSystems ($binDirectory, $fileSystemsJson) {
   $fileSystems = ConvertFrom-Json -InputObject $fileSystemsJson
   foreach ($fileSystem in $fileSystems) {
-    if ($fileSystem.enable -eq $true) {
+    if ($fileSystem.enable) {
       SetFileSystemMounts $fileSystem.mounts
     }
   }
@@ -51,10 +57,6 @@ function RegisterFileSystemMounts ($binDirectory) {
     $taskTrigger = New-ScheduledTaskTrigger -AtStartup
     Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
   }
-}
-
-function EnableFarmClient () {
-  deadlinecommand.exe -ChangeRepository Direct S:\ S:\Deadline10Client.pfx ""
 }
 
 function JoinActiveDirectory ($domainName, $domainServerName, $orgUnitPath, $adminUsername, $adminPassword) {

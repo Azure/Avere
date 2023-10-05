@@ -27,16 +27,16 @@ echo "Environment=workerIdleDeleteSeconds=${autoScale.workerIdleDeleteSeconds}" 
 echo "ExecStart=/bin/bash $codeFilePath" >> $servicePath
 echo "" >> $servicePath
 
-timerPath="/etc/systemd/system/$serviceFile.timer"
-echo "[Unit]" > $timerPath
-echo "Description=$serviceName Timer" >> $timerPath
-echo "" >> $timerPath
-echo "[Timer]" >> $timerPath
-echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $timerPath
-echo "AccuracySec=1us" >> $timerPath
-echo "" >> $timerPath
-echo "[Install]" >> $timerPath
-echo "WantedBy=timers.target" >> $timerPath
+serviceTimerPath="/etc/systemd/system/$serviceFile.timer"
+echo "[Unit]" > $serviceTimerPath
+echo "Description=$serviceName Timer" >> $serviceTimerPath
+echo "" >> $serviceTimerPath
+echo "[Timer]" >> $serviceTimerPath
+echo "OnUnitActiveSec=${autoScale.detectionIntervalSeconds}" >> $serviceTimerPath
+echo "AccuracySec=1us" >> $serviceTimerPath
+echo "" >> $serviceTimerPath
+echo "[Install]" >> $serviceTimerPath
+echo "WantedBy=timers.target" >> $serviceTimerPath
 
 if [ ${autoScale.enable} == true ]; then
   systemctl --now enable $serviceFile

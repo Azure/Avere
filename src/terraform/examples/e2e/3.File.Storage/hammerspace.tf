@@ -288,8 +288,8 @@ resource "azurerm_linux_virtual_machine" "storage_metadata" {
   os_disk {
     storage_account_type = var.hammerspace.metadata.osDisk.storageType
     caching              = var.hammerspace.metadata.osDisk.cachingType
-    disk_size_gb         = var.hammerspace.metadata.osDisk.sizeGB
-  }
+    disk_size_gb         = var.hammerspace.metadata.osDisk.sizeGB > 0 ? var.hammerspace.metadata.osDisk.sizeGB : null
+ }
   plan {
     publisher = local.hammerspaceImage.publisher
     product   = local.hammerspaceImage.product
@@ -330,7 +330,7 @@ resource "azurerm_linux_virtual_machine" "storage_data" {
   os_disk {
     storage_account_type = each.value.osDisk.storageType
     caching              = each.value.osDisk.cachingType
-    disk_size_gb         = each.value.osDisk.sizeGB
+    disk_size_gb         = each.value.osDisk.sizeGB > 0 ? each.value.osDisk.sizeGB : null
   }
   plan {
     publisher = local.hammerspaceImage.publisher

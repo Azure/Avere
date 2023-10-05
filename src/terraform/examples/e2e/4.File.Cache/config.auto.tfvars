@@ -26,7 +26,7 @@ hpcCache = {
     searchDomain = ""
   }
   encryption = {
-    keyName   = ""
+    enable    = false
     rotateKey = false
   }
 }

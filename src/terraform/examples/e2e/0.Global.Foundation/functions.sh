@@ -1,3 +1,10 @@
+function InitializeClient {
+  enableWeka=$1
+  if [ $enableWeka == true ]; then
+    curl http://content.artist.studio:14000/dist/v1/install | sh
+  fi
+}
+
 function StartProcess {
   command="$1"
   logFile=$2
@@ -36,8 +43,4 @@ function SetFileSystemMounts {
       echo "$mount" >> /etc/fstab
     fi
   done
-}
-
-function EnableFarmClient {
-  curl http://content.artist.studio:14000/dist/v1/install | sh
 }

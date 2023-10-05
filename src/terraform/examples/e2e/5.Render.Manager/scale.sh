@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-az login --identity
+az login --identity # Enables Azure CLI Role-Based Access Control (RBAC)
 
 queuedTasks=0
 activeJobIds=$(deadlinecommand -GetJobIdsFilter Status=Active)

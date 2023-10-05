@@ -33,7 +33,7 @@ Write-Host "Render Engines: $renderEngines"
 Write-Host "Customize (End): Image Build Parameters"
 
 Write-Host "Customize (Start): Image Build Platform"
-netsh advfirewall firewall set allprofiles state off
+netsh advfirewall set allprofiles state off
 
 Write-Host "Customize (Start): Chocolatey"
 $installType = "chocolatey"
@@ -174,7 +174,7 @@ if ($renderEngines -contains "PBRT") {
 
 if ($renderEngines -contains "Blender") {
   Write-Host "Customize (Start): Blender"
-  $versionInfo = "3.6.2"
+  $versionInfo = "3.6.4"
   $installType = "blender"
   $installFile = "$installType-$versionInfo-windows-x64.msi"
   $downloadUrl = "$binStorageHost/Blender/$versionInfo/$installFile$binStorageAuth"
@@ -370,6 +370,7 @@ if ($machineType -eq "Scheduler") {
 if ($machineType -ne "Storage") {
   $versionInfo = "10.3.0.13"
   $installRoot = "C:\Deadline"
+  $serverMount = "S:\"
   $databaseHost = $(hostname)
   $databasePort = 27100
   $databasePath = "C:\DeadlineDatabase"
@@ -398,7 +399,7 @@ if ($machineType -ne "Storage") {
   Write-Host "Customize (Start): Deadline Client"
   $installType = "deadline-client"
   $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
-  $installArgs = "--mode unattended --prefix $installRoot"
+  $installArgs = "--mode unattended --prefix $installRoot --repositorydir $serverMount"
   if ($machineType -eq "Scheduler") {
     $installArgs = "$installArgs --slavestartup false --launcherservice false"
   } else {

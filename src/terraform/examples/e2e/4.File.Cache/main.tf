@@ -141,8 +141,8 @@ data "azurerm_key_vault_secret" "admin_password" {
 }
 
 data "azurerm_key_vault_key" "cache_encryption" {
-  count        = module.global.keyVault.enable && var.hpcCache.encryption.keyName != "" ? 1 : 0
-  name         = var.hpcCache.encryption.keyName != "" ? var.hpcCache.encryption.keyName : module.global.keyVault.keyName.cacheEncryption
+  count        = module.global.keyVault.enable && var.hpcCache.encryption.enable ? 1 : 0
+  name         = module.global.keyVault.keyName.cacheEncryption
   key_vault_id = data.azurerm_key_vault.studio[0].id
 }
 

@@ -3,7 +3,7 @@ Set-Location -Path $binDirectory
 
 Start-Process -FilePath sc.exe -ArgumentList "start Deadline10DatabaseService"
 
-$scriptFile = "C:\AzureData\aaaScaler.ps1"
+$scriptFile = "C:\AzureData\aaaAutoScaler.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 
 $taskName = "AAA Auto Scaler"

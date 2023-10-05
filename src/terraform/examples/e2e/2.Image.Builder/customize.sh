@@ -118,7 +118,7 @@ fi
 
 if [[ $renderEngines == *Blender* ]]; then
   echo "Customize (Start): Blender"
-  versionInfo="3.6.2"
+  versionInfo="3.6.4"
   versionType="linux-x64"
   installType="blender"
   installPath="/usr/local/$installType"

@@ -271,7 +271,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   os_disk {
     storage_account_type = var.weka.osDisk.storageType
     caching              = var.weka.osDisk.cachingType
-    disk_size_gb         = var.weka.osDisk.sizeGB
+    disk_size_gb         = var.weka.osDisk.sizeGB > 0 ? var.weka.osDisk.sizeGB : null
   }
   data_disk {
     storage_account_type = var.weka.dataDisk.storageType
@@ -299,7 +299,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     settings = jsonencode({
       script = "${base64encode(
         templatefile("initialize.sh", {
-          wekaVersion               = "4.2.3"
+          wekaVersion               = "4.2.4"
           wekaApiToken              = var.weka.apiToken
           wekaClusterName           = var.weka.name.resource
           wekaDataDiskSize          = var.weka.dataDisk.sizeGB
