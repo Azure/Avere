@@ -1,7 +1,12 @@
 $fileSystemMountPath = "C:\AzureData\fileSystemMount.bat"
 
-function InitializeClient ($enableWeka) {
-  if ($enableWeka) {
+function InitializeClient ($binDirectory, $activeDirectoryJson) {
+  StartProcess deadlinecommand.exe "-ChangeRepository Direct S:\ S:\Deadline10Client.pfx" "$binDirectory\deadline-repository"
+  $activeDirectory = ConvertFrom-Json -InputObject $activeDirectoryJson
+  if ($activeDirectory.enable) {
+    Retry 5 10 {
+      JoinActiveDirectory $activeDirectory.domainName $activeDirectory.domainServerName $activeDirectory.orgUnitPath $activeDirectory.adminUsername $activeDirectory.adminPassword
+    }
   }
 }
 

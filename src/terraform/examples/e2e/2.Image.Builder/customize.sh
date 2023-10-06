@@ -314,7 +314,6 @@ fi
 if [ $machineType != Storage ]; then
   versionInfo="10.3.0.13"
   installRoot="/deadline"
-  serverMount="/mnt/deadline"
   databaseHost=$(hostname)
   databasePort=27017
   databaseName="deadline10db"
@@ -361,7 +360,7 @@ if [ $machineType != Storage ]; then
 
   echo "Customize (Start): Deadline Client"
   installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
-  installArgs="--mode unattended --prefix $installRoot --repositorydir $serverMount"
+  installArgs="--mode unattended --prefix $installRoot"
   if [ $machineType == Scheduler ]; then
     installArgs="$installArgs --slavestartup false --launcherdaemon false"
   else

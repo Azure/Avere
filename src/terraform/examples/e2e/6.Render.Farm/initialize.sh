@@ -10,10 +10,10 @@ functionsData="${filebase64("../0.Global.Foundation/functions.sh")}"
 echo $functionsData | base64 --decode > $functionsCode
 source $functionsCode
 
+SetFileSystems '${jsonencode(fileSystems)}'
+
 enableWeka=false
 InitializeClient $enableWeka
-
-SetFileSystems '${jsonencode(fileSystems)}'
 
 if [ ${terminateNotification.enable} == true ]; then
   cronFilePath="/tmp/crontab"

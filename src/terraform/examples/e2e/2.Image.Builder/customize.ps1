@@ -369,11 +369,10 @@ if ($machineType -eq "Scheduler") {
 
 if ($machineType -ne "Storage") {
   $versionInfo = "10.3.0.13"
-  $installRoot = "C:\Deadline"
-  $serverMount = "S:\"
+  $installRoot = "C:\deadline"
   $databaseHost = $(hostname)
   $databasePort = 27100
-  $databasePath = "C:\DeadlineDatabase"
+  $databasePath = "C:\deadlineData"
   $certificateFile = "Deadline10Client.pfx"
   $binPathScheduler = "$installRoot\bin"
 
@@ -399,7 +398,7 @@ if ($machineType -ne "Storage") {
   Write-Host "Customize (Start): Deadline Client"
   $installType = "deadline-client"
   $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
-  $installArgs = "--mode unattended --prefix $installRoot --repositorydir $serverMount"
+  $installArgs = "--mode unattended --prefix $installRoot"
   if ($machineType -eq "Scheduler") {
     $installArgs = "$installArgs --slavestartup false --launcherservice false"
   } else {

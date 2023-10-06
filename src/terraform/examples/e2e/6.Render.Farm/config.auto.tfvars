@@ -257,13 +257,13 @@ virtualMachineScaleSets = [
             {
               enable = false # File Cache
               mounts = [
-                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content H:"
+                "mount -o anon nolock \\\\cache.artist.studio\\content H:"
               ]
             },
             {
               enable = true # Job Scheduler
               mounts = [
-                "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+                "mount -o anon \\\\scheduler.artist.studio\\deadline S:"
               ]
             }
           ]
@@ -350,13 +350,13 @@ virtualMachineScaleSets = [
             {
               enable = false # File Cache
               mounts = [
-                "mount -o anon nolock \\\\cache.artist.studio\\mnt\\content H:"
+                "mount -o anon nolock \\\\cache.artist.studio\\content H:"
               ]
             },
             {
               enable = true # Job Scheduler
               mounts = [
-                "mount -o anon \\\\scheduler.artist.studio\\Deadline S:"
+                "mount -o anon \\\\scheduler.artist.studio\\deadline S:"
               ]
             }
           ]

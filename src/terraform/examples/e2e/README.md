@@ -34,8 +34,9 @@ For example, the following sample images were [rendered on Azure](https://user-i
 The following local installation prerequisites are required for the AAA solution deployment framework.<br>
 1. Make sure the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your PATH environment variable.
 1. Make sure the [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) is installed locally and accessible in your PATH environment variable.
-1. Run `az account show` to ensure your current Azure subscription session context is set as expected. Verify the `id` property.<br>To change your current Azure subscription session context, run `az account set --subscription <subscriptionId>`
-1. Download this GitHub repository to your local workstation, which enables easy module configuration and deployment.
+1. Run `az login` locally to authenticate into your Azure account. This is how Terraform connects to Azure.
+1. Run `az account show` to ensure your current Azure *subscription* context is set as expected. Verify the `id` property.<br>To change your current Azure subscription context, run `az account set --subscription <subscriptionId>`
+1. Download this GitHub repository to your local workstation for module configuration and deployment orchestration.
 
 ## 0 Global Foundation
 
