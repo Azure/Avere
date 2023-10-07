@@ -162,24 +162,24 @@ resource "azurerm_storage_container" "core" {
   ]
 }
 
-resource "terraform_data" "blob_container_file_system_access" {
-  for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.fileSystemEnable
-  }
-  provisioner "local-exec" {
-    command = "az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.fileSystemRootAcl}"
-  }
-  depends_on = [
-    azurerm_storage_container.core
-  ]
-}
-
 resource "terraform_data" "blob_container_file_system_access_default" {
   for_each = {
     for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.fileSystemEnable
   }
   provisioner "local-exec" {
     command = "az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl default:${each.value.fileSystemRootAcl}"
+  }
+  depends_on = [
+    azurerm_storage_container.core
+  ]
+}
+
+resource "terraform_data" "blob_container_file_system_access_pre_load" {
+  for_each = {
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.fileSystemEnable
+  }
+  provisioner "local-exec" {
+    command = "az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.fileSystemRootAcl}"
   }
   depends_on = [
     azurerm_storage_container.core
@@ -197,8 +197,8 @@ resource "terraform_data" "blob_container_load_root" {
     command = "az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name}"
   }
   depends_on = [
-    terraform_data.blob_container_file_system_access,
-    terraform_data.blob_container_file_system_access_default
+    terraform_data.blob_container_file_system_access_default,
+    terraform_data.blob_container_file_system_access_pre_load
   ]
 }
 
@@ -213,8 +213,22 @@ resource "terraform_data" "blob_container_load_blob" {
     command = "az storage copy --source-account-name ${var.fileLoadSource.accountName} --source-account-key ${var.fileLoadSource.accountKey} --source-container ${var.fileLoadSource.containerName} --source-blob ${var.fileLoadSource.blobName} --recursive --account-name ${each.value.storageAccountName} --destination-container ${each.value.name} --destination-blob ${var.fileLoadSource.blobName}"
   }
   depends_on = [
-    terraform_data.blob_container_file_system_access,
-    terraform_data.blob_container_file_system_access_default
+    terraform_data.blob_container_file_system_access_default,
+    terraform_data.blob_container_file_system_access_pre_load
+  ]
+}
+
+resource "terraform_data" "blob_container_file_system_access_post_load" {
+  for_each = {
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.fileSystemEnable
+  }
+  provisioner "local-exec" {
+    command = "az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.fileSystemRootAcl}"
+  }
+  depends_on = [
+    azurerm_storage_container.core,
+    terraform_data.blob_container_load_root,
+    terraform_data.blob_container_load_blob
   ]
 }
 
