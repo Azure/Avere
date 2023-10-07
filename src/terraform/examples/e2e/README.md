@@ -1,6 +1,6 @@
 # Azure Artist Anywhere (AAA) Solution Deployment Framework
 
-Azure Artist Anywhere (AAA) is a *modular & configurable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) solution deployment framework* for Azure HPC & AI [Rendering](https://azure.microsoft.com/solutions/high-performance-computing/rendering). Enable remote artist creativity with Azure [global scale](https://azure.microsoft.com/global-infrastructure) and distributed computing innovation via [HPC-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc) and [GPU-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu) infrastructure.
+Azure Artist Anywhere (AAA) is a *modular & configurable [infrastructure-as-code](https://learn.microsoft.com/devops/deliver/what-is-infrastructure-as-code) solution deployment framework* for Azure HPC & AI [Rendering](https://azure.microsoft.com/solutions/high-performance-computing/rendering). Ignite remote artist creativity with Azure [global scale](https://azure.microsoft.com/global-infrastructure) and distributed computing innovation via [HPC-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-hpc) and [GPU-Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu) infrastructure.
 
 The following design principles are implemented across each module of the Azure Artist Anywhere (AAA) solution deployment framework.
 * Defense-in-depth layered security model across [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview), [Key Vault](https://learn.microsoft.com/azure/key-vault/general/overview), [Private Link](https://learn.microsoft.com/azure/private-link/private-link-overview) / [Endpoints](https://learn.microsoft.com/azure/private-link/private-endpoint-overview), [Network Security Groups](https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview), etc
@@ -18,9 +18,9 @@ The following design principles are implemented across each module of the Azure 
 | [6 Render Farm](https://github.com/Azure/Avere/tree/main/src/terraform/examples/e2e/6.Render.Farm) | Deploys  [Virtual Machine Scale Sets](https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) or [Batch](https://learn.microsoft.com/azure/batch/batch-technical-overview) for highly-scalable Linux and/or Windows render farm compute.<br/>Deploys [Azure OpenAI](https://learn.microsoft.com/azure/ai-services/openai/overview) ([DALL-E 2](https://openai.com/dall-e-2)) with [Semantic Kernel](https://learn.microsoft.com/semantic-kernel/overview/). | Yes, Azure OpenAI is *optional* config [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.Render.Farm/config.auto.tfvars#L515) | Yes, Azure OpenAI is *optional* config [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/6.Render.Farm/config.auto.tfvars#L515) |
 | [7&#160;Artist&#160;Workstation](https://github.com/Azure/Avere/tree/main/src/terraform/examples/e2e/7.Artist.Workstation) | Deploys [Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/overview) ([GPU Enabled](https://learn.microsoft.com/azure/virtual-machines/sizes-gpu)) for [Linux](https://learn.microsoft.com/azure/virtual-machines/linux/overview) and/or<br>[Windows](https://learn.microsoft.com/azure/virtual-machines/windows/overview) remote artist workstations with [HP Anyware](https://www.teradici.com). | No | No |
 
-## Installation Prerequisites
+## Local Installation Dependencies
 
-The following local installation prerequisites are required for the AAA solution deployment framework.<br>
+The following installation dependencies are required for local deployment orchestration.<br>
 1. Make sure the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) is installed locally and accessible in your PATH environment variable.
 1. Make sure the [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) is installed locally and accessible in your PATH environment variable.
 1. Run `az login` locally to authenticate into your Azure account. This is how Terraform connects to Azure.
@@ -37,11 +37,11 @@ For each of the modules in the framework, here is the recommended deployment pro
            * `module/backend.config`
            * `module/variables.tf`
        * If Key Vault is enabled [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L35), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
-   * For modules `2 Image Builder`, `5 Render Manager`, `6 Render Farm` and `6 Artist Workstation`,
+   * For modules `2 Image Builder`, `5 Render Manager`, `6 Render Farm` and `7 Artist Workstation`,
        * Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
        * By default, [Spot](https://learn.microsoft.com/azure/virtual-machines/spot-vms) is enabled in module `6 Render Farm`. Therefore, Spot cores quota should be approved for your Azure subscrption.
-   * For modules `5 Render Manager`, `6 Render Farm` and `6 Artist Workstation`, make sure the **image.id** config references the correct custom image in your Azure subscription [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries).
-   * For modules `6 Render Farm` and `6 Artist Workstation`, make sure the **fileSystems** config has the correct values for your target storage environment.
+   * For modules `5 Render Manager`, `6 Render Farm` and `7 Artist Workstation`, make sure the **image.id** config references the correct custom image in your Azure subscription [Compute Gallery](https://learn.microsoft.com/azure/virtual-machines/shared-image-galleries).
+   * For modules `6 Render Farm` and `7 Artist Workstation`, make sure the **fileSystems** config has the correct values for your target storage environment.
 1. Run `terraform init -backend-config ../0.Global.Foundation/module/backend.config` to initialize the module local directory (append `-upgrade` if older providers are detected)
    * For module `0 Global Foundation`, do **not** include the `-backend-config` parameter
 1. Run `terraform apply` to generate the Terraform deployment [Plan](https://www.terraform.io/docs/cli/run/index.html#planning) (append `-destroy` to delete Azure resources)
