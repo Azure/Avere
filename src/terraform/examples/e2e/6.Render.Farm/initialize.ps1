@@ -5,10 +5,6 @@ $scriptFile = "C:\AzureData\functions.ps1"
 Copy-Item -Path "C:\AzureData\CustomData.bin" -Destination $scriptFile
 . $scriptFile
 
-SetFileSystems $binDirectory '${jsonencode(fileSystems)}'
-
-InitializeClient $binDirectory '${jsonencode(activeDirectory)}'
-
 if ("${terminateNotification.enable}" -eq $true) {
   $taskName = "AAA Terminate Event Handler"
   $taskInterval = New-TimeSpan -Minutes 1
@@ -16,3 +12,7 @@ if ("${terminateNotification.enable}" -eq $true) {
   $taskTrigger = New-ScheduledTaskTrigger -RepetitionInterval $taskInterval -At $(Get-Date) -Once
   Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -User System -Force
 }
+
+SetFileSystems $binDirectory '${jsonencode(fileSystems)}'
+
+InitializeClient $binDirectory '${jsonencode(activeDirectory)}'

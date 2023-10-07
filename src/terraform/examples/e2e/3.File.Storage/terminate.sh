@@ -24,7 +24,7 @@ for scheduledEvent in $(echo $scheduledEvents | jq -r '.[] | @base64'); do
   eventScope=$(GetEventValue .Resources[0])
 
   if [[ $eventType == Terminate && $eventScope == $instanceName ]]; then
-    az login --identity # Enables Azure CLI Role-Based Access Control (RBAC)
+    az login --identity
     dnsRecordQuery="aRecords[?ipv4Address=='$(hostname -i)']"
     dnsRecordAddress=$(az network private-dns record-set a show --resource-group ${dnsResourceGroupName} --zone-name ${dnsZoneName} --name ${dnsRecordSetName} --query $dnsRecordQuery --output tsv)
     if [ -n "$dnsRecordAddress" ]; then

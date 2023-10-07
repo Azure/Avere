@@ -60,7 +60,7 @@ if [ "${wekaClusterName}" != "" ]; then
   weka local stop --force $containerName
   weka local rm --force $containerName
 
-  az login --identity # Enables Azure CLI Role-Based Access Control (RBAC)
+  az login --identity
   failureDomain=$(hostname)
   drivesContainerName=drives0
   vmScaleSetState=$(az vmss show --resource-group ${wekaResourceGroupName} --name ${wekaClusterName} --query provisioningState --output tsv)

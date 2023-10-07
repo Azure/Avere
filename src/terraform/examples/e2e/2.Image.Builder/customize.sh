@@ -183,7 +183,7 @@ if [[ $renderEngines == *MoonRay* ]]; then
   rm -rf *
   installType="moonray"
   [[ $machineType == Workstation ]] && uiApps=YES || uiApps=NO
-  StartProcess "cmake $installRoot -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=$binPathOptix/include -D BUILD_QT_APPS=$uiApps" $binDirectory/$installType
+  StartProcess "cmake $installRoot -D PYTHON_EXECUTABLE=python3 -D BOOST_PYTHON_COMPONENT_NAME=python39 -D ABI_VERSION=0 -D OptiX_INCLUDE_DIRS=$binPathOptiX/include -D BUILD_QT_APPS=$uiApps" $binDirectory/$installType
   StartProcess "cmake --build . -- -j 64" $binDirectory/$installType
   mkdir -p /installs$installRoot
   StartProcess "cmake --install $installRoot/build --prefix /installs$installRoot" $binDirectory/$installType
@@ -352,24 +352,24 @@ if [ $machineType != Storage ]; then
     echo "Customize (Start): Deadline Server"
     installFile="DeadlineRepository-$versionInfo-linux-x64-installer.run"
     StartProcess "$installPath/$installFile --mode unattended --dbLicenseAcceptance accept --prefix $installRoot --dbhost $databaseHost --dbport $databasePort --dbname $databaseName --dbauth false --installmongodb false" $binDirectory/$installType
-    mv /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
+    cp /tmp/installbuilder_installer.log $binDirectory/deadline-repository.log
     echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
     echo "Customize (End): Deadline Server"
-  fi
-
-  echo "Customize (Start): Deadline Client"
-  installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
-  installArgs="--mode unattended --prefix $installRoot"
-  if [ $machineType == Scheduler ]; then
-    installArgs="$installArgs --slavestartup false --launcherdaemon false"
   else
-    [ $machineType == Farm ] && workerStartup=true || workerStartup=false
-    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+    echo "Customize (Start): Deadline Client"
+    installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
+    installArgs="--mode unattended --prefix $installRoot"
+    if [ $machineType == Scheduler ]; then
+      installArgs="$installArgs --slavestartup false --launcherdaemon false"
+    else
+      [ $machineType == Farm ] && workerStartup=true || workerStartup=false
+      installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+    fi
+    StartProcess "$installPath/$installFile $installArgs" $binDirectory/$installType
+    cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+    echo "Customize (End): Deadline Client"
   fi
-  StartProcess "$installPath/$installFile $installArgs" $binDirectory/$installType
-  cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-  echo "Customize (End): Deadline Client"
 
   binPaths="$binPaths:$binPathScheduler"
 fi

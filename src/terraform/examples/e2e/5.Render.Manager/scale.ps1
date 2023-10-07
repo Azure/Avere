@@ -6,7 +6,7 @@ param (
   [int] $workerIdleDeleteSeconds
 )
 
-az login --identity # Enables Azure CLI Role-Based Access Control (RBAC)
+az login --identity
 
 $queuedTasks = 0
 $activeJobIds = deadlinecommand -GetJobIdsFilter Status=Active
