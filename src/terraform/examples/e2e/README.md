@@ -86,4 +86,4 @@ To render the Blender Splash screen on an Azure **Windows** render farm, the fol
 
 https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4
 
-If you have any questions or issues, please contact rick.shahid@microsoft.com
+If you have any questions or issues, please contact AzureArtistAnywhere@microsoft.com
