@@ -48,47 +48,39 @@ For each of the modules in the framework, here is the recommended deployment pro
 1. Review the displayed Terraform deployment Plan *before* confirming to add, change and/or destroy Azure resources.
    * For module `2 Image Builder`, use the Azure portal or [Image Builder CLI](https://learn.microsoft.com/cli/azure/image/builder#az-image-builder-run) to start image build runs after image template deployment.
 
-## Render Jobs
+## Render Job Samples
 
-The following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via various render farm, engine and job submission options.
+The following sample images were [rendered on Azure](https://user-images.githubusercontent.com/22285652/202864874-e48070dc-deaa-45ee-a8ed-60ff401955f0.mp4) via multiple render farm, engine and job submission options.
 
-### [Moana Island](https://www.disneyanimation.com/resources/moana-island-scene/)
+### [Disney Moana Island](https://www.disneyanimation.com/resources/moana-island-scene)
 
-The following Moana Island scene was rendered on Azure via [Physically-Based Ray Tracer (PBRT) v4](https://github.com/mmp/pbrt-v4).
+The following Disney Moana Island scene was rendered on Azure via the [Physically-Based Ray Tracer (PBRT) v4](https://github.com/mmp/pbrt-v4) render engine.
 
 <p align="center">
   <img src=".github/images/moana-island.png" />
 </p>
 
-#### Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
-
-*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+To render the Disney Moana Island scene on an Azure **Linux** render farm, the following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt -arguments "--outfile /mnt/content/pbrt/moana/island-v4.png /mnt/content/pbrt/moana/island/pbrt-v4/island.pbrt"```
 
-#### Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
-
-*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+To render the Disney Moana Island scene on an Azure **Windows** render farm, the following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.
 
 ```deadlinecommand -SubmitCommandLineJob -name moana-island -executable pbrt.exe -arguments "--outfile H:\pbrt\moana\island-v4.png H:\pbrt\moana\island\pbrt-v4\island.pbrt"```
 
-### [Blender Splash](https://www.blender.org/download/demo-files/#splash)
+### [Blender Splash Screen](https://www.blender.org/download/demo-files/#splash)
 
-The following Blender 3.4 Splash screen was rendered on Azure via [Blender)](https://www.blender.org).
+The following Blender 3.4 Splash screen was rendered on Azure via the [Blender](https://www.blender.org) render engine.
 
 <p align="center">
   <img src=".github/images/blender-splash-3.4.png" />
 </p>
 
-#### Azure *Linux* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
-
-*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+To render the Blender Splash screen on an Azure **Linux** render farm, the following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender -arguments "--background /mnt/content/blender/3.4/splash.blend --render-output /mnt/content/blender/3.4/splash --enable-autoexec --render-frame 1"```
 
-#### Azure *Windows* Render Farm with [AWS Thinkbox Deadline](https://www.awsthinkbox.com/deadline)
-
-*The following render farm job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.*
+To render the Blender Splash screen on an Azure **Windows** render farm, the following job submission command can be submitted from a **Linux** and/or **Windows** artist workstation.
 
 ```deadlinecommand -SubmitCommandLineJob -name blender-splash -executable blender.exe -arguments "--background H:\blender\3.4\splash.blend --render-output H:\blender\3.4\splash --enable-autoexec --render-frame 1"```
 
