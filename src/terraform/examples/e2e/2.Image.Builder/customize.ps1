@@ -393,26 +393,28 @@ if ($machineType -ne "Storage") {
     Copy-Item -Path $databasePath\certs\$certificateFile -Destination $installRoot\$certificateFile
     New-NfsShare -Name "Deadline" -Path $installRoot -Permission ReadWrite
     Write-Host "Customize (End): Deadline Server"
-  } else {
-    Write-Host "Customize (Start): Deadline Client"
-    $installType = "deadline-client"
-    $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
-    $installArgs = "--mode unattended --prefix $installRoot"
-    if ($machineType -eq "Scheduler") {
-      $installArgs = "$installArgs --slavestartup false --launcherservice false"
-    } else {
-      if ($machineType -eq "Farm") {
-        $workerStartup = "true"
-      } else {
-        $workerStartup = "false"
-      }
-      $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
-    }
-    StartProcess .\$installFile $installArgs "$binDirectory\$installType"
-    Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
-    Set-Location -Path $binDirectory
-    Write-Host "Customize (End): Deadline Client"
+  }
 
+  Write-Host "Customize (Start): Deadline Client"
+  $installType = "deadline-client"
+  $installFile = "DeadlineClient-$versionInfo-windows-installer.exe"
+  $installArgs = "--mode unattended --prefix $installRoot"
+  if ($machineType -eq "Scheduler") {
+    $installArgs = "$installArgs --slavestartup false --launcherservice false"
+  } else {
+    if ($machineType -eq "Farm") {
+      $workerStartup = "true"
+    } else {
+      $workerStartup = "false"
+    }
+    $installArgs = "$installArgs --slavestartup $workerStartup --launcherservice true"
+  }
+  StartProcess .\$installFile $installArgs "$binDirectory\$installType"
+  Copy-Item -Path $env:TMP\installbuilder_installer.log -Destination $binDirectory\$installType.log
+  Set-Location -Path $binDirectory
+  Write-Host "Customize (End): Deadline Client"
+
+  if ($machineType -ne "Scheduler") {
     Write-Host "Customize (Start): Deadline Monitor"
     $shortcutPath = "$env:AllUsersProfile\Desktop\Deadline Monitor.lnk"
     $scriptShell = New-Object -ComObject WScript.Shell

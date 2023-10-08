@@ -356,20 +356,20 @@ if [ $machineType != Storage ]; then
     echo "$installRoot *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
     exportfs -r
     echo "Customize (End): Deadline Server"
-  else
-    echo "Customize (Start): Deadline Client"
-    installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
-    installArgs="--mode unattended --prefix $installRoot"
-    if [ $machineType == Scheduler ]; then
-      installArgs="$installArgs --slavestartup false --launcherdaemon false"
-    else
-      [ $machineType == Farm ] && workerStartup=true || workerStartup=false
-      installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
-    fi
-    StartProcess "$installPath/$installFile $installArgs" $binDirectory/$installType
-    cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
-    echo "Customize (End): Deadline Client"
   fi
+
+  echo "Customize (Start): Deadline Client"
+  installFile="DeadlineClient-$versionInfo-linux-x64-installer.run"
+  installArgs="--mode unattended --prefix $installRoot"
+  if [ $machineType == Scheduler ]; then
+    installArgs="$installArgs --slavestartup false --launcherdaemon false"
+  else
+    [ $machineType == Farm ] && workerStartup=true || workerStartup=false
+    installArgs="$installArgs --slavestartup $workerStartup --launcherdaemon true"
+  fi
+  StartProcess "$installPath/$installFile $installArgs" $binDirectory/$installType
+  cp /tmp/installbuilder_installer.log $binDirectory/deadline-client.log
+  echo "Customize (End): Deadline Client"
 
   binPaths="$binPaths:$binPathScheduler"
 fi
