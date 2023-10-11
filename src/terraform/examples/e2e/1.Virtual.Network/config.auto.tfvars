@@ -21,7 +21,7 @@ computeNetwork = {
         "Microsoft.Storage",
         "Microsoft.CognitiveServices"
       ]
-      serviceDelegation    = ""
+      serviceDelegation    = "Microsoft.Web/serverFarms"
       denyOutboundInternet = false
     },
     {
@@ -78,13 +78,13 @@ computeNetwork = {
       denyOutboundInternet = false
     }
   ]
-  subnetIndex = { # Make sure each index is in sync with corresponding subnet
+  subnetIndex = { # Must be in sync with corresponding subnet
     farm        = 0
     workstation = 1
     storage     = 2
     cache       = 3
   }
-  enableNatGateway = false
+  enableNatGateway = true
 }
 
 storageNetwork = {
@@ -129,7 +129,7 @@ storageNetwork = {
       denyOutboundInternet = false
     }
   ]
-  subnetIndex = { # Make sure each index is in sync with corresponding subnet
+  subnetIndex = { # Must be in sync with corresponding subnet
     primary     = 0
     secondary   = 1
     netAppFiles = 2
@@ -171,14 +171,6 @@ bastion = {
   enableIpConnect     = true
   enableTunneling     = true
   enableShareableLink = false
-}
-
-######################################################################
-# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
-######################################################################
-
-monitor = {
-  enable = false
 }
 
 ###############################################################################################################

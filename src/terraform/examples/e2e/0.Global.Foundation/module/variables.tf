@@ -1,7 +1,3 @@
-####################
-# Global Variables #
-####################
-
 variable "regionNames" { # Set Azure region names from "az account list-locations --query [].name"
   default = [
     "WestUS3"
@@ -12,7 +8,10 @@ variable "resourceGroupName" {
   default = "ArtistAnywhere" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 }
 
-# Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction)
+###################################################################################
+# Storage (https://learn.microsoft.com/azure/storage/common/storage-introduction) #
+###################################################################################
+
 variable "rootStorage" {
   default = {
     accountName = "azstudio0" # Set to a globally unique name (lowercase alphanumeric)
@@ -22,14 +21,20 @@ variable "rootStorage" {
   }
 }
 
-# Managed Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview)
+#####################################################################################################################
+# Managed Identity (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview) #
+#####################################################################################################################
+
 variable "managedIdentity" {
   default = {
     name = "azstudio" # Alphanumeric, underscores and hyphens are allowed
   }
 }
 
-# Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview)
+############################################################################
+# Key Vault (https://learn.microsoft.com/azure/key-vault/general/overview) #
+############################################################################
+
 variable "keyVault" {
   default = {
     enable = true
@@ -47,10 +52,13 @@ variable "keyVault" {
   }
 }
 
-# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview)
+######################################################################
+# Monitor (https://learn.microsoft.com/azure/azure-monitor/overview) #
+######################################################################
+
 variable "monitor" {
   default = {
-    enable = true
+    enable = false
     name   = "azstudio"
   }
 }

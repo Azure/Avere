@@ -3,47 +3,37 @@
 ###############################################################################################################
 
 variable "vpnGateway" {
-  type = object(
-    {
-      enable             = bool
-      sku                = string
-      type               = string
-      generation         = string
-      sharedKey          = string
-      enableBgp          = bool
-      enableVnet2Vnet    = bool
-      enableActiveActive = bool
-      pointToSiteClient = object(
-        {
-          addressSpace = list(string)
-          rootCertificate = object(
-            {
-              name = string
-              data = string
-            }
-          )
-        }
-      )
-    }
-  )
+  type = object({
+    enable             = bool
+    sku                = string
+    type               = string
+    generation         = string
+    sharedKey          = string
+    enableBgp          = bool
+    enableVnet2Vnet    = bool
+    enableActiveActive = bool
+    pointToSiteClient = object({
+      addressSpace = list(string)
+      rootCertificate = object({
+        name = string
+        data = string
+      })
+    })
+  })
 }
 
 variable "vpnGatewayLocal" {
-  type = object(
-    {
-      fqdn         = string
-      address      = string
-      addressSpace = list(string)
-      bgp = object(
-        {
-          enable         = bool
-          asn            = number
-          peerWeight     = number
-          peeringAddress = string
-        }
-      )
-    }
-  )
+  type = object({
+    fqdn         = string
+    address      = string
+    addressSpace = list(string)
+    bgp = object({
+      enable         = bool
+      asn            = number
+      peerWeight     = number
+      peeringAddress = string
+    })
+  })
 }
 
 locals {
@@ -71,7 +61,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
   for_each = {
     for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable
   }
-  name                = each.value.name
+  name                = "${each.value.name}-Gateway"
   resource_group_name = each.value.resourceGroupName
   location            = each.value.regionName
   type                = "Vpn"
@@ -104,7 +94,7 @@ resource "azurerm_virtual_network_gateway" "vpn" {
     }
   }
   depends_on = [
-    azurerm_subnet_network_security_group_association.network,
+    azurerm_subnet_network_security_group_association.studio,
     azurerm_public_ip.vpn_gateway_1,
     azurerm_public_ip.vpn_gateway_2
   ]

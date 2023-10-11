@@ -27,7 +27,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "key_vault" {
   private_dns_zone_name = azurerm_private_dns_zone.key_vault[0].name
   virtual_network_id    = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetworks[0].name}"
   depends_on = [
-    azurerm_virtual_network.network
+    azurerm_virtual_network.studio
   ]
 }
 
@@ -38,7 +38,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "storage_blob" {
   private_dns_zone_name = azurerm_private_dns_zone.storage_blob[0].name
   virtual_network_id    = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetworks[0].name}"
   depends_on = [
-    azurerm_virtual_network.network
+    azurerm_virtual_network.studio
   ]
 }
 
@@ -49,7 +49,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "storage_file" {
   private_dns_zone_name = azurerm_private_dns_zone.storage_file[0].name
   virtual_network_id    = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworks/${local.computeNetworks[0].name}"
   depends_on = [
-    azurerm_virtual_network.network
+    azurerm_virtual_network.studio
   ]
 }
 
@@ -74,7 +74,7 @@ resource "azurerm_private_endpoint" "key_vault" {
     ]
   }
   depends_on = [
-    azurerm_subnet.network,
+    azurerm_subnet.studio,
     azurerm_private_dns_zone_virtual_network_link.key_vault
   ]
 }
@@ -100,7 +100,7 @@ resource "azurerm_private_endpoint" "key_vault_batch" {
     ]
   }
   depends_on = [
-    azurerm_subnet.network,
+    azurerm_subnet.studio,
     azurerm_private_dns_zone_virtual_network_link.key_vault
   ]
 }

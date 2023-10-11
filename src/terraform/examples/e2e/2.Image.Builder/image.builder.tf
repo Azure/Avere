@@ -3,37 +3,29 @@
 #############################################################################################
 
 variable "imageTemplates" {
-  type = list(object(
-    {
-      name = string
-      source = object(
-        {
-          definitionName = string
-          inputVersion   = string
-        }
-      )
-      build = object(
-        {
-          machineType    = string
-          machineSize    = string
-          gpuProvider    = string
-          outputVersion  = string
-          timeoutMinutes = number
-          osDiskSizeGB   = number
-          renderEngines  = list(string)
-        }
-      )
-    }
-  ))
+  type = list(object({
+    name = string
+    source = object({
+      definitionName = string
+      inputVersion   = string
+    })
+    build = object({
+      machineType    = string
+      machineSize    = string
+      gpuProvider    = string
+      outputVersion  = string
+      timeoutMinutes = number
+      osDiskSizeGB   = number
+      renderEngines  = list(string)
+    })
+  }))
 }
 
 variable "binStorage" {
-  type = object(
-    {
-      host = string
-      auth = string
-    }
-  )
+  type = object({
+    host = string
+    auth = string
+  })
   validation {
     condition     = var.binStorage.host != "" && var.binStorage.auth != ""
     error_message = "Missing required deployment configuration."

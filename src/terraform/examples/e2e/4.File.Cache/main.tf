@@ -57,62 +57,48 @@ variable "enableDevMode" {
 }
 
 variable "storageTargetsNfs" {
-  type = list(object(
-    {
-      enable      = bool
-      name        = string
-      storageHost = string
-      hpcCache = object(
-        {
-          usageModel = string
-        }
-      )
-      vfxtCache = object(
-        {
-          cachePolicy    = string
-          nfsConnections = number
-          customSettings = list(string)
-        }
-      )
-      namespaceJunctions = list(object(
-        {
-          storageExport = string
-          storagePath   = string
-          clientPath    = string
-        }
-      ))
-    }
-  ))
+  type = list(object({
+    enable      = bool
+    name        = string
+    storageHost = string
+    hpcCache = object({
+      usageModel = string
+    })
+    vfxtCache = object({
+      cachePolicy    = string
+      nfsConnections = number
+      customSettings = list(string)
+    })
+    namespaceJunctions = list(object({
+      storageExport = string
+      storagePath   = string
+      clientPath    = string
+    }))
+  }))
 }
 
 variable "storageTargetsNfsBlob" {
-  type = list(object(
-    {
-      enable     = bool
-      name       = string
-      clientPath = string
-      usageModel = string
-      storage = object(
-        {
-          resourceGroupName = string
-          accountName       = string
-          containerName     = string
-        }
-      )
-    }
-  ))
+  type = list(object({
+    enable     = bool
+    name       = string
+    clientPath = string
+    usageModel = string
+    storage = object({
+      resourceGroupName = string
+      accountName       = string
+      containerName     = string
+    })
+  }))
 }
 
 variable "computeNetwork" {
-  type = object(
-    {
-      enable             = bool
-      name               = string
-      subnetName         = string
-      resourceGroupName  = string
-      privateDnsZoneName = string
-    }
-  )
+  type = object({
+    enable             = bool
+    name               = string
+    subnetName         = string
+    resourceGroupName  = string
+    privateDnsZoneName = string
+  })
 }
 
 data "azurerm_client_config" "studio" {}

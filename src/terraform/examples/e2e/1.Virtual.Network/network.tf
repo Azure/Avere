@@ -3,70 +3,56 @@
 #################################################################################################
 
 variable "computeNetwork" {
-  type = object(
-    {
-      name         = string
-      addressSpace = list(string)
-      dnsAddresses = list(string)
-      subnets = list(object(
-        {
-          name                 = string
-          addressSpace         = list(string)
-          serviceEndpoints     = list(string)
-          serviceDelegation    = string
-          denyOutboundInternet = bool
-        }
-      ))
-      subnetIndex = object(
-        {
-          farm        = number
-          workstation = number
-          storage     = number
-          cache       = number
-        }
-      )
-      enableNatGateway = bool
-    }
-  )
+  type = object({
+    name         = string
+    addressSpace = list(string)
+    dnsAddresses = list(string)
+    subnets = list(object({
+      name                 = string
+      addressSpace         = list(string)
+      serviceEndpoints     = list(string)
+      serviceDelegation    = string
+      denyOutboundInternet = bool
+    }))
+    subnetIndex = object({
+      farm        = number
+      workstation = number
+      storage     = number
+      cache       = number
+    })
+    enableNatGateway = bool
+  })
 }
 
 variable "storageNetwork" {
-  type = object(
-    {
-      enable       = bool
-      name         = string
-      addressSpace = list(string)
-      dnsAddresses = list(string)
-      subnets = list(object(
-        {
-          name                 = string
-          addressSpace         = list(string)
-          serviceEndpoints     = list(string)
-          serviceDelegation    = string
-          denyOutboundInternet = bool
-        }
-      ))
-      subnetIndex = object(
-        {
-          primary     = number
-          secondary   = number
-          netAppFiles = number
-        }
-      )
-      enableNatGateway = bool
-    }
-  )
+  type = object({
+    enable       = bool
+    name         = string
+    addressSpace = list(string)
+    dnsAddresses = list(string)
+    subnets = list(object({
+      name                 = string
+      addressSpace         = list(string)
+      serviceEndpoints     = list(string)
+      serviceDelegation    = string
+      denyOutboundInternet = bool
+    }))
+    subnetIndex = object({
+      primary     = number
+      secondary   = number
+      netAppFiles = number
+    })
+    enableNatGateway = bool
+  })
 }
 
 variable "virtualNetwork" {
-  type = object(
-    {
-      enable            = bool
-      name              = string
-      regionName        = string
-      resourceGroupName = string
-    }
-  )
+  type = object({
+    enable            = bool
+    name              = string
+    regionName        = string
+    resourceGroupName = string
+  })
 }
 
 locals {
@@ -129,7 +115,7 @@ locals {
   ]
 }
 
-resource "azurerm_virtual_network" "network" {
+resource "azurerm_virtual_network" "studio" {
   for_each = {
     for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.virtualNetwork.name == ""
   }
@@ -143,7 +129,7 @@ resource "azurerm_virtual_network" "network" {
   ]
 }
 
-resource "azurerm_subnet" "network" {
+resource "azurerm_subnet" "studio" {
   for_each = {
     for subnet in local.virtualNetworksSubnets : subnet.key => subnet if var.virtualNetwork.name == ""
   }
@@ -164,11 +150,11 @@ resource "azurerm_subnet" "network" {
     }
   }
   depends_on = [
-    azurerm_virtual_network.network
+    azurerm_virtual_network.studio
   ]
 }
 
-resource "azurerm_network_security_group" "network" {
+resource "azurerm_network_security_group" "studio" {
   for_each = {
     for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if var.virtualNetwork.name == ""
   }
@@ -286,19 +272,19 @@ resource "azurerm_network_security_group" "network" {
     }
   }
   depends_on = [
-    azurerm_virtual_network.network
+    azurerm_virtual_network.studio
   ]
 }
 
-resource "azurerm_subnet_network_security_group_association" "network" {
+resource "azurerm_subnet_network_security_group_association" "studio" {
   for_each = {
     for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if var.virtualNetwork.name == ""
   }
   subnet_id                 = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
   network_security_group_id = "${each.value.resourceGroupId}/providers/Microsoft.Network/networkSecurityGroups/${each.value.virtualNetworkName}-${each.value.name}"
   depends_on = [
-    azurerm_subnet.network,
-    azurerm_network_security_group.network
+    azurerm_subnet.studio,
+    azurerm_network_security_group.studio
   ]
 }
 

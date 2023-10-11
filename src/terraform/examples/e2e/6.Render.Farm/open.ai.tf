@@ -3,35 +3,39 @@
 ################################################################################
 
 variable "azureOpenAI" {
-  type = object(
-    {
-      enable      = bool
-      regionName  = string
-      accountName = string
-      domainName  = string
-      serviceTier = string
-      chatModel = object(
-        {
-          enable  = bool
-          name    = string
-          format  = string
-          version = string
-          scale   = string
-        }
-      )
-      storage = object(
-        {
-          enable = bool
-        }
-      )
-    }
-  )
+  type = object({
+    enable      = bool
+    regionName  = string
+    accountName = string
+    domainName  = string
+    serviceTier = string
+    chatDeployment = object({
+      model = object({
+        name    = string
+        format  = string
+        version = string
+        scale   = string
+      })
+      session = object({
+        context = string
+        request = string
+      })
+    })
+    imageGeneration = object({
+      description = string
+      height      = number
+      width       = number
+    })
+    storage = object({
+      enable = bool
+    })
+  })
 }
 
 resource "azurerm_cognitive_account" "open_ai" {
   count                 = var.azureOpenAI.enable ? 1 : 0
   name                  = var.azureOpenAI.accountName
-  resource_group_name   = azurerm_resource_group.farm_ai[0].name
+  resource_group_name   = azurerm_resource_group.farm.name
   location              = var.azureOpenAI.regionName
   custom_subdomain_name = var.azureOpenAI.domainName != "" ? var.azureOpenAI.domainName : null
   sku_name              = var.azureOpenAI.serviceTier
@@ -51,21 +55,22 @@ resource "azurerm_cognitive_account" "open_ai" {
 }
 
 resource "azurerm_cognitive_deployment" "open_ai_chat" {
-  count                = var.azureOpenAI.enable && var.azureOpenAI.chatModel.enable ? 1 : 0
-  name                 = var.azureOpenAI.chatModel.name
+  count                = var.azureOpenAI.enable ? 1 : 0
+  name                 = var.azureOpenAI.chatDeployment.model.name
   cognitive_account_id = azurerm_cognitive_account.open_ai[0].id
   model {
-    name    = var.azureOpenAI.chatModel.name
-    format  = var.azureOpenAI.chatModel.format
-    version = var.azureOpenAI.chatModel.version
+    name    = var.azureOpenAI.chatDeployment.model.name
+    format  = var.azureOpenAI.chatDeployment.model.format
+    version = var.azureOpenAI.chatDeployment.model.version
   }
   scale {
-    type = var.azureOpenAI.chatModel.scale
+    type = var.azureOpenAI.chatDeployment.model.scale
   }
 }
 
 output "azureOpenAI" {
   value = {
+    enable   = var.azureOpenAI.enable
     endpoint = var.azureOpenAI.enable ? azurerm_cognitive_account.open_ai[0].endpoint : ""
   }
 }

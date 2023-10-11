@@ -3,49 +3,39 @@
 ############################################################################
 
 variable "keyVault" {
-  type = object(
-    {
-      type                        = string
-      enableForDeployment         = bool
-      enableForDiskEncryption     = bool
-      enableForTemplateDeployment = bool
-      enablePurgeProtection       = bool
-      enableTrustedServices       = bool
-      softDeleteRetentionDays     = number
-      secrets = list(object(
-        {
-          name  = string
-          value = string
-        }
-      ))
-      keys = list(object(
-        {
-          name       = string
-          type       = string
-          size       = number
-          operations = list(string)
-        }
-      ))
-      certificates = list(object(
-        {
-          name        = string
-          subject     = string
-          issuerName  = string
-          contentType = string
-          validMonths = number
-          key = object(
-            {
-              type       = string
-              size       = number
-              reusable   = bool
-              exportable = bool
-              usage      = list(string)
-            }
-          )
-        }
-      ))
-    }
-  )
+  type = object({
+    type                        = string
+    enableForDeployment         = bool
+    enableForDiskEncryption     = bool
+    enableForTemplateDeployment = bool
+    enablePurgeProtection       = bool
+    enableTrustedServices       = bool
+    softDeleteRetentionDays     = number
+    secrets = list(object({
+      name  = string
+      value = string
+    }))
+    keys = list(object({
+      name       = string
+      type       = string
+      size       = number
+      operations = list(string)
+    }))
+    certificates = list(object({
+      name        = string
+      subject     = string
+      issuerName  = string
+      contentType = string
+      validMonths = number
+      key = object({
+        type       = string
+        size       = number
+        reusable   = bool
+        exportable = bool
+        usage      = list(string)
+      })
+    }))
+  })
 }
 
 data "azuread_service_principal" "batch" {
@@ -155,4 +145,11 @@ resource "azurerm_key_vault_access_policy" "batch" {
     "Delete",
     "Recover"
   ]
+}
+
+output "keyVault" {
+  value = {
+    enable = module.global.keyVault.enable
+    uri    = module.global.keyVault.enable ? azurerm_key_vault.studio[0].vault_uri : null
+  }
 }

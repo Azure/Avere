@@ -3,34 +3,26 @@
 #################################################################################
 
 variable "vfxtCache" {
-  type = object(
-    {
-      cluster = object(
-        {
-          nodeSize      = number
-          nodeCount     = number
-          adminUsername = string
-          adminPassword = string
-          sshPublicKey  = string
-          imageId = object(
-            {
-              controller = string
-              node       = string
-            }
-          )
-        }
-      )
-      support = object(
-        {
-          companyName      = string
-          enableLogUpload  = bool
-          enableProactive  = string
-          rollingTraceFlag = string
-        }
-      )
-      localTimezone = string
-    }
-  )
+  type = object({
+    cluster = object({
+      nodeSize      = number
+      nodeCount     = number
+      adminUsername = string
+      adminPassword = string
+      sshPublicKey  = string
+      imageId = object({
+        controller = string
+        node       = string
+      })
+    })
+    support = object({
+      companyName      = string
+      enableLogUpload  = bool
+      enableProactive  = string
+      rollingTraceFlag = string
+    })
+    localTimezone = string
+  })
 }
 
 # data "azurerm_resource_group" "studio" {
@@ -42,13 +34,11 @@ variable "vfxtCache" {
 # }
 
 locals {
-  vfxtCache = merge(
-    {
-      cluster = {
-        adminUsername = var.vfxtCache.cluster.adminUsername != "" ? var.vfxtCache.cluster.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-        adminPassword = var.vfxtCache.cluster.adminPassword != "" ? var.vfxtCache.cluster.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-      }
-    },
+  vfxtCache = merge({
+    cluster = {
+      adminUsername = var.vfxtCache.cluster.adminUsername != "" ? var.vfxtCache.cluster.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+      adminPassword = var.vfxtCache.cluster.adminPassword != "" ? var.vfxtCache.cluster.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+    }},
     var.vfxtCache
   )
   vfxtControllerAddress   = cidrhost(data.azurerm_subnet.cache.address_prefixes[0], 39)

@@ -3,119 +3,87 @@
 #########################################################################
 
 variable "virtualMachines" {
-  type = list(object(
-    {
-      enable = bool
-      name   = string
-      machine = object(
-        {
-          size = string
-          image = object(
-            {
-              id = string
-              plan = object(
-                {
-                  enable    = bool
-                  publisher = string
-                  product   = string
-                  name      = string
-                }
-              )
-            }
-          )
-        }
-      )
-      network = object(
-        {
-          enableAcceleration = bool
-        }
-      )
-      operatingSystem = object(
-        {
-          type = string
-          disk = object(
-            {
-              storageType = string
-              cachingType = string
-              sizeGB      = number
-            }
-          )
-        }
-      )
-      adminLogin = object(
-        {
-          userName     = string
-          userPassword = string
-          sshPublicKey = string
-          passwordAuth = object(
-            {
-              disable = bool
-            }
-          )
-        }
-      )
-      activeDirectory = object(
-        {
-          enable           = bool
-          domainName       = string
-          domainServerName = string
-          orgUnitPath      = string
-          adminUsername    = string
-          adminPassword    = string
-        }
-      )
-      extension = object(
-        {
-          initialize = object(
-            {
-              enable   = bool
-              fileName = string
-              parameters = object(
-                {
-                  fileSystems = list(object(
-                    {
-                      enable = bool
-                      mounts = list(string)
-                    }
-                  ))
-                  pcoipLicenseKey = string
-                }
-              )
-            }
-          )
-          monitor = object(
-            {
-              enable = bool
-            }
-          )
-        }
-      )
-    }
-  ))
+  type = list(object({
+    enable  = bool
+    name    = string
+    machine = object({
+      size  = string
+      image = object({
+        id   = string
+        plan = object({
+          enable    = bool
+          publisher = string
+          product   = string
+          name      = string
+        })
+      })
+    })
+    network = object({
+      enableAcceleration = bool
+    })
+    operatingSystem = object({
+      type = string
+      disk = object({
+        storageType = string
+        cachingType = string
+        sizeGB      = number
+      })
+    })
+    adminLogin = object({
+      userName     = string
+      userPassword = string
+      sshPublicKey = string
+      passwordAuth = object({
+        disable = bool
+      })
+    })
+    activeDirectory = object({
+      enable           = bool
+      domainName       = string
+      domainServerName = string
+      orgUnitPath      = string
+      adminUsername    = string
+      adminPassword    = string
+    })
+    extension = object({
+      initialize = object({
+        enable     = bool
+        fileName   = string
+        parameters = object({
+          fileSystems = list(object({
+            enable = bool
+            mounts = list(string)
+          }))
+          pcoipLicenseKey = string
+        })
+      })
+      monitor = object({
+        enable = bool
+      })
+    })
+  }))
 }
 
 locals {
   virtualMachines = [
-    for virtualMachine in var.virtualMachines : merge(virtualMachine,
-      {
-        adminLogin = {
-          userName     = virtualMachine.adminLogin.userName != "" ? virtualMachine.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          userPassword = virtualMachine.adminLogin.userPassword != "" ? virtualMachine.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-          sshPublicKey = virtualMachine.adminLogin.sshPublicKey
-          passwordAuth = {
-            disable = virtualMachine.adminLogin.passwordAuth.disable
-          }
-        }
-        activeDirectory = {
-          enable           = virtualMachine.activeDirectory.enable
-          domainName       = virtualMachine.activeDirectory.domainName
-          domainServerName = virtualMachine.activeDirectory.domainServerName
-          orgUnitPath      = virtualMachine.activeDirectory.orgUnitPath
-          adminUsername    = virtualMachine.activeDirectory.adminUsername != "" ? virtualMachine.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          adminPassword    = virtualMachine.activeDirectory.adminPassword != "" ? virtualMachine.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+    for virtualMachine in var.virtualMachines : merge(virtualMachine, {
+      adminLogin = {
+        userName     = virtualMachine.adminLogin.userName != "" ? virtualMachine.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        userPassword = virtualMachine.adminLogin.userPassword != "" ? virtualMachine.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        sshPublicKey = virtualMachine.adminLogin.sshPublicKey
+        passwordAuth = {
+          disable = virtualMachine.adminLogin.passwordAuth.disable
         }
       }
-    )
+      activeDirectory = {
+        enable           = virtualMachine.activeDirectory.enable
+        domainName       = virtualMachine.activeDirectory.domainName
+        domainServerName = virtualMachine.activeDirectory.domainServerName
+        orgUnitPath      = virtualMachine.activeDirectory.orgUnitPath
+        adminUsername    = virtualMachine.activeDirectory.adminUsername != "" ? virtualMachine.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        adminPassword    = virtualMachine.activeDirectory.adminPassword != "" ? virtualMachine.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+      }
+    })
   ]
 }
 
@@ -193,11 +161,9 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     script = "${base64encode(
-      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
-        {
-          activeDirectory = each.value.activeDirectory
-        }
-      ))
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {
+        activeDirectory = each.value.activeDirectory
+      }))
     )}"
   })
   depends_on = [
@@ -269,11 +235,9 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
     commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
-        {
-          activeDirectory = each.value.activeDirectory
-        }
-      )), "UTF-16LE"
+      templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {
+        activeDirectory = each.value.activeDirectory
+      })), "UTF-16LE"
     )}"
   })
   depends_on = [

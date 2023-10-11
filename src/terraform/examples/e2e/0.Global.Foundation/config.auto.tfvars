@@ -62,7 +62,7 @@ monitor = {
     sku = "PerGB2018"
   }
   insight = {
-    type = "web"
+    type = "Node.JS"
   }
   retentionDays = 90
 }

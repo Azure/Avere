@@ -408,17 +408,19 @@ batch = {
         }
         osDisk = {
           ephemeral = {
-            enable = true # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
+            enable = false # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
           }
         }
-        deallocationMode   = "Terminate"
+        deallocationMode   = "TaskCompletion" # https://learn.microsoft.com/rest/api/batchservice/pool/remove-nodes
         maxConcurrentTasks = 1
       }
-      spot = {
-        enable = true # https://learn.microsoft.com/azure/batch/batch-spot-vms
+      fillMode = { # https://learn.microsoft.com/azure/batch/batch-parallel-node-tasks
+        nodePack = {
+          enable = true
+        }
       }
-      fillMode = {
-        nodePack = false
+      spot = { # https://learn.microsoft.com/azure/batch/batch-spot-vms
+        enable = true
       }
     },
     {
@@ -431,22 +433,24 @@ batch = {
           agentId = "batch.node.el 9"
         }
         machine = {
-          size  = "Standard_NV18ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
+          size  = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
           count = 2
         }
         osDisk = {
           ephemeral = {
-            enable = true # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
+            enable = false # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
           }
         }
-        deallocationMode   = "Terminate"
+        deallocationMode   = "TaskCompletion" # https://learn.microsoft.com/rest/api/batchservice/pool/remove-nodes
         maxConcurrentTasks = 1
       }
-      spot = {
-        enable = false # https://learn.microsoft.com/azure/batch/batch-spot-vms
+      fillMode = { # https://learn.microsoft.com/azure/batch/batch-parallel-node-tasks
+        nodePack = {
+          enable = true
+        }
       }
-      fillMode = {
-        nodePack = false
+      spot = { # https://learn.microsoft.com/azure/batch/batch-spot-vms
+        enable = true
       }
     },
     {
@@ -464,17 +468,19 @@ batch = {
         }
         osDisk = {
           ephemeral = {
-            enable = true # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
+            enable = false # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
           }
         }
-        deallocationMode   = "Terminate"
+        deallocationMode   = "TaskCompletion" # https://learn.microsoft.com/rest/api/batchservice/pool/remove-nodes
         maxConcurrentTasks = 1
       }
-      spot = {
-        enable = true # https://learn.microsoft.com/azure/batch/batch-spot-vms
+      fillMode = { # https://learn.microsoft.com/azure/batch/batch-parallel-node-tasks
+        nodePack = {
+          enable = true
+        }
       }
-      fillMode = {
-        nodePack = false
+      spot = { # https://learn.microsoft.com/azure/batch/batch-spot-vms
+        enable = true
       }
     },
     {
@@ -487,22 +493,24 @@ batch = {
           agentId = "batch.node.windows amd64"
         }
         machine = {
-          size  = "Standard_NV18ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
+          size  = "Standard_NV36ads_A10_v5" # https://learn.microsoft.com/azure/batch/batch-pool-vm-sizes
           count = 2
         }
         osDisk = {
           ephemeral = {
-            enable = true # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
+            enable = false # https://learn.microsoft.com/azure/batch/create-pool-ephemeral-os-disk
           }
         }
-        deallocationMode   = "Terminate"
+        deallocationMode   = "TaskCompletion" # https://learn.microsoft.com/rest/api/batchservice/pool/remove-nodes
         maxConcurrentTasks = 1
       }
-      spot = {
-        enable = false # https://learn.microsoft.com/azure/batch/batch-spot-vms
+      fillMode = { # https://learn.microsoft.com/azure/batch/batch-parallel-node-tasks
+        nodePack = {
+          enable = true
+        }
       }
-      fillMode = {
-        nodePack = false
+      spot = { # https://learn.microsoft.com/azure/batch/batch-spot-vms
+        enable = true
       }
     }
   ]
@@ -518,12 +526,22 @@ azureOpenAI = {
   accountName = "azstudio"
   domainName  = ""
   serviceTier = "S0"
-  chatModel = {
-    enable  = true
-    name    = "gpt-35-turbo"
-    format  = "OpenAI"
-    version = ""
-    scale   = "Standard"
+  chatDeployment = {
+    model = {
+      name    = "gpt-35-turbo"
+      format  = "OpenAI"
+      version = ""
+      scale   = "Standard"
+    }
+    session = {
+      context = ""
+      request = "Create a visual description of a person painting on a computer screen canvas"
+    }
+  }
+  imageGeneration = {
+    description = ""
+    height      = 1024
+    width       = 1024
   }
   storage = {
     enable = false
@@ -535,10 +553,21 @@ azureOpenAI = {
 #####################################################
 
 functionApp = {
-  name = "azstudio"
+  enable = false
+  name   = "azstudio"
   servicePlan = {
     computeTier = "S1"
+    workerCount = 2
     alwaysOn    = true
+  }
+  monitor = {
+    workspace = {
+      sku = "PerGB2018"
+    }
+    insight = {
+      type = "web"
+    }
+    retentionDays = 90
   }
 }
 
@@ -554,7 +583,8 @@ computeNetwork = {
 }
 
 storageAccount = {
-  enable             = false
-  name               = ""
-  resourceGroupName  = ""
+  enable            = false
+  name              = ""
+  resourceGroupName = ""
+  fileShareName     = ""
 }

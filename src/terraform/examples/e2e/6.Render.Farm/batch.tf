@@ -3,66 +3,50 @@
 ############################################################################
 
 variable "batch" {
-  type = object(
-    {
-      enable = bool
-      account = object(
-        {
-          name = string
-          storage = object(
-            {
-              accountName       = string
-              resourceGroupName = string
-            }
-          )
-        }
-      )
-      pools = list(object(
-        {
-          enable      = bool
-          name        = string
-          displayName = string
-          node = object(
-            {
-              image = object(
-                {
-                  id      = string
-                  agentId = string
-                }
-              )
-              machine = object(
-                {
-                  size  = string
-                  count = number
-                }
-              )
-              osDisk = object(
-                {
-                  ephemeral = object(
-                    {
-                      enable = bool
-                    }
-                  )
-                }
-              )
-              deallocationMode   = string
-              maxConcurrentTasks = number
-            }
-          )
-          spot = object(
-            {
-              enable = bool
-            }
-          )
-          fillMode = object(
-            {
-              nodePack = bool
-            }
-          )
-        }
-      ))
-    }
-  )
+  type = object({
+    enable = bool
+    account = object({
+      name = string
+      storage = object({
+        accountName       = string
+        resourceGroupName = string
+      })
+    })
+    pools = list(object({
+      enable      = bool
+      name        = string
+      displayName = string
+      node = object({
+        image = object({
+          id      = string
+          agentId = string
+        })
+        machine = object({
+          size  = string
+          count = number
+        })
+        osDisk = object({
+          ephemeral = object({
+            enable = bool
+          })
+        })
+        deallocationMode   = string
+        maxConcurrentTasks = number
+      })
+      fillMode = object({
+        nodePack = object({
+          enable = bool
+        })
+      })
+      spot = object({
+        enable = bool
+      })
+    }))
+  })
+  validation {
+    condition     = alltrue([ for pool in var.batch.pools : !(pool.node.osDisk.ephemeral.enable && pool.spot.enable) if var.batch.enable && pool.enable ])
+    error_message = "Ephemeral OS disks cannot be used in conjunction with Spot VMs in Batch pools due to the service managed eviction policy."
+  }
 }
 
 data "azuread_service_principal" "batch" {
@@ -89,7 +73,7 @@ resource "azurerm_private_dns_zone" "batch" {
 resource "azurerm_private_dns_zone_virtual_network_link" "batch" {
   count                 = var.batch.enable ? 1 : 0
   name                  = "${data.azurerm_virtual_network.compute.name}-batch"
-  resource_group_name   = azurerm_resource_group.farm_batch[0].name
+  resource_group_name   = azurerm_resource_group.farm.name
   private_dns_zone_name = azurerm_private_dns_zone.batch[0].name
   virtual_network_id    = data.azurerm_virtual_network.compute.id
 }
@@ -97,8 +81,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "batch" {
 resource "azurerm_private_endpoint" "batch_account" {
   count               = var.batch.enable ? 1 : 0
   name                = "${var.batch.account.name}-batchAccount"
-  resource_group_name = azurerm_resource_group.farm_batch[0].name
-  location            = azurerm_resource_group.farm_batch[0].location
+  resource_group_name = azurerm_resource_group.farm.name
+  location            = azurerm_resource_group.farm.location
   subnet_id           = data.azurerm_subnet.farm.id
   private_service_connection {
     name                           = azurerm_batch_account.scheduler[0].name
@@ -119,8 +103,8 @@ resource "azurerm_private_endpoint" "batch_account" {
 resource "azurerm_private_endpoint" "batch_node" {
   count               = var.batch.enable ? 1 : 0
   name                = "${var.batch.account.name}-batchNode"
-  resource_group_name = azurerm_resource_group.farm_batch[0].name
-  location            = azurerm_resource_group.farm_batch[0].location
+  resource_group_name = azurerm_resource_group.farm.name
+  location            = azurerm_resource_group.farm.location
   subnet_id           = data.azurerm_subnet.farm.id
   private_service_connection {
     name                           = azurerm_batch_account.scheduler[0].name
@@ -152,8 +136,8 @@ resource "azurerm_role_assignment" "batch" {
 resource "azurerm_batch_account" "scheduler" {
   count                = var.batch.enable ? 1 : 0
   name                 = var.batch.account.name
-  resource_group_name  = azurerm_resource_group.farm_batch[0].name
-  location             = azurerm_resource_group.farm_batch[0].location
+  resource_group_name  = azurerm_resource_group.farm.name
+  location             = azurerm_resource_group.farm.location
   pool_allocation_mode = "UserSubscription"
   identity {
     type = "UserAssigned"
@@ -195,7 +179,7 @@ resource "azurerm_batch_pool" "farm" {
   }
   name                     = each.value.name
   display_name             = each.value.displayName != "" ? each.value.displayName : each.value.name
-  resource_group_name      = azurerm_resource_group.farm_batch[0].name
+  resource_group_name      = azurerm_resource_group.farm.name
   account_name             = azurerm_batch_account.scheduler[0].name
   vm_size                  = each.value.node.machine.size
   node_agent_sku_id        = each.value.node.image.agentId
@@ -215,17 +199,18 @@ resource "azurerm_batch_pool" "farm" {
     subnet_id = data.azurerm_subnet.farm.id
   }
   fixed_scale {
-    target_dedicated_nodes    = each.value.spot.enable ? 0 : each.value.node.machine.count
-    target_low_priority_nodes = each.value.spot.enable ? each.value.node.machine.count : 0
     node_deallocation_method  = each.value.node.deallocationMode
+    target_low_priority_nodes = each.value.spot.enable ? each.value.node.machine.count : 0
+    target_dedicated_nodes    = each.value.spot.enable ? 0 : each.value.node.machine.count
   }
   task_scheduling_policy {
-    node_fill_type = each.value.fillMode.nodePack ? "Pack" : "Spread"
+    node_fill_type = each.value.fillMode.nodePack.enable ? "Pack" : "Spread"
   }
 }
 
 output "batchAccount" {
   value = {
+    enable   = var.batch.enable
     endpoint = var.batch.enable ? azurerm_batch_account.scheduler[0].account_endpoint : ""
   }
 }

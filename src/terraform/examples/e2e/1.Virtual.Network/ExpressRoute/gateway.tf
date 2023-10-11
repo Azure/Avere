@@ -3,21 +3,17 @@
 #####################################################################################################################
 
 variable "expressRouteGateway" {
-  type = object(
-    {
-      enable          = bool
-      name            = string
-      serviceSku      = string
-      networkSubnetId = string
-      circuitConnection = object(
-        {
-          circuitId        = string
-          authorizationKey = string
-          enableFastPath   = bool
-        }
-      )
-    }
-  )
+  type = object({
+    enable          = bool
+    name            = string
+    serviceSku      = string
+    networkSubnetId = string
+    circuitConnection = object({
+      circuitId        = string
+      authorizationKey = string
+      enableFastPath   = bool
+    })
+  })
 }
 
 resource "azurerm_public_ip" "express_route" {

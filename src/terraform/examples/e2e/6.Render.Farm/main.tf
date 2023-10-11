@@ -9,6 +9,10 @@ terraform {
       source  = "hashicorp/azuread"
       version = "~>2.43.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~>0.9.1"
+    }
   }
   backend "azurerm" {
     key = "6.Render.Farm"
@@ -40,24 +44,21 @@ variable "resourceGroupName" {
 }
 
 variable "computeNetwork" {
-  type = object(
-    {
-      enable            = bool
-      name              = string
-      subnetName        = string
-      resourceGroupName = string
-    }
-  )
+  type = object({
+    enable            = bool
+    name              = string
+    subnetName        = string
+    resourceGroupName = string
+  })
 }
 
 variable "storageAccount" {
-  type = object(
-    {
-      enable            = bool
-      name               = string
-      resourceGroupName  = string
-    }
-  )
+  type = object({
+    enable            = bool
+    name              = string
+    resourceGroupName = string
+    fileShareName     = string
+  })
 }
 
 data "http" "client_address" {
@@ -105,16 +106,6 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "terraform_remote_state" "image" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "2.Image.Builder"
-  }
-}
-
 data "terraform_remote_state" "storage" {
   backend = "azurerm"
   config = {
@@ -126,6 +117,7 @@ data "terraform_remote_state" "storage" {
 }
 
 data "azurerm_application_insights" "studio" {
+  count               = module.global.monitor.enable ? 1 : 0
   name                = module.global.monitor.name
   resource_group_name = module.global.resourceGroupName
 }
@@ -147,25 +139,18 @@ data "azurerm_private_dns_zone" "studio" {
 }
 
 data "azurerm_storage_account" "studio" {
-  name                = var.storageAccount.enable ? var.storageAccount.name : data.terraform_remote_state.storage.outputs.blobStorageAccounts[0].name
+  name                = var.storageAccount.enable ? var.storageAccount.name : data.terraform_remote_state.storage.outputs.blobStorageAccount.name
   resource_group_name = var.storageAccount.enable ? var.storageAccount.resourceGroupName : data.terraform_remote_state.storage.outputs.resourceGroupName
+}
+
+data "azurerm_storage_share" "studio" {
+  name                 = var.storageAccount.enable ? var.storageAccount.fileShareName : data.terraform_remote_state.storage.outputs.blobStorageAccount.fileShares[0].name
+  storage_account_name = data.azurerm_storage_account.studio.name
 }
 
 resource "azurerm_resource_group" "farm" {
   name     = var.resourceGroupName
   location = module.global.regionNames[0]
-}
-
-resource "azurerm_resource_group" "farm_ai" {
-  count    = var.azureOpenAI.enable ? 1 : 0
-  name     = "${azurerm_resource_group.farm.name}.AI"
-  location = azurerm_resource_group.farm.location
-}
-
-resource "azurerm_resource_group" "farm_batch" {
-  count    = var.batch.enable ? 1 : 0
-  name     = "${azurerm_resource_group.farm.name}.Batch"
-  location = azurerm_resource_group.farm.location
 }
 
 output "resourceGroupName" {

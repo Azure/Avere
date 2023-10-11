@@ -33,35 +33,27 @@ variable "resourceGroupName" {
 }
 
 variable "trafficManager" {
-  type = object(
-    {
-      enable = bool
-      profile = object(
-        {
-          name              = string
-          routingMethod     = string
-          enableTrafficView = bool
-        }
-      )
-      dns = object(
-        {
-          name = string
-          ttl  = string
-        }
-      )
-    }
-  )
+  type = object({
+    enable  = bool
+    profile = object({
+      name              = string
+      routingMethod     = string
+      enableTrafficView = bool
+    })
+    dns = object({
+      name = string
+      ttl  = string
+    })
+  })
 }
 
 variable "computeNetwork" {
-  type = object(
-    {
-      enable            = bool
-      name              = string
-      subnetName        = string
-      resourceGroupName = string
-    }
-  )
+  type = object({
+    enable            = bool
+    name              = string
+    subnetName        = string
+    resourceGroupName = string
+  })
 }
 
 data "azurerm_user_assigned_identity" "studio" {
@@ -100,16 +92,6 @@ data "terraform_remote_state" "network" {
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
     key                  = "1.Virtual.Network"
-  }
-}
-
-data "terraform_remote_state" "image" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "2.Image.Builder"
   }
 }
 

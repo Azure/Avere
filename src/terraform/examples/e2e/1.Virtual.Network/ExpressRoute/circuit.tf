@@ -3,17 +3,15 @@
 #######################################################################################################
 
 variable "expressRouteCircuit" {
-  type = object(
-    {
-      enable          = bool
-      name            = string
-      serviceTier     = string
-      serviceProvider = string
-      peeringLocation = string
-      bandwidthMbps   = number
-      unlimitedData   = bool
-    }
-  )
+  type = object({
+    enable          = bool
+    name            = string
+    serviceTier     = string
+    serviceProvider = string
+    peeringLocation = string
+    bandwidthMbps   = number
+    unlimitedData   = bool
+  })
 }
 
 resource "azurerm_express_route_circuit" "render" {

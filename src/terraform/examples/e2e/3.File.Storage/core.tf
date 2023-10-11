@@ -3,42 +3,34 @@
 ###################################################################################
 
 variable "storageAccounts" {
-  type = list(object(
-    {
-      enable               = bool
-      name                 = string
-      type                 = string
-      tier                 = string
-      redundancy           = string
-      enableHttpsOnly      = bool
-      enableBlobNfsV3      = bool
-      enableLargeFileShare = bool
-      privateEndpointTypes = list(string)
-      blobContainers = list(object(
-        {
-          enable    = bool
-          name      = string
-          loadFiles = bool
-          fileSystem = object(
-            {
-              enable  = bool
-              rootAcl = string
-            }
-          )
-        }
-      ))
-      fileShares = list(object(
-        {
-          enable         = bool
-          name           = string
-          sizeGB         = number
-          accessTier     = string
-          accessProtocol = string
-          loadFiles      = bool
-        }
-      ))
-    }
-  ))
+  type = list(object({
+    enable               = bool
+    name                 = string
+    type                 = string
+    tier                 = string
+    redundancy           = string
+    enableHttpsOnly      = bool
+    enableBlobNfsV3      = bool
+    enableLargeFileShare = bool
+    privateEndpointTypes = list(string)
+    blobContainers = list(object({
+      enable    = bool
+      name      = string
+      loadFiles = bool
+      fileSystem = object({
+        enable  = bool
+        rootAcl = string
+      })
+    }))
+    fileShares = list(object({
+      enable         = bool
+      name           = string
+      sizeGB         = number
+      accessTier     = string
+      accessProtocol = string
+      loadFiles      = bool
+    }))
+  }))
 }
 
 locals {
@@ -53,13 +45,11 @@ locals {
       }
     ] if storageAccount.enable
   ])
-  blobStorageAccounts = [
-    for storageAccount in var.storageAccounts : merge(storageAccount,
-      {
-        resourceGroupName = var.resourceGroupName
-      }
-    ) if storageAccount.enable && storageAccount.type == "StorageV2" || storageAccount.type == "BlockBlobStorage"
-  ]
+  blobStorageAccount = one([
+    for storageAccount in var.storageAccounts : merge(storageAccount, {
+      resourceGroupName = var.resourceGroupName
+    }) if storageAccount.enable && storageAccount.type == "StorageV2"
+  ])
   blobContainers = flatten([
     for storageAccount in var.storageAccounts : [
       for blobContainer in storageAccount.blobContainers : {
@@ -139,6 +129,18 @@ resource "azurerm_private_endpoint" "storage" {
   ]
 }
 
+resource "azurerm_role_assignment" "storage_contributor" {
+  for_each = {
+    for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enable
+  }
+  role_definition_name = "Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor
+  principal_id         = data.azurerm_user_assigned_identity.studio.principal_id
+  scope                = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${each.value.name}"
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
+}
+
 resource "azurerm_role_assignment" "storage_blob_data_owner" {
   for_each = {
     for storageAccount in var.storageAccounts : storageAccount.name => storageAccount if storageAccount.enable
@@ -158,7 +160,7 @@ resource "azurerm_storage_container" "core" {
   name                 = each.value.name
   storage_account_name = each.value.storageAccountName
   depends_on = [
-    azurerm_private_endpoint.storage
+    azurerm_role_assignment.storage_blob_data_owner
   ]
 }
 
@@ -188,7 +190,7 @@ resource "terraform_data" "blob_container_file_system_access_pre_load" {
 
 resource "terraform_data" "blob_container_load_root" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.loadFiles && var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName == ""
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.loadFiles && var.fileLoadSource.enable && var.fileLoadSource.blobName == ""
   }
   provisioner "local-exec" {
     environment = {
@@ -204,7 +206,7 @@ resource "terraform_data" "blob_container_load_root" {
 
 resource "terraform_data" "blob_container_load_blob" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.loadFiles && var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName != ""
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.loadFiles && var.fileLoadSource.enable && var.fileLoadSource.blobName != ""
   }
   provisioner "local-exec" {
     environment = {
@@ -220,7 +222,7 @@ resource "terraform_data" "blob_container_load_blob" {
 
 resource "terraform_data" "blob_container_file_system_access_post_load" {
   for_each = {
-    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.fileSystemEnable
+    for blobContainer in local.blobContainers : "${blobContainer.storageAccountName}-${blobContainer.name}" => blobContainer if blobContainer.fileSystemEnable && blobContainer.loadFiles
   }
   provisioner "local-exec" {
     command = "az storage fs access update-recursive --auth-mode login --account-name ${each.value.storageAccountName} --file-system ${each.value.name} --path / --acl ${each.value.fileSystemRootAcl}"
@@ -248,7 +250,7 @@ resource "azurerm_storage_share" "core" {
 
 resource "terraform_data" "file_share_load_root" {
   for_each = {
-    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if fileShare.loadFiles && var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName == ""
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if fileShare.loadFiles && var.fileLoadSource.enable && var.fileLoadSource.blobName == ""
   }
   provisioner "local-exec" {
     environment = {
@@ -263,7 +265,7 @@ resource "terraform_data" "file_share_load_root" {
 
 resource "terraform_data" "file_share_load_blob" {
   for_each = {
-    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if fileShare.loadFiles && var.fileLoadSource.accountName != "" && var.fileLoadSource.blobName != ""
+    for fileShare in local.fileShares : "${fileShare.storageAccountName}-${fileShare.name}" => fileShare if fileShare.loadFiles && var.fileLoadSource.enable && var.fileLoadSource.blobName != ""
   }
   provisioner "local-exec" {
     environment = {
@@ -276,6 +278,6 @@ resource "terraform_data" "file_share_load_blob" {
   ]
 }
 
-output "blobStorageAccounts" {
-  value = local.blobStorageAccounts
+output "blobStorageAccount" {
+  value = local.blobStorageAccount
 }

@@ -3,20 +3,16 @@
 ###############################################################################################
 
 variable "computeGallery" {
-  type = object(
-    {
-      name = string
-      imageDefinition = map(object(
-        {
-          type       = string
-          generation = string
-          publisher  = string
-          offer      = string
-          sku        = string
-        }
-      ))
-    }
-  )
+  type = object({
+    name = string
+    imageDefinition = map(object({
+      type       = string
+      generation = string
+      publisher  = string
+      offer      = string
+      sku        = string
+    }))
+  })
 }
 
 resource "azurerm_shared_image_gallery" "studio" {

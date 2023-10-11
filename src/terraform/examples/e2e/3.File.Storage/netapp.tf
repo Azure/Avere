@@ -3,40 +3,32 @@
 #######################################################################################################
 
 variable "netAppAccount" {
-  type = object(
-    {
-      enable = bool
-      name   = string
-      capacityPools = list(object(
-        {
-          enable       = bool
-          name         = string
-          sizeTiB      = number
-          serviceLevel = string
-          volumes = list(object(
-            {
-              enable       = bool
-              name         = string
-              sizeGB       = number
-              serviceLevel = string
-              mountPath    = string
-              protocols    = list(string)
-              exportPolicies = list(object(
-                {
-                  ruleIndex      = number
-                  readOnly       = bool
-                  readWrite      = bool
-                  rootAccess     = bool
-                  protocols      = list(string)
-                  allowedClients = list(string)
-                }
-              ))
-            }
-          ))
-        }
-      ))
-    }
-  )
+  type = object({
+    enable = bool
+    name   = string
+    capacityPools = list(object({
+      enable       = bool
+      name         = string
+      sizeTiB      = number
+      serviceLevel = string
+      volumes = list(object({
+        enable       = bool
+        name         = string
+        sizeGB       = number
+        serviceLevel = string
+        mountPath    = string
+        protocols    = list(string)
+        exportPolicies = list(object({
+          ruleIndex      = number
+          readOnly       = bool
+          readWrite      = bool
+          rootAccess     = bool
+          protocols      = list(string)
+          allowedClients = list(string)
+        }))
+      }))
+    }))
+  })
 }
 
 data "azurerm_subnet" "storage_netapp" {

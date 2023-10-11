@@ -3,98 +3,68 @@
 #######################################################################################################
 
 variable "hammerspace" {
-  type = object(
-    {
-      namePrefix = string
-      domainName = string
-      metadata = object(
-        {
-          machine = object(
-            {
-              namePrefix = string
-              size       = string
-              count      = number
-            }
-          )
-          network = object(
-            {
-              enableAcceleration = bool
-            }
-          )
-          osDisk = object(
-            {
-              storageType = string
-              cachingType = string
-              sizeGB      = number
-            }
-          )
-          dataDisk = object(
-            {
-              storageType = string
-              cachingType = string
-              sizeGB      = number
-            }
-          )
-          adminLogin = object(
-            {
-              userName     = string
-              userPassword = string
-              sshPublicKey = string
-              passwordAuth = object(
-                {
-                  disable = bool
-                }
-              )
-            }
-          )
-        }
-      )
-      data = object(
-        {
-          machine = object(
-            {
-              namePrefix = string
-              size       = string
-              count      = number
-            }
-          )
-          network = object(
-            {
-              enableAcceleration = bool
-            }
-          )
-          osDisk = object(
-            {
-              storageType = string
-              cachingType = string
-              sizeGB      = number
-            }
-          )
-          dataDisk = object(
-            {
-              storageType = string
-              cachingType = string
-              enableRaid0 = bool
-              sizeGB      = number
-              count       = number
-            }
-          )
-          adminLogin = object(
-            {
-              userName     = string
-              userPassword = string
-              sshPublicKey = string
-              passwordAuth = object(
-                {
-                  disable = bool
-                }
-              )
-            }
-          )
-        }
-      )
-    }
-  )
+  type = object({
+    namePrefix = string
+    domainName = string
+    metadata = object({
+      machine = object({
+        namePrefix = string
+        size       = string
+        count      = number
+      })
+      network = object({
+        enableAcceleration = bool
+      })
+      osDisk = object({
+        storageType = string
+        cachingType = string
+        sizeGB      = number
+      })
+      dataDisk = object({
+        storageType = string
+        cachingType = string
+        sizeGB      = number
+      })
+      adminLogin = object({
+        userName     = string
+        userPassword = string
+        sshPublicKey = string
+        passwordAuth = object({
+          disable = bool
+        })
+      })
+    })
+    data = object({
+      machine = object({
+        namePrefix = string
+        size       = string
+        count      = number
+      })
+      network = object({
+        enableAcceleration = bool
+      })
+      osDisk = object({
+        storageType = string
+        cachingType = string
+        sizeGB      = number
+      })
+      dataDisk = object({
+        storageType = string
+        cachingType = string
+        enableRaid0 = bool
+        sizeGB      = number
+        count       = number
+      })
+      adminLogin = object({
+        userName     = string
+        userPassword = string
+        sshPublicKey = string
+        passwordAuth = object({
+          disable = bool
+        })
+      })
+    })
+  })
 }
 
 locals {
@@ -105,28 +75,24 @@ locals {
     version   = "22.08.18"
   }
   hammerspaceMetadataNodes = [
-    for i in range(var.hammerspace.metadata.machine.count) : merge(
-      {
-        index = i
-        name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}"
-        adminLogin = {
-          userName = var.hammerspace.adminLogin.userName != "" ? var.hammerspace.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          userPassword = var.hammerspace.adminLogin.userPassword != "" ? var.hammerspace.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-        }
-      },
+    for i in range(var.hammerspace.metadata.machine.count) : merge({
+      index = i
+      name  = "${var.hammerspace.namePrefix}${var.hammerspace.metadata.machine.namePrefix}${i + 1}"
+      adminLogin = {
+        userName = var.hammerspace.adminLogin.userName != "" ? var.hammerspace.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        userPassword = var.hammerspace.adminLogin.userPassword != "" ? var.hammerspace.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+      }},
       var.hammerspace.metadata
     ) if var.hammerspace.namePrefix != ""
   ]
   hammerspaceDataNodes = [
-    for i in range(var.hammerspace.data.machine.count) : merge(
-      {
-        index = i
-        name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}"
-        adminLogin = {
-          userName = var.hammerspace.adminLogin.userName != "" ? var.hammerspace.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          userPassword = var.hammerspace.adminLogin.userPassword != "" ? var.hammerspace.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-        }
-      },
+    for i in range(var.hammerspace.data.machine.count) : merge({
+      index = i
+      name  = "${var.hammerspace.namePrefix}${var.hammerspace.data.machine.namePrefix}${i + 1}"
+      adminLogin = {
+        userName = var.hammerspace.adminLogin.userName != "" ? var.hammerspace.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        userPassword = var.hammerspace.adminLogin.userPassword != "" ? var.hammerspace.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+      }},
       var.hammerspace.data
     ) if var.hammerspace.namePrefix != ""
   ]
@@ -378,28 +344,29 @@ resource "azurerm_virtual_machine_data_disk_attachment" "storage_data" {
   ]
 }
 
-# resource "azurerm_virtual_machine_extension" "storage" {
-#   for_each = {
-#     for node in concat(local.hammerspaceMetadataNodes, local.hammerspaceDataNodes) : node.name => node
-#   }
-#   name                       = "Initialize"
-#   type                       = "CustomScript"
-#   publisher                  = "Microsoft.Azure.Extensions"
-#   type_handler_version       = "2.1"
-#   auto_upgrade_minor_version = true
-#   virtual_machine_id         = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
-#   settings = jsonencode({
-#     "script": "${base64encode(
-#       templatefile("initialize.sh", {
-#         adminPassword = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword
-#       })
-#     )}"
-#   })
-#   depends_on = [
-#     azurerm_virtual_machine_data_disk_attachment.storage_metadata,
-#     azurerm_virtual_machine_data_disk_attachment.storage_data
-#   ]
-# }
+resource "azurerm_virtual_machine_extension" "storage" {
+  for_each = {
+    for node in concat(local.hammerspaceMetadataNodes, local.hammerspaceDataNodes) : node.name => node
+  }
+  name                       = "Initialize"
+  type                       = "CustomScript"
+  publisher                  = "Microsoft.Azure.Extensions"
+  type_handler_version       = "2.1"
+  auto_upgrade_minor_version = true
+  virtual_machine_id         = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
+  settings = jsonencode({
+    script = "${base64encode(
+      <<-BASH
+        #!/bin/bash -x
+        ADMIN_PASSWORD=${module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : each.value.adminLogin.userPassword} /usr/bin/hs-init-admin-pw
+      BASH
+    )}"
+  })
+  depends_on = [
+    azurerm_virtual_machine_data_disk_attachment.storage_metadata,
+    azurerm_virtual_machine_data_disk_attachment.storage_data
+  ]
+}
 
 resource "azurerm_lb" "storage" {
   count               = local.hammerspaceEnableHighAvailability ? 1 : 0

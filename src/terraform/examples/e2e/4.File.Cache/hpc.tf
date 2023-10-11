@@ -3,26 +3,20 @@
 ##############################################################################
 
 variable "hpcCache" {
-  type = object(
-    {
-      throughput = string
-      size       = number
-      mtuSize    = number
-      ntpHost    = string
-      dns = object(
-        {
-          ipAddresses  = list(string)
-          searchDomain = string
-        }
-      )
-      encryption = object(
-        {
-          enable    = bool
-          rotateKey = bool
-        }
-      )
-    }
-  )
+  type = object({
+    throughput = string
+    size       = number
+    mtuSize    = number
+    ntpHost    = string
+    dns = object({
+      ipAddresses  = list(string)
+      searchDomain = string
+    })
+    encryption = object({
+      enable    = bool
+      rotateKey = bool
+    })
+  })
 }
 
 data "azuread_service_principal" "hpc_cache" {

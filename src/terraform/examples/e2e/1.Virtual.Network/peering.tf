@@ -3,13 +3,11 @@
 ################################################################################################################
 
 variable "networkPeering" {
-  type = object(
-    {
-      enable                      = bool
-      allowRemoteNetworkAccess    = bool
-      allowRemoteForwardedTraffic = bool
-    }
-  )
+  type = object({
+    enable                      = bool
+    allowRemoteNetworkAccess    = bool
+    allowRemoteForwardedTraffic = bool
+  })
 }
 
 resource "azurerm_virtual_network_peering" "network_peering_up" {
@@ -22,7 +20,7 @@ resource "azurerm_virtual_network_peering" "network_peering_up" {
   allow_forwarded_traffic      = var.networkPeering.allowRemoteForwardedTraffic
   allow_gateway_transit        = contains(local.virtualGatewayNetworkNames, local.virtualNetworks[count.index].name)
   depends_on = [
-    azurerm_subnet_network_security_group_association.network
+    azurerm_subnet_network_security_group_association.studio
   ]
 }
 
@@ -36,6 +34,6 @@ resource "azurerm_virtual_network_peering" "network_peering_down" {
   allow_forwarded_traffic      = var.networkPeering.allowRemoteForwardedTraffic
   allow_gateway_transit        = contains(local.virtualGatewayNetworkNames, local.virtualNetworks[count.index + 1].name)
   depends_on = [
-    azurerm_subnet_network_security_group_association.network
+    azurerm_subnet_network_security_group_association.studio
   ]
 }

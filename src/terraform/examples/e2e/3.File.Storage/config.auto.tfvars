@@ -1,6 +1,7 @@
 resourceGroupName = "ArtistAnywhere.Storage" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
 fileLoadSource = {
+  enable        = false
   accountName   = ""
   accountKey    = ""
   containerName = ""

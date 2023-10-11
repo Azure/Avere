@@ -36,7 +36,7 @@ For each of the modules in the framework, here is the recommended deployment pro
        *  Review and edit the following config files.
            * `module/backend.config`
            * `module/variables.tf`
-       * If Key Vault is enabled [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L35), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
+       * If Key Vault is enabled [here](https://github.com/Azure/Avere/blob/main/src/terraform/examples/e2e/0.Global.Foundation/module/variables.tf#L40), make sure the [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator) role is assigned to the current user via [Role-Based Access Control (RBAC)](https://learn.microsoft.com/azure/role-based-access-control/overview).
    * For modules `2 Image Builder`, `5 Render Manager`, `6 Render Farm` and `7 Artist Workstation`,
        * Make sure you have sufficient compute cores quota available on your Azure subscription for each configured virtual machine size.
        * By default, [Spot](https://learn.microsoft.com/azure/virtual-machines/spot-vms) is enabled in module `6 Render Farm` configuration. Therefore, Spot cores quota should be approved for your Azure subscription and target region(s).

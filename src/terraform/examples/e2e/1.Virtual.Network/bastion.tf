@@ -3,18 +3,16 @@
 ########################################################################
 
 variable "bastion" {
-  type = object(
-    {
-      enable              = bool
-      sku                 = string
-      scaleUnitCount      = number
-      enableFileCopy      = bool
-      enableCopyPaste     = bool
-      enableIpConnect     = bool
-      enableTunneling     = bool
-      enableShareableLink = bool
-    }
-  )
+  type = object({
+    enable              = bool
+    sku                 = string
+    scaleUnitCount      = number
+    enableFileCopy      = bool
+    enableCopyPaste     = bool
+    enableIpConnect     = bool
+    enableTunneling     = bool
+    enableShareableLink = bool
+  })
 }
 
 resource "azurerm_network_security_group" "bastion" {
@@ -122,7 +120,7 @@ resource "azurerm_network_security_group" "bastion" {
     destination_port_range     = "80"
   }
   depends_on = [
-    azurerm_virtual_network.network
+    azurerm_virtual_network.studio
   ]
 }
 
@@ -133,7 +131,7 @@ resource "azurerm_subnet_network_security_group_association" "bastion" {
   subnet_id                 = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/AzureBastionSubnet"
   network_security_group_id = azurerm_network_security_group.bastion[each.value.key].id
   depends_on = [
-    azurerm_subnet.network
+    azurerm_subnet.studio
   ]
 }
 
@@ -171,7 +169,6 @@ resource "azurerm_bastion_host" "compute" {
     subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/AzureBastionSubnet"
   }
   depends_on = [
-    azurerm_subnet_nat_gateway_association.compute,
-    azurerm_nat_gateway_public_ip_association.compute
+    azurerm_virtual_network.studio
   ]
 }

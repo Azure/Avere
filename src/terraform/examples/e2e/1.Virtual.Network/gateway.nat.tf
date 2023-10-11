@@ -18,14 +18,26 @@ resource "azurerm_nat_gateway" "storage" {
   sku_name            = "Standard"
 }
 
+# resource "azurerm_nat_gateway_public_ip_prefix_association" "compute" {
+#   count               = var.computeNetwork.enableNatGateway ? 1 : 0
+#   nat_gateway_id      = azurerm_nat_gateway.compute[0].id
+#   public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway_compute[0].id
+# }
+
+# resource "azurerm_nat_gateway_public_ip_prefix_association" "storage" {
+#   count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
+#   nat_gateway_id      = azurerm_nat_gateway.storage[0].id
+#   public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway_storage[0].id
+# }
+
 resource "azurerm_nat_gateway_public_ip_association" "compute" {
-  count               = var.computeNetwork.enableNatGateway ? 1 : 0
+  count                = var.computeNetwork.enableNatGateway ? 1 : 0
   nat_gateway_id       = azurerm_nat_gateway.compute[0].id
   public_ip_address_id = azurerm_public_ip.nat_gateway_compute[0].id
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
+  count                = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
   nat_gateway_id       = azurerm_nat_gateway.storage[0].id
   public_ip_address_id = azurerm_public_ip.nat_gateway_storage[0].id
 }
@@ -36,6 +48,9 @@ resource "azurerm_subnet_nat_gateway_association" "compute" {
   }
   nat_gateway_id = azurerm_nat_gateway.compute[0].id
   subnet_id      = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+  depends_on = [
+    azurerm_virtual_network.studio
+  ]
 }
 
 resource "azurerm_subnet_nat_gateway_association" "storage" {
@@ -44,4 +59,7 @@ resource "azurerm_subnet_nat_gateway_association" "storage" {
   }
   nat_gateway_id = azurerm_nat_gateway.storage[0].id
   subnet_id      = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+  depends_on = [
+    azurerm_virtual_network.studio
+  ]
 }

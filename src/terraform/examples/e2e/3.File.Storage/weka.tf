@@ -3,134 +3,96 @@
 #######################################################################################################
 
 variable "weka" {
-  type = object(
-    {
-      enable   = bool
-      apiToken = string
-      name = object(
-        {
-          resource = string
-          display  = string
-        }
-      )
-      machine = object(
-        {
-          size  = string
-          count = number
-          image = object(
-            {
-              id = string
-              plan = object(
-                {
-                  enable    = bool
-                  publisher = string
-                  product   = string
-                  name      = string
-                }
-              )
-            }
-          )
-        }
-      )
-      network = object(
-        {
-          privateDnsZone = object(
-            {
-              recordSetName    = string
-              recordTtlSeconds = number
-            }
-          )
-          enableAcceleration = bool
-        }
-      )
-      terminateNotification = object(
-        {
-          enable       = bool
-          delayTimeout = string
-        }
-      )
-      objectTier = object(
-        {
-          enable  = bool
-          percent = number
-          storage = object(
-            {
-              accountName   = string
-              accountKey    = string
-              containerName = string
-            }
-          )
-        }
-      )
-      fileSystem = object(
-        {
-          name         = string
-          groupName    = string
-          autoScale    = bool
-          authRequired = bool
-          loadFiles    = bool
-        }
-      )
-      osDisk = object(
-        {
-          storageType = string
-          cachingType = string
-          sizeGB      = number
-        }
-      )
-      dataDisk = object(
-        {
-          storageType = string
-          cachingType = string
-          sizeGB      = number
-        }
-      )
-      dataProtection = object(
-        {
-          stripeWidth = number
-          parityLevel = number
-          hotSpare    = number
-        }
-      )
-      healthExtension = object(
-        {
-          enable      = bool
-          protocol    = string
-          port        = number
-          requestPath = string
-        }
-      )
-      adminLogin = object(
-        {
-          userName     = string
-          userPassword = string
-          sshPublicKey = string
-          passwordAuth = object(
-            {
-              disable = bool
-            }
-          )
-        }
-      )
-      license = object(
-        {
-          key = string
-          payGo = object(
-            {
-              planId    = string
-              secretKey = string
-            }
-          )
-        }
-      )
-      supportUrl = string
-    }
-  )
+  type = object({
+    enable   = bool
+    apiToken = string
+    name = object({
+      resource = string
+      display  = string
+    })
+    machine = object({
+      size  = string
+      count = number
+      image = object({
+        id = string
+        plan = object({
+          enable    = bool
+          publisher = string
+          product   = string
+          name      = string
+        })
+      })
+    })
+    network = object({
+      privateDnsZone = object({
+        recordSetName    = string
+        recordTtlSeconds = number
+      })
+      enableAcceleration = bool
+    })
+    terminateNotification = object({
+      enable       = bool
+      delayTimeout = string
+    })
+    objectTier = object({
+      enable  = bool
+      percent = number
+      storage = object({
+        accountName   = string
+        accountKey    = string
+        containerName = string
+      })
+    })
+    fileSystem = object({
+      name         = string
+      groupName    = string
+      autoScale    = bool
+      authRequired = bool
+      loadFiles    = bool
+    })
+    osDisk = object({
+      storageType = string
+      cachingType = string
+      sizeGB      = number
+    })
+    dataDisk = object({
+      storageType = string
+      cachingType = string
+      sizeGB      = number
+    })
+    dataProtection = object({
+      stripeWidth = number
+      parityLevel = number
+      hotSpare    = number
+    })
+    healthExtension = object({
+      enable      = bool
+      protocol    = string
+      port        = number
+      requestPath = string
+    })
+    adminLogin = object({
+      userName     = string
+      userPassword = string
+      sshPublicKey = string
+      passwordAuth = object({
+        disable = bool
+      })
+    })
+    license = object({
+      key = string
+      payGo = object({
+        planId    = string
+        secretKey = string
+      })
+    })
+    supportUrl = string
+  })
 }
 
 data "azurerm_storage_account" "blob" {
   count               = var.weka.enable ? 1 : 0
-  name                = local.blobStorageAccounts[0].name
+  name                = local.blobStorageAccount.name
   resource_group_name = azurerm_resource_group.storage.name
   depends_on = [
     azurerm_storage_account.storage
@@ -144,13 +106,11 @@ data "azurerm_virtual_machine_scale_set" "weka" {
 }
 
 locals {
-  weka = merge(
-    {
-      adminLogin = {
-        userName = var.weka.adminLogin.userName != "" ? var.weka.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-        userPassword = var.weka.adminLogin.userPassword != "" ? var.weka.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-      }
-    },
+  weka = merge({
+    adminLogin = {
+      userName     = var.weka.adminLogin.userName != "" ? var.weka.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+      userPassword = var.weka.adminLogin.userPassword != "" ? var.weka.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+    }},
     var.weka
   )
   wekaObjectTier = merge(var.weka.objectTier, {
@@ -250,7 +210,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   proximity_placement_group_id    = azurerm_proximity_placement_group.weka[0].id
   single_placement_group          = false
   overprovision                   = false
-  custom_data                     = base64encode(templatefile("terminate.sh", {
+  custom_data = base64encode(templatefile("terminate.sh", {
     wekaClusterName      = var.weka.name.resource
     wekaAdminPassword    = var.weka.adminLogin.userPassword
     dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name
@@ -469,7 +429,7 @@ resource "terraform_data" "weka_file_system" {
 }
 
 resource "terraform_data" "weka_load" {
-  count = var.weka.enable && var.weka.fileSystem.loadFiles && var.fileLoadSource.accountName != "" ? 1 : 0
+  count = var.weka.enable && var.weka.fileSystem.loadFiles && var.fileLoadSource.enable ? 1 : 0
   connection {
     type     = "ssh"
     host     = data.azurerm_virtual_machine_scale_set.weka[0].instances[0].private_ip_address

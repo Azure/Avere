@@ -37,24 +37,20 @@ variable "resourceGroupName" {
 }
 
 variable "privateDns" {
-  type = object(
-    {
-      aRecordName = string
-      ttlSeconds  = number
-    }
-  )
+  type = object({
+    aRecordName = string
+    ttlSeconds  = number
+  })
 }
 
 variable "computeNetwork" {
-  type = object(
-    {
-      enable             = bool
-      name               = string
-      subnetName         = string
-      resourceGroupName  = string
-      privateDnsZoneName = string
-    }
-  )
+  type = object({
+    enable             = bool
+    name               = string
+    subnetName         = string
+    resourceGroupName  = string
+    privateDnsZoneName = string
+  })
 }
 
 data "azurerm_user_assigned_identity" "studio" {
@@ -93,16 +89,6 @@ data "terraform_remote_state" "network" {
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
     key                  = "1.Virtual.Network"
-  }
-}
-
-data "terraform_remote_state" "image" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "2.Image.Builder"
   }
 }
 

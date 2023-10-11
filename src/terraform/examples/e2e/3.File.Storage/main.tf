@@ -41,34 +41,29 @@ variable "resourceGroupName" {
 }
 
 variable "fileLoadSource" {
-  type = object(
-    {
-      accountName   = string
-      accountKey    = string
-      containerName = string
-      blobName      = string
-    }
-  )
+  type = object({
+    enable        = bool
+    accountName   = string
+    accountKey    = string
+    containerName = string
+    blobName      = string
+  })
 }
 
 variable "storageNetwork" {
-  type = object(
-    {
-      enable              = bool
-      name                = string
-      resourceGroupName   = string
-      subnetNamePrimary   = string
-      subnetNameSecondary = string
-      privateDnsZoneName  = string
-      serviceEndpointSubnets = list(object(
-        {
-          name               = string
-          regionName         = string
-          virtualNetworkName = string
-        }
-      ))
-    }
-  )
+  type = object({
+    enable              = bool
+    name                = string
+    resourceGroupName   = string
+    subnetNamePrimary   = string
+    subnetNameSecondary = string
+    privateDnsZoneName  = string
+    serviceEndpointSubnets = list(object({
+      name               = string
+      regionName         = string
+      virtualNetworkName = string
+    }))
+  })
 }
 
 data "http" "client_address" {
@@ -113,16 +108,6 @@ data "terraform_remote_state" "network" {
     storage_account_name = module.global.rootStorage.accountName
     container_name       = module.global.rootStorage.containerName.terraform
     key                  = "1.Virtual.Network"
-  }
-}
-
-data "terraform_remote_state" "image" {
-  backend = "azurerm"
-  config = {
-    resource_group_name  = module.global.resourceGroupName
-    storage_account_name = module.global.rootStorage.accountName
-    container_name       = module.global.rootStorage.containerName.terraform
-    key                  = "2.Image.Builder"
   }
 }
 

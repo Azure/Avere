@@ -3,145 +3,105 @@
 ######################################################################################################
 
 variable "virtualMachineScaleSets" {
-  type = list(object(
-    {
-      enable = bool
-      name   = string
-      machine = object(
-        {
-          size  = string
-          count = number
-          image = object(
-            {
-              id = string
-              plan = object(
-                {
-                  enable    = bool
-                  publisher = string
-                  product   = string
-                  name      = string
-                }
-              )
-            }
-          )
-        }
-      )
-      spot = object(
-        {
-          enable         = bool
-          evictionPolicy = string
-        }
-      )
-      network = object(
-        {
-          enableAcceleration = bool
-        }
-      )
-      operatingSystem = object(
-        {
-          type = string
-          disk = object(
-            {
-              storageType = string
-              cachingType = string
-              sizeGB      = number
-              ephemeral = object(
-                {
-                  enable    = bool
-                  placement = string
-                }
-              )
-            }
-          )
-        }
-      )
-      adminLogin = object(
-        {
-          userName     = string
-          userPassword = string
-          sshPublicKey = string
-          passwordAuth = object(
-            {
-              disable = bool
-            }
-          )
-        }
-      )
-      activeDirectory = object(
-        {
-          enable           = bool
-          domainName       = string
-          domainServerName = string
-          orgUnitPath      = string
-          adminUsername    = string
-          adminPassword    = string
-        }
-      )
-      extension = object(
-        {
-          initialize = object(
-            {
-              enable   = bool
-              fileName = string
-              parameters = object(
-                {
-                  fileSystems = list(object(
-                    {
-                      enable = bool
-                      mounts = list(string)
-                    }
-                  ))
-                  terminateNotification = object(
-                    {
-                      enable       = bool
-                      delayTimeout = string
-                    }
-                  )
-                }
-              )
-            }
-          )
-          health = object (
-            {
-              enable      = bool
-              protocol    = string
-              port        = number
-              requestPath = string
-            }
-          )
-          monitor = object (
-            {
-              enable = bool
-            }
-          )
-        }
-      )
-    }
-  ))
+  type = list(object({
+    enable = bool
+    name   = string
+    machine = object({
+      size  = string
+      count = number
+      image = object({
+        id   = string
+        plan = object({
+          enable    = bool
+          publisher = string
+          product   = string
+          name      = string
+        })
+      })
+    })
+    spot = object({
+      enable         = bool
+      evictionPolicy = string
+    })
+    network = object({
+      enableAcceleration = bool
+    })
+    operatingSystem = object({
+      type = string
+      disk = object({
+        storageType = string
+        cachingType = string
+        sizeGB      = number
+        ephemeral = object({
+          enable    = bool
+          placement = string
+        })
+      })
+    })
+    adminLogin = object({
+      userName     = string
+      userPassword = string
+      sshPublicKey = string
+      passwordAuth = object({
+        disable = bool
+      })
+    })
+    activeDirectory = object({
+      enable           = bool
+      domainName       = string
+      domainServerName = string
+      orgUnitPath      = string
+      adminUsername    = string
+      adminPassword    = string
+    })
+    extension = object({
+      initialize = object({
+        enable     = bool
+        fileName   = string
+        parameters = object({
+          fileSystems = list(object({
+            enable = bool
+            mounts = list(string)
+          }))
+          terminateNotification = object({
+            enable       = bool
+            delayTimeout = string
+          })
+        })
+      })
+      health = object({
+        enable      = bool
+        protocol    = string
+        port        = number
+        requestPath = string
+      })
+      monitor = object({
+        enable = bool
+      })
+    })
+  }))
 }
 
 locals {
   virtualMachineScaleSets = [
-    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet,
-      {
-        adminLogin = {
-          userName     = virtualMachineScaleSet.adminLogin.userName != "" ? virtualMachineScaleSet.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          userPassword = virtualMachineScaleSet.adminLogin.userPassword != "" ? virtualMachineScaleSet.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
-          sshPublicKey = virtualMachineScaleSet.adminLogin.sshPublicKey
-          passwordAuth = {
-            disable = virtualMachineScaleSet.adminLogin.passwordAuth.disable
-          }
-        }
-        activeDirectory = {
-          enable           = virtualMachineScaleSet.activeDirectory.enable
-          domainName       = virtualMachineScaleSet.activeDirectory.domainName
-          domainServerName = virtualMachineScaleSet.activeDirectory.domainServerName
-          orgUnitPath      = virtualMachineScaleSet.activeDirectory.orgUnitPath
-          adminUsername    = virtualMachineScaleSet.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-          adminPassword    = virtualMachineScaleSet.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+    for virtualMachineScaleSet in var.virtualMachineScaleSets : merge(virtualMachineScaleSet, {
+      adminLogin = {
+        userName     = virtualMachineScaleSet.adminLogin.userName != "" ? virtualMachineScaleSet.adminLogin.userName : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        userPassword = virtualMachineScaleSet.adminLogin.userPassword != "" ? virtualMachineScaleSet.adminLogin.userPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        sshPublicKey = virtualMachineScaleSet.adminLogin.sshPublicKey
+        passwordAuth = {
+          disable = virtualMachineScaleSet.adminLogin.passwordAuth.disable
         }
       }
-    )
+      activeDirectory = {
+        enable           = virtualMachineScaleSet.activeDirectory.enable
+        domainName       = virtualMachineScaleSet.activeDirectory.domainName
+        domainServerName = virtualMachineScaleSet.activeDirectory.domainServerName
+        orgUnitPath      = virtualMachineScaleSet.activeDirectory.orgUnitPath
+        adminUsername    = virtualMachineScaleSet.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        adminPassword    = virtualMachineScaleSet.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+      }
+    })
   ]
 }
 
@@ -214,12 +174,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type_handler_version       = "2.1"
       auto_upgrade_minor_version = true
       settings = jsonencode({
-        script: "${base64encode(
-          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
-            {
-              activeDirectory = each.value.activeDirectory
-            }
-          ))
+        script = "${base64encode(
+          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {
+            activeDirectory = each.value.activeDirectory
+          }))
         )}"
       })
     }
@@ -319,11 +277,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       auto_upgrade_minor_version = true
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
-          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters,
-            {
-              activeDirectory = each.value.activeDirectory
-            }
-          )), "UTF-16LE"
+          templatefile(each.value.extension.initialize.fileName, merge(each.value.extension.initialize.parameters, {
+            activeDirectory = each.value.activeDirectory
+          })), "UTF-16LE"
         )}"
       })
     }
