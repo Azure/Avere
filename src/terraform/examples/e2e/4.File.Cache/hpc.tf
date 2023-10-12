@@ -24,7 +24,7 @@ data "azuread_service_principal" "hpc_cache" {
   display_name = "HPC Cache Resource Provider"
 }
 
-resource "azurerm_role_assignment" "storage_account" {
+resource "azurerm_role_assignment" "storage_account_contributor" {
   for_each = {
     for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.enableHPCCache && storageTargetNfsBlob.enable
   }
@@ -33,7 +33,7 @@ resource "azurerm_role_assignment" "storage_account" {
   scope                = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}"
 }
 
-resource "azurerm_role_assignment" "storage_blob_data" {
+resource "azurerm_role_assignment" "storage_blob_data_contributor" {
   for_each = {
     for storageTargetNfsBlob in var.storageTargetsNfsBlob : storageTargetNfsBlob.name => storageTargetNfsBlob if var.enableHPCCache && storageTargetNfsBlob.enable
   }
@@ -68,16 +68,8 @@ resource "azurerm_hpc_cache" "cache" {
   key_vault_key_id                           = var.hpcCache.encryption.enable ? data.azurerm_key_vault_key.cache_encryption[0].id : null
   automatically_rotate_key_to_latest_enabled = var.hpcCache.encryption.enable ? var.hpcCache.encryption.rotateKey : null
   depends_on = [
-    azurerm_role_assignment.storage_account,
-    azurerm_role_assignment.storage_blob_data
-  ]
-}
-
-resource "time_sleep" "blob_nfs_target_rbac" {
-  create_duration = "30s"
-  depends_on = [
-    azurerm_role_assignment.storage_account,
-    azurerm_role_assignment.storage_blob_data
+    azurerm_role_assignment.storage_account_contributor,
+    azurerm_role_assignment.storage_blob_data_contributor
   ]
 }
 
@@ -110,7 +102,4 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   storage_container_id = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
   usage_model          = each.value.usageModel
   namespace_path       = each.value.clientPath
-  depends_on = [
-    time_sleep.blob_nfs_target_rbac
-  ]
 }

@@ -556,9 +556,8 @@ functionApp = {
   enable = false
   name   = "azstudio"
   servicePlan = {
-    computeTier = "S1"
-    workerCount = 2
-    alwaysOn    = true
+    computeTier = "EP1"
+    workerCount = 1
   }
   monitor = {
     workspace = {

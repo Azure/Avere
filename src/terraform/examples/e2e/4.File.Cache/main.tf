@@ -13,10 +13,6 @@ terraform {
       source  = "hashicorp/avere"
       version = "~>1.3.3"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~>0.9.1"
-    }
   }
   backend "azurerm" {
     key = "4.File.Cache"

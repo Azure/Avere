@@ -21,7 +21,7 @@ computeNetwork = {
         "Microsoft.Storage",
         "Microsoft.CognitiveServices"
       ]
-      serviceDelegation    = "Microsoft.Web/serverFarms"
+      serviceDelegation    = ""
       denyOutboundInternet = false
     },
     {
