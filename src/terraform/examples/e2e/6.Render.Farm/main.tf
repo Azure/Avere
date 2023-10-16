@@ -39,7 +39,18 @@ variable "resourceGroupName" {
   type = string
 }
 
-variable "computeNetwork" {
+variable "activeDirectory" {
+  type = object({
+    enable           = bool
+    domainName       = string
+    domainServerName = string
+    orgUnitPath      = string
+    adminUsername    = string
+    adminPassword    = string
+  })
+}
+
+variable "existingNetwork" {
   type = object({
     enable            = bool
     name              = string
@@ -48,7 +59,7 @@ variable "computeNetwork" {
   })
 }
 
-variable "storageAccount" {
+variable "existingStorage" {
   type = object({
     enable            = bool
     name              = string
@@ -118,29 +129,29 @@ data "azurerm_application_insights" "studio" {
   resource_group_name = module.global.resourceGroupName
 }
 
-data "azurerm_virtual_network" "compute" {
-  name                = var.computeNetwork.enable ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
-  resource_group_name = var.computeNetwork.enable ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+data "azurerm_virtual_network" "studio" {
+  name                = var.existingNetwork.enable ? var.existingNetwork.name : data.terraform_remote_state.network.outputs.virtualNetwork.name
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = var.computeNetwork.enable ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
-  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.compute.name
+  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
+  resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.studio.name
 }
 
 data "azurerm_private_dns_zone" "studio" {
   name                = data.terraform_remote_state.network.outputs.privateDns.zoneName
-  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
+  resource_group_name = data.azurerm_virtual_network.studio.resource_group_name
 }
 
 data "azurerm_storage_account" "studio" {
-  name                = var.storageAccount.enable ? var.storageAccount.name : data.terraform_remote_state.storage.outputs.blobStorageAccount.name
-  resource_group_name = var.storageAccount.enable ? var.storageAccount.resourceGroupName : data.terraform_remote_state.storage.outputs.resourceGroupName
+  name                = var.existingStorage.enable ? var.existingStorage.name : data.terraform_remote_state.storage.outputs.blobStorageAccount.name
+  resource_group_name = var.existingStorage.enable ? var.existingStorage.resourceGroupName : data.terraform_remote_state.storage.outputs.resourceGroupName
 }
 
 data "azurerm_storage_share" "studio" {
-  name                 = var.storageAccount.enable ? var.storageAccount.fileShareName : data.terraform_remote_state.storage.outputs.blobStorageAccount.fileShares[0].name
+  name                 = var.existingStorage.enable ? var.existingStorage.fileShareName : data.terraform_remote_state.storage.outputs.blobStorageAccount.fileShares[0].name
   storage_account_name = data.azurerm_storage_account.studio.name
 }
 

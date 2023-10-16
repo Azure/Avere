@@ -36,6 +36,14 @@ variable "resourceGroupName" {
   type = string
 }
 
+variable "activeDirectory" {
+  type = object({
+    enable        = bool
+    domainName    = string
+    adminPassword = string
+  })
+}
+
 variable "privateDns" {
   type = object({
     aRecordName = string
@@ -43,7 +51,7 @@ variable "privateDns" {
   })
 }
 
-variable "computeNetwork" {
+variable "existingNetwork" {
   type = object({
     enable             = bool
     name               = string
@@ -92,20 +100,20 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_virtual_network" "compute" {
-  name                = var.computeNetwork.enable ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
-  resource_group_name = var.computeNetwork.enable ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+data "azurerm_virtual_network" "studio" {
+  name                = var.existingNetwork.enable ? var.existingNetwork.name : data.terraform_remote_state.network.outputs.virtualNetwork.name
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = var.computeNetwork.enable ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
-  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.compute.name
+  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
+  resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.studio.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                = var.computeNetwork.enable ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
-  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
+  name                = var.existingNetwork.enable ? var.existingNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
+  resource_group_name = data.azurerm_virtual_network.studio.resource_group_name
 }
 
 resource "azurerm_resource_group" "scheduler" {

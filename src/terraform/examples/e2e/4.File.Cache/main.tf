@@ -87,7 +87,7 @@ variable "storageTargetsNfsBlob" {
   }))
 }
 
-variable "computeNetwork" {
+variable "existingNetwork" {
   type = object({
     enable             = bool
     name               = string
@@ -138,25 +138,26 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_virtual_network" "compute" {
-  name                = var.computeNetwork.enable ? var.computeNetwork.name : data.terraform_remote_state.network.outputs.computeNetwork.name
-  resource_group_name = var.computeNetwork.enable ? var.computeNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+data "azurerm_virtual_network" "studio" {
+  name                = var.existingNetwork.enable ? var.existingNetwork.name : data.terraform_remote_state.network.outputs.virtualNetwork.name
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 data "azurerm_subnet" "cache" {
-  name                 = var.computeNetwork.enable ? var.computeNetwork.subnetName : data.terraform_remote_state.network.outputs.computeNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].name
-  resource_group_name  = data.azurerm_virtual_network.compute.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.compute.name
+  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].name
+  resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.studio.name
 }
 
 data "azurerm_private_dns_zone" "network" {
-  name                = var.computeNetwork.enable ? var.computeNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
-  resource_group_name = data.azurerm_virtual_network.compute.resource_group_name
+  name                = var.existingNetwork.enable ? var.existingNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
+  resource_group_name = data.azurerm_virtual_network.studio.resource_group_name
 }
 
-resource "azurerm_resource_group" "cache" {
-  name     = var.resourceGroupName
-  location = module.global.regionNames[0]
+resource "azurerm_resource_group" "cache_regions" {
+  count    = length(module.global.regionNames)
+  name     = "${var.resourceGroupName}.${module.global.regionNames[count.index]}"
+  location = module.global.regionNames[count.index]
 }
 
 ############################################################################
@@ -171,8 +172,8 @@ resource "azurerm_private_dns_a_record" "cache" {
   ttl                 = 300
 }
 
-output "resourceGroupName" {
-  value = azurerm_resource_group.cache.name
+output "resourceGroups" {
+  value = azurerm_resource_group.cache_regions
 }
 
 output "cacheName" {

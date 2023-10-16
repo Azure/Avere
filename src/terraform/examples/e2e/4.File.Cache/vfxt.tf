@@ -92,13 +92,13 @@ module "vfxt_controller" {
   admin_password                    = module.global.keyVault.enable ? data.azurerm_key_vault_secret.admin_password[0].value : var.vfxtCache.cluster.adminPassword
   ssh_key_data                      = var.vfxtCache.cluster.sshPublicKey != "" ? var.vfxtCache.cluster.sshPublicKey : null
   # user_assigned_managed_identity_id = data.azurerm_user_assigned_identity.studio.id
-  virtual_network_name              = data.azurerm_virtual_network.compute.name
-  virtual_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
+  virtual_network_name              = data.azurerm_virtual_network.studio.name
+  virtual_network_resource_group    = data.azurerm_virtual_network.studio.resource_group_name
   virtual_network_subnet_name       = data.azurerm_subnet.cache.name
   static_ip_address                 = local.vfxtControllerAddress
   image_id                          = var.vfxtCache.cluster.imageId.controller
   depends_on = [
-    azurerm_resource_group.cache,
+    azurerm_resource_group.cache_regions,
     # azurerm_role_assignment.managed_identity,
     # azurerm_role_assignment.network_cache_contributor,
     # azurerm_role_assignment.network_cache_operator,
@@ -115,8 +115,8 @@ resource "avere_vfxt" "cache" {
   location                        = module.global.regionNames[0]
   node_cache_size                 = var.vfxtCache.cluster.nodeSize
   vfxt_node_count                 = var.vfxtCache.cluster.nodeCount
-  azure_network_name              = data.azurerm_virtual_network.compute.name
-  azure_network_resource_group    = data.azurerm_virtual_network.compute.resource_group_name
+  azure_network_name              = data.azurerm_virtual_network.studio.name
+  azure_network_resource_group    = data.azurerm_virtual_network.studio.resource_group_name
   azure_subnet_name               = data.azurerm_subnet.cache.name
   # user_assigned_managed_identity  = data.azurerm_user_assigned_identity.studio.id
   controller_address              = module.vfxt_controller[count.index].controller_address

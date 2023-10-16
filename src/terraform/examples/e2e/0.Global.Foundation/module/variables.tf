@@ -1,6 +1,7 @@
 variable "regionNames" { # Set Azure region names from "az account list-locations --query [].name"
   default = [
-    "WestUS3"
+    "WestUS3",
+    "EastUS2"
   ]
 }
 
@@ -58,7 +59,7 @@ variable "keyVault" {
 
 variable "monitor" {
   default = {
-    enable = false
+    enable = true
     name   = "azstudio"
   }
 }

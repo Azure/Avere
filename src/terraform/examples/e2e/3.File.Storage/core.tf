@@ -34,7 +34,7 @@ variable "storageAccounts" {
 }
 
 locals {
-  serviceEndpointSubnets = var.storageNetwork.enable ? var.storageNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
+  serviceEndpointSubnets = var.existingNetwork.enable ? var.existingNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
   privateEndpoints = flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpointType in storageAccount.privateEndpointTypes : {
@@ -109,7 +109,7 @@ resource "azurerm_private_endpoint" "storage" {
   name                = "${each.value.storageAccountName}-${each.value.type}"
   resource_group_name = azurerm_resource_group.storage.name
   location            = azurerm_resource_group.storage.location
-  subnet_id           = local.storageSubnet.id
+  subnet_id           = data.azurerm_subnet.storage.id
   private_service_connection {
     name                           = each.value.storageAccountName
     private_connection_resource_id = each.value.storageAccountId

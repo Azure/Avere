@@ -1,5 +1,11 @@
 resourceGroupName = "ArtistAnywhere.Scheduler" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
+activeDirectory = {
+  enable        = true
+  domainName    = "artist.studio"
+  adminPassword = ""
+}
+
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
 #########################################################################
@@ -39,11 +45,6 @@ virtualMachines = [
       passwordAuth = {
         disable = false
       }
-    }
-    activeDirectory = {
-      enable        = false
-      domainName    = ""
-      adminPassword = ""
     }
     extension = {
       initialize = {
@@ -102,11 +103,6 @@ virtualMachines = [
         disable = false
       }
     }
-    activeDirectory = {
-      enable        = true
-      domainName    = "artist.studio"
-      adminPassword = ""
-    }
     extension = {
       initialize = {
         enable   = true
@@ -144,7 +140,7 @@ privateDns = {
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
-computeNetwork = {
+existingNetwork = {
   enable             = false
   name               = ""
   subnetName         = ""

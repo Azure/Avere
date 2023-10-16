@@ -37,14 +37,6 @@ variable "virtualMachines" {
         disable = bool
       })
     })
-    activeDirectory = object({
-      enable           = bool
-      domainName       = string
-      domainServerName = string
-      orgUnitPath      = string
-      adminUsername    = string
-      adminPassword    = string
-    })
     extension = object({
       initialize = object({
         enable     = bool
@@ -76,12 +68,12 @@ locals {
         }
       }
       activeDirectory = {
-        enable           = virtualMachine.activeDirectory.enable
-        domainName       = virtualMachine.activeDirectory.domainName
-        domainServerName = virtualMachine.activeDirectory.domainServerName
-        orgUnitPath      = virtualMachine.activeDirectory.orgUnitPath
-        adminUsername    = virtualMachine.activeDirectory.adminUsername != "" ? virtualMachine.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-        adminPassword    = virtualMachine.activeDirectory.adminPassword != "" ? virtualMachine.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        enable           = var.activeDirectory.enable
+        domainName       = var.activeDirectory.domainName
+        domainServerName = var.activeDirectory.domainServerName
+        orgUnitPath      = var.activeDirectory.orgUnitPath
+        adminUsername    = var.activeDirectory.adminUsername != "" ? var.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        adminPassword    = var.activeDirectory.adminPassword != "" ? var.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
       }
     })
   ]
@@ -157,6 +149,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
+  automatic_upgrade_enabled  = true
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
@@ -179,6 +172,7 @@ resource "azurerm_virtual_machine_extension" "monitor_linux" {
   type                       = "AzureMonitorLinuxAgent"
   publisher                  = "Microsoft.Azure.Monitor"
   type_handler_version       = "1.21"
+  automatic_upgrade_enabled  = true
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
@@ -231,6 +225,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   type                       = "CustomScriptExtension"
   publisher                  = "Microsoft.Compute"
   type_handler_version       = "1.10"
+  automatic_upgrade_enabled  = true
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
@@ -253,6 +248,7 @@ resource "azurerm_virtual_machine_extension" "monitor_windows" {
   type                       = "AzureMonitorWindowsAgent"
   publisher                  = "Microsoft.Azure.Monitor"
   type_handler_version       = "1.7"
+  automatic_upgrade_enabled  = true
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.workstation.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({

@@ -2,7 +2,7 @@
 # Virtual Network (https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) #
 #################################################################################################
 
-variable "computeNetwork" {
+variable "virtualNetwork" {
   type = object({
     name         = string
     addressSpace = list(string)
@@ -20,33 +20,10 @@ variable "computeNetwork" {
       storage     = number
       cache       = number
     })
-    enableNatGateway = bool
   })
 }
 
-variable "storageNetwork" {
-  type = object({
-    enable       = bool
-    name         = string
-    addressSpace = list(string)
-    dnsAddresses = list(string)
-    subnets = list(object({
-      name                 = string
-      addressSpace         = list(string)
-      serviceEndpoints     = list(string)
-      serviceDelegation    = string
-      denyOutboundInternet = bool
-    }))
-    subnetIndex = object({
-      primary     = number
-      secondary   = number
-      netAppFiles = number
-    })
-    enableNatGateway = bool
-  })
-}
-
-variable "virtualNetwork" {
+variable "existingNetwork" {
   type = object({
     enable            = bool
     name              = string
@@ -56,49 +33,17 @@ variable "virtualNetwork" {
 }
 
 locals {
-  computeNetworks = [
-    for regionName in module.global.regionNames : merge(var.computeNetwork, {
-      key               = "${regionName}-${var.computeNetwork.name}"
+  virtualNetwork = local.virtualNetworks[0]
+  virtualNetworks = [
+    for regionName in module.global.regionNames : merge(var.virtualNetwork, {
+      id                = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.resourceGroupName}.${regionName}/providers/Microsoft.Network/virtualNetworks/${var.virtualNetwork.name}-${regionName}"
+      key               = "${regionName}-${var.virtualNetwork.name}"
+      name              = "${var.virtualNetwork.name}-${regionName}"
       regionName        = regionName
-      resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${regionName}" : var.resourceGroupName}"
-      resourceGroupName = length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${regionName}" : var.resourceGroupName
+      resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.resourceGroupName}.${regionName}"
+      resourceGroupName = "${var.resourceGroupName}.${regionName}"
     })
   ]
-  storageNetwork = merge(var.storageNetwork, {
-    key               = "${module.global.regionNames[0]}-${var.storageNetwork.name}"
-    regionName        = module.global.regionNames[0]
-    resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.resourceGroupName}"
-    resourceGroupName = var.resourceGroupName
-  })
-  computeNetworksSubnets = flatten([
-    for computeNetwork in local.computeNetworks : [
-      for subnet in computeNetwork.subnets : merge(subnet, {
-        key                = "${computeNetwork.key}-${subnet.name}"
-        regionName         = computeNetwork.regionName
-        resourceGroupId    = computeNetwork.resourceGroupId
-        resourceGroupName  = computeNetwork.resourceGroupName
-        virtualNetworkName = computeNetwork.name
-      }) if subnet.name != "GatewaySubnet"
-    ]
-  ])
-  computeNetworkStorageSubnet = merge(local.computeNetworks[0].subnets[var.computeNetwork.subnetIndex.storage], {
-    key = "${local.computeNetworks[0].key}-${local.computeNetworks[0].subnets[var.computeNetwork.subnetIndex.storage].name}"
-    regionName         = local.computeNetworks[0].regionName
-    resourceGroupId    = local.computeNetworks[0].resourceGroupId
-    resourceGroupName  = local.computeNetworks[0].resourceGroupName
-    virtualNetworkName = local.computeNetworks[0].name
-  })
-  storageNetworkSubnets = [
-    for subnet in local.storageNetwork.subnets : merge(subnet, {
-      key                = "${local.storageNetwork.key}-${subnet.name}"
-      regionName         = local.storageNetwork.regionName
-      resourceGroupId    = local.storageNetwork.resourceGroupId
-      resourceGroupName  = local.storageNetwork.resourceGroupName
-      virtualNetworkName = local.storageNetwork.name
-    }) if subnet.name != "GatewaySubnet" && local.storageNetwork.enable
-  ]
-  storageSubnets  = setunion(local.storageNetworkSubnets, [local.computeNetworkStorageSubnet])
-  virtualNetworks = local.storageNetwork.enable ? merge(local.storageNetwork, local.computeNetworks) : local.computeNetworks
   virtualNetworksSubnets = flatten([
     for virtualNetwork in local.virtualNetworks : [
       for subnet in virtualNetwork.subnets : merge(subnet, {
@@ -106,18 +51,31 @@ locals {
         regionName         = virtualNetwork.regionName
         resourceGroupId    = virtualNetwork.resourceGroupId
         resourceGroupName  = virtualNetwork.resourceGroupName
+        virtualNetworkId   = virtualNetwork.id
+        virtualNetworkKey  = virtualNetwork.key
         virtualNetworkName = virtualNetwork.name
       })
     ]
   ])
+  virtualNetworksSubnetStorage = [
+    for virtualNetwork in local.virtualNetworks : merge(virtualNetwork.subnets[var.virtualNetwork.subnetIndex.storage], {
+      key                = "${virtualNetwork.key}-${virtualNetwork.subnets[var.virtualNetwork.subnetIndex.storage].name}"
+      regionName         = virtualNetwork.regionName
+      resourceGroupId    = virtualNetwork.resourceGroupId
+      resourceGroupName  = virtualNetwork.resourceGroupName
+      virtualNetworkId   = virtualNetwork.id
+      virtualNetworkKey  = virtualNetwork.key
+      virtualNetworkName = virtualNetwork.name
+    })
+  ]
   virtualNetworksSubnetsSecurity = [
-    for subnet in local.virtualNetworksSubnets : subnet if subnet.name != "GatewaySubnet" && subnet.name != "AzureBastionSubnet" && subnet.serviceDelegation == ""
+    for subnet in local.virtualNetworksSubnets : subnet if subnet.name != "GatewaySubnet" && subnet.name != "AzureBastionSubnet"
   ]
 }
 
 resource "azurerm_virtual_network" "studio" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.virtualNetwork.name == ""
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if !var.existingNetwork.enable
   }
   name                = each.value.name
   resource_group_name = each.value.resourceGroupName
@@ -131,7 +89,7 @@ resource "azurerm_virtual_network" "studio" {
 
 resource "azurerm_subnet" "studio" {
   for_each = {
-    for subnet in local.virtualNetworksSubnets : subnet.key => subnet if var.virtualNetwork.name == ""
+    for subnet in local.virtualNetworksSubnets : subnet.key => subnet if !var.existingNetwork.enable
   }
   name                                          = each.value.name
   resource_group_name                           = each.value.resourceGroupName
@@ -156,7 +114,7 @@ resource "azurerm_subnet" "studio" {
 
 resource "azurerm_network_security_group" "studio" {
   for_each = {
-    for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if var.virtualNetwork.name == ""
+    for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if !var.existingNetwork.enable
   }
   name                = "${each.value.virtualNetworkName}-${each.value.name}"
   resource_group_name = each.value.resourceGroupName
@@ -278,9 +236,9 @@ resource "azurerm_network_security_group" "studio" {
 
 resource "azurerm_subnet_network_security_group_association" "studio" {
   for_each = {
-    for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if var.virtualNetwork.name == ""
+    for subnet in local.virtualNetworksSubnetsSecurity : subnet.key => subnet if !var.existingNetwork.enable
   }
-  subnet_id                 = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+  subnet_id                 = "${each.value.virtualNetworkId}/subnets/${each.value.name}"
   network_security_group_id = "${each.value.resourceGroupId}/providers/Microsoft.Network/networkSecurityGroups/${each.value.virtualNetworkName}-${each.value.name}"
   depends_on = [
     azurerm_subnet.studio,
@@ -288,16 +246,15 @@ resource "azurerm_subnet_network_security_group_association" "studio" {
   ]
 }
 
-output "computeNetwork" {
-  value = var.virtualNetwork.enable ? null : local.computeNetworks[0]
-}
-
-output "storageNetwork" {
-  value = var.virtualNetwork.enable ? null : local.storageNetwork
+output "virtualNetwork" {
+  value = {
+    name              = var.existingNetwork.enable ? var.existingNetwork.name : local.virtualNetwork.name
+    resourceGroupName = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : local.virtualNetwork.resourceGroupName
+  }
 }
 
 output "storageEndpointSubnets" {
   value = [
-    for subnet in local.virtualNetworksSubnets : subnet if contains(subnet.serviceEndpoints, "Microsoft.Storage") && var.virtualNetwork.name == ""
+    for subnet in local.virtualNetworksSubnets : subnet if contains(subnet.serviceEndpoints, "Microsoft.Storage") && !var.existingNetwork.enable
   ]
 }

@@ -46,14 +46,6 @@ variable "virtualMachineScaleSets" {
         disable = bool
       })
     })
-    activeDirectory = object({
-      enable           = bool
-      domainName       = string
-      domainServerName = string
-      orgUnitPath      = string
-      adminUsername    = string
-      adminPassword    = string
-    })
     extension = object({
       initialize = object({
         enable     = bool
@@ -94,12 +86,12 @@ locals {
         }
       }
       activeDirectory = {
-        enable           = virtualMachineScaleSet.activeDirectory.enable
-        domainName       = virtualMachineScaleSet.activeDirectory.domainName
-        domainServerName = virtualMachineScaleSet.activeDirectory.domainServerName
-        orgUnitPath      = virtualMachineScaleSet.activeDirectory.orgUnitPath
-        adminUsername    = virtualMachineScaleSet.activeDirectory.adminUsername != "" ? virtualMachineScaleSet.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
-        adminPassword    = virtualMachineScaleSet.activeDirectory.adminPassword != "" ? virtualMachineScaleSet.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
+        enable           = var.activeDirectory.enable
+        domainName       = var.activeDirectory.domainName
+        domainServerName = var.activeDirectory.domainServerName
+        orgUnitPath      = var.activeDirectory.orgUnitPath
+        adminUsername    = var.activeDirectory.adminUsername != "" ? var.activeDirectory.adminUsername : try(data.azurerm_key_vault_secret.admin_username[0].value, "")
+        adminPassword    = var.activeDirectory.adminPassword != "" ? var.activeDirectory.adminPassword : try(data.azurerm_key_vault_secret.admin_password[0].value, "")
       }
     })
   ]
@@ -172,6 +164,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type                       = "CustomScript"
       publisher                  = "Microsoft.Azure.Extensions"
       type_handler_version       = "2.1"
+      automatic_upgrade_enabled  = true
       auto_upgrade_minor_version = true
       settings = jsonencode({
         script = "${base64encode(
@@ -189,6 +182,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type                       = "ApplicationHealthLinux"
       publisher                  = "Microsoft.ManagedServices"
       type_handler_version       = "1.0"
+      automatic_upgrade_enabled  = true
       auto_upgrade_minor_version = true
       settings = jsonencode({
         protocol    = each.value.extension.health.protocol
@@ -204,6 +198,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type                       = "AzureMonitorLinuxAgent"
       publisher                  = "Microsoft.Azure.Monitor"
       type_handler_version       = "1.21"
+      automatic_upgrade_enabled  = true
       auto_upgrade_minor_version = true
       settings = jsonencode({
         workspaceId = data.azurerm_log_analytics_workspace.monitor[0].workspace_id
@@ -274,6 +269,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type                       = "CustomScriptExtension"
       publisher                  = "Microsoft.Compute"
       type_handler_version       = "1.10"
+      automatic_upgrade_enabled  = true
       auto_upgrade_minor_version = true
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(
@@ -291,6 +287,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type                       = "ApplicationHealthWindows"
       publisher                  = "Microsoft.ManagedServices"
       type_handler_version       = "1.0"
+      automatic_upgrade_enabled  = true
       auto_upgrade_minor_version = true
       settings = jsonencode({
         protocol    = each.value.extension.health.protocol
@@ -306,6 +303,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type                       = "AzureMonitorWindowsAgent"
       publisher                  = "Microsoft.Azure.Monitor"
       type_handler_version       = "1.7"
+      automatic_upgrade_enabled  = true
       auto_upgrade_minor_version = true
       settings = jsonencode({
         workspaceId = data.azurerm_log_analytics_workspace.monitor[0].workspace_id

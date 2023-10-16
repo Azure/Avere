@@ -44,7 +44,8 @@ computeGallery = {
 
 imageTemplates = [
   {
-    name = "LnxStorageCPU"
+    name       = "LnxStorageCPU"
+    regionName = ""
     source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -61,7 +62,8 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxStorageGPU"
+    name       = "LnxStorageGPU"
+    regionName = ""
     source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -78,7 +80,8 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxScheduler"
+    name       = "LnxScheduler"
+    regionName = ""
     source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -95,7 +98,8 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxFarmCPU"
+    name       = "LnxFarmCPU"
+    regionName = ""
     source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -116,7 +120,8 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxFarmGPU"
+    name       = "LnxFarmGPU"
+    regionName = ""
     source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -137,7 +142,8 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxArtistNVIDIA"
+    name       = "LnxArtistNVIDIA"
+    regionName = ""
     source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -158,7 +164,8 @@ imageTemplates = [
     }
   },
   {
-    name = "LnxArtistAMD"
+    name       = "LnxArtistAMD"
+    regionName = "EastUS2"
     source = {
       definitionName = "Linux"
       inputVersion   = "Latest"
@@ -179,7 +186,8 @@ imageTemplates = [
     }
   },
   {
-    name = "WinScheduler"
+    name       = "WinScheduler"
+    regionName = ""
     source = {
       definitionName = "WinServer"
       inputVersion   = "Latest"
@@ -196,7 +204,8 @@ imageTemplates = [
     }
   },
   {
-    name = "WinFarmCPU"
+    name       = "WinFarmCPU"
+    regionName = ""
     source = {
       definitionName = "WinFarm"
       inputVersion   = "Latest"
@@ -216,7 +225,8 @@ imageTemplates = [
     }
   },
   {
-    name = "WinFarmGPU"
+    name       = "WinFarmGPU"
+    regionName = ""
     source = {
       definitionName = "WinFarm"
       inputVersion   = "Latest"
@@ -236,7 +246,8 @@ imageTemplates = [
    }
   },
   {
-    name = "WinArtistNVIDIA"
+    name       = "WinArtistNVIDIA"
+    regionName = ""
     source = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"
@@ -256,7 +267,8 @@ imageTemplates = [
     }
   },
   {
-    name = "WinArtistAMD"
+    name       = "WinArtistAMD"
+    regionName = "EastUS2"
     source = {
       definitionName = "WinArtist"
       inputVersion   = "Latest"

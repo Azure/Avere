@@ -10,7 +10,7 @@ variable "vpnGateway" {
     generation         = string
     sharedKey          = string
     enableBgp          = bool
-    enableVnet2Vnet    = bool
+    enablePerRegion    = bool
     enableActiveActive = bool
     pointToSiteClient = object({
       addressSpace = list(string)
@@ -37,31 +37,29 @@ variable "vpnGatewayLocal" {
 }
 
 locals {
-  virtualGatewayNetworks = var.virtualNetwork.enable ? [
-    merge(var.virtualNetwork, {
-      key             = "${var.virtualNetwork.regionName}-${var.virtualNetwork.name}"
-      resourceGroupId = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.virtualNetwork.resourceGroupName}"
+  vpnGatewayNetworks = distinct(var.existingNetwork.enable ? [
+    for i in range(length(local.virtualNetworks)) : merge(var.existingNetwork, {
+      key              = "${var.existingNetwork.regionName}-${var.existingNetwork.name}"
+      resourceGroupId  = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.existingNetwork.resourceGroupName}"
+      virtualNetworkId = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.existingNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.existingNetwork.name}"
     })
   ] : [
-    for virtualNetwork in var.vpnGateway.enableVnet2Vnet ? local.virtualNetworks : [local.virtualNetworks[0]] : merge({}, {
-      key               = "${virtualNetwork.regionName}-${virtualNetwork.name}"
+    for virtualNetwork in var.vpnGateway.enablePerRegion ? local.virtualNetworks : [local.virtualNetwork] : merge({}, {
+      key               = virtualNetwork.key
       name              = virtualNetwork.name
       regionName        = virtualNetwork.regionName
-      resourceGroupId   = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${virtualNetwork.resourceGroupName}"
+      resourceGroupId   = virtualNetwork.resourceGroupId
       resourceGroupName = virtualNetwork.resourceGroupName
+      virtualNetworkId  = virtualNetwork.id
     })
-  ]
-  virtualGatewayNetworkNames = [
-    for virtualGatewayNetwork in local.virtualGatewayNetworks : virtualGatewayNetwork.name
-  ]
-  virtualGatewayActiveActive = var.vpnGateway.enable && var.vpnGateway.enableActiveActive
+  ])
 }
 
 resource "azurerm_virtual_network_gateway" "vpn" {
   for_each = {
-    for virtualNetwork in local.virtualGatewayNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable
+    for virtualNetwork in local.vpnGatewayNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable && !var.existingNetwork.enable
   }
-  name                = "${each.value.name}-Gateway"
+  name                = "Gateway"
   resource_group_name = each.value.resourceGroupName
   location            = each.value.regionName
   type                = "Vpn"
@@ -69,18 +67,18 @@ resource "azurerm_virtual_network_gateway" "vpn" {
   vpn_type            = var.vpnGateway.type
   generation          = var.vpnGateway.generation
   enable_bgp          = var.vpnGateway.enableBgp
-  active_active       = local.virtualGatewayActiveActive
+  active_active       = var.vpnGateway.enableActiveActive
   ip_configuration {
     name                 = "ipConfig1"
-    public_ip_address_id = azurerm_public_ip.vpn_gateway_1[0].id
-    subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
+    public_ip_address_id = azurerm_public_ip.vpn_gateway_1[each.value.key].id
+    subnet_id            = "${each.value.virtualNetworkId}/subnets/GatewaySubnet"
   }
   dynamic ip_configuration {
-    for_each = local.virtualGatewayActiveActive ? [1] : []
+    for_each = var.vpnGateway.enableActiveActive ? [1] : []
     content {
       name                 = "ipConfig2"
       public_ip_address_id = azurerm_public_ip.vpn_gateway_2[0].id
-      subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/GatewaySubnet"
+      subnet_id            = "${each.value.id}/subnets/GatewaySubnet"
     }
   }
   dynamic vpn_client_configuration {
@@ -100,43 +98,17 @@ resource "azurerm_virtual_network_gateway" "vpn" {
   ]
 }
 
-resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_up" {
-  count                           = var.vpnGateway.enable && var.vpnGateway.enableVnet2Vnet && length(local.virtualGatewayNetworks) > 1 ? length(local.virtualGatewayNetworks) - 1 : 0
-  name                            = "${local.virtualGatewayNetworks[count.index].name}-${local.virtualGatewayNetworks[count.index + 1].name}"
-  resource_group_name             = azurerm_resource_group.network[0].name
-  location                        = local.virtualGatewayNetworks[count.index].regionName
-  type                            = "Vnet2Vnet"
-  virtual_network_gateway_id      = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index].name}"
-  peer_virtual_network_gateway_id = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index + 1].name}"
-  shared_key                      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
-  depends_on = [
-    azurerm_virtual_network_gateway.vpn
-  ]
-}
-
-resource "azurerm_virtual_network_gateway_connection" "vnet_to_vnet_down" {
-  count                           = var.vpnGateway.enable && var.vpnGateway.enableVnet2Vnet && length(local.virtualGatewayNetworks) > 1 ? length(local.virtualGatewayNetworks) - 1 : 0
-  name                            = "${local.virtualGatewayNetworks[count.index + 1].name}-${local.virtualGatewayNetworks[count.index].name}"
-  resource_group_name             = azurerm_resource_group.network[0].name
-  location                        = local.virtualGatewayNetworks[count.index + 1].regionName
-  type                            = "Vnet2Vnet"
-  virtual_network_gateway_id      = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index + 1].name}"
-  peer_virtual_network_gateway_id = "${azurerm_resource_group.network[0].id}/providers/Microsoft.Network/virtualNetworkGateways/${local.virtualGatewayNetworks[count.index].name}"
-  shared_key                      = module.global.keyVault.enable ? data.azurerm_key_vault_secret.gateway_connection[0].value : var.vpnGateway.sharedKey
-  depends_on = [
-    azurerm_virtual_network_gateway.vpn
-  ]
-}
-
 ##########################################################################################################################
 # Local Network Gateway (VPN) (https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#lng) #
 ##########################################################################################################################
 
 resource "azurerm_local_network_gateway" "vpn" {
-  count               = var.vpnGateway.enable && var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "" ? 1 : 0
-  name                = local.computeNetworks[0].name
-  resource_group_name = local.computeNetworks[0].resourceGroupName
-  location            = local.computeNetworks[0].regionName
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable && !var.existingNetwork.enable && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "")
+  }
+  name                = each.value.name
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
   gateway_fqdn        = var.vpnGatewayLocal.address == "" ? var.vpnGatewayLocal.fqdn : null
   gateway_address     = var.vpnGatewayLocal.fqdn == "" ? var.vpnGatewayLocal.address : null
   address_space       = var.vpnGatewayLocal.addressSpace
@@ -154,13 +126,15 @@ resource "azurerm_local_network_gateway" "vpn" {
 }
 
 resource "azurerm_virtual_network_gateway_connection" "site_to_site" {
-  count                      = var.vpnGateway.enable && var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "" ? 1 : 0
-  name                       = local.computeNetworks[0].name
-  resource_group_name        = azurerm_resource_group.network[0].name
-  location                   = local.computeNetworks[0].regionName
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable && !var.existingNetwork.enable && (var.vpnGatewayLocal.fqdn != "" || var.vpnGatewayLocal.address != "")
+  }
+  name                       = each.value.name
+  resource_group_name        = each.value.resourceGroupName
+  location                   = each.value.regionName
   type                       = "IPsec"
-  virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[local.virtualGatewayNetworks[0].key].id
-  local_network_gateway_id   = azurerm_local_network_gateway.vpn[count.index].id
+  virtual_network_gateway_id = azurerm_virtual_network_gateway.vpn[each.value.key].id
+  local_network_gateway_id   = azurerm_local_network_gateway.vpn[each.value.key].id
   shared_key                 = var.vpnGateway.sharedKey != "" ? var.vpnGateway.sharedKey : data.azurerm_key_vault_secret.gateway_connection[0].value
   enable_bgp                 = var.vpnGatewayLocal.bgp.enable
 }

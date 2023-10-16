@@ -53,11 +53,20 @@ data "azurerm_storage_account" "studio" {
 }
 
 resource "azurerm_resource_group" "network" {
-  count    = var.virtualNetwork.enable ? 1 : length(module.global.regionNames)
-  name     = length(module.global.regionNames) > 1 ? "${var.resourceGroupName}.${module.global.regionNames[count.index]}" : var.resourceGroupName
+  name     = var.resourceGroupName
+  location = module.global.regionNames[0]
+}
+
+resource "azurerm_resource_group" "network_regions" {
+  count    = length(module.global.regionNames)
+  name     = "${var.resourceGroupName}.${module.global.regionNames[count.index]}"
   location = module.global.regionNames[count.index]
 }
 
 output "resourceGroupName" {
-  value = var.virtualNetwork.enable ? "" : azurerm_resource_group.network[0].name
+  value = azurerm_resource_group.network.name
+}
+
+output "resourceGroups" {
+  value = azurerm_resource_group.network_regions
 }

@@ -1,5 +1,14 @@
 resourceGroupName = "ArtistAnywhere.Workstation" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
+activeDirectory = {
+  enable           = true
+  domainName       = "artist.studio"
+  domainServerName = "WinScheduler"
+  orgUnitPath      = ""
+  adminUsername    = ""
+  adminPassword    = ""
+}
+
 #########################################################################
 # Virtual Machines (https://learn.microsoft.com/azure/virtual-machines) #
 #########################################################################
@@ -38,14 +47,6 @@ virtualMachines = [
       passwordAuth = {
         disable = false
       }
-    }
-    activeDirectory = {
-      enable           = false
-      domainName       = ""
-      domainServerName = ""
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -114,14 +115,6 @@ virtualMachines = [
         disable = false
       }
     }
-    activeDirectory = {
-      enable           = false
-      domainName       = ""
-      domainServerName = ""
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
-    }
     extension = {
       initialize = {
         enable   = true
@@ -188,14 +181,6 @@ virtualMachines = [
       passwordAuth = {
         disable = false
       }
-    }
-    activeDirectory = {
-      enable           = false
-      domainName       = "artist.studio"
-      domainServerName = "WinScheduler"
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -264,14 +249,6 @@ virtualMachines = [
         disable = false
       }
     }
-    activeDirectory = {
-      enable           = false
-      domainName       = "artist.studio"
-      domainServerName = "WinScheduler"
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
-    }
     extension = {
       initialize = {
         enable   = true
@@ -328,7 +305,7 @@ trafficManager = {
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
-computeNetwork = {
+existingNetwork = {
   enable            = false
   name              = ""
   subnetName        = ""

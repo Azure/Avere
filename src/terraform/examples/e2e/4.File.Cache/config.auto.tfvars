@@ -102,7 +102,7 @@ storageTargetsNfsBlob = [
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
-computeNetwork = {
+existingNetwork = {
   enable             = false
   name               = ""
   subnetName         = ""

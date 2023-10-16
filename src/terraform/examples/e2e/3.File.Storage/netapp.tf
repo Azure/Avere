@@ -31,13 +31,6 @@ variable "netAppAccount" {
   })
 }
 
-data "azurerm_subnet" "storage_netapp" {
-  count                = var.storageNetwork.enable || data.terraform_remote_state.network.outputs.storageNetwork.enable ? 1 : 0
-  name                 = var.storageNetwork.enable ? var.storageNetwork.subnetNamePrimary : data.terraform_remote_state.network.outputs.storageNetwork.subnets[data.terraform_remote_state.network.outputs.storageNetwork.subnetIndex.netAppFiles].name
-  resource_group_name  = data.azurerm_virtual_network.storage[0].resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.storage[0].name
-}
-
 locals {
   netAppVolumes = flatten([
     for capacityPool in var.netAppAccount.capacityPools : [
@@ -89,7 +82,7 @@ resource "azurerm_netapp_volume" "storage" {
   protocols           = each.value.protocols
   pool_name           = each.value.capacityPoolName
   account_name        = var.netAppAccount.name
-  subnet_id           = data.azurerm_subnet.storage_netapp[0].id
+  subnet_id           = data.azurerm_subnet.storage.id
   dynamic export_policy_rule {
     for_each = each.value.exportPolicies
     content {

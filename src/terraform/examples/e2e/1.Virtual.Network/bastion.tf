@@ -17,9 +17,9 @@ variable "bastion" {
 
 resource "azurerm_network_security_group" "bastion" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && var.virtualNetwork.name == ""
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && !var.existingNetwork.enable
   }
-  name                = "${each.value.name}-Bastion"
+  name                = "Bastion"
   resource_group_name = each.value.resourceGroupName
   location            = each.value.regionName
   security_rule {
@@ -126,18 +126,18 @@ resource "azurerm_network_security_group" "bastion" {
 
 resource "azurerm_subnet_network_security_group_association" "bastion" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && var.virtualNetwork.name == ""
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && !var.existingNetwork.enable
   }
-  subnet_id                 = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/AzureBastionSubnet"
+  subnet_id                 = "${each.value.id}/subnets/AzureBastionSubnet"
   network_security_group_id = azurerm_network_security_group.bastion[each.value.key].id
   depends_on = [
     azurerm_subnet.studio
   ]
 }
 
-resource "azurerm_public_ip" "bastion_address" {
+resource "azurerm_public_ip" "bastion" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && var.virtualNetwork.name == ""
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && !var.existingNetwork.enable
   }
   name                = "Bastion"
   resource_group_name = each.value.resourceGroupName
@@ -149,9 +149,9 @@ resource "azurerm_public_ip" "bastion_address" {
   ]
 }
 
-resource "azurerm_bastion_host" "compute" {
+resource "azurerm_bastion_host" "studio" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && var.virtualNetwork.name == ""
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.bastion.enable && !var.existingNetwork.enable
   }
   name                   = "Bastion"
   resource_group_name    = each.value.resourceGroupName
@@ -165,10 +165,10 @@ resource "azurerm_bastion_host" "compute" {
   shareable_link_enabled = var.bastion.enableShareableLink
   ip_configuration {
     name                 = "ipConfig"
-    public_ip_address_id = azurerm_public_ip.bastion_address[each.value.key].id
-    subnet_id            = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.name}/subnets/AzureBastionSubnet"
+    public_ip_address_id = azurerm_public_ip.bastion[each.value.key].id
+    subnet_id            = "${each.value.id}/subnets/AzureBastionSubnet"
   }
   depends_on = [
-    azurerm_virtual_network.studio
+    azurerm_subnet.studio
   ]
 }

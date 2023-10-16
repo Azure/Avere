@@ -9,6 +9,7 @@ variable "functionApp" {
     servicePlan = object({
       computeTier = string
       workerCount = number
+      alwaysOn    = bool
     })
     monitor = object({
       workspace = object({
@@ -21,45 +22,6 @@ variable "functionApp" {
     })
   })
 }
-
-# resource "azurerm_private_dns_zone" "function_app" {
-#   count               = var.functionApp.enable ? 1 : 0
-#   name                = "privatelink.azurewebsites.net"
-#   resource_group_name = azurerm_resource_group.farm.name
-# }
-
-# resource "azurerm_private_dns_zone_virtual_network_link" "function_app" {
-#   count                 = var.functionApp.enable ? 1 : 0
-#   name                  = "${var.functionApp.name}-functions"
-#   resource_group_name   = azurerm_resource_group.farm.name
-#   private_dns_zone_name = azurerm_private_dns_zone.function_app[0].name
-#   virtual_network_id    = data.azurerm_virtual_network.compute.id
-# }
-
-# resource "azurerm_private_endpoint" "function_app" {
-#   count               = var.functionApp.enable ? 1 : 0
-#   name                = "${var.functionApp.name}-functions"
-#   resource_group_name = azurerm_resource_group.farm.name
-#   location            = azurerm_resource_group.farm.location
-#   subnet_id           = data.azurerm_subnet.farm.id
-#   private_service_connection {
-#     name                           = azurerm_windows_function_app.studio[0].name
-#     private_connection_resource_id = azurerm_windows_function_app.studio[0].id
-#     is_manual_connection           = false
-#     subresource_names = [
-#       "sites"
-#     ]
-#   }
-#   private_dns_zone_group {
-#     name = azurerm_windows_function_app.studio[0].name
-#     private_dns_zone_ids = [
-#       azurerm_private_dns_zone.function_app[0].id
-#     ]
-#   }
-#   depends_on = [
-#     azurerm_private_dns_zone_virtual_network_link.function_app
-#   ]
-# }
 
 resource "azurerm_log_analytics_workspace" "studio" {
   count                      = var.functionApp.enable ? 1 : 0
@@ -95,18 +57,17 @@ resource "azurerm_service_plan" "studio" {
 }
 
 resource "azurerm_windows_function_app" "studio" {
-  count                           = var.functionApp.enable ? 1 : 0
-  name                            = var.functionApp.name
-  resource_group_name             = azurerm_resource_group.farm.name
-  location                        = azurerm_resource_group.farm.location
-  service_plan_id                 = azurerm_service_plan.studio[0].id
-  key_vault_reference_identity_id = data.azurerm_user_assigned_identity.studio.id
-  #virtual_network_subnet_id       = data.azurerm_subnet.farm.id
-  storage_account_name            = data.azurerm_storage_account.studio.name
-  storage_uses_managed_identity   = true
-  #public_network_access_enabled   = false
-  builtin_logging_enabled         = true
-  https_only                      = true
+  count                         = var.functionApp.enable ? 1 : 0
+  name                          = var.functionApp.name
+  resource_group_name           = azurerm_resource_group.farm.name
+  location                      = azurerm_resource_group.farm.location
+  service_plan_id               = azurerm_service_plan.studio[0].id
+  virtual_network_subnet_id     = data.azurerm_subnet.farm.id
+  storage_account_name          = data.azurerm_storage_account.studio.name
+  storage_uses_managed_identity = true
+  public_network_access_enabled = false
+  builtin_logging_enabled       = true
+  https_only                    = true
   identity {
     type = "UserAssigned"
     identity_ids = [
@@ -121,9 +82,13 @@ resource "azurerm_windows_function_app" "studio" {
     type         = "AzureFiles"
   }
   site_config {
+    always_on                              = var.functionApp.servicePlan.alwaysOn
     application_insights_connection_string = azurerm_application_insights.studio[0].connection_string
     application_insights_key               = azurerm_application_insights.studio[0].instrumentation_key
     health_check_path                      = "/"
+    use_32_bit_worker                      = false
+    http2_enabled                          = true
+    vnet_route_all_enabled                 = true
     cors {
       allowed_origins = [
         "https://portal.azure.com"

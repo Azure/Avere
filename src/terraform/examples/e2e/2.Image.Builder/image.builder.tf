@@ -4,7 +4,8 @@
 
 variable "imageTemplates" {
   type = list(object({
-    name = string
+    name       = string
+    regionName = string
     source = object({
       definitionName = string
       inputVersion   = string
@@ -61,7 +62,7 @@ resource "azapi_resource" "image_builder" {
   name      = each.value.name
   type      = "Microsoft.VirtualMachineImages/imageTemplates@2022-07-01"
   parent_id = azurerm_resource_group.image.id
-  location  = azurerm_resource_group.image.location
+  location  = each.value.regionName != "" ? each.value.regionName : azurerm_resource_group.image.location
   identity {
     type = "UserAssigned"
     identity_ids = [

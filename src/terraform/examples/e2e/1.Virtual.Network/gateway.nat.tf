@@ -2,64 +2,48 @@
 # Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
 ##########################################################################################################################
 
-resource "azurerm_nat_gateway" "compute" {
-  count               = var.computeNetwork.enableNatGateway ? 1 : 0
-  name                = "${local.computeNetworks[0].name}-Gateway"
-  resource_group_name = local.computeNetworks[0].resourceGroupName
-  location            = local.computeNetworks[0].regionName
-  sku_name            = "Standard"
+variable "natGateway" {
+  type = object({
+    enable = bool
+  })
 }
 
-resource "azurerm_nat_gateway" "storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
-  name                = "${local.storageNetwork.name}-Gateway"
-  resource_group_name = local.storageNetwork.resourceGroupName
-  location            = local.storageNetwork.regionName
-  sku_name            = "Standard"
-}
-
-# resource "azurerm_nat_gateway_public_ip_prefix_association" "compute" {
-#   count               = var.computeNetwork.enableNatGateway ? 1 : 0
-#   nat_gateway_id      = azurerm_nat_gateway.compute[0].id
-#   public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway_compute[0].id
-# }
-
-# resource "azurerm_nat_gateway_public_ip_prefix_association" "storage" {
-#   count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
-#   nat_gateway_id      = azurerm_nat_gateway.storage[0].id
-#   public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway_storage[0].id
-# }
-
-resource "azurerm_nat_gateway_public_ip_association" "compute" {
-  count                = var.computeNetwork.enableNatGateway ? 1 : 0
-  nat_gateway_id       = azurerm_nat_gateway.compute[0].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway_compute[0].id
-}
-
-resource "azurerm_nat_gateway_public_ip_association" "storage" {
-  count                = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
-  nat_gateway_id       = azurerm_nat_gateway.storage[0].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway_storage[0].id
-}
-
-resource "azurerm_subnet_nat_gateway_association" "compute" {
+resource "azurerm_nat_gateway" "studio" {
   for_each = {
-    for subnet in local.computeNetworksSubnets : subnet.key => subnet if var.computeNetwork.enableNatGateway
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
   }
-  nat_gateway_id = azurerm_nat_gateway.compute[0].id
-  subnet_id      = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+  name                = "Gateway"
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
+  sku_name            = "Standard"
   depends_on = [
-    azurerm_virtual_network.studio
+    azurerm_resource_group.network_regions
   ]
 }
 
-resource "azurerm_subnet_nat_gateway_association" "storage" {
+# resource "azurerm_nat_gateway_public_ip_prefix_association" "studio" {
+#   for_each = {
+#     for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
+#   }
+#   nat_gateway_id      = azurerm_nat_gateway.studio[each.value.key].id
+#   public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway[each.value.key].id
+# }
+
+resource "azurerm_nat_gateway_public_ip_association" "studio" {
   for_each = {
-    for subnet in local.storageNetworkSubnets : subnet.key => subnet if var.storageNetwork.enableNatGateway
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
   }
-  nat_gateway_id = azurerm_nat_gateway.storage[0].id
-  subnet_id      = "${each.value.resourceGroupId}/providers/Microsoft.Network/virtualNetworks/${each.value.virtualNetworkName}/subnets/${each.value.name}"
+  nat_gateway_id       = azurerm_nat_gateway.studio[each.value.key].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway[each.value.key].id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "studio" {
+  for_each = {
+    for subnet in local.virtualNetworksSubnets : subnet.key => subnet if var.natGateway.enable && subnet.name != "GatewaySubnet" && !var.existingNetwork.enable
+  }
+  nat_gateway_id = azurerm_nat_gateway.studio[each.value.virtualNetworkKey].id
+  subnet_id      = "${each.value.virtualNetworkId}/subnets/${each.value.name}"
   depends_on = [
-    azurerm_virtual_network.studio
+    azurerm_subnet.studio
   ]
 }

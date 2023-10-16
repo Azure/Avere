@@ -1,5 +1,14 @@
 resourceGroupName = "ArtistAnywhere.Farm" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
+activeDirectory = {
+  enable           = true
+  domainName       = "artist.studio"
+  domainServerName = "WinScheduler"
+  orgUnitPath      = ""
+  adminUsername    = ""
+  adminPassword    = ""
+}
+
 ######################################################################################################
 # Virtual Machine Scale Sets (https://learn.microsoft.com/azure/virtual-machine-scale-sets/overview) #
 ######################################################################################################
@@ -47,14 +56,6 @@ virtualMachineScaleSets = [
       passwordAuth = {
         disable = false
       }
-    }
-    activeDirectory = {
-      enable           = false
-      domainName       = ""
-      domainServerName = ""
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -141,14 +142,6 @@ virtualMachineScaleSets = [
         disable = false
       }
     }
-    activeDirectory = {
-      enable           = false
-      domainName       = ""
-      domainServerName = ""
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
-    }
     extension = {
       initialize = {
         enable   = true
@@ -234,14 +227,6 @@ virtualMachineScaleSets = [
         disable = false
       }
     }
-    activeDirectory = {
-      enable           = true
-      domainName       = "artist.studio"
-      domainServerName = "WinScheduler"
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
-    }
     extension = {
       initialize = {
         enable   = true
@@ -326,14 +311,6 @@ virtualMachineScaleSets = [
       passwordAuth = {
         disable = false
       }
-    }
-    activeDirectory = {
-      enable           = true
-      domainName       = "artist.studio"
-      domainServerName = "WinScheduler"
-      orgUnitPath      = ""
-      adminUsername    = ""
-      adminPassword    = ""
     }
     extension = {
       initialize = {
@@ -535,7 +512,7 @@ azureOpenAI = {
     }
     session = {
       context = ""
-      request = "Create a visual description of a person painting on a computer screen canvas"
+      request = ""
     }
   }
   imageGeneration = {
@@ -556,8 +533,9 @@ functionApp = {
   enable = false
   name   = "azstudio"
   servicePlan = {
-    computeTier = "EP1"
+    computeTier = "S1"
     workerCount = 1
+    alwaysOn    = true
   }
   monitor = {
     workspace = {
@@ -574,14 +552,14 @@ functionApp = {
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
-computeNetwork = {
+existingNetwork = {
   enable            = false
   name              = ""
   subnetName        = ""
   resourceGroupName = ""
 }
 
-storageAccount = {
+existingStorage = {
   enable            = false
   name              = ""
   resourceGroupName = ""

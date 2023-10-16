@@ -3,75 +3,76 @@
 # Public IP Addresses      (https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-addresses)             #
 ############################################################################################################################
 
-locals {
-  vpnComputeGatewayName = "${local.computeNetworks[0].name}-Gateway-VPN"
-  natComputeGatewayName = "${local.computeNetworks[0].name}-Gateway-NAT"
-  natStorageGatewayName = "${local.storageNetwork.name}-Gateway-NAT"
-}
-
 resource "azurerm_public_ip_prefix" "vpn_gateway" {
-  count               = var.vpnGateway.enable ? 1 : 0
-  name                = local.vpnComputeGatewayName
-  resource_group_name = local.computeNetworks[0].resourceGroupName
-  location            = local.computeNetworks[0].regionName
+  for_each = {
+    for virtualNetwork in local.vpnGatewayNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable && !var.existingNetwork.enable
+  }
+  name                = "Gateway-VPN"
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
   prefix_length       = 31
+  depends_on = [
+    azurerm_resource_group.network_regions
+  ]
   lifecycle {
     prevent_destroy = true
   }
 }
 
 resource "azurerm_public_ip" "vpn_gateway_1" {
-  count               = var.vpnGateway.enable ? 1 : 0
-  name                = local.virtualGatewayActiveActive ? "${local.vpnComputeGatewayName}1" : local.vpnComputeGatewayName
-  resource_group_name = local.computeNetworks[0].resourceGroupName
-  location            = local.computeNetworks[0].regionName
-  public_ip_prefix_id = azurerm_public_ip_prefix.vpn_gateway[0].id
+  for_each = {
+    for virtualNetwork in local.vpnGatewayNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable && !var.existingNetwork.enable
+  }
+  name                = var.vpnGateway.enableActiveActive ? "${azurerm_public_ip_prefix.vpn_gateway[each.value.key].name}1" : azurerm_public_ip_prefix.vpn_gateway[each.value.key].name
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
+  public_ip_prefix_id = azurerm_public_ip_prefix.vpn_gateway[each.value.key].id
   sku                 = "Standard"
   allocation_method   = "Static"
+  depends_on = [
+    azurerm_resource_group.network_regions
+  ]
 }
 
 resource "azurerm_public_ip" "vpn_gateway_2" {
-  count               = var.vpnGateway.enable && local.virtualGatewayActiveActive ? 1 : 0
-  name                = "${local.vpnComputeGatewayName}2"
-  resource_group_name = local.computeNetworks[0].resourceGroupName
-  location            = local.computeNetworks[0].regionName
-  public_ip_prefix_id = azurerm_public_ip_prefix.vpn_gateway[0].id
+  for_each = {
+    for virtualNetwork in local.vpnGatewayNetworks : virtualNetwork.key => virtualNetwork if var.vpnGateway.enable && !var.existingNetwork.enable && var.vpnGateway.enableActiveActive
+  }
+  name                = "${azurerm_public_ip_prefix.vpn_gateway[each.value.key].name}2"
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
+  public_ip_prefix_id = azurerm_public_ip_prefix.vpn_gateway[each.value.key].id
   sku                 = "Standard"
   allocation_method   = "Static"
+  depends_on = [
+    azurerm_resource_group.network_regions
+  ]
 }
 
-resource "azurerm_public_ip_prefix" "nat_gateway_compute" {
-  count               = var.computeNetwork.enableNatGateway ? 1 : 0
-  name                = local.natComputeGatewayName
-  resource_group_name = local.computeNetworks[0].resourceGroupName
-  location            = local.computeNetworks[0].regionName
+resource "azurerm_public_ip_prefix" "nat_gateway" {
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
+  }
+  name                = "Gateway-NAT"
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
   prefix_length       = 31
+  depends_on = [
+    azurerm_resource_group.network_regions
+  ]
 }
 
-resource "azurerm_public_ip" "nat_gateway_compute" {
-  count               = var.computeNetwork.enableNatGateway ? 1 : 0
-  name                = azurerm_public_ip_prefix.nat_gateway_compute[0].name
-  resource_group_name = azurerm_public_ip_prefix.nat_gateway_compute[0].resource_group_name
-  location            = azurerm_public_ip_prefix.nat_gateway_compute[0].location
-  public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway_compute[0].id
+resource "azurerm_public_ip" "nat_gateway" {
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
+  }
+  name                = azurerm_public_ip_prefix.nat_gateway[each.value.key].name
+  resource_group_name = each.value.resourceGroupName
+  location            = each.value.regionName
+  public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway[each.value.key].id
   sku                 = "Standard"
   allocation_method   = "Static"
-}
-
-resource "azurerm_public_ip_prefix" "nat_gateway_storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
-  name                = local.natStorageGatewayName
-  resource_group_name = local.storageNetwork.resourceGroupName
-  location            = local.storageNetwork.regionName
-  prefix_length       = 31
-}
-
-resource "azurerm_public_ip" "nat_gateway_storage" {
-  count               = var.storageNetwork.enableNatGateway && local.storageNetwork.enable ? 1 : 0
-  name                = azurerm_public_ip_prefix.nat_gateway_storage[0].name
-  resource_group_name = azurerm_public_ip_prefix.nat_gateway_storage[0].resource_group_name
-  location            = azurerm_public_ip_prefix.nat_gateway_storage[0].location
-  public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway_storage[0].id
-  sku                 = "Standard"
-  allocation_method   = "Static"
+  depends_on = [
+    azurerm_resource_group.network_regions
+  ]
 }

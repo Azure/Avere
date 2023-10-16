@@ -90,28 +90,17 @@ if ($gpuProvider -eq "AMD") {
   $installType = "amd-gpu"
   if ($machineType -like "*NG*" -and $machineType -like "*v1*") {
     Write-Host "Customize (Start): AMD GPU (NG v1)"
-    $installFile = "$installType.zip"
-    $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2234555"
+    $installFile = "$installType.exe"
+    $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2248541"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    Expand-Archive -Path $installFile
-    $certStore = Get-Item -Path "cert:LocalMachine\TrustedPublisher"
-    $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-    $filePath = ".\$installType\Packages\Drivers\Display\WT6A_INF\U0388197.cat"
-    $signature = Get-AuthenticodeSignature -FilePath $filePath
-    $certStore.Add($signature.SignerCertificate)
-    $filePath = ".\$installType\Packages\Drivers\Display\WT6A_INF\amdfdans\AMDFDANS.cat"
-    $signature = Get-AuthenticodeSignature -FilePath $filePath
-    $certStore.Add($signature.SignerCertificate)
-    $certStore.Close()
-    StartProcess .\$installType\Setup.exe "-install -log $binDirectory\$installType.log" $null
+    StartProcess .\$installFile "-install -log $binDirectory\$installType.log" $null
     Write-Host "Customize (End): AMD GPU (NG v1)"
   } elseif ($machineType -like "*NV*" -and $machineType -like "*v4*") {
     Write-Host "Customize (Start): AMD GPU (NV v4)"
     $installFile = "$installType.exe"
     $downloadUrl = "https://go.microsoft.com/fwlink/?linkid=2175154"
     (New-Object System.Net.WebClient).DownloadFile($downloadUrl, (Join-Path -Path $pwd.Path -ChildPath $installFile))
-    StartProcess .\$installFile /S $null
-    StartProcess C:\AMD\AMD*\Setup.exe "-install -log $binDirectory\$installType.log" $null
+    StartProcess .\$installFile "-install -log $binDirectory\$installType.log" $null
     Write-Host "Customize (End): AMD GPU (NV v4)"
   }
 } elseif ($gpuProvider -eq "NVIDIA") {

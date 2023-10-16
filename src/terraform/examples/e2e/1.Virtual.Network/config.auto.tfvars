@@ -4,7 +4,7 @@ resourceGroupName = "ArtistAnywhere.Network" # Alphanumeric, underscores, hyphen
 # Virtual Network (https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) #
 #################################################################################################
 
-computeNetwork = {
+virtualNetwork = {
   name = "Studio"
   addressSpace = [
     "10.1.0.0/16"
@@ -21,7 +21,7 @@ computeNetwork = {
         "Microsoft.Storage",
         "Microsoft.CognitiveServices"
       ]
-      serviceDelegation    = ""
+      serviceDelegation    = "Microsoft.Web/serverFarms"
       denyOutboundInternet = false
     },
     {
@@ -43,7 +43,7 @@ computeNetwork = {
       serviceEndpoints = [
         "Microsoft.Storage"
       ]
-      serviceDelegation    = ""
+      serviceDelegation    = "" # "Microsoft.Netapp/volumes"
       denyOutboundInternet = false
     },
     {
@@ -84,67 +84,14 @@ computeNetwork = {
     storage     = 2
     cache       = 3
   }
-  enableNatGateway = true
 }
 
-storageNetwork = {
-  enable = false
-  name   = ""
-  addressSpace = [
-    "10.0.0.0/16"
-  ]
-  dnsAddresses = [
-  ]
-  subnets = [
-    {
-      name = "Primary"
-      addressSpace = [
-        "10.0.0.0/24"
-      ]
-      serviceEndpoints = [
-        "Microsoft.Storage"
-      ]
-      serviceDelegation    = ""
-      denyOutboundInternet = false
-    },
-    {
-      name = "Secondary"
-      addressSpace = [
-        "10.0.1.0/24"
-      ]
-      serviceEndpoints = [
-        "Microsoft.Storage"
-      ]
-      serviceDelegation    = ""
-      denyOutboundInternet = false
-    },
-    {
-      name = "NetAppFiles"
-      addressSpace = [
-        "10.0.2.0/24"
-      ]
-      serviceEndpoints = [
-      ]
-      serviceDelegation    = "Microsoft.Netapp/volumes"
-      denyOutboundInternet = false
-    }
-  ]
-  subnetIndex = { # Must be in sync with corresponding subnet
-    primary     = 0
-    secondary   = 1
-    netAppFiles = 2
-  }
-  enableNatGateway = false
-}
+##########################################################################################################################
+# Network Address Translation (NAT) Gateway (https://learn.microsoft.com/azure/virtual-network/nat-gateway/nat-overview) #
+##########################################################################################################################
 
-################################################################################################################
-# Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
-################################################################################################################
-
-networkPeering = {
-  enable                      = false
-  allowRemoteNetworkAccess    = true
-  allowRemoteForwardedTraffic = true
+natGateway = {
+  enable = true
 }
 
 ############################################################################
@@ -152,6 +99,7 @@ networkPeering = {
 ############################################################################
 
 privateDns = {
+  enable   = true
   zoneName = "artist.studio"
   autoRegistration = {
     enable = true
@@ -184,7 +132,7 @@ vpnGateway = {
   generation         = "Generation2"
   sharedKey          = ""
   enableBgp          = false
-  enableVnet2Vnet    = false
+  enablePerRegion    = false
   enableActiveActive = false
   pointToSiteClient = {
     addressSpace = [
@@ -217,7 +165,7 @@ vpnGatewayLocal = {
 # Resource dependency configuration for pre-existing deployments only #
 #######################################################################
 
-virtualNetwork = {
+existingNetwork = {
   enable            = false
   name              = ""
   regionName        = ""

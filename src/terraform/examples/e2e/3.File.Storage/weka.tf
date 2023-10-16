@@ -224,7 +224,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     ip_configuration {
       name      = "ipConfig"
       primary   = true
-      subnet_id = local.storageSubnet.id
+      subnet_id = data.azurerm_subnet.storage.id
     }
     enable_accelerated_networking = var.weka.network.enableAcceleration
   }
@@ -255,6 +255,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     type                       = "CustomScript"
     publisher                  = "Microsoft.Azure.Extensions"
     type_handler_version       = "2.1"
+    automatic_upgrade_enabled  = true
     auto_upgrade_minor_version = true
     settings = jsonencode({
       script = "${base64encode(
@@ -288,6 +289,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
       type                       = "ApplicationHealthLinux"
       publisher                  = "Microsoft.ManagedServices"
       type_handler_version       = "1.0"
+      automatic_upgrade_enabled  = true
       auto_upgrade_minor_version = true
       settings = jsonencode({
         protocol    = var.weka.healthExtension.protocol

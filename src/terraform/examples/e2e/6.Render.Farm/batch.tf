@@ -72,10 +72,10 @@ resource "azurerm_private_dns_zone" "batch" {
 
 resource "azurerm_private_dns_zone_virtual_network_link" "batch" {
   count                 = var.batch.enable ? 1 : 0
-  name                  = "${data.azurerm_virtual_network.compute.name}-batch"
+  name                  = "${data.azurerm_virtual_network.studio.name}-batch"
   resource_group_name   = azurerm_resource_group.farm.name
   private_dns_zone_name = azurerm_private_dns_zone.batch[0].name
-  virtual_network_id    = data.azurerm_virtual_network.compute.id
+  virtual_network_id    = data.azurerm_virtual_network.studio.id
 }
 
 resource "azurerm_private_endpoint" "batch_account" {
