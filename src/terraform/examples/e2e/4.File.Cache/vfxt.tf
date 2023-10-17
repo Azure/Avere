@@ -33,6 +33,17 @@ variable "vfxtCache" {
 #   name = data.azurerm_virtual_network.compute.resource_group_name
 # }
 
+data "azurerm_virtual_network" "studio" {
+  name                = var.existingNetwork.enable ? var.existingNetwork.name : data.terraform_remote_state.network.outputs.virtualNetwork.name
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.virtualNetwork.resourceGroupName
+}
+
+data "azurerm_subnet" "cache" {
+  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.virtualNetwork.subnetIndex.cache].name
+  resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.studio.name
+}
+
 locals {
   vfxtCache = merge({
     cluster = {
@@ -155,5 +166,42 @@ resource "avere_vfxt" "cache" {
   }
   depends_on = [
     module.vfxt_controller
+  ]
+}
+
+############################################################################
+# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
+############################################################################
+
+resource "azurerm_private_dns_a_record" "studio_vfxt" {
+  count               = var.enableHPCCache ? 0 : 1
+  name                = "cache"
+  resource_group_name = data.azurerm_private_dns_zone.studio.resource_group_name
+  zone_name           = data.azurerm_private_dns_zone.studio.name
+  records             = avere_vfxt.cache[0].vserver_ip_addresses
+  ttl                 = 300
+}
+
+output "vfxtCacheControllerAddress" {
+  value = var.enableHPCCache ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].controller_address : ""
+}
+
+output "vfxtCacheManagementAddress" {
+  value = var.enableHPCCache ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vfxt_management_ip : ""
+}
+
+output "vfxtCacheMountAddresses" {
+  value = var.enableHPCCache ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vserver_ip_addresses : ""
+}
+
+output "vfxtCacheDns" {
+  value = var.enableHPCCache ? null : [
+    for dnsRecord in azurerm_private_dns_a_record.studio_vfxt : {
+      id                = dnsRecord.id
+      name              = dnsRecord.name
+      resourceGroupName = dnsRecord.resource_group_name
+      fqdn              = dnsRecord.fqdn
+      records           = dnsRecord.records
+    }
   ]
 }

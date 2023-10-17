@@ -34,14 +34,18 @@ variable "storageAccounts" {
 }
 
 locals {
-  serviceEndpointSubnets = var.existingNetwork.enable ? var.existingNetwork.serviceEndpointSubnets : data.terraform_remote_state.network.outputs.storageEndpointSubnets
+  serviceEndpointSubnets = distinct(var.existingNetwork.enable ? flatten([
+    for i in range(length(data.terraform_remote_state.network.outputs.storageEndpointSubnets)) : [
+      var.existingNetwork.serviceEndpointSubnets
+    ]
+  ]) : data.terraform_remote_state.network.outputs.storageEndpointSubnets)
   privateEndpoints = flatten([
     for storageAccount in var.storageAccounts : [
       for privateEndpointType in storageAccount.privateEndpointTypes : {
         type               = privateEndpointType
         storageAccountName = storageAccount.name
         storageAccountId   = "${azurerm_resource_group.storage.id}/providers/Microsoft.Storage/storageAccounts/${storageAccount.name}"
-        dnsZoneId          = "${data.azurerm_resource_group.network.id}/providers/Microsoft.Network/privateDnsZones/privatelink.${privateEndpointType}.core.windows.net"
+        dnsZoneId          = "${data.azurerm_resource_group.dns.id}/providers/Microsoft.Network/privateDnsZones/privatelink.${privateEndpointType}.core.windows.net"
       }
     ] if storageAccount.enable
   ])

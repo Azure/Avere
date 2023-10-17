@@ -44,14 +44,14 @@ locals {
       virtualNetworkId = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.existingNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.existingNetwork.name}"
     })
   ] : [
-    for virtualNetwork in var.vpnGateway.enablePerRegion ? local.virtualNetworks : [local.virtualNetwork] : merge({}, {
+    for virtualNetwork in var.vpnGateway.enablePerRegion ? local.virtualNetworks : [local.virtualNetwork] : {
       key               = virtualNetwork.key
       name              = virtualNetwork.name
       regionName        = virtualNetwork.regionName
       resourceGroupId   = virtualNetwork.resourceGroupId
       resourceGroupName = virtualNetwork.resourceGroupName
       virtualNetworkId  = virtualNetwork.id
-    })
+    }
   ])
 }
 

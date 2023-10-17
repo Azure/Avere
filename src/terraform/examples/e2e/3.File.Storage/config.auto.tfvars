@@ -289,15 +289,14 @@ hammerspace = {
 #######################################################################
 
 existingNetwork = {
-  enable              = false
-  name                = ""
-  resourceGroupName   = ""
-  subnetName          = ""
-  privateDnsZoneName  = ""
+  enable             = false
+  name               = ""
+  subnetName         = ""
+  resourceGroupName  = ""
+  privateDnsZoneName = ""
   serviceEndpointSubnets = [ # https://learn.microsoft.com/azure/storage/common/storage-network-security#grant-access-from-a-virtual-network
     {
       name               = ""
-      regionName         = ""
       virtualNetworkName = ""
     }
   ]

@@ -138,20 +138,9 @@ data "terraform_remote_state" "network" {
   }
 }
 
-data "azurerm_virtual_network" "studio" {
-  name                = var.existingNetwork.enable ? var.existingNetwork.name : data.terraform_remote_state.network.outputs.virtualNetwork.name
-  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
-}
-
-data "azurerm_subnet" "cache" {
-  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.cache].name
-  resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.studio.name
-}
-
-data "azurerm_private_dns_zone" "network" {
+data "azurerm_private_dns_zone" "studio" {
   name                = var.existingNetwork.enable ? var.existingNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
-  resource_group_name = data.azurerm_virtual_network.studio.resource_group_name
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 resource "azurerm_resource_group" "cache_regions" {
@@ -160,38 +149,11 @@ resource "azurerm_resource_group" "cache_regions" {
   location = module.global.regionNames[count.index]
 }
 
-############################################################################
-# Private DNS (https://learn.microsoft.com/azure/dns/private-dns-overview) #
-############################################################################
-
-resource "azurerm_private_dns_a_record" "cache" {
-  name                = "cache"
-  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
-  zone_name           = data.azurerm_private_dns_zone.network.name
-  records             = var.enableHPCCache ? azurerm_hpc_cache.cache[0].mount_addresses : avere_vfxt.cache[0].vserver_ip_addresses
-  ttl                 = 300
-}
-
 output "resourceGroups" {
-  value = azurerm_resource_group.cache_regions
-}
-
-output "cacheName" {
-  value = var.cacheName
-}
-
-output "cacheControllerAddress" {
-  value = var.enableHPCCache ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].controller_address : ""
-}
-
-output "cacheManagementAddress" {
-  value = var.enableHPCCache ? "" : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vfxt_management_ip: ""
-}
-
-output "cacheMountAddresses" {
-  value = var.enableHPCCache && length(azurerm_hpc_cache.cache) > 0 ? azurerm_hpc_cache.cache[0].mount_addresses : length(avere_vfxt.cache) > 0 ? avere_vfxt.cache[0].vserver_ip_addresses : null
-}
-
-output "cachePrivateDnsFqdn" {
-  value = azurerm_private_dns_a_record.cache.fqdn
+  value = [
+    for resourceGroup in azurerm_resource_group.cache_regions : {
+      id   = resourceGroup.id
+      name = resourceGroup.name
+    }
+  ]
 }

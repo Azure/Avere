@@ -247,14 +247,21 @@ resource "azurerm_subnet_network_security_group_association" "studio" {
 }
 
 output "virtualNetwork" {
-  value = {
-    name              = var.existingNetwork.enable ? var.existingNetwork.name : local.virtualNetwork.name
-    resourceGroupName = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : local.virtualNetwork.resourceGroupName
-  }
+  value = merge(var.virtualNetwork, {
+    name              = local.virtualNetwork.name
+    resourceGroupName = local.virtualNetwork.resourceGroupName
+  })
+}
+
+output "virtualNetworks" {
+  value = local.virtualNetworks
 }
 
 output "storageEndpointSubnets" {
   value = [
-    for subnet in local.virtualNetworksSubnets : subnet if contains(subnet.serviceEndpoints, "Microsoft.Storage") && !var.existingNetwork.enable
+    for subnet in local.virtualNetwork.subnets : {
+      name               = subnet.name
+      virtualNetworkName = local.virtualNetwork.name
+    } if contains(subnet.serviceEndpoints, "Microsoft.Storage")
   ]
 }

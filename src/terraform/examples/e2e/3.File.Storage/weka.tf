@@ -213,8 +213,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
   custom_data = base64encode(templatefile("terminate.sh", {
     wekaClusterName      = var.weka.name.resource
     wekaAdminPassword    = var.weka.adminLogin.userPassword
-    dnsResourceGroupName = data.azurerm_private_dns_zone.network.resource_group_name
-    dnsZoneName          = data.azurerm_private_dns_zone.network.name
+    dnsResourceGroupName = data.azurerm_private_dns_zone.studio.resource_group_name
+    dnsZoneName          = data.azurerm_private_dns_zone.studio.name
     dnsRecordSetName     = var.weka.network.privateDnsZone.recordSetName
     binDirectory         = local.binDirectory
   }))
@@ -274,8 +274,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
           wekaTerminateNotification = var.weka.terminateNotification
           wekaAdminPassword         = var.weka.adminLogin.userPassword
           wekaResourceGroupName     = azurerm_resource_group.weka[0].name
-          dnsResourceGroupName      = data.azurerm_private_dns_zone.network.resource_group_name
-          dnsZoneName               = data.azurerm_private_dns_zone.network.name
+          dnsResourceGroupName      = data.azurerm_private_dns_zone.studio.resource_group_name
+          dnsZoneName               = data.azurerm_private_dns_zone.studio.name
           dnsRecordSetName          = var.weka.network.privateDnsZone.recordSetName
           binDirectory              = local.binDirectory
         })
@@ -322,8 +322,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
 resource "azurerm_private_dns_a_record" "content" {
   count               = var.weka.enable ? 1 : 0
   name                = var.weka.network.privateDnsZone.recordSetName
-  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
-  zone_name           = data.azurerm_private_dns_zone.network.name
+  resource_group_name = data.azurerm_private_dns_zone.studio.resource_group_name
+  zone_name           = data.azurerm_private_dns_zone.studio.name
   records             = [for vmInstance in data.azurerm_virtual_machine_scale_set.weka[0].instances : vmInstance.private_ip_address]
   ttl                 = var.weka.network.privateDnsZone.recordTtlSeconds
 }

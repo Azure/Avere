@@ -18,10 +18,9 @@ virtualNetwork = {
         "10.1.0.0/17"
       ]
       serviceEndpoints = [
-        "Microsoft.Storage",
-        "Microsoft.CognitiveServices"
+        "Microsoft.Storage"
       ]
-      serviceDelegation    = "Microsoft.Web/serverFarms"
+      serviceDelegation    = ""
       denyOutboundInternet = false
     },
     {
@@ -58,6 +57,17 @@ virtualNetwork = {
       denyOutboundInternet = false
     },
     {
+      name = "AI"
+      addressSpace = [
+        "10.1.194.0/24"
+      ]
+      serviceEndpoints = [
+        "Microsoft.CognitiveServices"
+      ]
+      serviceDelegation    = "Microsoft.Web/serverFarms"
+      denyOutboundInternet = false
+    },
+    {
       name = "GatewaySubnet"
       addressSpace = [
         "10.1.255.0/26"
@@ -83,6 +93,7 @@ virtualNetwork = {
     workstation = 1
     storage     = 2
     cache       = 3
+    ai          = 4
   }
 }
 

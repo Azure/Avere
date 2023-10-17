@@ -102,18 +102,18 @@ data "terraform_remote_state" "network" {
 
 data "azurerm_virtual_network" "studio" {
   name                = var.existingNetwork.enable ? var.existingNetwork.name : data.terraform_remote_state.network.outputs.virtualNetwork.name
-  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.virtualNetwork.resourceGroupName
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.computeNetwork.subnetIndex.farm].name
+  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.virtualNetwork.subnetIndex.farm].name
   resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.studio.name
 }
 
-data "azurerm_private_dns_zone" "network" {
+data "azurerm_private_dns_zone" "studio" {
   name                = var.existingNetwork.enable ? var.existingNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
-  resource_group_name = data.azurerm_virtual_network.studio.resource_group_name
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 resource "azurerm_resource_group" "scheduler" {
@@ -126,8 +126,8 @@ resource "azurerm_private_dns_a_record" "scheduler" {
     for virtualMachine in var.virtualMachines : virtualMachine.name => virtualMachine if virtualMachine.enable
   }
   name                = var.privateDns.aRecordName
-  resource_group_name = data.azurerm_private_dns_zone.network.resource_group_name
-  zone_name           = data.azurerm_private_dns_zone.network.name
+  resource_group_name = data.azurerm_private_dns_zone.studio.resource_group_name
+  zone_name           = data.azurerm_private_dns_zone.studio.name
   ttl                 = var.privateDns.ttlSeconds
   records = [
     azurerm_network_interface.scheduler[each.value.name].private_ip_address

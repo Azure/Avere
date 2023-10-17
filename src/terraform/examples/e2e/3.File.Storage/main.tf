@@ -54,12 +54,11 @@ variable "existingNetwork" {
   type = object({
     enable             = bool
     name               = string
-    resourceGroupName  = string
     subnetName         = string
+    resourceGroupName  = string
     privateDnsZoneName = string
     serviceEndpointSubnets = list(object({
       name               = string
-      regionName         = string
       virtualNetworkName = string
     }))
   })
@@ -114,9 +113,13 @@ data "azurerm_resource_group" "network" {
   name = data.azurerm_virtual_network.studio.resource_group_name
 }
 
+data "azurerm_resource_group" "dns" {
+  name = data.azurerm_private_dns_zone.studio.resource_group_name
+}
+
 data "azurerm_virtual_network" "studio" {
   name                = var.existingNetwork.enable ? var.existingNetwork.name : data.terraform_remote_state.network.outputs.virtualNetwork.name
-  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.virtualNetwork.resourceGroupName
 }
 
 data "azurerm_subnet" "storage" {
@@ -125,9 +128,9 @@ data "azurerm_subnet" "storage" {
   virtual_network_name = data.azurerm_virtual_network.studio.name
 }
 
-data "azurerm_private_dns_zone" "network" {
+data "azurerm_private_dns_zone" "studio" {
   name                = var.existingNetwork.enable ? var.existingNetwork.privateDnsZoneName : data.terraform_remote_state.network.outputs.privateDns.zoneName
-  resource_group_name = data.azurerm_virtual_network.studio.resource_group_name
+  resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
 locals {
