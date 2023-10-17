@@ -62,7 +62,7 @@ resource "azurerm_windows_function_app" "studio" {
   resource_group_name           = azurerm_resource_group.farm.name
   location                      = azurerm_resource_group.farm.location
   service_plan_id               = azurerm_service_plan.studio[0].id
-  virtual_network_subnet_id     = data.azurerm_subnet.farm.id
+  virtual_network_subnet_id     = data.azurerm_subnet.ai.id
   storage_account_name          = data.azurerm_storage_account.studio.name
   storage_uses_managed_identity = true
   public_network_access_enabled = false

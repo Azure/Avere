@@ -64,7 +64,7 @@ locals {
 
 resource "azurerm_role_assignment" "storage_account_contributor" {
   for_each = {
-    for storageTargetNfsBlob in local.storageTargetsNfsBlob : storageTargetNfsBlob.key => storageTargetNfsBlob
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob: storageTargetNfsBlob.name => storageTargetNfsBlob
   }
   role_definition_name = "Storage Account Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor
   principal_id         = data.azuread_service_principal.hpc_cache[0].object_id
@@ -73,7 +73,7 @@ resource "azurerm_role_assignment" "storage_account_contributor" {
 
 resource "azurerm_role_assignment" "storage_blob_data_contributor" {
   for_each = {
-    for storageTargetNfsBlob in local.storageTargetsNfsBlob : storageTargetNfsBlob.key => storageTargetNfsBlob
+    for storageTargetNfsBlob in var.storageTargetsNfsBlob: storageTargetNfsBlob.name => storageTargetNfsBlob
   }
   role_definition_name = "Storage Blob Data Contributor" # https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor
   principal_id         = data.azuread_service_principal.hpc_cache[0].object_id

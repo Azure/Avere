@@ -352,7 +352,7 @@ resource "azurerm_virtual_machine_extension" "storage" {
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
-  automatic_upgrade_enabled  = true
+  automatic_upgrade_enabled  = false
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.hammerspace[0].id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({

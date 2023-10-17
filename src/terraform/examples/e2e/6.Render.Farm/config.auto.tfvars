@@ -555,7 +555,8 @@ functionApp = {
 existingNetwork = {
   enable            = false
   name              = ""
-  subnetName        = ""
+  subnetNameFarm    = ""
+  subnetNameAI      = ""
   resourceGroupName = ""
 }
 

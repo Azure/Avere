@@ -54,7 +54,8 @@ variable "existingNetwork" {
   type = object({
     enable            = bool
     name              = string
-    subnetName        = string
+    subnetNameFarm    = string
+    subnetNameAI      = string
     resourceGroupName = string
   })
 }
@@ -135,7 +136,13 @@ data "azurerm_virtual_network" "studio" {
 }
 
 data "azurerm_subnet" "farm" {
-  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetName : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.virtualNetwork.subnetIndex.farm].name
+  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetNameFarm : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.virtualNetwork.subnetIndex.farm].name
+  resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.studio.name
+}
+
+data "azurerm_subnet" "ai" {
+  name                 = var.existingNetwork.enable ? var.existingNetwork.subnetNameAI : data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.virtualNetwork.subnetIndex.ai].name
   resource_group_name  = data.azurerm_virtual_network.studio.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.studio.name
 }

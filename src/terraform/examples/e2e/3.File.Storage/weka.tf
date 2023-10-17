@@ -255,7 +255,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "weka" {
     type                       = "CustomScript"
     publisher                  = "Microsoft.Azure.Extensions"
     type_handler_version       = "2.1"
-    automatic_upgrade_enabled  = true
+    automatic_upgrade_enabled  = false
     auto_upgrade_minor_version = true
     settings = jsonencode({
       script = "${base64encode(

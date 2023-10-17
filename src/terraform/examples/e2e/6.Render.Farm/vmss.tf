@@ -164,7 +164,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "farm" {
       type                       = "CustomScript"
       publisher                  = "Microsoft.Azure.Extensions"
       type_handler_version       = "2.1"
-      automatic_upgrade_enabled  = true
+      automatic_upgrade_enabled  = false
       auto_upgrade_minor_version = true
       settings = jsonencode({
         script = "${base64encode(
@@ -269,7 +269,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "farm" {
       type                       = "CustomScriptExtension"
       publisher                  = "Microsoft.Compute"
       type_handler_version       = "1.10"
-      automatic_upgrade_enabled  = true
+      automatic_upgrade_enabled  = false
       auto_upgrade_minor_version = true
       settings = jsonencode({
         commandToExecute = "PowerShell -ExecutionPolicy Unrestricted -EncodedCommand ${textencodebase64(

@@ -1,6 +1,6 @@
 resourceGroupName = "ArtistAnywhere.Cache" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
-cacheName      = "cache" # Set to a uniquely identifiable cache cluster name
+cacheName      = "Cache" # Set to a uniquely identifiable cache cluster name
 enableHPCCache = true    # Enables HPC Cache (PaaS) instead of Avere vFXT (IaaS)
 enableDevMode  = false   # Enables non-production deployment of Avere vFXT (IaaS)
 

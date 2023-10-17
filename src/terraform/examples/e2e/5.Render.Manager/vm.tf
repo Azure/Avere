@@ -155,7 +155,7 @@ resource "azurerm_virtual_machine_extension" "initialize_linux" {
   type                       = "CustomScript"
   publisher                  = "Microsoft.Azure.Extensions"
   type_handler_version       = "2.1"
-  automatic_upgrade_enabled  = true
+  automatic_upgrade_enabled  = false
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
@@ -233,7 +233,7 @@ resource "azurerm_virtual_machine_extension" "initialize_windows" {
   type                       = "CustomScriptExtension"
   publisher                  = "Microsoft.Compute"
   type_handler_version       = "1.10"
-  automatic_upgrade_enabled  = true
+  automatic_upgrade_enabled  = false
   auto_upgrade_minor_version = true
   virtual_machine_id         = "${azurerm_resource_group.scheduler.id}/providers/Microsoft.Compute/virtualMachines/${each.value.name}"
   settings = jsonencode({
