@@ -111,7 +111,8 @@ resource "azurerm_private_endpoint" "key_vault_batch" {
   }
   depends_on = [
     azurerm_subnet.studio,
-    azurerm_private_dns_zone_virtual_network_link.key_vault
+    azurerm_private_dns_zone_virtual_network_link.key_vault,
+    azurerm_private_endpoint.key_vault
   ]
 }
 
@@ -138,9 +139,10 @@ resource "azurerm_private_endpoint" "storage_blob" {
     ]
   }
   depends_on = [
-    azurerm_private_endpoint.key_vault,
-    azurerm_private_dns_zone_virtual_network_link.storage_blob
-  ]
+    azurerm_subnet.studio,
+    azurerm_private_dns_zone_virtual_network_link.storage_blob,
+    azurerm_private_endpoint.key_vault_batch
+ ]
 }
 
 resource "azurerm_private_endpoint" "storage_file" {
@@ -166,7 +168,8 @@ resource "azurerm_private_endpoint" "storage_file" {
     ]
   }
   depends_on = [
-    azurerm_private_endpoint.storage_blob,
-    azurerm_private_dns_zone_virtual_network_link.storage_file
+    azurerm_subnet.studio,
+    azurerm_private_dns_zone_virtual_network_link.storage_file,
+    azurerm_private_endpoint.storage_blob
   ]
 }

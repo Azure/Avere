@@ -109,7 +109,8 @@ resource "azurerm_private_endpoint" "monitor" {
     azurerm_private_dns_zone_virtual_network_link.monitor,
     azurerm_private_dns_zone_virtual_network_link.monitor_opinsights_oms,
     azurerm_private_dns_zone_virtual_network_link.monitor_opinsights_ods,
-    azurerm_private_dns_zone_virtual_network_link.monitor_automation
+    azurerm_private_dns_zone_virtual_network_link.monitor_automation,
+    azurerm_private_endpoint.storage_file
   ]
 }
 
