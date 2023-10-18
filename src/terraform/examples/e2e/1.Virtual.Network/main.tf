@@ -54,13 +54,15 @@ data "azurerm_storage_account" "studio" {
 
 resource "azurerm_resource_group" "network" {
   name     = var.resourceGroupName
-  location = module.global.regionNames[0]
+  location = module.global.regionName
 }
 
 resource "azurerm_resource_group" "network_regions" {
-  count    = length(module.global.regionNames)
-  name     = "${var.resourceGroupName}.${module.global.regionNames[count.index]}"
-  location = module.global.regionNames[count.index]
+  for_each = {
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork
+  }
+  name     = "${var.resourceGroupName}.${each.value.regionName}"
+  location = each.value.regionName
 }
 
 output "resourceGroupName" {
@@ -68,5 +70,10 @@ output "resourceGroupName" {
 }
 
 output "resourceGroups" {
-  value = azurerm_resource_group.network_regions
+  value = [
+    for resourceGroup in azurerm_resource_group.network_regions : {
+      id   = resourceGroup.id
+      name = resourceGroup.name
+    }
+  ]
 }

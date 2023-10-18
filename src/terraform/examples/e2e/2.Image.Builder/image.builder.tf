@@ -35,7 +35,7 @@ variable "binStorage" {
 
 locals {
   targetRegions = [
-    for regionName in module.global.regionNames : {
+    for regionName in var.computeGallery.replicationRegions : {
       name               = regionName
       replicaCount       = 1
       storageAccountType = "Standard_LRS"

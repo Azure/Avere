@@ -104,6 +104,13 @@ resource "azurerm_private_endpoint" "monitor" {
       azurerm_private_dns_zone.storage_blob[0].id
     ]
   }
+  depends_on = [
+    azurerm_subnet.studio,
+    azurerm_private_dns_zone_virtual_network_link.monitor,
+    azurerm_private_dns_zone_virtual_network_link.monitor_opinsights_oms,
+    azurerm_private_dns_zone_virtual_network_link.monitor_opinsights_ods,
+    azurerm_private_dns_zone_virtual_network_link.monitor_automation
+  ]
 }
 
 resource "azurerm_monitor_private_link_scope" "monitor" {

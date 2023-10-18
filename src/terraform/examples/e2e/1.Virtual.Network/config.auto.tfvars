@@ -4,97 +4,206 @@ resourceGroupName = "ArtistAnywhere.Network" # Alphanumeric, underscores, hyphen
 # Virtual Network (https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview) #
 #################################################################################################
 
-virtualNetwork = {
-  name = "Studio"
-  addressSpace = [
-    "10.1.0.0/16"
-  ]
-  dnsAddresses = [
-  ]
-  subnets = [
-    {
-      name = "Farm"
-      addressSpace = [
-        "10.1.0.0/17"
-      ]
-      serviceEndpoints = [
-        "Microsoft.Storage"
-      ]
-      serviceDelegation    = ""
-      denyOutboundInternet = false
-    },
-    {
-      name = "Workstation"
-      addressSpace = [
-        "10.1.128.0/18"
-      ]
-      serviceEndpoints = [
-        "Microsoft.Storage"
-      ]
-      serviceDelegation    = ""
-      denyOutboundInternet = false
-    },
-    {
-      name = "Storage"
-      addressSpace = [
-        "10.1.192.0/24"
-      ]
-      serviceEndpoints = [
-        "Microsoft.Storage"
-      ]
-      serviceDelegation    = "" # "Microsoft.Netapp/volumes"
-      denyOutboundInternet = false
-    },
-    {
-      name = "Cache"
-      addressSpace = [
-        "10.1.193.0/24"
-      ]
-      serviceEndpoints = [
-        "Microsoft.Storage"
-      ]
-      serviceDelegation    = ""
-      denyOutboundInternet = false
-    },
-    {
-      name = "AI"
-      addressSpace = [
-        "10.1.194.0/24"
-      ]
-      serviceEndpoints = [
-        "Microsoft.CognitiveServices"
-      ]
-      serviceDelegation    = "Microsoft.Web/serverFarms"
-      denyOutboundInternet = false
-    },
-    {
-      name = "GatewaySubnet"
-      addressSpace = [
-        "10.1.255.0/26"
-      ]
-      serviceEndpoints = [
-      ]
-      serviceDelegation    = ""
-      denyOutboundInternet = false
-    },
-    {
-      name = "AzureBastionSubnet"
-      addressSpace = [
-        "10.1.255.64/26"
-      ]
-      serviceEndpoints = [
-      ]
-      serviceDelegation    = ""
-      denyOutboundInternet = false
+virtualNetworks = [
+  {
+    enable     = true
+    name       = "Studio"
+    regionName = "WestUS3"
+    addressSpace = [
+      "10.0.0.0/16"
+    ]
+    dnsAddresses = [
+    ]
+    subnets = [
+      {
+        name = "Farm"
+        addressSpace = [
+          "10.0.0.0/17"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "Workstation"
+        addressSpace = [
+          "10.0.128.0/18"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "Storage"
+        addressSpace = [
+          "10.0.192.0/24"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = "" # "Microsoft.Netapp/volumes"
+        denyOutboundInternet = false
+      },
+      {
+        name = "Cache"
+        addressSpace = [
+          "10.0.193.0/24"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "AI"
+        addressSpace = [
+          "10.0.194.0/24"
+        ]
+        serviceEndpoints = [
+          "Microsoft.CognitiveServices"
+        ]
+        serviceDelegation    = "Microsoft.Web/serverFarms"
+        denyOutboundInternet = false
+      },
+      {
+        name = "GatewaySubnet"
+        addressSpace = [
+          "10.0.255.0/26"
+        ]
+        serviceEndpoints = [
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "AzureBastionSubnet"
+        addressSpace = [
+          "10.0.255.64/26"
+        ]
+        serviceEndpoints = [
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      }
+    ]
+    subnetIndex = { # Must be in sync with corresponding subnet
+      farm        = 0
+      workstation = 1
+      storage     = 2
+      cache       = 3
+      ai          = 4
     }
-  ]
-  subnetIndex = { # Must be in sync with corresponding subnet
-    farm        = 0
-    workstation = 1
-    storage     = 2
-    cache       = 3
-    ai          = 4
+  },
+  {
+    enable     = true
+    name       = "Studio"
+    regionName = "EastUS2"
+    addressSpace = [
+      "10.1.0.0/16"
+    ]
+    dnsAddresses = [
+    ]
+    subnets = [
+      {
+        name = "Farm"
+        addressSpace = [
+          "10.1.0.0/17"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "Workstation"
+        addressSpace = [
+          "10.1.128.0/18"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "Storage"
+        addressSpace = [
+          "10.1.192.0/24"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = "" # "Microsoft.Netapp/volumes"
+        denyOutboundInternet = false
+      },
+      {
+        name = "Cache"
+        addressSpace = [
+          "10.1.193.0/24"
+        ]
+        serviceEndpoints = [
+          "Microsoft.Storage.Global"
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "AI"
+        addressSpace = [
+          "10.1.194.0/24"
+        ]
+        serviceEndpoints = [
+          "Microsoft.CognitiveServices"
+        ]
+        serviceDelegation    = "Microsoft.Web/serverFarms"
+        denyOutboundInternet = false
+      },
+      {
+        name = "GatewaySubnet"
+        addressSpace = [
+          "10.1.255.0/26"
+        ]
+        serviceEndpoints = [
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      },
+      {
+        name = "AzureBastionSubnet"
+        addressSpace = [
+          "10.1.255.64/26"
+        ]
+        serviceEndpoints = [
+        ]
+        serviceDelegation    = ""
+        denyOutboundInternet = false
+      }
+    ]
+    subnetIndex = { # Must be in sync with corresponding subnet
+      farm        = 0
+      workstation = 1
+      storage     = 2
+      cache       = 3
+      ai          = 4
+    }
   }
+]
+
+################################################################################################################
+# Virtual Network Peering (https://learn.microsoft.com/azure/virtual-network/virtual-network-peering-overview) #
+################################################################################################################
+
+networkPeering = {
+  enable                      = false
+  allowRemoteNetworkAccess    = true
+  allowRemoteForwardedTraffic = true
+  allowGatewayTransit         = true
 }
 
 ##########################################################################################################################

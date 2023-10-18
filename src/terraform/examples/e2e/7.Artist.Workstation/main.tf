@@ -119,7 +119,7 @@ data "azurerm_subnet" "workstation" {
 
 resource "azurerm_resource_group" "workstation" {
   name     = var.resourceGroupName
-  location = module.global.regionNames[0]
+  location = module.global.regionName
 }
 
 ###############################################################################################

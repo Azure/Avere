@@ -164,7 +164,7 @@ data "azurerm_storage_share" "studio" {
 
 resource "azurerm_resource_group" "farm" {
   name     = var.resourceGroupName
-  location = module.global.regionNames[0]
+  location = module.global.regionName
 }
 
 output "resourceGroupName" {

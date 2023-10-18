@@ -38,7 +38,7 @@ data "azurerm_user_assigned_identity" "studio" {
 
 resource "azurerm_resource_group" "image" {
   name     = var.resourceGroupName
-  location = module.global.regionNames[0]
+  location = module.global.regionName
 }
 
 output "resourceGroupName" {

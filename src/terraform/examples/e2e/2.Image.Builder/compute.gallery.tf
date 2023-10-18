@@ -12,6 +12,7 @@ variable "computeGallery" {
       offer      = string
       sku        = string
     }))
+    replicationRegions = list(string)
   })
 }
 

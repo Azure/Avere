@@ -84,7 +84,7 @@ virtualMachines = [
       }
     }
     network = {
-      staticIpAddress    = "10.1.127.0"
+      staticIpAddress    = "10.0.127.0"
       enableAcceleration = true
     }
     operatingSystem = {

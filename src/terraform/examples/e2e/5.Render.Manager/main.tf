@@ -118,7 +118,7 @@ data "azurerm_private_dns_zone" "studio" {
 
 resource "azurerm_resource_group" "scheduler" {
   name     = var.resourceGroupName
-  location = module.global.regionNames[0]
+  location = module.global.regionName
 }
 
 resource "azurerm_private_dns_a_record" "scheduler" {

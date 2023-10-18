@@ -139,7 +139,7 @@ locals {
 
 resource "azurerm_resource_group" "storage" {
   name     = var.resourceGroupName
-  location = module.global.regionNames[0]
+  location = module.global.regionName
 }
 
 output "resourceGroupName" {

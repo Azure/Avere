@@ -1,8 +1,5 @@
-variable "regionNames" { # Set Azure region names from "az account list-locations --query [].name"
-  default = [
-    "WestUS3",
-    "EastUS2"
-  ]
+variable "regionName" { # Set Azure region name from "az account list-locations --query [].name"
+  default = "WestUS3"
 }
 
 variable "resourceGroupName" {
@@ -64,8 +61,8 @@ variable "monitor" {
   }
 }
 
-output "regionNames" {
-  value = var.regionNames
+output "regionName" {
+  value = var.regionName
 }
 
 output "resourceGroupName" {

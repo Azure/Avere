@@ -98,7 +98,7 @@ resource "azurerm_storage_account" "storage" {
     default_action = "Deny"
     virtual_network_subnet_ids = [
       for serviceEndpointSubnet in local.serviceEndpointSubnets :
-        "${data.azurerm_resource_group.network.id}/providers/Microsoft.Network/virtualNetworks/${serviceEndpointSubnet.virtualNetworkName}/subnets/${serviceEndpointSubnet.name}"
+        "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${serviceEndpointSubnet.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${serviceEndpointSubnet.virtualNetworkName}/subnets/${serviceEndpointSubnet.name}"
     ]
     ip_rules = [
       jsondecode(data.http.client_address.response_body).ip
