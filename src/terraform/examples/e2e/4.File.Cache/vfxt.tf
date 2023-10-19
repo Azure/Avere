@@ -22,6 +22,7 @@ variable "vfxtCache" {
       rollingTraceFlag = string
     })
     localTimezone = string
+    enableDevMode = bool
   })
 }
 
@@ -126,6 +127,7 @@ resource "avere_vfxt" "cache" {
   location                        = module.global.regionName
   node_cache_size                 = var.vfxtCache.cluster.nodeSize
   vfxt_node_count                 = var.vfxtCache.cluster.nodeCount
+  image_id                        = var.vfxtCache.cluster.imageId.node
   azure_network_name              = data.azurerm_virtual_network.studio.name
   azure_network_resource_group    = data.azurerm_virtual_network.studio.resource_group_name
   azure_subnet_name               = data.azurerm_subnet.cache.name
@@ -143,8 +145,7 @@ resource "avere_vfxt" "cache" {
   vserver_first_ip                = local.vfxtVServerFirstAddress
   vserver_ip_count                = local.vfxtVServerAddressCount
   timezone                        = var.vfxtCache.localTimezone
-  image_id                        = var.vfxtCache.cluster.imageId.node
-  node_size                       = var.enableDevMode ? "unsupported_test_SKU" : "prod_sku"
+  node_size                       = var.vfxtCache.enableDevMode ? "unsupported_test_SKU" : "prod_sku"
   dynamic core_filer {
     for_each = {
       for storageTargetNfs in var.storageTargetsNfs : storageTargetNfs.name => storageTargetNfs if storageTargetNfs.enable

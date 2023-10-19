@@ -22,9 +22,9 @@ resource "azurerm_private_dns_zone" "storage_file" {
 
 resource "azurerm_private_dns_zone_virtual_network_link" "key_vault" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if module.global.keyVault.enable && !var.existingNetwork.enable
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork if module.global.keyVault.enable && !var.existingNetwork.enable
   }
-  name                  = "${each.value.key}-vault"
+  name                  = "${each.value.name}-vault"
   resource_group_name   = azurerm_resource_group.network.name
   private_dns_zone_name = azurerm_private_dns_zone.key_vault[0].name
   virtual_network_id    = each.value.id
@@ -35,9 +35,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "key_vault" {
 
 resource "azurerm_private_dns_zone_virtual_network_link" "storage_blob" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if !var.existingNetwork.enable && !var.existingNetwork.enable
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork if !var.existingNetwork.enable && !var.existingNetwork.enable
   }
-  name                  = "${each.value.key}-blob"
+  name                  = "${each.value.name}-blob"
   resource_group_name   = azurerm_resource_group.network.name
   private_dns_zone_name = azurerm_private_dns_zone.storage_blob[0].name
   virtual_network_id    = each.value.id
@@ -48,9 +48,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "storage_blob" {
 
 resource "azurerm_private_dns_zone_virtual_network_link" "storage_file" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if !var.existingNetwork.enable && !var.existingNetwork.enable
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork if !var.existingNetwork.enable && !var.existingNetwork.enable
   }
-  name                  = "${each.value.key}-file"
+  name                  = "${each.value.name}-file"
   resource_group_name   = azurerm_resource_group.network.name
   private_dns_zone_name = azurerm_private_dns_zone.storage_file[0].name
   virtual_network_id    = each.value.id
@@ -61,7 +61,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "storage_file" {
 
 resource "azurerm_private_endpoint" "key_vault" {
   for_each = {
-    for virtualNetwork in local.virtualNetworksSubnetStorage : virtualNetwork.key => virtualNetwork if module.global.keyVault.enable && !var.existingNetwork.enable
+    for subnet in local.virtualNetworksSubnetStorage : "${subnet.virtualNetworkName}-${subnet.name}" => subnet if !var.existingNetwork.enable
   }
   name                = "${data.azurerm_key_vault.studio[0].name}-vault"
   resource_group_name = each.value.resourceGroupName
@@ -89,7 +89,7 @@ resource "azurerm_private_endpoint" "key_vault" {
 
 resource "azurerm_private_endpoint" "key_vault_batch" {
   for_each = {
-    for virtualNetwork in local.virtualNetworksSubnetStorage : virtualNetwork.key => virtualNetwork if module.global.keyVault.enable && !var.existingNetwork.enable
+    for subnet in local.virtualNetworksSubnetStorage : "${subnet.virtualNetworkName}-${subnet.name}" => subnet if !var.existingNetwork.enable
   }
   name                = "${data.azurerm_key_vault.batch[0].name}-vault-batch"
   resource_group_name = each.value.resourceGroupName
@@ -118,7 +118,7 @@ resource "azurerm_private_endpoint" "key_vault_batch" {
 
 resource "azurerm_private_endpoint" "storage_blob" {
   for_each = {
-    for virtualNetwork in local.virtualNetworksSubnetStorage : virtualNetwork.key => virtualNetwork if !var.existingNetwork.enable
+    for subnet in local.virtualNetworksSubnetStorage : "${subnet.virtualNetworkName}-${subnet.name}" => subnet if !var.existingNetwork.enable
   }
   name                = "${data.azurerm_storage_account.studio.name}-blob"
   resource_group_name = each.value.resourceGroupName
@@ -147,7 +147,7 @@ resource "azurerm_private_endpoint" "storage_blob" {
 
 resource "azurerm_private_endpoint" "storage_file" {
   for_each = {
-    for virtualNetwork in local.virtualNetworksSubnetStorage : virtualNetwork.key => virtualNetwork if !var.existingNetwork.enable
+    for subnet in local.virtualNetworksSubnetStorage : "${subnet.virtualNetworkName}-${subnet.name}" => subnet if !var.existingNetwork.enable
   }
   name                = "${data.azurerm_storage_account.studio.name}-file"
   resource_group_name = each.value.resourceGroupName

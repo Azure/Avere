@@ -1,8 +1,8 @@
 resourceGroupName = "ArtistAnywhere.Cache" # Alphanumeric, underscores, hyphens, periods and parenthesis are allowed
 
-cacheName      = "Cache" # Set to a uniquely identifiable cache cluster name
-enableHPCCache = true    # Enables HPC Cache (PaaS) instead of Avere vFXT (IaaS)
-enableDevMode  = false   # Enables non-production deployment of Avere vFXT (IaaS)
+cacheName       = "Cache" # Set to a uniquely identifiable cache cluster name
+enableHPCCache  = true    # Enables HPC Cache (PaaS) instead of Avere vFXT (IaaS)
+enablePerRegion = false   # Enables HPC Cache (PaaS) per Azure Virtual Network region
 
 ##############################################################################
 # HPC Cache (https://learn.microsoft.com/azure/hpc-cache/hpc-cache-overview) #
@@ -54,6 +54,7 @@ vfxtCache = {
     rollingTraceFlag = "0xe4001" # https://github.com/Azure/Avere/tree/main/src/terraform/providers/terraform-provider-avere#rolling_trace_flag
   }
   localTimezone = "UTC"
+  enableDevMode = false
 }
 
 #######################################################################################

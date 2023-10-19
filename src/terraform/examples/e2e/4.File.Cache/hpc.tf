@@ -24,41 +24,37 @@ data "azuread_service_principal" "hpc_cache" {
   display_name = "HPC Cache Resource Provider"
 }
 
-data "azurerm_storage_container" "blob_nfs" {
-  for_each = {
-    for storageTargetNfsBlob in local.storageTargetsNfsBlob : storageTargetNfsBlob.key => storageTargetNfsBlob
-  }
-  name                 = each.value.storage.containerName
-  storage_account_name = each.value.storage.accountName
-}
-
 locals {
-  storageCaches = [
-    for virtualNetwork in data.terraform_remote_state.network.outputs.virtualNetworks : merge(var.hpcCache, {
-      key               = "${virtualNetwork.regionName}-${var.cacheName}"
-      name              = var.cacheName
+  storageCaches = distinct(var.existingNetwork.enable ? [
+    for i in range(length(local.virtualNetworks)) : merge(var.hpcCache, {
+      name              = "${module.global.regionName}-${var.cacheName}"
+      regionName        = module.global.regionName
+      resourceGroupName = "${var.resourceGroupName}.${module.global.regionName}"
+      subnetId          = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${var.existingNetwork.resourceGroupName}/providers/Microsoft.Network/virtualNetworks/${var.existingNetwork.name}/subnets/${var.existingNetwork.subnetName}"
+    }) if var.enableHPCCache
+  ] : [
+    for virtualNetwork in local.virtualNetworks : merge(var.hpcCache, {
+      name              = "${virtualNetwork.regionName}-${var.cacheName}"
       regionName        = virtualNetwork.regionName
       resourceGroupName = "${var.resourceGroupName}.${virtualNetwork.regionName}"
       subnetId          = "${virtualNetwork.id}/subnets/${data.terraform_remote_state.network.outputs.virtualNetwork.subnets[data.terraform_remote_state.network.outputs.virtualNetwork.subnetIndex.cache].name}"
     }) if var.enableHPCCache
-  ]
+  ])
   storageTargetsNfs = flatten([
     for storageCache in local.storageCaches : [
       for storageTargetNfs in var.storageTargetsNfs : merge(storageTargetNfs, {
-        key               = "${storageCache.key}-${storageTargetNfs.name}"
-        cacheName         = var.cacheName
+        cacheName         = storageCache.name
         resourceGroupName = storageCache.resourceGroupName
       }) if storageTargetNfs.enable
-    ] if var.enableHPCCache
+    ]
   ])
   storageTargetsNfsBlob = flatten([
     for storageCache in local.storageCaches : [
       for storageTargetNfsBlob in var.storageTargetsNfsBlob : merge(storageTargetNfsBlob, {
-        key               = "${storageCache.key}-${storageTargetNfsBlob.name}"
-        cacheName         = var.cacheName
+        cacheName         = storageCache.name
         resourceGroupName = storageCache.resourceGroupName
       }) if storageTargetNfsBlob.enable
-    ] if var.enableHPCCache
+    ]
   ])
 }
 
@@ -82,7 +78,7 @@ resource "azurerm_role_assignment" "storage_blob_data_contributor" {
 
 resource "azurerm_hpc_cache" "studio" {
   for_each = {
-    for storageCache in local.storageCaches : storageCache.key => storageCache
+    for storageCache in local.storageCaches : storageCache.name => storageCache
   }
   name                = each.value.name
   resource_group_name = each.value.resourceGroupName
@@ -116,7 +112,7 @@ resource "azurerm_hpc_cache" "studio" {
 
 resource "azurerm_hpc_cache_nfs_target" "storage" {
   for_each = {
-    for storageTargetNfs in local.storageTargetsNfs : storageTargetNfs.key => storageTargetNfs
+    for storageTargetNfs in local.storageTargetsNfs : "${storageTargetNfs.cacheName}-${storageTargetNfs.name}" => storageTargetNfs
   }
   name                = each.value.name
   resource_group_name = each.value.resourceGroupName
@@ -138,14 +134,14 @@ resource "azurerm_hpc_cache_nfs_target" "storage" {
 
 resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
   for_each = {
-    for storageTargetNfsBlob in local.storageTargetsNfsBlob : storageTargetNfsBlob.key => storageTargetNfsBlob
+    for storageTargetNfsBlob in local.storageTargetsNfsBlob : "${storageTargetNfsBlob.cacheName}-${storageTargetNfsBlob.name}" => storageTargetNfsBlob
   }
   name                 = each.value.name
   resource_group_name  = each.value.resourceGroupName
   cache_name           = each.value.cacheName
-  storage_container_id = data.azurerm_storage_container.blob_nfs[each.value.key].resource_manager_id
   usage_model          = each.value.usageModel
   namespace_path       = each.value.clientPath
+  storage_container_id = "/subscriptions/${data.azurerm_client_config.studio.subscription_id}/resourceGroups/${each.value.storage.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${each.value.storage.accountName}/blobServices/default/containers/${each.value.storage.containerName}"
   depends_on = [
     azurerm_hpc_cache.studio
   ]
@@ -157,12 +153,12 @@ resource "azurerm_hpc_cache_blob_nfs_target" "storage" {
 
 resource "azurerm_private_dns_a_record" "studio_hpc" {
   for_each = {
-    for storageCache in local.storageCaches : storageCache.key => storageCache
+    for storageCache in local.storageCaches : storageCache.name => storageCache
   }
   name                = "cache-${lower(each.value.regionName)}"
   resource_group_name = data.azurerm_private_dns_zone.studio.resource_group_name
   zone_name           = data.azurerm_private_dns_zone.studio.name
-  records             = azurerm_hpc_cache.studio[each.value.key].mount_addresses
+  records             = azurerm_hpc_cache.studio[each.value.name].mount_addresses
   ttl                 = 300
 }
 

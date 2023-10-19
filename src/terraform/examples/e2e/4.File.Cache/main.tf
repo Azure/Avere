@@ -45,11 +45,11 @@ variable "cacheName" {
 }
 
 variable "enableHPCCache" {
-  type = string
+  type = bool
 }
 
-variable "enableDevMode" {
-  type = string
+variable "enablePerRegion" {
+  type = bool
 }
 
 variable "storageTargetsNfs" {
@@ -143,10 +143,27 @@ data "azurerm_private_dns_zone" "studio" {
   resource_group_name = var.existingNetwork.enable ? var.existingNetwork.resourceGroupName : data.terraform_remote_state.network.outputs.resourceGroupName
 }
 
+locals {
+  regionNames = var.existingNetwork.enable || !var.enablePerRegion ? [module.global.regionName] : [
+    for virtualNetwork in data.terraform_remote_state.network.outputs.virtualNetworks : virtualNetwork.regionName
+  ]
+  virtualNetworks = distinct(!var.enablePerRegion ? [
+    for i in range(length(data.terraform_remote_state.network.outputs.virtualNetworks)) : {
+      id         = data.terraform_remote_state.network.outputs.virtualNetwork.id
+      regionName = data.terraform_remote_state.network.outputs.virtualNetwork.regionName
+    }
+  ] : [
+    for virtualNetwork in data.terraform_remote_state.network.outputs.virtualNetworks : {
+      id         = virtualNetwork.id
+      regionName = virtualNetwork.regionName
+    }
+  ])
+}
+
 resource "azurerm_resource_group" "cache_regions" {
-  count    = length(module.global.regionNames)
-  name     = "${var.resourceGroupName}.${module.global.regionNames[count.index]}"
-  location = module.global.regionNames[count.index]
+  count    = length(local.regionNames)
+  name     = "${var.resourceGroupName}.${local.regionNames[count.index]}"
+  location = local.regionNames[count.index]
 }
 
 output "resourceGroups" {

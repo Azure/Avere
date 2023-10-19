@@ -8,6 +8,7 @@ variable "networkPeering" {
     allowRemoteNetworkAccess    = bool
     allowRemoteForwardedTraffic = bool
     allowGatewayTransit         = bool
+    useRemoteGateways           = bool
   })
 }
 
@@ -20,6 +21,7 @@ resource "azurerm_virtual_network_peering" "up" {
   allow_virtual_network_access = var.networkPeering.allowRemoteNetworkAccess
   allow_forwarded_traffic      = var.networkPeering.allowRemoteForwardedTraffic
   allow_gateway_transit        = var.networkPeering.allowGatewayTransit
+  use_remote_gateways          = var.networkPeering.useRemoteGateways
   depends_on = [
     azurerm_subnet_network_security_group_association.studio
   ]
@@ -34,6 +36,7 @@ resource "azurerm_virtual_network_peering" "down" {
   allow_virtual_network_access = var.networkPeering.allowRemoteNetworkAccess
   allow_forwarded_traffic      = var.networkPeering.allowRemoteForwardedTraffic
   allow_gateway_transit        = var.networkPeering.allowGatewayTransit
+  use_remote_gateways          = var.networkPeering.useRemoteGateways
   depends_on = [
     azurerm_subnet_network_security_group_association.studio
   ]

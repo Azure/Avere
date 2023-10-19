@@ -7,7 +7,7 @@ resourceGroupName = "ArtistAnywhere.Network" # Alphanumeric, underscores, hyphen
 virtualNetworks = [
   {
     enable     = true
-    name       = "Studio"
+    name       = "Studio-WestUS3"
     regionName = "WestUS3"
     addressSpace = [
       "10.0.0.0/16"
@@ -101,7 +101,7 @@ virtualNetworks = [
   },
   {
     enable     = true
-    name       = "Studio"
+    name       = "Studio-EastUS2"
     regionName = "EastUS2"
     addressSpace = [
       "10.1.0.0/16"
@@ -203,7 +203,8 @@ networkPeering = {
   enable                      = false
   allowRemoteNetworkAccess    = true
   allowRemoteForwardedTraffic = true
-  allowGatewayTransit         = true
+  allowGatewayTransit         = false
+  useRemoteGateways           = false
 }
 
 ##########################################################################################################################

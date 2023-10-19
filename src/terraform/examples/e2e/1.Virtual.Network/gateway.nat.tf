@@ -10,7 +10,7 @@ variable "natGateway" {
 
 resource "azurerm_nat_gateway" "studio" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
   }
   name                = "Gateway"
   resource_group_name = each.value.resourceGroupName
@@ -23,25 +23,25 @@ resource "azurerm_nat_gateway" "studio" {
 
 # resource "azurerm_nat_gateway_public_ip_prefix_association" "studio" {
 #   for_each = {
-#     for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
+#     for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
 #   }
-#   nat_gateway_id      = azurerm_nat_gateway.studio[each.value.key].id
-#   public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway[each.value.key].id
+#   nat_gateway_id      = azurerm_nat_gateway.studio[each.value.name].id
+#   public_ip_prefix_id = azurerm_public_ip_prefix.nat_gateway[each.value.name].id
 # }
 
 resource "azurerm_nat_gateway_public_ip_association" "studio" {
   for_each = {
-    for virtualNetwork in local.virtualNetworks : virtualNetwork.key => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
+    for virtualNetwork in local.virtualNetworks : virtualNetwork.name => virtualNetwork if var.natGateway.enable && !var.existingNetwork.enable
   }
-  nat_gateway_id       = azurerm_nat_gateway.studio[each.value.key].id
-  public_ip_address_id = azurerm_public_ip.nat_gateway[each.value.key].id
+  nat_gateway_id       = azurerm_nat_gateway.studio[each.value.name].id
+  public_ip_address_id = azurerm_public_ip.nat_gateway[each.value.name].id
 }
 
 resource "azurerm_subnet_nat_gateway_association" "studio" {
   for_each = {
-    for subnet in local.virtualNetworksSubnets : subnet.key => subnet if var.natGateway.enable && subnet.name != "GatewaySubnet" && !var.existingNetwork.enable
+    for subnet in local.virtualNetworksSubnets : "${subnet.virtualNetworkName}-${subnet.name}" => subnet if var.natGateway.enable && subnet.name != "GatewaySubnet" && !var.existingNetwork.enable
   }
-  nat_gateway_id = azurerm_nat_gateway.studio[each.value.virtualNetworkKey].id
+  nat_gateway_id = azurerm_nat_gateway.studio[each.value.virtualNetworkName].id
   subnet_id      = "${each.value.virtualNetworkId}/subnets/${each.value.name}"
   depends_on = [
     azurerm_subnet.studio
