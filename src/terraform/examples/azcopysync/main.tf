@@ -132,7 +132,7 @@ output "rdp_address" {
 }
 
 output "storage_account_container_sas_command_prefix" {
-  value = "export SAS_PREFIX=https://${local.storage_account_name}.blob.core.windows.net/${local.container_name}?"
+  value = "export SAS_PREFIX=https://${local.storage_account_name}.URI_TO_AZURE_STORAGE_ACCOUNT/${local.container_name}?"
 }
 
 output "storage_account_container_sas_command_suffix" {

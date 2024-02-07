@@ -63,8 +63,8 @@ $GOPATH/bin/blobuploader
 
 
 ```bash
-10.2.1.5 YOUR_PRIVATE_STORAGE_ACCOUNT.blob.core.windows.net
-```
+10.2.1.5 URI_TO_AZURE_STORAGE_ACCOUNT
+
 
 14. Now confirm you can upload the blobs:
 

@@ -416,7 +416,7 @@ resource "terraform_data" "weka_file_system" {
       "  fileSystemAuthRequired=${var.weka.fileSystem.authRequired ? "yes" : "no"}",
       "  fileSystemContainerName=${local.wekaObjectTier.storage.containerName}",
       "  if [ ${local.wekaObjectTier.enable} == true ]; then",
-      "    weka fs tier s3 add $fileSystemContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.blob.core.windows.net --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
+      "    weka fs tier s3 add $fileSystemContainerName --obs-type AZURE --hostname ${local.wekaObjectTier.storage.accountName}.URI_TO_AZURE_STORAGE_ACCOUNT --secret-key ${nonsensitive(local.wekaObjectTier.storage.accountKey)} --access-key-id ${local.wekaObjectTier.storage.accountName} --bucket ${local.wekaObjectTier.storage.containerName} --protocol https --port 443",
       "  fi",
       "  weka fs group create $fileSystemGroupName",
       "  weka fs create $fileSystemName $fileSystemGroupName \"$fileSystemTotalBytes\"B --obs-name $fileSystemContainerName --ssd-capacity \"$fileSystemDriveBytes\"B --auth-required $fileSystemAuthRequired",

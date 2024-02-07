@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	productionBlobURLTemplate = "https://%s.blob.core.windows.net"
+	productionBlobURLTemplate = "https://%s.URI_TO_AZURE_STORAGE_ACCOUNT"
 )
 
 // BlobContainer represents a blob container, this can be used to read/write blockblobs, appendblobs, or page blobs

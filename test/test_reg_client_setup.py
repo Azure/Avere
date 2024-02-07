@@ -192,7 +192,7 @@ class TestRegressionClientSetup:
         # Get the storage account's access key and add that hostdb entry, too.
         sa_key = atd.st_client.storage_accounts.list_keys(
             atd.resource_group, test_vars["storage_account"]).keys[0].value
-        commands.append("echo 'averesv/hostdb.py -s {0}.blob.core.windows.net -m {0}.blob.core.windows.net -M az --cloudCreds \"{0}::{1}\"' >> ~/hostdb_entries.sh".format(test_vars["storage_account"], sa_key))
+        commands.append("echo 'averesv/hostdb.py -s URI_TO_AZURE_STORAGE_ACCOUNT -m URI_TO_AZURE_STORAGE_ACCOUNT -M az --cloudCreds \"{0}::{1}\"' >> ~/hostdb_entries.sh".format(test_vars["storage_account"], sa_key))
 
         last_error = None
         for staf_client_ip in test_vars["staf_client_priv_ips"]:

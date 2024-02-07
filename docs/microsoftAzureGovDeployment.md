@@ -104,7 +104,7 @@ dbutil.py set mass2 serverName avereblobstorage.blob.core.usgovcloudapi.net -x
 
 Was set to:
 ```
-serverName: avereblobstorage.blob.core.windows.net
+serverName: URI_TO_AZURE_STORAGE_ACCOUNT
 ```
 
 ###### Configure junction:

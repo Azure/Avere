@@ -122,7 +122,7 @@ Install-DesktopLinks($UserPath)
     $lnk = $wshshell.CreateShortcut("c:\Users\$UserPath\Desktop\AvereMgmt.lnk")
     $lnk.TargetPath = "https://${AvereManagementIP}/avere/fxt/index.php"
     $AvereIconDestinationPath =  "C:\Windows\System32\avere.ico"
-    $AvereIconUrl = "https://avereimageswestus.blob.core.windows.net/archive/avere.ico"
+    $AvereIconUrl = "URI_TO_AZURE_STORAGE_ACCOUNT/archive/avere.ico"
     DownloadFileOverHttp $AvereIconUrl $AvereIconDestinationPath
     $lnk.IconLocation = "$AvereIconDestinationPath, 0"
     $lnk.Save()
@@ -219,7 +219,7 @@ Install-WindowsPacks
     # install the windows pack
     $DestinationPath =  "C:\AzureData\Windows_Pack_x64_1709.msu"
     $DestinationLog =  "C:\AzureData\Windows_Pack_x64_1709.txt"
-    $WindowsPackUrl = "https://avereimageswestus.blob.core.windows.net/archive/Windows_Pack_x64_1709.msu"
+    $WindowsPackUrl = "https://URI_TO_AZURE_STORAGE_ACCOUNT/archive/Windows_Pack_x64_1709.msu"
     DownloadFileOverHttp $WindowsPackUrl $DestinationPath
     Write-Log "installing Windows pack: Wusa.exe $DestinationPath /quiet /log:$DestinationLog"
     Wusa.exe "$DestinationPath" /quiet /log:$DestinationLog

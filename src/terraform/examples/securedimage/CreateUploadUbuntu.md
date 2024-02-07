@@ -98,12 +98,12 @@ Next upload the image:
 2. login to [azcopy] with `azcopy login` command
 3. execute the following command to upload to the storage account:
 ```bash
-azcopy copy ubuntu.vhd https://anhowevhd.blob.core.windows.net/vhd/ubuntu.vhd
+azcopy copy ubuntu.vhd https://URI_TO_AZURE_STORAGE_ACCOUNT/vhd/ubuntu.vhd
 ```
 
 Once uploaded create the image using the following command:
 ```bash
-az image create --location LOCATION --resource-group RESOURCE_GROUP_NAME --name IMAGE_NAME --os-type Linux --source https://STORAGE_ACCOUNT_NAME.blob.core.windows.net/vhd/ubuntu.vhd
+az image create --location LOCATION --resource-group RESOURCE_GROUP_NAME --name IMAGE_NAME --os-type Linux --source https://URI_TO_AZURE_STORAGE_ACCOUNT/vhd/ubuntu.vhd
 ```
 
 Once the image is created, you can now delete the storage account:
