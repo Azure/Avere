@@ -226,7 +226,7 @@ https://aka.ms/downloadazcopy
 Now copy the image to Azure:
 ```
 cd 'C:\Program Files (x86)\Microsoft SDKs\Azure\AzCopy\'
-.\AzCopy.exe /Source:C:\Path\To\Image\ubuntu-demo-image.vhd /Dest:https://myvmstore.blob.core.windows.net/public/ubuntu-demo-image.vhd /DestKey:/<key here> /BlobType:page
+.\AzCopy.exe /Source:C:\Path\To\Image\ubuntu-demo-image.vhd /Dest:(https://URI_TO_AZURE_STORAGE_ACCOUNT/public/ubuntu-demo-image.vhd) /DestKey:/<key here> /BlobType:page
 ```
 
 # Create VM from VHD

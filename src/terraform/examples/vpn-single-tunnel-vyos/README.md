@@ -31,19 +31,19 @@ These instructions walk through the creation of a Vyos VHD image and are based o
 1. exit the container and run azcopy to copy the vhd to a blob storage account.
 ```bash
 VHD_PATH=$(find . -name *.log | head -1)
-STORAGE_ACCOUNT="your storage account"
+STORAGE_ACCOUNT="URI_TO_AZURE_STORAGE_ACCOUNT"
 azcopy login
-azcopy $VHD_PATH https://$STORAGEACCOUNT.blob.core.windows.net/vhd/vyos.vhd
+azcopy $VHD_PATH https://$STORAGEACCOUNT/vhd/vyos.vhd
 ```
 1. create the vyos image
 ```bash
 # assumes image RG already exists, and location is same region as blob storage account
-STORAGE_ACCOUNT="your storage account"
+STORAGE_ACCOUNT="URI_TO_AZURE_STORAGE_ACCOUNT"
 LOCATION=eastus
 IMAGES_RG=images_rg
 
 # create the image
-az image create --location $LOCATION --resource-group $IMAGES_RG --name vyos1.2 --os-type Linux --source https://$STORAGEACCOUNT.blob.core.windows.net/vhd/vyos.vhd
+az image create --location $LOCATION --resource-group $IMAGES_RG --name vyos1.2 --os-type Linux --source https://$STORAGEACCOUNT/vhd/vyos.vhd
 
 # list the image id
 az image list -g $IMAGES_RG --query "[].id"

@@ -57,7 +57,7 @@ virtualMachines = [
             {
               enable = false # File Storage
               mounts = [
-                "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
+                "URI_TO_AZURE_STORAGE_ACCOUNT:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
               ]
             },
             {
@@ -124,7 +124,7 @@ virtualMachines = [
             {
               enable = false # File Storage
               mounts = [
-                "azstudio1.blob.core.windows.net:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
+                "URI_TO_AZURE_STORAGE_ACCOUNT:/azstudio1/content /mnt/content aznfs default,sec=sys,proto=tcp,vers=3,nolock 0 0"
               ]
             },
             {
@@ -191,7 +191,7 @@ virtualMachines = [
             {
               enable = false # File Storage
               mounts = [
-                "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content X:"
+                "mount -o anon nolock \\\\URI_TO_AZURE_STORAGE_ACCOUNT\\azstudio1\\content X:"
               ]
             },
             {
@@ -258,7 +258,7 @@ virtualMachines = [
             {
               enable = false # File Storage
               mounts = [
-                "mount -o anon nolock \\\\azstudio1.blob.core.windows.net\\azstudio1\\content X:"
+                "mount -o anon nolock \\\\URI_TO_AZURE_STORAGE_ACCOUNT\\azstudio1\\content X:"
               ]
             },
             {

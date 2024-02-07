@@ -6,4 +6,4 @@ SVRSecure-G3-crl.verisign.com      sd.symcd.com
 download.averesystems.com download.averesystems.net  Avere software
 updates  Allow the IP range 65.123.167.224/29 to pass through your
 firewall on port 443  avere-billing.appspot.com
-averedist.blob.core.windows.net
+URI_TO_AZURE_STORAGE_ACCOUNT

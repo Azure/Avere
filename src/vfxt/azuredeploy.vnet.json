@@ -191,7 +191,7 @@
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
                         "enabled": true,
-                        "storageUri": "[concat('http://',variables('jumpboxSAName'),'.blob.core.windows.net')]"
+                        "storageUri": "[concat('http://',variables('jumpboxSAName'),'URI_TO_AZURE_STORAGE_ACCOUNT')]"
                     }
                 }
             }

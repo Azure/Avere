@@ -66,5 +66,5 @@ The following table shows the safe urls required for Avere vFXT and az cli:
 
 | Azure Service | Role | Safe Urls |
 | --- | --- | --- |
-| Azure Avere vFXTs | Render burst fast caching / performance caching | download.averesystems.com:443<BR>management.azure.com:443<BR>ACCOUNTNAME.blob.core.windows.net(if using blob storage for filer) |
+| Azure Avere vFXTs | Render burst fast caching / performance caching | download.averesystems.com:443<BR>management.azure.com:443<BR>URI_TO_AZURE_STORAGE_ACCOUNT(if using blob storage for filer) |
 | az cli | command line tool to create and manage azure resources | management.azure.com:443 |

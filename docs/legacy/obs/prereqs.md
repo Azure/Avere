@@ -96,7 +96,7 @@ The Avere vFXT cluster uses managed service identity (MSI) for normal cluster op
 3. Use these commands to download the role definition and paste in your subscription ID. 
 
 ```bash
-wget -O- https://averedistribution.blob.core.windows.net/public/vfxtdistdoc.tgz | tar zxf - avere-cluster.json
+wget -O- https://URI_TO_AZURE_STORAGE_ACCOUNT/public/vfxtdistdoc.tgz | tar zxf - avere-cluster.json
 vi avere-cluster.json
 ```
 
