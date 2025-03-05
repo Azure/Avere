@@ -9,16 +9,17 @@ from contextlib import closing
 from time import sleep, time
 
 # from requirements.txt
-from paramiko import AutoAddPolicy, SSHClient
+from paramiko import RejectPolicy, SSHClient
 
 
 def create_ssh_client(username, hostname, port=22, password=None, key_filename=None):
     """Creates (and returns) an SSHClient. Auth'n is via publickey."""
     log = logging.getLogger("create_ssh_client")
     log.warning(">>> DEPRECATION IN PROGRESS [create_ssh_client] <<<")
+    log.warning(">>> The host key of the server will need to be manually validated. <<<")
     ssh_client = SSHClient()
     ssh_client.load_system_host_keys()
-    ssh_client.set_missing_host_key_policy(AutoAddPolicy())
+    ssh_client.set_missing_host_key_policy(RejectPolicy())
     ssh_client.connect(
         username=username, hostname=hostname, port=port,
         password=password, key_filename=key_filename
